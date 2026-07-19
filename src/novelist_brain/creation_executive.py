@@ -12,6 +12,21 @@ from src.novelist_brain.module import Module
 from src.novelist_brain.persistence import dataclass_to_dict, reconstruct_dataclass
 
 
+def _looks_like_prose(text: str) -> bool:
+    """Heuristic: does this text look like Chinese prose, not reasoning?"""
+    if not text or len(text) < 50:
+        return False
+    # Count Chinese characters.
+    chinese_chars = sum(1 for ch in text if "\u4e00" <= ch <= "\u9fff")
+    if chinese_chars < 80:
+        return False
+    # If English letters dominate, it's reasoning.
+    english_letters = sum(1 for ch in text if ch.isascii() and ch.isalpha())
+    if english_letters > chinese_chars:
+        return False
+    return True
+
+
 _PROSE_TEMPLATES: dict[str, list[str]] = {
     "opening": [
         "{setting} held its breath at {time_of_day}, as if the world itself were waiting for {protagonist} to make the first move. Light fell through the window in pale slabs, illuminating dust motes that drifted like thoughts suspended between memory and the present moment.",
@@ -357,10 +372,39 @@ class CreationExecutive(Module):
                 user,
                 context={"system": system},
                 temperature=0.85,
-                max_tokens=1600,
+                max_tokens=3000,
             ).strip()
         except LLMCallError:
             text = ""
+
+        # If the result is too short or pure reasoning, retry once with a
+        # more explicit instruction.
+        from src.novelist_brain.llm import OpenAILLMService
+        if (
+            not text
+            or len(text) < 100
+            or (
+                isinstance(self._llm, OpenAILLMService)
+                and not _looks_like_prose(text)
+            )
+        ):
+            retry_user = (
+                user
+                + "\n\n注意：请直接输出中文散文段落本身，不要输出任何"
+                "英文、推理过程、字数统计或思考。直接从第一个汉字开始写。"
+            )
+            try:
+                retry_text = self._llm.complete(
+                    retry_user,
+                    context={"system": system},
+                    temperature=0.9,
+                    max_tokens=3000,
+                ).strip()
+            except LLMCallError:
+                retry_text = ""
+            if retry_text and _looks_like_prose(retry_text):
+                text = retry_text
+
         return text
 
     def _identity_constraints_for_prompt(self) -> dict[str, Any]:
@@ -490,15 +534,11 @@ class CreationExecutive(Module):
     def _fallback_paragraph(self) -> str:
         """Return a safe paragraph when no scenes are available."""
         return (
-            "The page remained blank for a long moment, as though the story "
-            "were waiting for permission to begin. Somewhere in the quiet, a "
-            "single sentence gathered its courage and stepped forward. It was "
-            "not yet a paragraph, but it was no longer silence. The words "
-            "lingered on the screen, soft and uncertain, like footprints in "
-            "dust that might, with enough patience, lead somewhere worth "
-            "following. And so the novelist waited, listening for the next "
-            "line to arrive from the same place the first one had come: the "
-            "hollow just behind the ordinary world, where fiction begins."
+            "纸页空白了很久，像是在等待一个许可才能开始。寂静里有一个句子"
+            "鼓起勇气走了出来。它还不是段落，但已不再是沉默。字迹留在屏幕上，"
+            "柔软而犹疑，像尘土里的脚印，只要足够耐心，也许会通向某个值得追随"
+            "的地方。于是小说家等待着，倾听下一行字从与第一行相同的地方抵达："
+            "寻常世界背后那个空洞之处，小说起始之处。"
         )
 
     # ------------------------------------------------------------------
@@ -512,7 +552,7 @@ class CreationExecutive(Module):
                 return scene.setting
         if self._style_profile.get("default_setting"):
             return str(self._style_profile["default_setting"])
-        return "quiet room"
+        return "安静的房间"
 
     def _resolve_characters(
         self, narrative_line: NarrativeLine
@@ -531,7 +571,7 @@ class CreationExecutive(Module):
         if not characters:
             if self._style_profile.get("default_protagonist"):
                 return str(self._style_profile["default_protagonist"]), []
-            return "the figure", []
+            return "那个身影", []
 
         return characters[0], characters
 
@@ -539,28 +579,28 @@ class CreationExecutive(Module):
         """Map aggregate emotional tone to a mood label."""
         tones = [s.emotional_tone for s in narrative_line.scenes if s.emotional_tone != 0.0]
         if not tones:
-            return "neutral"
+            return "中性"
         avg = sum(tones) / len(tones)
         if avg > 0.3:
-            return "hopeful"
+            return "希望"
         if avg < -0.3:
-            return "melancholic"
+            return "忧郁"
         if avg < -0.6:
-            return "bleak"
-        return "tense"
+            return "黯淡"
+        return "紧张"
 
     def _resolve_time_of_day(self, setting: str) -> str:
         """Guess a time of day from style profile or setting hints."""
         if self._style_profile.get("default_time"):
             return str(self._style_profile["default_time"])
-        setting_lower = setting.lower()
-        if "dawn" in setting_lower or "morning" in setting_lower:
-            return "morning"
-        if "dusk" in setting_lower or "evening" in setting_lower:
-            return "evening"
-        if "night" in setting_lower:
-            return "night"
-        return "afternoon"
+        # 中文关键词匹配
+        if "黎明" in setting or "清晨" in setting or "早晨" in setting:
+            return "清晨"
+        if "黄昏" in setting or "傍晚" in setting:
+            return "傍晚"
+        if "夜晚" in setting or "深夜" in setting:
+            return "夜晚"
+        return "午后"
 
     def _extract_query_tags(self, narrative_line: NarrativeLine) -> list[str]:
         """Gather query tags from narrative line scenes and conflicts."""

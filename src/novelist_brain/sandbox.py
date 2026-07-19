@@ -477,9 +477,8 @@ class MentalSandbox(Module):
             )
 
         identity = getattr(self, "_identity_constraints", {}) or {}
-        world_rules = [
-            str(rule) for rule in (self.world_model.rules or [])
-        ][:5] or ["ordinary realism"]
+        rules = (self.world_model.rules or [])[:5]
+        world_rules = [str(r) for r in rules] or ["寻常现实"]
 
         system, user = prompts_mod.build_coc_judgment_prompt(
             identity=identity,
@@ -524,7 +523,7 @@ class MentalSandbox(Module):
 
         # Fallback for mock LLM or empty response.
         prompt = (
-            f"In a {outcome}, what happens when {char_name} attempts to {action}?"
+            f"在{outcome}的情况下，{char_name} 试图 {action}，会发生什么？"
         )
         return self._llm.complete(prompt, max_tokens=96)
 
@@ -579,7 +578,7 @@ class MentalSandbox(Module):
         if self._rng.random() < 0.35:
             line.foreshadowing.append(
                 self._llm.complete(
-                    "Foreshadow a future event based on the current world.",
+                    "根据当前世界，伏笔一个未来事件，用中文写一句。",
                     max_tokens=64,
                 )
             )
@@ -734,8 +733,8 @@ class MentalSandbox(Module):
         desires = [Desire(object=desire_object, strength=0.5, urgency=0.5)]
 
         internal_conflict = self._llm.complete(
-            f"Describe an internal conflict for a {archetype} named {name} "
-            f"based on: {trace.content}",
+            f"请用中文为一位名为 {name} 的 {archetype} 描述一个内心冲突，"
+            f"依据如下记忆：{trace.content}",
             max_tokens=80,
         )
 
@@ -776,12 +775,12 @@ class MentalSandbox(Module):
             self._state.custom["narrative_line_count"] = 1
 
     def _create_default_scene(self) -> Scene:
-        setting = "an unnamed city at dawn"
+        setting = "黎明中无名的城市"
         if self._world_model and self._world_model.ontology:
             setting = self._world_model.ontology.get("setting", setting)
         return Scene(
             description=self._llm.complete(
-                f"Describe a scene set in {setting}.", max_tokens=96
+                f"请用中文描写一个发生在「{setting}」的场景。", max_tokens=96
             ),
             characters=[c.name for c in self._characters],
             setting=setting,
@@ -791,16 +790,16 @@ class MentalSandbox(Module):
 
     def _generate_action(self) -> str:
         if self._world_model and self._world_model.ontology:
-            genre = self._world_model.ontology.get("genre", "literary fiction")
+            genre = self._world_model.ontology.get("genre", "严肃文学")
             return self._llm.complete(
-                f"Suggest a meaningful action in a {genre} story.", max_tokens=48
+                f"请用中文为一个 {genre} 故事建议一个有意义的行动。", max_tokens=48
             )
-        return "confront the unresolved past"
+        return "面对未被解决的过去"
 
     def _generate_stakes(self, character: CharacterProjection | None) -> str:
-        char_name = character.name if character else "the protagonist"
+        char_name = character.name if character else "主角"
         return self._llm.complete(
-            f"What is at stake for {char_name}?", max_tokens=64
+            f"对 {char_name} 来说，什么处于危险之中？请用中文回答。", max_tokens=64
         )
 
     def _resolve_actor(self, character_id: Any) -> CharacterProjection | None:

@@ -108,18 +108,18 @@ def build_context(
 ) -> dict[str, Any]:
     """Assemble the shared agent context passed to every module."""
     identity_profile = {
-        "name": "the Novelist",
-        "pen_name": "quiet_observer",
-        "values": ["truth", "empathy", "beauty", "freedom"],
+        "name": "小说家",
+        "pen_name": "静观者",
+        "values": ["真实", "共情", "美", "自由"],
         "traits": {
             "openness": 0.8,
             "introversion": 0.7,
             "neuroticism": 0.5,
             "conscientiousness": 0.6,
         },
-        "interests": ["urban life", "memory", "loneliness", "time"],
+        "interests": ["城市生活", "记忆", "孤独", "时间"],
         "self_narrative": (
-            "I am a quiet observer who turns ordinary moments into fiction."
+            "我是一个安静的观察者，把寻常时刻写成小说。"
         ),
         "voice_signature": {},
     }
@@ -148,23 +148,23 @@ def build_context(
             "world": {
                 "name": "脑中世界",
                 "ontology": {
-                    "genre": "literary fiction",
-                    "tone": "melancholic",
-                    "setting": "an unnamed city at dawn",
+                    "genre": "严肃文学",
+                    "tone": "忧郁",
+                    "setting": "黎明中无名的城市",
                 },
                 "rules": [
-                    "actions have emotional consequences",
-                    "randomness shapes fate",
+                    "行动有情感后果",
+                    "随机性塑造命运",
                 ],
-                "current_state": {"time": "morning", "mood": "quiet"},
+                "current_state": {"time": "清晨", "mood": "安静"},
             },
         },
         "creation": {
             "seed": 42,
             "style_profile": {
-                "default_setting": "the quiet apartment",
-                "default_protagonist": "the writer",
-                "default_time": "morning",
+                "default_setting": "安静的公寓",
+                "default_protagonist": "作家",
+                "default_time": "清晨",
                 "identity": identity_profile,
             },
         },

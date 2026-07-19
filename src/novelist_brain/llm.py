@@ -193,14 +193,36 @@ class OpenAILLMService(LLMService):
     ) -> str:
         """Request a chat completion.
 
-        If the provider returns an empty ``content`` (as reasoning models
-        sometimes do when ``max_tokens`` is exhausted by reasoning), the
-        ``reasoning_content`` field is returned as a fallback so callers
-        still get usable text.
+        For reasoning models (e.g. MiniMax-M3), the model often dumps its
+        reasoning into ``content`` before producing the final answer. We
+        handle two cases:
+        1. If ``reasoning_content`` is present, the final answer is in
+           ``content`` — return it directly.
+        2. If ``content`` itself contains reasoning traces (marked by
+           English meta phrases like "Let me", "I should", "Count:",
+           "Let me count", etc.), we strip the reasoning prefix and
+           extract the final Chinese passage.
         """
         messages: list[dict[str, str]] = []
         if context and context.get("system"):
-            messages.append({"role": "system", "content": str(context["system"])})
+            system_prompt = str(context["system"])
+            # Always enforce Chinese output, even when caller provides system.
+            if "简体中文" not in system_prompt and "中文" not in system_prompt:
+                system_prompt += (
+                    "\n重要：你必须始终用简体中文回答，严禁输出英文散文或推理过程。"
+                )
+            messages.append({"role": "system", "content": system_prompt})
+        else:
+            messages.append(
+                {
+                    "role": "system",
+                    "content": (
+                        "你是一位严肃文学小说家。所有回答必须使用简体中文。"
+                        "不要输出英文，不要输出推理过程，不要解释你的写作思路。"
+                        "直接给出最终的中文文本。"
+                    ),
+                }
+            )
         messages.append({"role": "user", "content": prompt})
 
         response = self._chat(
@@ -213,14 +235,137 @@ class OpenAILLMService(LLMService):
             raise LLMCallError(f"Empty choices in response: {response}")
         message = choices[0].get("message") or {}
         content = message.get("content") or ""
-        if content.strip():
-            return content.strip()
-        # Fallback: reasoning models may put the usable text in reasoning_content.
         reasoning = message.get("reasoning_content") or ""
-        if reasoning.strip():
-            # Best-effort: strip reasoning meta-commentary if final answer is embedded.
+
+        # Case 1: reasoning model with proper split — content is the answer.
+        if reasoning.strip() and content.strip():
+            # Some providers put the final answer in content after reasoning.
+            # Check if content looks like reasoning (English meta) or actual answer.
+            cleaned = self._strip_reasoning_prefix(content)
+            if cleaned.strip():
+                return cleaned.strip()
+            # Otherwise fall back to reasoning extraction.
             return self._extract_final_answer(reasoning)
+
+        # Case 2: content has the answer.
+        if content.strip():
+            cleaned = self._strip_reasoning_prefix(content)
+            return cleaned.strip() if cleaned.strip() else content.strip()
+
+        # Case 3: only reasoning available.
+        if reasoning.strip():
+            return self._extract_final_answer(reasoning)
+
         raise LLMCallError(f"Empty content and reasoning in response: {response}")
+
+    @staticmethod
+    def _strip_reasoning_prefix(text: str) -> str:
+        """Remove reasoning traces that some models prepend or append.
+
+        Reasoning models like MiniMax-M3 sometimes leak their internal
+        reasoning into ``content``, interleaved with the actual prose.
+        Common patterns:
+        - Pre-rationalization: "Let me think..." / "The user wants..."
+        - Post-rationalization: "Let me count..." / "Hmm, let me check..."
+          / "Wait, let me reconsider..."
+        - Embedded counting: "(57) text (20) text"
+
+        Strategy:
+        1. Find the FIRST contiguous prose block (Chinese-heavy, no
+           English reasoning markers) of length >= 30.
+        2. Cut it off at the first reasoning marker that appears AFTER
+           the start of the prose block.
+        3. If the prose block ends with an incomplete sentence (no
+           Chinese sentence-ending punctuation), look ahead for the
+           next sentence ending.
+        """
+        if not text:
+            return text
+        import re as _re
+
+        # Reasoning markers (case-insensitive English).
+        reasoning_markers_en = _re.compile(
+            r"(let me|i need|i should|i think|i want|the user|user wants|"
+            r"count:|let me count|let me think|let me draft|let me revise|"
+            r"wait,|actually,?|however,? i|now let me|i'll|i will|i should write|"
+            r"let me reconsider|let me refine|let me check|i should make|"
+            r"good,?|i can|so the|i think the|let me write|total:|"
+            r"approximately|that fits|let me count more|good, within|"
+            r"draft \d|draft:|i should be|i want to|i need to|i'll write|"
+            r"let me polish|i want to make|previous text|"
+            r"i should avoid|i should not|i'll use|hmm,|"
+            r"check for|forbidden|reuse|refine|"
+            r"character count|count: roughly|count: approximately|"
+            r"let me read|let me consider|i interpret|"
+            r"the instruction|instructions say|context mentions|"
+            r"so i should|i also|within range|on ties)",
+            _re.IGNORECASE,
+        )
+        # Chinese reasoning markers.
+        reasoning_markers_zh = _re.compile(
+            r"(我需要|让我想|让我数|让我重新|让我考虑|我应该|我来写|"
+            r"我重新|用户想要|让我修改|让我检查|让我再|我先|"
+            r"让我来|让我写|让我草拟|我打算|让我精炼|"
+            r"让我仔细|让我看|让我阅读|让我确认|"
+            r"接下来我来|让我先)"
+        )
+
+        # Find the first substantial Chinese run (>= 20 Chinese chars).
+        chinese_run_re = _re.compile(
+            r"[\u4e00-\u9fff，。、；：！？\u201c\u201d\u2018\u2019（）…—\s]{20,}"
+        )
+        match = chinese_run_re.search(text)
+        if not match:
+            # No Chinese prose found — fall back to original.
+            return text
+
+        prose_start = match.start()
+
+        # If there's a non-trivial prefix before the prose, it's reasoning.
+        # Now scan forward from prose_start and look for the first reasoning
+        # marker (English or Chinese) that appears after the prose has begun.
+        # We cut the prose at that point.
+        remaining = text[prose_start:]
+
+        # Find the earliest occurrence of any reasoning marker.
+        cut_positions: list[int] = []
+        for m in reasoning_markers_en.finditer(remaining):
+            cut_positions.append(m.start())
+        for m in reasoning_markers_zh.finditer(remaining):
+            cut_positions.append(m.start())
+
+        if cut_positions:
+            earliest_cut = min(cut_positions)
+            # Allow some buffer: the prose must be at least 30 chars.
+            if earliest_cut >= 30:
+                prose = remaining[:earliest_cut].rstrip()
+                # Also strip trailing incomplete sentences: cut at the
+                # last Chinese sentence-ending punctuation.
+                # Find the last 。！？
+                last_end = -1
+                for i, ch in enumerate(prose):
+                    if ch in "。！？…":
+                        last_end = i
+                if last_end != -1 and last_end < len(prose) - 1:
+                    # If there's trailing text after the last sentence
+                    # ender, truncate it.
+                    prose = prose[: last_end + 1]
+                return prose.strip()
+
+        # No reasoning markers found after the prose start. Return the
+        # text from prose_start, but also strip any trailing English
+        # reasoning after the last Chinese character.
+        last_chinese = -1
+        for i, ch in enumerate(remaining):
+            if "\u4e00" <= ch <= "\u9fff" or ch in "。！？；…":
+                last_chinese = i
+        if last_chinese != -1 and last_chinese < len(remaining) - 1:
+            tail = remaining[last_chinese + 1 :].strip()
+            # If the tail has any English letters, it's reasoning.
+            if tail and _re.search(r"[a-zA-Z]{3,}", tail):
+                remaining = remaining[: last_chinese + 1]
+
+        return remaining.strip()
 
     @staticmethod
     def _extract_final_answer(reasoning: str) -> str:
