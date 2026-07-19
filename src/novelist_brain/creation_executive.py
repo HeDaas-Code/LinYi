@@ -24,6 +24,9 @@ _PROSE_TEMPLATES: dict[str, list[str]] = {
     "rendered_scene": [
         "What happened next unfolded slowly: {description} {protagonist} observed it with the particular clarity of someone who knows that ordinary moments are the true plot of a life.",
         "{protagonist} was still trying to name the feeling when {description} The sensation was less like surprise than like recognition delayed by years.",
+        "Then, as if the moment had been waiting for permission: {description} {protagonist} noticed how the air seemed to change its mind about silence.",
+        "Nothing announced itself, yet something shifted: {description} {protagonist} carried the image carefully, afraid it would bruise.",
+        "The next thing revealed itself in fragments: {description} {protagonist} recognized it before understanding it, the way one recognizes a voice in a dark room.",
     ],
     "dialogue": [
         "'I keep thinking about what you said,' {char1} admitted, the words escaping like moths. {char2} looked away. 'Some things aren't meant to be finished,' {char2} replied. 'Only carried.'",
@@ -256,23 +259,30 @@ class CreationExecutive(Module):
         )
 
         scene_count = 0
+        seen_descriptions: set[str] = set()
         for scene in scenes:
             if scene_count >= 3:
                 break
-            rendered = self._render_scene(scene, protagonist, setting)
+            description = (scene.description or "").strip()
+            if description and description in seen_descriptions:
+                continue
+            rendered = self._render_scene(scene, protagonist, setting, scene_count)
             if rendered:
                 parts.append(rendered)
                 scene_count += 1
+                if description:
+                    seen_descriptions.add(description)
 
         if scene_count < 2:
-            parts.append(
-                self._fill_template(
-                    self._rng.choice(_PROSE_TEMPLATES["scene_progression"]),
-                    setting=setting,
-                    protagonist=protagonist,
-                    time_of_day=time_of_day,
+            for _ in range(2 - scene_count):
+                parts.append(
+                    self._fill_template(
+                        self._rng.choice(_PROSE_TEMPLATES["scene_progression"]),
+                        setting=setting,
+                        protagonist=protagonist,
+                        time_of_day=time_of_day,
+                    )
                 )
-            )
 
         if len(characters) >= 2:
             parts.append(
@@ -316,7 +326,7 @@ class CreationExecutive(Module):
         return paragraph
 
     def _render_scene(
-        self, scene: Scene, protagonist: str, setting: str
+        self, scene: Scene, protagonist: str, setting: str, scene_index: int = 0
     ) -> str:
         """Render a single scene into prose."""
         description = scene.description.strip() if scene.description else ""
@@ -327,7 +337,9 @@ class CreationExecutive(Module):
                 protagonist=protagonist,
             )
 
-        template = self._rng.choice(_PROSE_TEMPLATES["rendered_scene"])
+        templates = _PROSE_TEMPLATES["rendered_scene"]
+        # Cycle through templates by scene index to avoid consecutive repetition.
+        template = templates[scene_index % len(templates)]
         rendered = template.format(
             protagonist=protagonist,
             description=description,
@@ -461,8 +473,7 @@ class CreationExecutive(Module):
             return " ".join(words[:500])
 
         expansion_parts: list[str] = []
-        mood = self._resolve_mood(narrative_line)
-        while len(words) + len(expansion_parts) < 200:
+        while len(words) + len(" ".join(expansion_parts).split()) < 200:
             template = self._rng.choice(_PROSE_TEMPLATES["expansion"])
             filled = self._fill_template(
                 template,
@@ -475,16 +486,33 @@ class CreationExecutive(Module):
                 break
 
         if expansion_parts:
-            # Weave expansions into the paragraph rather than appending in bulk.
-            base_words = words
-            extra_words = " ".join(expansion_parts).split()
-            combined = base_words[: len(base_words) // 2]
-            combined.extend(extra_words)
-            combined.extend(base_words[len(base_words) // 2 :])
-            paragraph = " ".join(combined)
+            # Append expansions with a soft transitional phrase.
+            paragraph = paragraph + " " + " ".join(expansion_parts)
             paragraph = self._normalize_spacing(paragraph)
 
+        paragraph = self._remove_duplicate_sentences(paragraph)
         final_words = paragraph.split()
         if len(final_words) > 500:
             return " ".join(final_words[:500])
         return paragraph
+
+    def _remove_duplicate_sentences(self, paragraph: str) -> str:
+        """Remove consecutive duplicate sentences and near-duplicate fragments."""
+        sentences = [s.strip() for s in paragraph.split(".") if s.strip()]
+        if not sentences:
+            return paragraph
+
+        filtered: list[str] = []
+        for sentence in sentences:
+            # Skip if this sentence is identical to the previous one.
+            if filtered and sentence == filtered[-1]:
+                continue
+            # Skip if this sentence is a substring of the previous one.
+            if filtered and sentence in filtered[-1]:
+                continue
+            # Skip if the previous sentence is a substring of this one.
+            if filtered and filtered[-1] in sentence:
+                filtered.pop()
+            filtered.append(sentence)
+
+        return ". ".join(filtered) + ("." if filtered else "")
