@@ -73,6 +73,8 @@ class CentralExecutiveNetwork(Module):
             "data.memory.trace.query.result",
             "identity.constraints",
             "identity.initialized",
+            "data.identity.constraint",
+            "data.identity.updated",
             "control.module.init",
         )
 
@@ -227,7 +229,12 @@ class CentralExecutiveNetwork(Module):
             self._handle_query_result(message.payload or {})
         elif topic == "data.sandbox.narrative.ready":
             self._handle_narrative_ready(message.payload or {})
-        elif topic in ("identity.constraints", "identity.initialized"):
+        elif topic in (
+            "identity.constraints",
+            "identity.initialized",
+            "data.identity.constraint",
+            "data.identity.updated",
+        ):
             payload = message.payload or {}
             constraints = payload.get("constraints")
             if isinstance(constraints, dict):
@@ -236,7 +243,13 @@ class CentralExecutiveNetwork(Module):
     def tick(self, delta: TickDelta) -> None:
         """Advance CEN: drive sandbox simulation until the narrative is ready."""
         self._state.last_tick = delta.absolute_time
+        previous_phase = self._current_phase
         self._current_phase = delta.phase
+
+        # Day boundary: entering "morning" marks the start of a new day.
+        # Allow fresh sandbox builds in the high-energy phases of the new day.
+        if previous_phase is not None and previous_phase != "morning" and delta.phase == "morning":
+            self._narrative_triggered_phases.clear()
 
         # Phase-driven activation: CEN owns the high-energy creation/simulation phases.
         if delta.phase in self._CEN_PHASES:

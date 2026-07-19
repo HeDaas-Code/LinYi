@@ -74,6 +74,8 @@ class DefaultModeNetwork(Module):
             "event.novel.paragraph.published",
             "identity.constraints",
             "identity.initialized",
+            "data.identity.constraint",
+            "data.identity.updated",
             "control.module.init",
         )
 
@@ -162,11 +164,12 @@ class DefaultModeNetwork(Module):
             )
         else:
             self._identity_constraints = {
-                "name": "novelist",
-                "interests": ["memory", "loneliness", "time"],
-                "self_narrative": "I turn ordinary moments into fiction.",
+                "name": "林逸",
+                "pen_name": "静观者",
+                "interests": ["城市边缘人", "记忆", "雨", "旧物", "未说出口的话"],
+                "self_narrative": "我是一个在人群边缘写字的人。我相信那些被忽略的瞬间里藏着真正的小说。",
             }
-            self._current_theme = "memory, loneliness, time"
+            self._current_theme = "城市边缘人, 记忆, 雨"
 
         self._state.custom["current_theme"] = self._current_theme
 
@@ -190,7 +193,12 @@ class DefaultModeNetwork(Module):
             self._handle_query_result(message.payload or {})
         elif topic == "event.novel.paragraph.published":
             self._handle_novel_feedback(message.payload or {})
-        elif topic in ("identity.constraints", "identity.initialized"):
+        elif topic in (
+            "identity.constraints",
+            "identity.initialized",
+            "data.identity.constraint",
+            "data.identity.updated",
+        ):
             payload = message.payload or {}
             constraints = payload.get("constraints")
             if isinstance(constraints, dict):

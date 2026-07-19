@@ -208,12 +208,14 @@ class SalienceNetwork(Module):
             return "dmn"
 
         decision: str
-        if fragment.salience > self.SALIENCE_HIGH_THRESHOLD:
-            decision = "cen"
+        if phase in self.DMN_PHASES:
+            # DMN phases dominate so that dreaming, reflection and incubation
+            # are not interrupted by internally generated high-salience ideas.
+            decision = "dmn"
         elif phase in self.CEN_PHASES:
             decision = "cen"
-        elif phase in self.DMN_PHASES:
-            decision = "dmn"
+        elif fragment.salience > self.SALIENCE_HIGH_THRESHOLD:
+            decision = "cen"
         else:
             # Default bias based on overall score: high score favors CEN.
             decision = "cen" if score >= 0.3 else "dmn"

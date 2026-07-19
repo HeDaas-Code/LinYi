@@ -75,6 +75,7 @@ class MentalSandbox(Module):
             "control.sandbox.simulate",
             "data.memory.trace.query.result",
             "data.identity.constraint",
+            "data.identity.updated",
             "control.module.init",
         )
 
@@ -123,7 +124,10 @@ class MentalSandbox(Module):
                 current_state={"time": "morning", "mood": "quiet"},
             )
 
+        self._identity_constraints = context.get("identity", self._identity_constraints)
+
         self._process_pending_traces()
+        self._ensure_protagonist_projection()
         self._ensure_narrative_line()
         self._state.custom["world_built"] = True
         self._emit_world_updated("sandbox.initialized")
@@ -138,7 +142,7 @@ class MentalSandbox(Module):
             self._handle_simulate(message.payload)
         elif message.topic == "data.memory.trace.query.result":
             self._handle_trace_results(message.payload)
-        elif message.topic == "data.identity.constraint":
+        elif message.topic in ("data.identity.constraint", "data.identity.updated"):
             self._handle_identity_constraint(message.payload)
 
     def tick(self, delta: TickDelta) -> None:
@@ -288,6 +292,7 @@ class MentalSandbox(Module):
                 self._characters.append(CharacterProjection(**char_data))
 
         self._process_pending_traces()
+        self._ensure_protagonist_projection()
         self._ensure_narrative_line()
         self._state.custom["world_built"] = True
         self._emit_world_updated("data.sandbox.world.updated")
@@ -458,10 +463,19 @@ class MentalSandbox(Module):
         character: CharacterProjection | None,
     ) -> str:
         """Generate a brief narrative consequence string."""
-        char_name = character.name if character else "the figure"
+        char_name = character.name if character else "那个身影"
+
+        # For the mock service, bypass the JSON-oriented prompt to avoid
+        # leaking system instructions into the narrative.
+        if isinstance(self._llm, MockLLMService):
+            return (
+                f"{char_name}{action}，结果是{outcome}。"
+                "空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。"
+            )
+
         # Use the structured COC judgment prompt when a real LLM is available.
         from src.novelist_brain import prompts as prompts_mod
-        from src.novelist_brain.llm import LLMCallError, MockLLMService
+        from src.novelist_brain.llm import LLMCallError
 
         scene_desc = self._current_scene.description if self._current_scene else ""
         character_states = []
@@ -521,7 +535,7 @@ class MentalSandbox(Module):
             # If JSON parse failed, fall back to the raw text (truncated).
             return text[:240]
 
-        # Fallback for mock LLM or empty response.
+        # Fallback for empty response.
         prompt = (
             f"在{outcome}的情况下，{char_name} 试图 {action}，会发生什么？"
         )
@@ -568,7 +582,7 @@ class MentalSandbox(Module):
 
         if abs(shift) > 0.4:
             conflict = Conflict(
-                parties=[character.name] if character else ["world"],
+                parties=[character.name] if character else ["世界"],
                 stakes=self._generate_stakes(character),
                 intensity=abs(shift),
                 resolved=False,
@@ -576,12 +590,14 @@ class MentalSandbox(Module):
             line.conflicts.append(conflict)
 
         if self._rng.random() < 0.35:
-            line.foreshadowing.append(
-                self._llm.complete(
+            if isinstance(self._llm, MockLLMService):
+                foreshadowing = "远处有一盏灯，将在某个需要的时刻熄灭。"
+            else:
+                foreshadowing = self._llm.complete(
                     "根据当前世界，伏笔一个未来事件，用中文写一句。",
                     max_tokens=64,
                 )
-            )
+            line.foreshadowing.append(foreshadowing)
 
         if character is not None:
             character.traits.neuroticism = max(
@@ -693,6 +709,59 @@ class MentalSandbox(Module):
     # Character projection
     # ------------------------------------------------------------------
 
+    def _ensure_protagonist_projection(self) -> None:
+        """Ensure the sandbox has a protagonist that is a projection of 林逸.
+
+        The novelist's self is the default actor in the mental sandbox. If no
+        character exists yet, create one directly from the identity constraints
+        broadcast by the identity core.
+        """
+        if any(c.name == "林逸" for c in self._characters):
+            return
+
+        identity = self._identity_constraints or {}
+        traits = identity.get("traits", {}) if isinstance(identity, dict) else {}
+        trait_vector = TraitVector(
+            openness=_trait_value(traits, "开放性", 0.85),
+            conscientiousness=_trait_value(traits, "尽责性", 0.6),
+            extraversion=1.0 - _trait_value(traits, "内倾性", 0.75),
+            agreeableness=_trait_value(traits, "敏感性", 0.8),
+            neuroticism=_trait_value(traits, "神经质", 0.5),
+        )
+
+        interests = identity.get("interests", ["城市边缘人", "记忆", "雨"])
+        self_narrative = identity.get(
+            "self_narrative",
+            "我是一个在人群边缘写字的人。",
+        )
+        desires = [
+            Desire(object=obj, strength=0.6, urgency=0.5)
+            for obj in (interests[:2] if len(interests) >= 2 else ["被忽略的瞬间", "未被说出的话"])
+        ]
+
+        internal_conflict = identity.get(
+            "internal_conflict",
+            "林逸想要靠近世界以收集它，又害怕被它看见；"
+            "他相信孤独里才有真正的小说，却又在孤独中怀疑这是否只是借口。",
+        )
+        protagonist = CharacterProjection(
+            name="林逸",
+            archetype="在人群边缘写字的小说家",
+            source_trace_ids=["identity_projection"],
+            traits=trait_vector,
+            desires=desires,
+            internal_conflict=internal_conflict,
+        )
+        self._characters.insert(0, protagonist)
+        self.emit(
+            topic="data.sandbox.character.updated",
+            payload={"character": protagonist, "source": "identity_projection"},
+            channel="data",
+            priority=6,
+            ttl=5,
+        )
+        self._state.custom["character_count"] = len(self._characters)
+
     def _process_pending_traces(self) -> None:
         """Convert queued character traces into character projections."""
         for trace in self._pending_traces:
@@ -732,11 +801,17 @@ class MentalSandbox(Module):
         desire_object = _infer_desire(trace)
         desires = [Desire(object=desire_object, strength=0.5, urgency=0.5)]
 
-        internal_conflict = self._llm.complete(
-            f"请用中文为一位名为 {name} 的 {archetype} 描述一个内心冲突，"
-            f"依据如下记忆：{trace.content}",
-            max_tokens=80,
-        )
+        if isinstance(self._llm, MockLLMService):
+            internal_conflict = (
+                f"{name}想要靠近，又害怕被看见；"
+                "记忆越是清晰，沉默就越沉重。"
+            )
+        else:
+            internal_conflict = self._llm.complete(
+                f"请用中文为一位名为 {name} 的 {archetype} 描述一个内心冲突，"
+                f"依据如下记忆：{trace.content}",
+                max_tokens=80,
+            )
 
         return CharacterProjection(
             name=name,
@@ -778,10 +853,14 @@ class MentalSandbox(Module):
         setting = "黎明中无名的城市"
         if self._world_model and self._world_model.ontology:
             setting = self._world_model.ontology.get("setting", setting)
-        return Scene(
-            description=self._llm.complete(
+        if isinstance(self._llm, MockLLMService):
+            description = f"{setting}的街道还沉浸在未被命名的寂静里，只有远处的灯光在缓慢呼吸。"
+        else:
+            description = self._llm.complete(
                 f"请用中文描写一个发生在「{setting}」的场景。", max_tokens=96
-            ),
+            )
+        return Scene(
+            description=description,
             characters=[c.name for c in self._characters],
             setting=setting,
             conflict_level=0.1,
@@ -789,6 +868,8 @@ class MentalSandbox(Module):
         )
 
     def _generate_action(self) -> str:
+        if isinstance(self._llm, MockLLMService):
+            return "面对未被解决的过去"
         if self._world_model and self._world_model.ontology:
             genre = self._world_model.ontology.get("genre", "严肃文学")
             return self._llm.complete(
@@ -798,6 +879,8 @@ class MentalSandbox(Module):
 
     def _generate_stakes(self, character: CharacterProjection | None) -> str:
         char_name = character.name if character else "主角"
+        if isinstance(self._llm, MockLLMService):
+            return f"对{char_name}来说，过去正悬在一句未说出口的话上。"
         return self._llm.complete(
             f"对 {char_name} 来说，什么处于危险之中？请用中文回答。", max_tokens=64
         )
@@ -829,6 +912,15 @@ class MentalSandbox(Module):
 # ----------------------------------------------------------------------
 # Utility functions
 # ----------------------------------------------------------------------
+
+
+def _trait_value(traits: dict[str, Any], key: str, default: float) -> float:
+    """Return a trait value clamped to [0, 1]."""
+    value = traits.get(key, default)
+    try:
+        return float(max(0.0, min(1.0, value)))
+    except (TypeError, ValueError):
+        return float(default)
 
 
 def _looks_like_character(trace: Trace) -> bool:

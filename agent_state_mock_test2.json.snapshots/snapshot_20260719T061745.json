@@ -1,0 +1,5280 @@
+{
+  "version": 1,
+  "saved_at": "2026-07-19T06:17:45.337545+00:00",
+  "clock": {
+    "tick": 48,
+    "absolute_time_ms": 86400000.0,
+    "hour": 0.0,
+    "phase": "deep_night"
+  },
+  "modules": {
+    "identity_core": {
+      "name": "identity_core",
+      "state": {
+        "active": true,
+        "energy_cost": 0.0,
+        "last_tick": 0.0,
+        "custom": {
+          "broadcast_count": 54,
+          "last_phase": "deep_night"
+        }
+      },
+      "subscriptions": [
+        "control.identity.request",
+        "control.module.init",
+        "data.identity.profile"
+      ],
+      "profile": {
+        "name": "林逸",
+        "pen_name": "静观者",
+        "values": [
+          "真实",
+          "共情",
+          "美",
+          "孤独",
+          "自由"
+        ],
+        "traits": {
+          "开放性": 0.85,
+          "内倾性": 0.75,
+          "神经质": 0.5,
+          "尽责性": 0.6,
+          "敏感性": 0.8
+        },
+        "interests": [
+          "城市边缘人",
+          "记忆",
+          "雨",
+          "旧物",
+          "未说出口的话"
+        ],
+        "self_narrative": "我是一个在人群边缘写字的人。我相信那些被忽略的瞬间里藏着真正的小说。",
+        "rhythm_preferences": {
+          "preferred_writing_hours": [
+            19,
+            23
+          ],
+          "sleep_start": 0,
+          "wake_up": 6
+        },
+        "integrity_score": 1.0,
+        "voice_signature": {}
+      }
+    },
+    "metabolism": {
+      "name": "metabolism",
+      "state": {
+        "active": true,
+        "energy_cost": 0.0,
+        "last_tick": 0.0,
+        "custom": {
+          "warning_issued": false,
+          "tick_count": 144,
+          "last_phase": "deep_night"
+        }
+      },
+      "subscriptions": [
+        "control.metabolism.allocate",
+        "control.module.init",
+        "event.module.consume"
+      ],
+      "resources": {
+        "energy": 78.12000000000006,
+        "compute_budget": 79.97999999999996,
+        "time_currency": 19.52000000000009,
+        "social_capital": 50.0,
+        "exhausted": false
+      }
+    },
+    "dynamics": {
+      "name": "dynamics",
+      "state": {
+        "active": true,
+        "energy_cost": 0.0,
+        "last_tick": 0.0,
+        "custom": {
+          "event_count": 19,
+          "paragraph_count": 3
+        }
+      },
+      "subscriptions": [
+        "control.module.init",
+        "data.novel.paragraph",
+        "data.sandbox.event.resolved"
+      ],
+      "dynamics": {
+        "reward_prediction_error": 0.0,
+        "punishment_prediction_error": 0.148,
+        "habit_strengths": {
+          "simulation": 0.5,
+          "reflection": 0.5,
+          "creation": 0.5,
+          "social": 0.5,
+          "memory": 0.5
+        },
+        "value_function": {
+          "sandbox": 0.0376,
+          "novel": 0.0
+        },
+        "last_outcome": {}
+      }
+    },
+    "memory_system": {
+      "name": "memory_system",
+      "state": {
+        "active": true,
+        "energy_cost": 0.0,
+        "last_tick": 86400000.0,
+        "custom": {
+          "fragment_count": 168,
+          "trace_count": 16,
+          "consolidation_runs": 114
+        }
+      },
+      "subscriptions": [
+        "control.memory.consolidate",
+        "control.memory.query",
+        "control.module.init",
+        "fragment.cen.new",
+        "fragment.dmn.new",
+        "fragment.dream.new",
+        "fragment.memory.new",
+        "fragment.novel.new",
+        "fragment.personal.new",
+        "fragment.sandbox.new",
+        "fragment.social.new"
+      ],
+      "fragments": {
+        "cdff6179": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=0.00，唤醒=0.30。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, and the silence that followed was itself a kind of answer.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": 0.0,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 1800000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "cdff6179"
+        },
+        "61cc96d5": {
+          "content": "Distant sirens remind you that the city is awake even when you are not.",
+          "source": "social",
+          "modality": "event",
+          "valence": -0.1,
+          "arousal": 0.15,
+          "salience": 0.19999999999999998,
+          "timestamp": 3600000.0,
+          "tags": [
+            "social",
+            "city",
+            "sound"
+          ],
+          "embedding": [],
+          "id": "61cc96d5"
+        },
+        "675b8a00": {
+          "content": "A distant train whistle threads through sleep. (touched by the old theme of 记忆)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.2,
+          "salience": 0.2,
+          "timestamp": 3600000.0,
+          "tags": [
+            "dream",
+            "sound",
+            "night"
+          ],
+          "embedding": [],
+          "id": "675b8a00"
+        },
+        "f47861f8": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=0.00，唤醒=0.70。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, and the silence that followed was itself a kind of answer.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": 0.0,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 3600000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "f47861f8"
+        },
+        "25e020ff": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.04，唤醒=0.48。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, while the city held its breath outside the window.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.033,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 5400000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "25e020ff"
+        },
+        "03dd64bb": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.05，唤醒=0.51。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, though no one was sure whether it had really happened.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.033,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 7200000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "03dd64bb"
+        },
+        "e8ab418f": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.04，唤醒=0.58。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, and the silence that followed was itself a kind of answer.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.033,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 9000000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "e8ab418f"
+        },
+        "cddbd8b3": {
+          "content": "A distant train whistle threads through sleep. (touched by the old theme of 城市边缘人)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.2,
+          "salience": 0.2,
+          "timestamp": 10800000.0,
+          "tags": [
+            "dream",
+            "sound",
+            "night"
+          ],
+          "embedding": [],
+          "id": "cddbd8b3"
+        },
+        "1ded109f": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.04，唤醒=0.59。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, and the silence that followed was itself a kind of answer.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.033,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 10800000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "1ded109f"
+        },
+        "fc7ff44b": {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.05000000000000002,
+          "salience": 0.15,
+          "timestamp": 12600000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "fc7ff44b"
+        },
+        "712d30fd": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.05，唤醒=0.51。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, and the silence that followed was itself a kind of answer.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.042,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 12600000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "712d30fd"
+        },
+        "e2978b6e": {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.05000000000000002,
+          "salience": 0.15,
+          "timestamp": 14400000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "e2978b6e"
+        },
+        "58b1df71": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.04，唤醒=0.55。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, while the city held its breath outside the window.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.042,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 14400000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "58b1df71"
+        },
+        "92a5f716": {
+          "content": "A half-remembered dream dissolves into the ceiling.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.25,
+          "timestamp": 16200000.0,
+          "tags": [
+            "dream",
+            "night",
+            "fragments"
+          ],
+          "embedding": [],
+          "id": "92a5f716"
+        },
+        "174d62cd": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.04，唤醒=0.54。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, and the silence that followed was itself a kind of answer.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.042,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 16200000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "174d62cd"
+        },
+        "aaaa4cc3": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.03，唤醒=0.46。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, while the city held its breath outside the window.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.036,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 18000000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "aaaa4cc3"
+        },
+        "755dc7ff": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.02，唤醒=0.51。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, while the city held its breath outside the window.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.039,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 19800000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "755dc7ff"
+        },
+        "929d5088": {
+          "content": "Coffee steam rises while the city mutters awake outside. [共情]",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.2,
+          "arousal": 0.4,
+          "salience": 0.4,
+          "timestamp": 21600000.0,
+          "tags": [
+            "morning",
+            "coffee",
+            "city"
+          ],
+          "embedding": [],
+          "id": "929d5088"
+        },
+        "251891ad": {
+          "content": "A piece of toast, a spoon, the ordinary sacraments.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 23400000.0,
+          "tags": [
+            "morning",
+            "food",
+            "routine"
+          ],
+          "embedding": [],
+          "id": "251891ad"
+        },
+        "fb174fe0": {
+          "content": "Distant sirens remind you that the city is awake even when you are not.",
+          "source": "social",
+          "modality": "event",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.3,
+          "timestamp": 25200000.0,
+          "tags": [
+            "social",
+            "city",
+            "sound"
+          ],
+          "embedding": [],
+          "id": "fb174fe0"
+        },
+        "74f965ae": {
+          "content": "Coffee steam rises while the city mutters awake outside. (touched by the old theme of 旧物)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.2,
+          "arousal": 0.4,
+          "salience": 0.4,
+          "timestamp": 25200000.0,
+          "tags": [
+            "morning",
+            "coffee",
+            "city"
+          ],
+          "embedding": [],
+          "id": "74f965ae"
+        },
+        "7117ed1a": {
+          "content": "The alarm releases you into a gray morning.",
+          "source": "personal",
+          "modality": "event",
+          "valence": -0.2,
+          "arousal": 0.4,
+          "salience": 0.45,
+          "timestamp": 27000000.0,
+          "tags": [
+            "morning",
+            "waking",
+            "routine"
+          ],
+          "embedding": [],
+          "id": "7117ed1a"
+        },
+        "a6b7a1c6": {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.25,
+          "timestamp": 28800000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "a6b7a1c6"
+        },
+        "87ba8ff8": {
+          "content": "The problem you left at the desk follows you at a distance.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 28800000.0,
+          "tags": [
+            "incubation",
+            "problem",
+            "wandering"
+          ],
+          "embedding": [],
+          "id": "87ba8ff8"
+        },
+        "dab92491": {
+          "content": "Distant sirens remind you that the city is awake even when you are not.",
+          "source": "social",
+          "modality": "event",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.3,
+          "timestamp": 30600000.0,
+          "tags": [
+            "social",
+            "city",
+            "sound"
+          ],
+          "embedding": [],
+          "id": "dab92491"
+        },
+        "c473d9e4": {
+          "content": "Steps on wet pavement, no destination in mind.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 30600000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "c473d9e4"
+        },
+        "3eae78e7": {
+          "content": "The problem you left at the desk follows you at a distance.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 32400000.0,
+          "tags": [
+            "incubation",
+            "problem",
+            "wandering"
+          ],
+          "embedding": [],
+          "id": "3eae78e7"
+        },
+        "caf52535": {
+          "content": "The problem you left at the desk follows you at a distance.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 34200000.0,
+          "tags": [
+            "incubation",
+            "problem",
+            "wandering"
+          ],
+          "embedding": [],
+          "id": "caf52535"
+        },
+        "5c34a71c": {
+          "content": "Someone coughs behind a closed door.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.1,
+          "salience": 0.15,
+          "timestamp": 36000000.0,
+          "tags": [
+            "social",
+            "sound",
+            "indoor"
+          ],
+          "embedding": [],
+          "id": "5c34a71c"
+        },
+        "bb4871ae": {
+          "content": "Steps on wet pavement, no destination in mind.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 36000000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "bb4871ae"
+        },
+        "bf170dd6": {
+          "content": "Steps on wet pavement, no destination in mind.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 37800000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "bf170dd6"
+        },
+        "38ee0829": {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour. [共情]",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.25,
+          "timestamp": 39600000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "38ee0829"
+        },
+        "f67d9358": {
+          "content": "A stranger's gesture lodges in attention without reason. (touched by the old theme of 雨)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 39600000.0,
+          "tags": [
+            "incubation",
+            "observation",
+            "stranger"
+          ],
+          "embedding": [],
+          "id": "f67d9358"
+        },
+        "a57cc8db": {
+          "content": "A streetlamp comes on while you are still looking at it.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.2,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 41400000.0,
+          "tags": [
+            "incubation",
+            "light",
+            "evening"
+          ],
+          "embedding": [],
+          "id": "a57cc8db"
+        },
+        "cffa2e39": {
+          "content": "At the table beside you, laughter rises and falls like a single instrument.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.3,
+          "arousal": 0.4,
+          "salience": 0.45,
+          "timestamp": 43200000.0,
+          "tags": [
+            "social",
+            "laughter",
+            "cafe"
+          ],
+          "embedding": [],
+          "id": "cffa2e39"
+        },
+        "b646cad1": {
+          "content": "A half-finished sentence hangs in the air between you and the room.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 43200000.0,
+          "tags": [
+            "social",
+            "silence",
+            "tension"
+          ],
+          "embedding": [],
+          "id": "b646cad1"
+        },
+        "6f64f1b5": {
+          "content": "An acquaintance talks for ten minutes without asking a single question.",
+          "source": "social",
+          "modality": "dialogue",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 45000000.0,
+          "tags": [
+            "social",
+            "acquaintance",
+            "monologue"
+          ],
+          "embedding": [],
+          "id": "6f64f1b5"
+        },
+        "f2fa646a": {
+          "content": "You catch yourself rehearsing what you might say if asked.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 45000000.0,
+          "tags": [
+            "social",
+            "rehearsal",
+            "self"
+          ],
+          "embedding": [],
+          "id": "f2fa646a"
+        },
+        "505a8073": {
+          "content": "An acquaintance talks for ten minutes without asking a single question.",
+          "source": "social",
+          "modality": "dialogue",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 46800000.0,
+          "tags": [
+            "social",
+            "acquaintance",
+            "monologue"
+          ],
+          "embedding": [],
+          "id": "505a8073"
+        },
+        "f19fa35e": {
+          "content": "You catch yourself rehearsing what you might say if asked. (touched by the old theme of 旧物)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 46800000.0,
+          "tags": [
+            "social",
+            "rehearsal",
+            "self"
+          ],
+          "embedding": [],
+          "id": "f19fa35e"
+        },
+        "937ba330": {
+          "content": "Someone cuts the line; the room pretends not to notice.",
+          "source": "social",
+          "modality": "event",
+          "valence": -0.3,
+          "arousal": 0.5,
+          "salience": 0.55,
+          "timestamp": 48600000.0,
+          "tags": [
+            "social",
+            "norm",
+            "transgression"
+          ],
+          "embedding": [],
+          "id": "937ba330"
+        },
+        "7e6f6c60": {
+          "content": "A half-finished sentence hangs in the air between you and the room.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 48600000.0,
+          "tags": [
+            "social",
+            "silence",
+            "tension"
+          ],
+          "embedding": [],
+          "id": "7e6f6c60"
+        },
+        "63aa8a3f": {
+          "content": "Distant sirens remind you that the city is awake even when you are not.",
+          "source": "social",
+          "modality": "event",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.3,
+          "timestamp": 50400000.0,
+          "tags": [
+            "social",
+            "city",
+            "sound"
+          ],
+          "embedding": [],
+          "id": "63aa8a3f"
+        },
+        "60cd16bc": {
+          "content": "The furniture in the imagined room stays where you left it. (touched by the old theme of 雨)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 50400000.0,
+          "tags": [
+            "simulation",
+            "place",
+            "continuity"
+          ],
+          "embedding": [],
+          "id": "60cd16bc"
+        },
+        "302a7562": {
+          "content": "You replay a conversation, testing different endings in your head. (touched by the old theme of 城市边缘人)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.4,
+          "salience": 0.45,
+          "timestamp": 52200000.0,
+          "tags": [
+            "simulation",
+            "memory",
+            "possibility"
+          ],
+          "embedding": [],
+          "id": "302a7562"
+        },
+        "06b6f523": {
+          "content": "A what-if branches into three futures, none of them certain. [自由]",
+          "source": "personal",
+          "modality": "concept",
+          "valence": 0.1,
+          "arousal": 0.5,
+          "salience": 0.5,
+          "timestamp": 54000000.0,
+          "tags": [
+            "simulation",
+            "future",
+            "branching"
+          ],
+          "embedding": [],
+          "id": "06b6f523"
+        },
+        "f97a139c": {
+          "content": "The furniture in the imagined room stays where you left it.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 55800000.0,
+          "tags": [
+            "simulation",
+            "place",
+            "continuity"
+          ],
+          "embedding": [],
+          "id": "f97a139c"
+        },
+        "fe5820ad": {
+          "content": "A what-if branches into three futures, none of them certain.",
+          "source": "personal",
+          "modality": "concept",
+          "valence": 0.1,
+          "arousal": 0.5,
+          "salience": 0.5,
+          "timestamp": 57600000.0,
+          "tags": [
+            "simulation",
+            "future",
+            "branching"
+          ],
+          "embedding": [],
+          "id": "fe5820ad"
+        },
+        "3fb41454": {
+          "content": "You replay a conversation, testing different endings in your head. (touched by the old theme of 记忆)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.4,
+          "salience": 0.45,
+          "timestamp": 59400000.0,
+          "tags": [
+            "simulation",
+            "memory",
+            "possibility"
+          ],
+          "embedding": [],
+          "id": "3fb41454"
+        },
+        "5519a8a0": {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.25,
+          "timestamp": 61200000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "5519a8a0"
+        },
+        "a9510b45": {
+          "content": "The furniture in the imagined room stays where you left it.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 61200000.0,
+          "tags": [
+            "simulation",
+            "place",
+            "continuity"
+          ],
+          "embedding": [],
+          "id": "a9510b45"
+        },
+        "e734d992": {
+          "content": "Someone coughs behind a closed door.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.1,
+          "salience": 0.15,
+          "timestamp": 63000000.0,
+          "tags": [
+            "social",
+            "sound",
+            "indoor"
+          ],
+          "embedding": [],
+          "id": "e734d992"
+        },
+        "0d88a64c": {
+          "content": "The furniture in the imagined room stays where you left it.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 63000000.0,
+          "tags": [
+            "simulation",
+            "place",
+            "continuity"
+          ],
+          "embedding": [],
+          "id": "0d88a64c"
+        },
+        "f37875ca": {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.25,
+          "timestamp": 82800000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "f37875ca"
+        },
+        "5564d9ab": {
+          "content": "The problem you left at the desk follows you at a distance. (touched by the old theme of 记忆)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 82800000.0,
+          "tags": [
+            "incubation",
+            "problem",
+            "wandering"
+          ],
+          "embedding": [],
+          "id": "5564d9ab"
+        },
+        "790c6c41": {
+          "content": "A stranger's gesture lodges in attention without reason. (touched by the old theme of 城市边缘人)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 84600000.0,
+          "tags": [
+            "incubation",
+            "observation",
+            "stranger"
+          ],
+          "embedding": [],
+          "id": "790c6c41"
+        },
+        "1104cbc2": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.02，唤醒=0.37。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, though no one was sure whether it had really happened.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.045,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 86400000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "1104cbc2"
+        },
+        "fd4b18d0": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=0.00，唤醒=0.43。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, while the city held its breath outside the window.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.045,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 88200000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "fd4b18d0"
+        },
+        "5e70b1e6": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.02，唤醒=0.49。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, while the city held its breath outside the window.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.04,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 90000000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "5e70b1e6"
+        },
+        "0287a346": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.01，唤醒=0.55。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, though no one was sure whether it had really happened.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.034,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 91800000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "0287a346"
+        },
+        "e9d71501": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.03，唤醒=0.58。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, while the city held its breath outside the window.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.027,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 93600000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "e9d71501"
+        },
+        "8d5a632d": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.04，唤醒=0.63。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, and the silence that followed was itself a kind of answer.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.02,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 95400000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "8d5a632d"
+        },
+        "64f9e0b8": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.03，唤醒=0.65。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, while the city held its breath outside the window.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.022,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 97200000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "64f9e0b8"
+        },
+        "c06eed9f": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.03，唤醒=0.66。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, and the silence that followed was itself a kind of answer.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.014,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 99000000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "c06eed9f"
+        },
+        "0c084920": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.03，唤醒=0.70。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, and the silence that followed was itself a kind of answer.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.015,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 100800000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "0c084920"
+        },
+        "89c005e8": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.02，唤醒=0.70。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, while the city held its breath outside the window.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.036,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 102600000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "89c005e8"
+        },
+        "c153257d": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.02，唤醒=0.70。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, and the silence that followed was itself a kind of answer.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.03,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 104400000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "c153257d"
+        },
+        "aeb23ca1": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.03，唤醒=0.70。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, though no one was sure whether it had really happened.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.028,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 106200000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "aeb23ca1"
+        },
+        "fdacb800": {
+          "content": "The alarm releases you into a gray morning.",
+          "source": "personal",
+          "modality": "event",
+          "valence": -0.2,
+          "arousal": 0.4,
+          "salience": 0.45,
+          "timestamp": 108000000.0,
+          "tags": [
+            "morning",
+            "waking",
+            "routine"
+          ],
+          "embedding": [],
+          "id": "fdacb800"
+        },
+        "a99d8155": {
+          "content": "Someone coughs behind a closed door.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.1,
+          "salience": 0.15,
+          "timestamp": 109800000.0,
+          "tags": [
+            "social",
+            "sound",
+            "indoor"
+          ],
+          "embedding": [],
+          "id": "a99d8155"
+        },
+        "9d9cb502": {
+          "content": "Coffee steam rises while the city mutters awake outside.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.2,
+          "arousal": 0.4,
+          "salience": 0.4,
+          "timestamp": 109800000.0,
+          "tags": [
+            "morning",
+            "coffee",
+            "city"
+          ],
+          "embedding": [],
+          "id": "9d9cb502"
+        },
+        "702f9645": {
+          "content": "Coffee steam rises while the city mutters awake outside.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.2,
+          "arousal": 0.4,
+          "salience": 0.4,
+          "timestamp": 111600000.0,
+          "tags": [
+            "morning",
+            "coffee",
+            "city"
+          ],
+          "embedding": [],
+          "id": "702f9645"
+        },
+        "91ea04d0": {
+          "content": "Coffee steam rises while the city mutters awake outside.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.2,
+          "arousal": 0.4,
+          "salience": 0.4,
+          "timestamp": 113400000.0,
+          "tags": [
+            "morning",
+            "coffee",
+            "city"
+          ],
+          "embedding": [],
+          "id": "91ea04d0"
+        },
+        "3805207c": {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.25,
+          "timestamp": 115200000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "3805207c"
+        },
+        "25a8e153": {
+          "content": "Steps on wet pavement, no destination in mind.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 115200000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "25a8e153"
+        },
+        "4635151b": {
+          "content": "Someone coughs behind a closed door.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.1,
+          "salience": 0.15,
+          "timestamp": 117000000.0,
+          "tags": [
+            "social",
+            "sound",
+            "indoor"
+          ],
+          "embedding": [],
+          "id": "4635151b"
+        },
+        "4107a258": {
+          "content": "A streetlamp comes on while you are still looking at it. (touched by the old theme of 记忆)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.2,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 117000000.0,
+          "tags": [
+            "incubation",
+            "light",
+            "evening"
+          ],
+          "embedding": [],
+          "id": "4107a258"
+        },
+        "9039bc92": {
+          "content": "Someone coughs behind a closed door.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.1,
+          "salience": 0.15,
+          "timestamp": 118800000.0,
+          "tags": [
+            "social",
+            "sound",
+            "indoor"
+          ],
+          "embedding": [],
+          "id": "9039bc92"
+        },
+        "8661030d": {
+          "content": "Steps on wet pavement, no destination in mind.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 118800000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "8661030d"
+        },
+        "e92ae5a9": {
+          "content": "Steps on wet pavement, no destination in mind.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 120600000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "e92ae5a9"
+        },
+        "994803dd": {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.25,
+          "timestamp": 122400000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "994803dd"
+        },
+        "e6e509f8": {
+          "content": "The problem you left at the desk follows you at a distance. (touched by the old theme of 记忆)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 122400000.0,
+          "tags": [
+            "incubation",
+            "problem",
+            "wandering"
+          ],
+          "embedding": [],
+          "id": "e6e509f8"
+        },
+        "3e4cdc06": {
+          "content": "Steps on wet pavement, no destination in mind. (touched by the old theme of 旧物)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 124200000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "3e4cdc06"
+        },
+        "6ac0f21e": {
+          "content": "Distant sirens remind you that the city is awake even when you are not.",
+          "source": "social",
+          "modality": "event",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.3,
+          "timestamp": 126000000.0,
+          "tags": [
+            "social",
+            "city",
+            "sound"
+          ],
+          "embedding": [],
+          "id": "6ac0f21e"
+        },
+        "cbe85170": {
+          "content": "Steps on wet pavement, no destination in mind.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 126000000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "cbe85170"
+        },
+        "de039bb1": {
+          "content": "Distant sirens remind you that the city is awake even when you are not.",
+          "source": "social",
+          "modality": "event",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.3,
+          "timestamp": 127800000.0,
+          "tags": [
+            "social",
+            "city",
+            "sound"
+          ],
+          "embedding": [],
+          "id": "de039bb1"
+        },
+        "3b194368": {
+          "content": "A streetlamp comes on while you are still looking at it. (touched by the old theme of 旧物)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.2,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 127800000.0,
+          "tags": [
+            "incubation",
+            "light",
+            "evening"
+          ],
+          "embedding": [],
+          "id": "3b194368"
+        },
+        "8568e73a": {
+          "content": "A stranger at the square asks for the time and then lingers a moment too long. (you notice it through the lens of 旧物)",
+          "source": "social",
+          "modality": "dialogue",
+          "valence": 0.0,
+          "arousal": 0.4,
+          "salience": 0.55,
+          "timestamp": 129600000.0,
+          "tags": [
+            "social",
+            "stranger",
+            "square"
+          ],
+          "embedding": [],
+          "id": "8568e73a"
+        },
+        "7bf59d01": {
+          "content": "You catch yourself rehearsing what you might say if asked. (touched by the old theme of 未说出口的话)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 129600000.0,
+          "tags": [
+            "social",
+            "rehearsal",
+            "self"
+          ],
+          "embedding": [],
+          "id": "7bf59d01"
+        },
+        "c2f025cf": {
+          "content": "At the table beside you, laughter rises and falls like a single instrument.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.3,
+          "arousal": 0.4,
+          "salience": 0.45,
+          "timestamp": 131400000.0,
+          "tags": [
+            "social",
+            "laughter",
+            "cafe"
+          ],
+          "embedding": [],
+          "id": "c2f025cf"
+        },
+        "d86e77a5": {
+          "content": "A half-finished sentence hangs in the air between you and the room.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 131400000.0,
+          "tags": [
+            "social",
+            "silence",
+            "tension"
+          ],
+          "embedding": [],
+          "id": "d86e77a5"
+        },
+        "f11975b8": {
+          "content": "Someone cuts the line; the room pretends not to notice. (you notice it through the lens of 未说出口的话)",
+          "source": "social",
+          "modality": "event",
+          "valence": -0.3,
+          "arousal": 0.5,
+          "salience": 0.55,
+          "timestamp": 133200000.0,
+          "tags": [
+            "social",
+            "norm",
+            "transgression"
+          ],
+          "embedding": [],
+          "id": "f11975b8"
+        },
+        "46c1c847": {
+          "content": "You catch yourself rehearsing what you might say if asked.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 133200000.0,
+          "tags": [
+            "social",
+            "rehearsal",
+            "self"
+          ],
+          "embedding": [],
+          "id": "46c1c847"
+        },
+        "63a8f3b3": {
+          "content": "You hold the door open; the nod exchanged feels like a small contract.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.2,
+          "arousal": 0.2,
+          "salience": 0.35,
+          "timestamp": 135000000.0,
+          "tags": [
+            "social",
+            "politeness",
+            "gesture"
+          ],
+          "embedding": [],
+          "id": "63a8f3b3"
+        },
+        "a895c0b7": {
+          "content": "A half-finished sentence hangs in the air between you and the room.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 135000000.0,
+          "tags": [
+            "social",
+            "silence",
+            "tension"
+          ],
+          "embedding": [],
+          "id": "a895c0b7"
+        },
+        "e3787449": {
+          "content": "You replay a conversation, testing different endings in your head. (touched by the old theme of 城市边缘人)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.4,
+          "salience": 0.45,
+          "timestamp": 136800000.0,
+          "tags": [
+            "simulation",
+            "memory",
+            "possibility"
+          ],
+          "embedding": [],
+          "id": "e3787449"
+        },
+        "9290a5c6": {
+          "content": "A what-if branches into three futures, none of them certain. (touched by the old theme of 未说出口的话)",
+          "source": "personal",
+          "modality": "concept",
+          "valence": 0.1,
+          "arousal": 0.5,
+          "salience": 0.5,
+          "timestamp": 138600000.0,
+          "tags": [
+            "simulation",
+            "future",
+            "branching"
+          ],
+          "embedding": [],
+          "id": "9290a5c6"
+        },
+        "94aad7d7": {
+          "content": "You replay a conversation, testing different endings in your head. [真实]",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.4,
+          "salience": 0.45,
+          "timestamp": 140400000.0,
+          "tags": [
+            "simulation",
+            "memory",
+            "possibility"
+          ],
+          "embedding": [],
+          "id": "94aad7d7"
+        },
+        "4d5e819d": {
+          "content": "Someone coughs behind a closed door.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.1,
+          "salience": 0.15,
+          "timestamp": 142200000.0,
+          "tags": [
+            "social",
+            "sound",
+            "indoor"
+          ],
+          "embedding": [],
+          "id": "4d5e819d"
+        },
+        "0497cb59": {
+          "content": "You replay a conversation, testing different endings in your head. (touched by the old theme of 城市边缘人)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.4,
+          "salience": 0.45,
+          "timestamp": 142200000.0,
+          "tags": [
+            "simulation",
+            "memory",
+            "possibility"
+          ],
+          "embedding": [],
+          "id": "0497cb59"
+        },
+        "5ddf53e8": {
+          "content": "A what-if branches into three futures, none of them certain. (touched by the old theme of 记忆)",
+          "source": "personal",
+          "modality": "concept",
+          "valence": 0.1,
+          "arousal": 0.5,
+          "salience": 0.5,
+          "timestamp": 144000000.0,
+          "tags": [
+            "simulation",
+            "future",
+            "branching"
+          ],
+          "embedding": [],
+          "id": "5ddf53e8"
+        },
+        "993c6db3": {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour. (you notice it through the lens of 城市边缘人)",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.25,
+          "timestamp": 145800000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "993c6db3"
+        },
+        "ad827008": {
+          "content": "A what-if branches into three futures, none of them certain.",
+          "source": "personal",
+          "modality": "concept",
+          "valence": 0.1,
+          "arousal": 0.5,
+          "salience": 0.5,
+          "timestamp": 145800000.0,
+          "tags": [
+            "simulation",
+            "future",
+            "branching"
+          ],
+          "embedding": [],
+          "id": "ad827008"
+        },
+        "951ae521": {
+          "content": "You replay a conversation, testing different endings in your head.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.4,
+          "salience": 0.45,
+          "timestamp": 147600000.0,
+          "tags": [
+            "simulation",
+            "memory",
+            "possibility"
+          ],
+          "embedding": [],
+          "id": "951ae521"
+        },
+        "91a63165": {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour. (you notice it through the lens of 城市边缘人)",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.25,
+          "timestamp": 149400000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "91a63165"
+        },
+        "a306d6a6": {
+          "content": "The furniture in the imagined room stays where you left it.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 149400000.0,
+          "tags": [
+            "simulation",
+            "place",
+            "continuity"
+          ],
+          "embedding": [],
+          "id": "a306d6a6"
+        },
+        "7f0b0022": {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.05000000000000002,
+          "salience": 0.15,
+          "timestamp": 156600000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "7f0b0022"
+        },
+        "fa1b6edd": {
+          "content": "A stranger's gesture lodges in attention without reason. (touched by the old theme of 城市边缘人)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 169200000.0,
+          "tags": [
+            "incubation",
+            "observation",
+            "stranger"
+          ],
+          "embedding": [],
+          "id": "fa1b6edd"
+        },
+        "665acd89": {
+          "content": "Someone coughs behind a closed door.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.1,
+          "salience": 0.15,
+          "timestamp": 171000000.0,
+          "tags": [
+            "social",
+            "sound",
+            "indoor"
+          ],
+          "embedding": [],
+          "id": "665acd89"
+        },
+        "b99f21e5": {
+          "content": "A stranger's gesture lodges in attention without reason.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 171000000.0,
+          "tags": [
+            "incubation",
+            "observation",
+            "stranger"
+          ],
+          "embedding": [],
+          "id": "b99f21e5"
+        },
+        "19100753": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=0.04，唤醒=0.32。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, while the city held its breath outside the window.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.01,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 172800000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "19100753"
+        },
+        "415bba85": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=0.03，唤醒=0.40。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, and the silence that followed was itself a kind of answer.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.009,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 1800000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "415bba85"
+        },
+        "35c81da9": {
+          "content": "Distant sirens remind you that the city is awake even when you are not.",
+          "source": "social",
+          "modality": "event",
+          "valence": -0.1,
+          "arousal": 0.15,
+          "salience": 0.19999999999999998,
+          "timestamp": 3600000.0,
+          "tags": [
+            "social",
+            "city",
+            "sound"
+          ],
+          "embedding": [],
+          "id": "35c81da9"
+        },
+        "aba53ec9": {
+          "content": "A distant train whistle threads through sleep. (touched by the old theme of 记忆)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.2,
+          "salience": 0.2,
+          "timestamp": 3600000.0,
+          "tags": [
+            "dream",
+            "sound",
+            "night"
+          ],
+          "embedding": [],
+          "id": "aba53ec9"
+        },
+        "cfb0d380": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=0.04，唤醒=0.47。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, and the silence that followed was itself a kind of answer.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.006,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 3600000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "cfb0d380"
+        },
+        "6b0f849b": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.03，唤醒=0.46。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, while the city held its breath outside the window.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.011,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 5400000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "6b0f849b"
+        },
+        "239ad541": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.03，唤醒=0.47。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, though no one was sure whether it had really happened.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.002,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 7200000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "239ad541"
+        },
+        "2cf7296d": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.02，唤醒=0.57。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, and the silence that followed was itself a kind of answer.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.003,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 9000000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "2cf7296d"
+        },
+        "62a68bd0": {
+          "content": "A distant train whistle threads through sleep. (touched by the old theme of 城市边缘人)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.2,
+          "salience": 0.2,
+          "timestamp": 10800000.0,
+          "tags": [
+            "dream",
+            "sound",
+            "night"
+          ],
+          "embedding": [],
+          "id": "62a68bd0"
+        },
+        "cb896b6b": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.02，唤醒=0.60。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, and the silence that followed was itself a kind of answer.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.003,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 10800000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "cb896b6b"
+        },
+        "5aa43dcf": {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.05000000000000002,
+          "salience": 0.15,
+          "timestamp": 12600000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "5aa43dcf"
+        },
+        "8bc143cf": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.04，唤醒=0.51。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, and the silence that followed was itself a kind of answer.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.004,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 12600000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "8bc143cf"
+        },
+        "7720c298": {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.05000000000000002,
+          "salience": 0.15,
+          "timestamp": 14400000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "7720c298"
+        },
+        "be75151e": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.02，唤醒=0.55。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, while the city held its breath outside the window.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.025,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 14400000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "be75151e"
+        },
+        "a6eb7915": {
+          "content": "A half-remembered dream dissolves into the ceiling.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.25,
+          "timestamp": 16200000.0,
+          "tags": [
+            "dream",
+            "night",
+            "fragments"
+          ],
+          "embedding": [],
+          "id": "a6eb7915"
+        },
+        "6d4a6796": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.02，唤醒=0.54。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, and the silence that followed was itself a kind of answer.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.026,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 16200000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "6d4a6796"
+        },
+        "5c524966": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.02，唤醒=0.46。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, while the city held its breath outside the window.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.018,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 18000000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "5c524966"
+        },
+        "49fcb21d": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.01，唤醒=0.51。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, while the city held its breath outside the window.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.019,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 19800000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "49fcb21d"
+        },
+        "211f849e": {
+          "content": "Coffee steam rises while the city mutters awake outside. [共情]",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.2,
+          "arousal": 0.4,
+          "salience": 0.4,
+          "timestamp": 21600000.0,
+          "tags": [
+            "morning",
+            "coffee",
+            "city"
+          ],
+          "embedding": [],
+          "id": "211f849e"
+        },
+        "cab5158c": {
+          "content": "A piece of toast, a spoon, the ordinary sacraments.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 23400000.0,
+          "tags": [
+            "morning",
+            "food",
+            "routine"
+          ],
+          "embedding": [],
+          "id": "cab5158c"
+        },
+        "b9e3d411": {
+          "content": "Distant sirens remind you that the city is awake even when you are not.",
+          "source": "social",
+          "modality": "event",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.3,
+          "timestamp": 25200000.0,
+          "tags": [
+            "social",
+            "city",
+            "sound"
+          ],
+          "embedding": [],
+          "id": "b9e3d411"
+        },
+        "54215941": {
+          "content": "Coffee steam rises while the city mutters awake outside. (touched by the old theme of 旧物)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.2,
+          "arousal": 0.4,
+          "salience": 0.4,
+          "timestamp": 25200000.0,
+          "tags": [
+            "morning",
+            "coffee",
+            "city"
+          ],
+          "embedding": [],
+          "id": "54215941"
+        },
+        "c77fbb41": {
+          "content": "The alarm releases you into a gray morning.",
+          "source": "personal",
+          "modality": "event",
+          "valence": -0.2,
+          "arousal": 0.4,
+          "salience": 0.45,
+          "timestamp": 27000000.0,
+          "tags": [
+            "morning",
+            "waking",
+            "routine"
+          ],
+          "embedding": [],
+          "id": "c77fbb41"
+        },
+        "5ac2310d": {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.25,
+          "timestamp": 28800000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "5ac2310d"
+        },
+        "4f374be3": {
+          "content": "The problem you left at the desk follows you at a distance.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 28800000.0,
+          "tags": [
+            "incubation",
+            "problem",
+            "wandering"
+          ],
+          "embedding": [],
+          "id": "4f374be3"
+        },
+        "c0e50e0c": {
+          "content": "Distant sirens remind you that the city is awake even when you are not.",
+          "source": "social",
+          "modality": "event",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.3,
+          "timestamp": 30600000.0,
+          "tags": [
+            "social",
+            "city",
+            "sound"
+          ],
+          "embedding": [],
+          "id": "c0e50e0c"
+        },
+        "3e7a7c41": {
+          "content": "Steps on wet pavement, no destination in mind.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 30600000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "3e7a7c41"
+        },
+        "12f88aa8": {
+          "content": "The problem you left at the desk follows you at a distance.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 32400000.0,
+          "tags": [
+            "incubation",
+            "problem",
+            "wandering"
+          ],
+          "embedding": [],
+          "id": "12f88aa8"
+        },
+        "2b649c11": {
+          "content": "The problem you left at the desk follows you at a distance.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 34200000.0,
+          "tags": [
+            "incubation",
+            "problem",
+            "wandering"
+          ],
+          "embedding": [],
+          "id": "2b649c11"
+        },
+        "f3e855cc": {
+          "content": "Someone coughs behind a closed door.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.1,
+          "salience": 0.15,
+          "timestamp": 36000000.0,
+          "tags": [
+            "social",
+            "sound",
+            "indoor"
+          ],
+          "embedding": [],
+          "id": "f3e855cc"
+        },
+        "fb455354": {
+          "content": "Steps on wet pavement, no destination in mind.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 36000000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "fb455354"
+        },
+        "4612ef77": {
+          "content": "Steps on wet pavement, no destination in mind.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 37800000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "4612ef77"
+        },
+        "fb4e0694": {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour. [共情]",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.25,
+          "timestamp": 39600000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "fb4e0694"
+        },
+        "3986b70c": {
+          "content": "A stranger's gesture lodges in attention without reason. (touched by the old theme of 雨)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 39600000.0,
+          "tags": [
+            "incubation",
+            "observation",
+            "stranger"
+          ],
+          "embedding": [],
+          "id": "3986b70c"
+        },
+        "d48f99eb": {
+          "content": "A streetlamp comes on while you are still looking at it.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.2,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 41400000.0,
+          "tags": [
+            "incubation",
+            "light",
+            "evening"
+          ],
+          "embedding": [],
+          "id": "d48f99eb"
+        },
+        "dbdd33d5": {
+          "content": "At the table beside you, laughter rises and falls like a single instrument.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.3,
+          "arousal": 0.4,
+          "salience": 0.45,
+          "timestamp": 43200000.0,
+          "tags": [
+            "social",
+            "laughter",
+            "cafe"
+          ],
+          "embedding": [],
+          "id": "dbdd33d5"
+        },
+        "414ac286": {
+          "content": "A half-finished sentence hangs in the air between you and the room.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 43200000.0,
+          "tags": [
+            "social",
+            "silence",
+            "tension"
+          ],
+          "embedding": [],
+          "id": "414ac286"
+        },
+        "083aa656": {
+          "content": "An acquaintance talks for ten minutes without asking a single question.",
+          "source": "social",
+          "modality": "dialogue",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 45000000.0,
+          "tags": [
+            "social",
+            "acquaintance",
+            "monologue"
+          ],
+          "embedding": [],
+          "id": "083aa656"
+        },
+        "93d0b04d": {
+          "content": "You catch yourself rehearsing what you might say if asked.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 45000000.0,
+          "tags": [
+            "social",
+            "rehearsal",
+            "self"
+          ],
+          "embedding": [],
+          "id": "93d0b04d"
+        },
+        "e1868a9d": {
+          "content": "An acquaintance talks for ten minutes without asking a single question.",
+          "source": "social",
+          "modality": "dialogue",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 46800000.0,
+          "tags": [
+            "social",
+            "acquaintance",
+            "monologue"
+          ],
+          "embedding": [],
+          "id": "e1868a9d"
+        },
+        "9c6698f5": {
+          "content": "You catch yourself rehearsing what you might say if asked. (touched by the old theme of 旧物)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 46800000.0,
+          "tags": [
+            "social",
+            "rehearsal",
+            "self"
+          ],
+          "embedding": [],
+          "id": "9c6698f5"
+        },
+        "1d47e1dd": {
+          "content": "Someone cuts the line; the room pretends not to notice.",
+          "source": "social",
+          "modality": "event",
+          "valence": -0.3,
+          "arousal": 0.5,
+          "salience": 0.55,
+          "timestamp": 48600000.0,
+          "tags": [
+            "social",
+            "norm",
+            "transgression"
+          ],
+          "embedding": [],
+          "id": "1d47e1dd"
+        },
+        "e092c53c": {
+          "content": "A half-finished sentence hangs in the air between you and the room.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 48600000.0,
+          "tags": [
+            "social",
+            "silence",
+            "tension"
+          ],
+          "embedding": [],
+          "id": "e092c53c"
+        },
+        "9905ee0b": {
+          "content": "Distant sirens remind you that the city is awake even when you are not.",
+          "source": "social",
+          "modality": "event",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.3,
+          "timestamp": 50400000.0,
+          "tags": [
+            "social",
+            "city",
+            "sound"
+          ],
+          "embedding": [],
+          "id": "9905ee0b"
+        },
+        "f1b4bd5c": {
+          "content": "The furniture in the imagined room stays where you left it. (touched by the old theme of 雨)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 50400000.0,
+          "tags": [
+            "simulation",
+            "place",
+            "continuity"
+          ],
+          "embedding": [],
+          "id": "f1b4bd5c"
+        },
+        "ddec7011": {
+          "content": "You replay a conversation, testing different endings in your head. (touched by the old theme of 城市边缘人)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.4,
+          "salience": 0.45,
+          "timestamp": 52200000.0,
+          "tags": [
+            "simulation",
+            "memory",
+            "possibility"
+          ],
+          "embedding": [],
+          "id": "ddec7011"
+        },
+        "af9f0ad1": {
+          "content": "A what-if branches into three futures, none of them certain. [自由]",
+          "source": "personal",
+          "modality": "concept",
+          "valence": 0.1,
+          "arousal": 0.5,
+          "salience": 0.5,
+          "timestamp": 54000000.0,
+          "tags": [
+            "simulation",
+            "future",
+            "branching"
+          ],
+          "embedding": [],
+          "id": "af9f0ad1"
+        },
+        "c2c4b654": {
+          "content": "The furniture in the imagined room stays where you left it.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 55800000.0,
+          "tags": [
+            "simulation",
+            "place",
+            "continuity"
+          ],
+          "embedding": [],
+          "id": "c2c4b654"
+        },
+        "680feb76": {
+          "content": "A what-if branches into three futures, none of them certain.",
+          "source": "personal",
+          "modality": "concept",
+          "valence": 0.1,
+          "arousal": 0.5,
+          "salience": 0.5,
+          "timestamp": 57600000.0,
+          "tags": [
+            "simulation",
+            "future",
+            "branching"
+          ],
+          "embedding": [],
+          "id": "680feb76"
+        },
+        "29d66050": {
+          "content": "You replay a conversation, testing different endings in your head. (touched by the old theme of 记忆)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.4,
+          "salience": 0.45,
+          "timestamp": 59400000.0,
+          "tags": [
+            "simulation",
+            "memory",
+            "possibility"
+          ],
+          "embedding": [],
+          "id": "29d66050"
+        },
+        "8ed5a077": {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.25,
+          "timestamp": 61200000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "8ed5a077"
+        },
+        "a19668a2": {
+          "content": "The furniture in the imagined room stays where you left it.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 61200000.0,
+          "tags": [
+            "simulation",
+            "place",
+            "continuity"
+          ],
+          "embedding": [],
+          "id": "a19668a2"
+        },
+        "a358bf29": {
+          "content": "Someone coughs behind a closed door.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.1,
+          "salience": 0.15,
+          "timestamp": 63000000.0,
+          "tags": [
+            "social",
+            "sound",
+            "indoor"
+          ],
+          "embedding": [],
+          "id": "a358bf29"
+        },
+        "b01cf099": {
+          "content": "The furniture in the imagined room stays where you left it.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 63000000.0,
+          "tags": [
+            "simulation",
+            "place",
+            "continuity"
+          ],
+          "embedding": [],
+          "id": "b01cf099"
+        },
+        "8894f324": {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.25,
+          "timestamp": 82800000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "8894f324"
+        },
+        "d0036bb8": {
+          "content": "The problem you left at the desk follows you at a distance. (touched by the old theme of 记忆)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 82800000.0,
+          "tags": [
+            "incubation",
+            "problem",
+            "wandering"
+          ],
+          "embedding": [],
+          "id": "d0036bb8"
+        },
+        "b959d6c6": {
+          "content": "A stranger's gesture lodges in attention without reason. (touched by the old theme of 城市边缘人)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 84600000.0,
+          "tags": [
+            "incubation",
+            "observation",
+            "stranger"
+          ],
+          "embedding": [],
+          "id": "b959d6c6"
+        },
+        "67cd5c17": {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.02，唤醒=0.37。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, while the city held its breath outside the window.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.042,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 86400000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "67cd5c17"
+        }
+      },
+      "traces": {
+        "f6f6387d": {
+          "fragment_ids": [
+            "929d5088"
+          ],
+          "importance": 0.08000000000000002,
+          "recency": 0.9856631986401876,
+          "relevance": 0.3516989595920563,
+          "emotional_weight": 0.08000000000000002,
+          "narrative_role": "character",
+          "content": "Coffee steam rises while the city mutters awake outside. [共情]",
+          "tags": [
+            "city",
+            "coffee",
+            "morning"
+          ],
+          "id": "f6f6387d"
+        },
+        "d25e3b16": {
+          "fragment_ids": [
+            "74f965ae"
+          ],
+          "importance": 0.08000000000000002,
+          "recency": 0.9856631986401876,
+          "relevance": 0.3516989595920563,
+          "emotional_weight": 0.08000000000000002,
+          "narrative_role": "character",
+          "content": "Coffee steam rises while the city mutters awake outside. (touched by the old theme of 旧物)",
+          "tags": [
+            "city",
+            "coffee",
+            "morning"
+          ],
+          "id": "d25e3b16"
+        },
+        "2bca19b8": {
+          "fragment_ids": [
+            "7117ed1a"
+          ],
+          "importance": 0.09000000000000001,
+          "recency": 0.9856631986401876,
+          "relevance": 0.35569895959205633,
+          "emotional_weight": 0.08000000000000002,
+          "narrative_role": "character",
+          "content": "The alarm releases you into a gray morning.",
+          "tags": [
+            "morning",
+            "routine",
+            "waking"
+          ],
+          "id": "2bca19b8"
+        },
+        "fb5e8916": {
+          "fragment_ids": [
+            "cffa2e39"
+          ],
+          "importance": 0.135,
+          "recency": 0.9856631986401876,
+          "relevance": 0.38569895959205625,
+          "emotional_weight": 0.12,
+          "narrative_role": "character",
+          "content": "At the table beside you, laughter rises and falls like a single instrument.",
+          "tags": [
+            "cafe",
+            "laughter",
+            "social"
+          ],
+          "id": "fb5e8916"
+        },
+        "744121c8": {
+          "fragment_ids": [
+            "937ba330"
+          ],
+          "importance": 0.165,
+          "recency": 0.9856631986401876,
+          "relevance": 0.40669895959205626,
+          "emotional_weight": 0.15,
+          "narrative_role": "character",
+          "content": "Someone cuts the line; the room pretends not to notice.",
+          "tags": [
+            "norm",
+            "social",
+            "transgression"
+          ],
+          "id": "744121c8"
+        },
+        "fb9ad9c7": {
+          "fragment_ids": [
+            "fdacb800"
+          ],
+          "importance": 0.09000000000000001,
+          "recency": 0.9856631986401876,
+          "relevance": 0.35569895959205633,
+          "emotional_weight": 0.08000000000000002,
+          "narrative_role": "character",
+          "content": "The alarm releases you into a gray morning.",
+          "tags": [
+            "morning",
+            "routine",
+            "waking"
+          ],
+          "id": "fb9ad9c7"
+        },
+        "1b2532d4": {
+          "fragment_ids": [
+            "9d9cb502"
+          ],
+          "importance": 0.08000000000000002,
+          "recency": 0.9856631986401876,
+          "relevance": 0.3516989595920563,
+          "emotional_weight": 0.08000000000000002,
+          "narrative_role": "character",
+          "content": "Coffee steam rises while the city mutters awake outside.",
+          "tags": [
+            "city",
+            "coffee",
+            "morning"
+          ],
+          "id": "1b2532d4"
+        },
+        "9a502f53": {
+          "fragment_ids": [
+            "702f9645"
+          ],
+          "importance": 0.08000000000000002,
+          "recency": 0.9856631986401876,
+          "relevance": 0.3516989595920563,
+          "emotional_weight": 0.08000000000000002,
+          "narrative_role": "character",
+          "content": "Coffee steam rises while the city mutters awake outside.",
+          "tags": [
+            "city",
+            "coffee",
+            "morning"
+          ],
+          "id": "9a502f53"
+        },
+        "f44e970f": {
+          "fragment_ids": [
+            "91ea04d0"
+          ],
+          "importance": 0.08000000000000002,
+          "recency": 0.9856631986401876,
+          "relevance": 0.3516989595920563,
+          "emotional_weight": 0.08000000000000002,
+          "narrative_role": "character",
+          "content": "Coffee steam rises while the city mutters awake outside.",
+          "tags": [
+            "city",
+            "coffee",
+            "morning"
+          ],
+          "id": "f44e970f"
+        },
+        "8c35ea0b": {
+          "fragment_ids": [
+            "c2f025cf"
+          ],
+          "importance": 0.135,
+          "recency": 0.9856631986401876,
+          "relevance": 0.38569895959205625,
+          "emotional_weight": 0.12,
+          "narrative_role": "character",
+          "content": "At the table beside you, laughter rises and falls like a single instrument.",
+          "tags": [
+            "cafe",
+            "laughter",
+            "social"
+          ],
+          "id": "8c35ea0b"
+        },
+        "c05646ec": {
+          "fragment_ids": [
+            "f11975b8"
+          ],
+          "importance": 0.165,
+          "recency": 0.9856631986401876,
+          "relevance": 0.40669895959205626,
+          "emotional_weight": 0.15,
+          "narrative_role": "character",
+          "content": "Someone cuts the line; the room pretends not to notice. (you notice it through the lens of 未说出口的话)",
+          "tags": [
+            "norm",
+            "social",
+            "transgression"
+          ],
+          "id": "c05646ec"
+        },
+        "b3fc1a07": {
+          "fragment_ids": [
+            "211f849e"
+          ],
+          "importance": 0.08000000000000002,
+          "recency": 0.9856631986401876,
+          "relevance": 0.3516989595920563,
+          "emotional_weight": 0.08000000000000002,
+          "narrative_role": "character",
+          "content": "Coffee steam rises while the city mutters awake outside. [共情]",
+          "tags": [
+            "city",
+            "coffee",
+            "morning"
+          ],
+          "id": "b3fc1a07"
+        },
+        "d88b4f9c": {
+          "fragment_ids": [
+            "54215941"
+          ],
+          "importance": 0.08000000000000002,
+          "recency": 0.9856631986401876,
+          "relevance": 0.3516989595920563,
+          "emotional_weight": 0.08000000000000002,
+          "narrative_role": "character",
+          "content": "Coffee steam rises while the city mutters awake outside. (touched by the old theme of 旧物)",
+          "tags": [
+            "city",
+            "coffee",
+            "morning"
+          ],
+          "id": "d88b4f9c"
+        },
+        "52ef6fac": {
+          "fragment_ids": [
+            "c77fbb41"
+          ],
+          "importance": 0.09000000000000001,
+          "recency": 0.9856631986401876,
+          "relevance": 0.35569895959205633,
+          "emotional_weight": 0.08000000000000002,
+          "narrative_role": "character",
+          "content": "The alarm releases you into a gray morning.",
+          "tags": [
+            "morning",
+            "routine",
+            "waking"
+          ],
+          "id": "52ef6fac"
+        },
+        "81ddea7d": {
+          "fragment_ids": [
+            "dbdd33d5"
+          ],
+          "importance": 0.135,
+          "recency": 0.9856631986401876,
+          "relevance": 0.38569895959205625,
+          "emotional_weight": 0.12,
+          "narrative_role": "character",
+          "content": "At the table beside you, laughter rises and falls like a single instrument.",
+          "tags": [
+            "cafe",
+            "laughter",
+            "social"
+          ],
+          "id": "81ddea7d"
+        },
+        "9bcc5b96": {
+          "fragment_ids": [
+            "1d47e1dd"
+          ],
+          "importance": 0.165,
+          "recency": 0.9856631986401876,
+          "relevance": 0.40669895959205626,
+          "emotional_weight": 0.15,
+          "narrative_role": "character",
+          "content": "Someone cuts the line; the room pretends not to notice.",
+          "tags": [
+            "norm",
+            "social",
+            "transgression"
+          ],
+          "id": "9bcc5b96"
+        }
+      },
+      "working_memory": [
+        {
+          "content": "You catch yourself rehearsing what you might say if asked.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 45000000.0,
+          "tags": [
+            "social",
+            "rehearsal",
+            "self"
+          ],
+          "embedding": [],
+          "id": "93d0b04d"
+        },
+        {
+          "content": "An acquaintance talks for ten minutes without asking a single question.",
+          "source": "social",
+          "modality": "dialogue",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 46800000.0,
+          "tags": [
+            "social",
+            "acquaintance",
+            "monologue"
+          ],
+          "embedding": [],
+          "id": "e1868a9d"
+        },
+        {
+          "content": "You catch yourself rehearsing what you might say if asked. (touched by the old theme of 旧物)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 46800000.0,
+          "tags": [
+            "social",
+            "rehearsal",
+            "self"
+          ],
+          "embedding": [],
+          "id": "9c6698f5"
+        },
+        {
+          "content": "Someone cuts the line; the room pretends not to notice.",
+          "source": "social",
+          "modality": "event",
+          "valence": -0.3,
+          "arousal": 0.5,
+          "salience": 0.55,
+          "timestamp": 48600000.0,
+          "tags": [
+            "social",
+            "norm",
+            "transgression"
+          ],
+          "embedding": [],
+          "id": "1d47e1dd"
+        },
+        {
+          "content": "A half-finished sentence hangs in the air between you and the room.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 48600000.0,
+          "tags": [
+            "social",
+            "silence",
+            "tension"
+          ],
+          "embedding": [],
+          "id": "e092c53c"
+        },
+        {
+          "content": "Distant sirens remind you that the city is awake even when you are not.",
+          "source": "social",
+          "modality": "event",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.3,
+          "timestamp": 50400000.0,
+          "tags": [
+            "social",
+            "city",
+            "sound"
+          ],
+          "embedding": [],
+          "id": "9905ee0b"
+        },
+        {
+          "content": "The furniture in the imagined room stays where you left it. (touched by the old theme of 雨)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 50400000.0,
+          "tags": [
+            "simulation",
+            "place",
+            "continuity"
+          ],
+          "embedding": [],
+          "id": "f1b4bd5c"
+        },
+        {
+          "content": "You replay a conversation, testing different endings in your head. (touched by the old theme of 城市边缘人)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.4,
+          "salience": 0.45,
+          "timestamp": 52200000.0,
+          "tags": [
+            "simulation",
+            "memory",
+            "possibility"
+          ],
+          "embedding": [],
+          "id": "ddec7011"
+        },
+        {
+          "content": "A what-if branches into three futures, none of them certain. [自由]",
+          "source": "personal",
+          "modality": "concept",
+          "valence": 0.1,
+          "arousal": 0.5,
+          "salience": 0.5,
+          "timestamp": 54000000.0,
+          "tags": [
+            "simulation",
+            "future",
+            "branching"
+          ],
+          "embedding": [],
+          "id": "af9f0ad1"
+        },
+        {
+          "content": "The furniture in the imagined room stays where you left it.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 55800000.0,
+          "tags": [
+            "simulation",
+            "place",
+            "continuity"
+          ],
+          "embedding": [],
+          "id": "c2c4b654"
+        },
+        {
+          "content": "A what-if branches into three futures, none of them certain.",
+          "source": "personal",
+          "modality": "concept",
+          "valence": 0.1,
+          "arousal": 0.5,
+          "salience": 0.5,
+          "timestamp": 57600000.0,
+          "tags": [
+            "simulation",
+            "future",
+            "branching"
+          ],
+          "embedding": [],
+          "id": "680feb76"
+        },
+        {
+          "content": "You replay a conversation, testing different endings in your head. (touched by the old theme of 记忆)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.4,
+          "salience": 0.45,
+          "timestamp": 59400000.0,
+          "tags": [
+            "simulation",
+            "memory",
+            "possibility"
+          ],
+          "embedding": [],
+          "id": "29d66050"
+        },
+        {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.25,
+          "timestamp": 61200000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "8ed5a077"
+        },
+        {
+          "content": "The furniture in the imagined room stays where you left it.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 61200000.0,
+          "tags": [
+            "simulation",
+            "place",
+            "continuity"
+          ],
+          "embedding": [],
+          "id": "a19668a2"
+        },
+        {
+          "content": "Someone coughs behind a closed door.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.1,
+          "salience": 0.15,
+          "timestamp": 63000000.0,
+          "tags": [
+            "social",
+            "sound",
+            "indoor"
+          ],
+          "embedding": [],
+          "id": "a358bf29"
+        },
+        {
+          "content": "The furniture in the imagined room stays where you left it.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 63000000.0,
+          "tags": [
+            "simulation",
+            "place",
+            "continuity"
+          ],
+          "embedding": [],
+          "id": "b01cf099"
+        },
+        {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.25,
+          "timestamp": 82800000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "8894f324"
+        },
+        {
+          "content": "The problem you left at the desk follows you at a distance. (touched by the old theme of 记忆)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 82800000.0,
+          "tags": [
+            "incubation",
+            "problem",
+            "wandering"
+          ],
+          "embedding": [],
+          "id": "d0036bb8"
+        },
+        {
+          "content": "A stranger's gesture lodges in attention without reason. (touched by the old theme of 城市边缘人)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 84600000.0,
+          "tags": [
+            "incubation",
+            "observation",
+            "stranger"
+          ],
+          "embedding": [],
+          "id": "b959d6c6"
+        },
+        {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.02，唤醒=0.37。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, while the city held its breath outside the window.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.042,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 86400000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "67cd5c17"
+        }
+      ],
+      "consolidation_queue": [
+        {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.02，唤醒=0.37。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, while the city held its breath outside the window.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.042,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 86400000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "67cd5c17"
+        }
+      ],
+      "working_memory_capacity": 20,
+      "consolidation_threshold": 0.35,
+      "min_tag_overlap": 2,
+      "last_time_ms": 86400000.0
+    },
+    "personal_input": {
+      "name": "personal_input",
+      "state": {
+        "active": true,
+        "energy_cost": 0.0,
+        "last_tick": 0.0,
+        "custom": {
+          "fragment_count": 84,
+          "last_phase": "deep_night"
+        }
+      },
+      "subscriptions": [
+        "control.module.init",
+        "data.identity.constraint",
+        "identity.constraints",
+        "identity.initialized"
+      ],
+      "seed": 42,
+      "constraints": {
+        "name": "林逸",
+        "pen_name": "静观者",
+        "values": [
+          "真实",
+          "共情",
+          "美",
+          "孤独",
+          "自由"
+        ],
+        "traits": {
+          "开放性": 0.85,
+          "内倾性": 0.75,
+          "神经质": 0.5,
+          "尽责性": 0.6,
+          "敏感性": 0.8
+        },
+        "interests": [
+          "城市边缘人",
+          "记忆",
+          "雨",
+          "旧物",
+          "未说出口的话"
+        ],
+        "self_narrative": "我是一个在人群边缘写字的人。我相信那些被忽略的瞬间里藏着真正的小说。",
+        "rhythm_preferences": {
+          "preferred_writing_hours": [
+            19,
+            23
+          ],
+          "sleep_start": 0,
+          "wake_up": 6
+        },
+        "integrity_score": 1.0,
+        "voice_signature": {}
+      },
+      "last_mood": {
+        "valence": 0.0,
+        "arousal": 0.3,
+        "phase": "incubation",
+        "source": "personal_input"
+      }
+    },
+    "social_input": {
+      "name": "social_input",
+      "state": {
+        "active": true,
+        "energy_cost": 0.0,
+        "last_tick": 0.0,
+        "custom": {
+          "fragment_count": 48,
+          "last_phase": "deep_night"
+        }
+      },
+      "subscriptions": [
+        "control.module.init",
+        "data.identity.constraint",
+        "identity.constraints",
+        "identity.initialized"
+      ],
+      "seed": 42,
+      "constraints": {
+        "name": "林逸",
+        "pen_name": "静观者",
+        "values": [
+          "真实",
+          "共情",
+          "美",
+          "孤独",
+          "自由"
+        ],
+        "traits": {
+          "开放性": 0.85,
+          "内倾性": 0.75,
+          "神经质": 0.5,
+          "尽责性": 0.6,
+          "敏感性": 0.8
+        },
+        "interests": [
+          "城市边缘人",
+          "记忆",
+          "雨",
+          "旧物",
+          "未说出口的话"
+        ],
+        "self_narrative": "我是一个在人群边缘写字的人。我相信那些被忽略的瞬间里藏着真正的小说。",
+        "rhythm_preferences": {
+          "preferred_writing_hours": [
+            19,
+            23
+          ],
+          "sleep_start": 0,
+          "wake_up": 6
+        },
+        "integrity_score": 1.0,
+        "voice_signature": {}
+      }
+    },
+    "salience_network": {
+      "name": "salience_network",
+      "state": {
+        "active": true,
+        "energy_cost": 0.0,
+        "last_tick": 0.0,
+        "custom": {
+          "evaluation_count": 197,
+          "switch_count": 14,
+          "rejected_count": 0,
+          "last_network": "dmn",
+          "cen_hold_ticks": 0
+        }
+      },
+      "subscriptions": [
+        "control.module.init",
+        "data.metabolism.state",
+        "data.personal.state",
+        "data.social.state",
+        "fragment.cen.new",
+        "fragment.dmn.new",
+        "fragment.dream.new",
+        "fragment.insight.new",
+        "fragment.memory.new",
+        "fragment.novel.new",
+        "fragment.personal.new",
+        "fragment.reflection.new",
+        "fragment.sandbox.new",
+        "fragment.social.new"
+      ],
+      "energy": 78.12000000000006,
+      "phase": "deep_night",
+      "personal_state": {
+        "phase": "incubation",
+        "latest_fragment": {
+          "content": "A stranger's gesture lodges in attention without reason. (touched by the old theme of 城市边缘人)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 84600000.0,
+          "tags": [
+            "incubation",
+            "observation",
+            "stranger"
+          ],
+          "embedding": [],
+          "id": "b959d6c6"
+        },
+        "mood": {
+          "valence": 0.0,
+          "arousal": 0.3,
+          "phase": "incubation",
+          "source": "personal_input"
+        },
+        "fragment_count": 84,
+        "constraints_applied": true
+      },
+      "social_state": {
+        "latest_fragment": {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.25,
+          "timestamp": 82800000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "8894f324"
+        },
+        "fragment_count": 48,
+        "energy_cost": 1.2,
+        "constraints_applied": true
+      },
+      "last_network": "dmn",
+      "evaluation_count": 197,
+      "cen_hold_ticks": 0
+    },
+    "default_mode_network": {
+      "name": "default_mode_network",
+      "state": {
+        "active": true,
+        "energy_cost": 0.0,
+        "last_tick": 86400000.0,
+        "custom": {
+          "activation_level": 0.0,
+          "current_theme": "城市边缘人, 记忆, 雨, 旧物, 未说出口的话",
+          "wandering_trace_count": 0,
+          "dream_queue_count": 0,
+          "reflection_buffer_count": 0
+        }
+      },
+      "subscriptions": [
+        "control.module.init",
+        "control.network.cen.active",
+        "control.network.dmn.active",
+        "control.network.switch",
+        "data.identity.constraint",
+        "data.identity.updated",
+        "data.memory.trace.query.result",
+        "event.novel.paragraph.published",
+        "fragment.cen.new",
+        "fragment.dmn.new",
+        "fragment.dream.new",
+        "fragment.insight.new",
+        "fragment.memory.new",
+        "fragment.novel.new",
+        "fragment.personal.new",
+        "fragment.reflection.new",
+        "fragment.sandbox.new",
+        "fragment.social.new",
+        "identity.constraints",
+        "identity.initialized"
+      ],
+      "activation_level": 0.96,
+      "current_theme": "城市边缘人, 记忆, 雨, 旧物, 未说出口的话",
+      "identity_constraints": {
+        "name": "林逸",
+        "pen_name": "静观者",
+        "values": [
+          "真实",
+          "共情",
+          "美",
+          "孤独",
+          "自由"
+        ],
+        "traits": {
+          "开放性": 0.85,
+          "内倾性": 0.75,
+          "神经质": 0.5,
+          "尽责性": 0.6,
+          "敏感性": 0.8
+        },
+        "interests": [
+          "城市边缘人",
+          "记忆",
+          "雨",
+          "旧物",
+          "未说出口的话"
+        ],
+        "self_narrative": "我是一个在人群边缘写字的人。我相信那些被忽略的瞬间里藏着真正的小说。",
+        "rhythm_preferences": {
+          "preferred_writing_hours": [
+            19,
+            23
+          ],
+          "sleep_start": 0,
+          "wake_up": 6
+        },
+        "integrity_score": 1.0,
+        "voice_signature": {}
+      },
+      "last_phase": "deep_night",
+      "wandering_traces": [],
+      "dream_queue": [
+        {
+          "content": "The problem you left at the desk follows you at a distance.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 28800000.0,
+          "tags": [
+            "incubation",
+            "problem",
+            "wandering"
+          ],
+          "embedding": [],
+          "id": "4f374be3"
+        },
+        {
+          "content": "The problem you left at the desk follows you at a distance.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 32400000.0,
+          "tags": [
+            "incubation",
+            "problem",
+            "wandering"
+          ],
+          "embedding": [],
+          "id": "12f88aa8"
+        },
+        {
+          "content": "The problem you left at the desk follows you at a distance.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 34200000.0,
+          "tags": [
+            "incubation",
+            "problem",
+            "wandering"
+          ],
+          "embedding": [],
+          "id": "2b649c11"
+        },
+        {
+          "content": "A half-finished sentence hangs in the air between you and the room.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 43200000.0,
+          "tags": [
+            "social",
+            "silence",
+            "tension"
+          ],
+          "embedding": [],
+          "id": "414ac286"
+        },
+        {
+          "content": "You catch yourself rehearsing what you might say if asked. (touched by the old theme of 旧物)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 46800000.0,
+          "tags": [
+            "social",
+            "rehearsal",
+            "self"
+          ],
+          "embedding": [],
+          "id": "9c6698f5"
+        },
+        {
+          "content": "A half-finished sentence hangs in the air between you and the room.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 48600000.0,
+          "tags": [
+            "social",
+            "silence",
+            "tension"
+          ],
+          "embedding": [],
+          "id": "e092c53c"
+        },
+        {
+          "content": "[context] 今日事件（压缩）： A half-finished sentence hangs in the air between you and the room. | An acquaintance talks for ten minutes without asking a single question. | You catch yourself rehearsing what you might say if asked. (touched by the old theme of 旧物) | Someone cuts the line; the room pretends not to notice. | A half-finished sentence hangs in the air between you and the room. 今日情绪基线：效价=-0.03，唤醒=0.35。 [instruction] 写一则简短的反思札记。浮现一个模式、一个疑虑、一个对明天的意图。避免陈词滥调。 [outputSpec] 输出 100-180 字的中文，第一人称，现在时态。, and the silence that followed was itself a kind of answer.",
+          "source": "dmn",
+          "modality": "emotion",
+          "valence": -0.003,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 0.0,
+          "tags": [
+            "reflection",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "f10d4e11"
+        },
+        {
+          "content": "窗外，黎明中无名的城市以灰色的增量展开。林逸从一个静止的点注视着它，好像整个清晨都是一句写出来只为被修改的句子。接下来发生的事缓慢展开：林逸面对未被解决的过去，结果是成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。林逸以一种知道平凡时刻才是真正人生情节的清晰观察着它。林逸还在试图命名那种感觉，这时林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。这感觉不像惊讶，更像延迟了多年的认出。然后，仿佛这一刻一直在等待许可：林逸面对未被解决的过去，结果是大成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。林逸注意到空气似乎改变了对沉默的主意。林逸只对空房间说出这些话，但它们听起来像是一封写给永远不会读到的人的信：‘即使故事忘了我，我还在这里。’于是",
+          "source": "novel",
+          "modality": "scene",
+          "valence": 0.2,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 0.0,
+          "tags": [
+            "novel",
+            "feedback"
+          ],
+          "embedding": [],
+          "id": "61b88b64"
+        },
+        {
+          "content": "The problem you left at the desk follows you at a distance. (touched by the old theme of 记忆)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 82800000.0,
+          "tags": [
+            "incubation",
+            "problem",
+            "wandering"
+          ],
+          "embedding": [],
+          "id": "d0036bb8"
+        },
+        {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.02，唤醒=0.37。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, while the city held its breath outside the window.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.042,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 86400000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "67cd5c17"
+        }
+      ],
+      "reflection_buffer": [
+        {
+          "content": "[context] 当前漫游主题：城市边缘人、记忆、雨、旧物、未说出口的话。 浮现的痕迹： - [context] 当前漫游主题：城市边缘人、记忆、雨、旧物、未说出口的话。 浮现的痕迹： - The problem you left at the desk follows you at a distance. - [context] - Someone coughs behind a closed door. - Steps on wet pavement, no destination in mind. [instruction] 产出一个灵感：在两个互不相关的意象、记忆或概念之间建立意外的联系。这个灵感应像一颗虚构场景或人物的种子，而不是论文。 [outputSpec] 输出 60-120 字的中文。结尾给出一个具体的意象。, and the silence that followed was itself a kind of answer.",
+          "source": "dmn",
+          "modality": "concept",
+          "valence": 0.008,
+          "arousal": 0.6,
+          "salience": 0.85,
+          "timestamp": 0.0,
+          "tags": [
+            "insight",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "5fddd16b"
+        },
+        {
+          "content": "Steps on wet pavement, no destination in mind.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 37800000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "4612ef77"
+        },
+        {
+          "content": "[context] 当前漫游主题：城市边缘人、记忆、雨、旧物、未说出口的话。 浮现的痕迹： - Steps on wet pavement, no destination in mind. - [context] 当前漫游主题：城市边缘人、记忆、雨、旧物、未说出口的话。 浮现的痕迹： - [context] 当前漫游主题：城市边缘人、记忆、雨、旧物、未说出口的话。 浮现的痕迹： - The problem you left at - Steps on wet pavement, no destination in mind. [instruction] 产出一个灵感：在两个互不相关的意象、记忆或概念之间建立意外的联系。这个灵感应像一颗虚构场景或人物的种子，而不是论文。 [outputSpec] 输出 60-120 字的中文。结尾给出一个具体的意象。, while the city held its breath outside the window.",
+          "source": "dmn",
+          "modality": "concept",
+          "valence": 0.014,
+          "arousal": 0.6,
+          "salience": 0.85,
+          "timestamp": 0.0,
+          "tags": [
+            "insight",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "6b8ce95f"
+        },
+        {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour. [共情]",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.25,
+          "timestamp": 39600000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "fb4e0694"
+        },
+        {
+          "content": "A stranger's gesture lodges in attention without reason. (touched by the old theme of 雨)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 39600000.0,
+          "tags": [
+            "incubation",
+            "observation",
+            "stranger"
+          ],
+          "embedding": [],
+          "id": "3986b70c"
+        },
+        {
+          "content": "[context] 当前漫游主题：城市边缘人、记忆、雨、旧物、未说出口的话。 浮现的痕迹： - [context] 当前漫游主题：城市边缘人、记忆、雨、旧物、未说出口的话。 浮现的痕迹： - Steps on wet pavement, no destination in mind. - [context] 当前漫游主题：城市边缘人、 - A neighbor's footsteps cross the ceiling at an odd hour. [共情] - A stranger's gesture lodges in attention without reason. (touched by the old theme of 雨) [instruction] 产出一个灵感：在两个互不相关的意象、记忆或概念之间建立意外的联系。这个灵感应像一颗虚构场景或人物的种子，而不是论文。 [outputSpec] 输出 60-120 字的中文。结尾给出一个具体的意象。, while the city held its breath outside the window.",
+          "source": "dmn",
+          "modality": "concept",
+          "valence": 0.007,
+          "arousal": 0.6,
+          "salience": 0.85,
+          "timestamp": 0.0,
+          "tags": [
+            "insight",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "efc67d31"
+        },
+        {
+          "content": "A streetlamp comes on while you are still looking at it.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.2,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 41400000.0,
+          "tags": [
+            "incubation",
+            "light",
+            "evening"
+          ],
+          "embedding": [],
+          "id": "d48f99eb"
+        },
+        {
+          "content": "At the table beside you, laughter rises and falls like a single instrument.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.3,
+          "arousal": 0.4,
+          "salience": 0.45,
+          "timestamp": 43200000.0,
+          "tags": [
+            "social",
+            "laughter",
+            "cafe"
+          ],
+          "embedding": [],
+          "id": "dbdd33d5"
+        },
+        {
+          "content": "A half-finished sentence hangs in the air between you and the room.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 43200000.0,
+          "tags": [
+            "social",
+            "silence",
+            "tension"
+          ],
+          "embedding": [],
+          "id": "414ac286"
+        },
+        {
+          "content": "An acquaintance talks for ten minutes without asking a single question.",
+          "source": "social",
+          "modality": "dialogue",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 46800000.0,
+          "tags": [
+            "social",
+            "acquaintance",
+            "monologue"
+          ],
+          "embedding": [],
+          "id": "e1868a9d"
+        },
+        {
+          "content": "You catch yourself rehearsing what you might say if asked. (touched by the old theme of 旧物)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 46800000.0,
+          "tags": [
+            "social",
+            "rehearsal",
+            "self"
+          ],
+          "embedding": [],
+          "id": "9c6698f5"
+        },
+        {
+          "content": "Someone cuts the line; the room pretends not to notice.",
+          "source": "social",
+          "modality": "event",
+          "valence": -0.3,
+          "arousal": 0.5,
+          "salience": 0.55,
+          "timestamp": 48600000.0,
+          "tags": [
+            "social",
+            "norm",
+            "transgression"
+          ],
+          "embedding": [],
+          "id": "1d47e1dd"
+        },
+        {
+          "content": "A half-finished sentence hangs in the air between you and the room.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 48600000.0,
+          "tags": [
+            "social",
+            "silence",
+            "tension"
+          ],
+          "embedding": [],
+          "id": "e092c53c"
+        },
+        {
+          "content": "[context] 今日事件（压缩）： A half-finished sentence hangs in the air between you and the room. | An acquaintance talks for ten minutes without asking a single question. | You catch yourself rehearsing what you might say if asked. (touched by the old theme of 旧物) | Someone cuts the line; the room pretends not to notice. | A half-finished sentence hangs in the air between you and the room. 今日情绪基线：效价=-0.03，唤醒=0.35。 [instruction] 写一则简短的反思札记。浮现一个模式、一个疑虑、一个对明天的意图。避免陈词滥调。 [outputSpec] 输出 100-180 字的中文，第一人称，现在时态。, and the silence that followed was itself a kind of answer.",
+          "source": "dmn",
+          "modality": "emotion",
+          "valence": -0.003,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 0.0,
+          "tags": [
+            "reflection",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "f10d4e11"
+        },
+        {
+          "content": "窗外，黎明中无名的城市以灰色的增量展开。林逸从一个静止的点注视着它，好像整个清晨都是一句写出来只为被修改的句子。接下来发生的事缓慢展开：林逸面对未被解决的过去，结果是成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。林逸以一种知道平凡时刻才是真正人生情节的清晰观察着它。林逸还在试图命名那种感觉，这时林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。这感觉不像惊讶，更像延迟了多年的认出。然后，仿佛这一刻一直在等待许可：林逸面对未被解决的过去，结果是大成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。林逸注意到空气似乎改变了对沉默的主意。林逸只对空房间说出这些话，但它们听起来像是一封写给永远不会读到的人的信：‘即使故事忘了我，我还在这里。’于是",
+          "source": "novel",
+          "modality": "scene",
+          "valence": 0.2,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 0.0,
+          "tags": [
+            "novel",
+            "feedback"
+          ],
+          "embedding": [],
+          "id": "61b88b64"
+        },
+        {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.25,
+          "timestamp": 82800000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "8894f324"
+        },
+        {
+          "content": "The problem you left at the desk follows you at a distance. (touched by the old theme of 记忆)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 82800000.0,
+          "tags": [
+            "incubation",
+            "problem",
+            "wandering"
+          ],
+          "embedding": [],
+          "id": "d0036bb8"
+        },
+        {
+          "content": "[context] 当前漫游主题：城市边缘人、记忆、雨、旧物、未说出口的话。 浮现的痕迹： - 窗外，黎明中无名的城市以灰色的增量展开。林逸从一个静止的点注视着它，好像整个清晨都是一句写出来只为被修改的句子。接下来发生的事缓慢展开：林逸面对未被解决的过去，结果是成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。林逸以一种 - A neighbor's footsteps cross the ceiling at an odd hour. - The problem you left at the desk follows you at a distance. (touched by the old theme of 记忆) [instruction] 产出一个灵感：在两个互不相关的意象、记忆或概念之间建立意外的联系。这个灵感应像一颗虚构场景或人物的种子，而不是论文。 [outputSpec] 输出 60-120 字的中文。结尾给出一个具体的意象。, and the silence that followed was itself a kind of answer.",
+          "source": "dmn",
+          "modality": "concept",
+          "valence": 0.011,
+          "arousal": 0.6,
+          "salience": 0.85,
+          "timestamp": 0.0,
+          "tags": [
+            "insight",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "70c6ea06"
+        },
+        {
+          "content": "A stranger's gesture lodges in attention without reason. (touched by the old theme of 城市边缘人)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 84600000.0,
+          "tags": [
+            "incubation",
+            "observation",
+            "stranger"
+          ],
+          "embedding": [],
+          "id": "b959d6c6"
+        },
+        {
+          "content": "[context] 近期记忆残余： （无近期痕迹） 当前情绪基线：效价=-0.02，唤醒=0.37。 [instruction] 创作一段梦境。不要解释这个梦，不要使用“我梦见”或“在梦里”这类话。直接呈现被体验到的梦境本身。将近期残余与至少一个远距联想、一个不可能的感官意象混合在一起。 [outputSpec] 输出 120-220 字的纯梦境散文，中文。无标题、无元叙述、无列表。, while the city held its breath outside the window.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.042,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 86400000.0,
+          "tags": [
+            "dream",
+            "城市边缘人",
+            "旧物",
+            "未说出口的话",
+            "记忆",
+            "雨"
+          ],
+          "embedding": [],
+          "id": "67cd5c17"
+        }
+      ]
+    },
+    "central_executive_network": {
+      "name": "central_executive_network",
+      "state": {
+        "active": false,
+        "energy_cost": 0.0,
+        "last_tick": 86400000.0,
+        "custom": {
+          "goal_stack": [
+            {
+              "id": "7c6bb279",
+              "name": "持续探索人性与城市记忆的小说创作",
+              "goal_type": "life",
+              "priority": 1.0,
+              "status": "active"
+            },
+            {
+              "id": "3f9ab4a2",
+              "name": "完成今日的脑中世界推演与叙事生成",
+              "goal_type": "daily",
+              "priority": 0.8,
+              "status": "active"
+            },
+            {
+              "id": "e9551664",
+              "name": "等待灵感触发",
+              "goal_type": "task",
+              "priority": 0.5,
+              "status": "active"
+            }
+          ],
+          "current_goal": {
+            "id": "e9551664",
+            "name": "等待灵感触发",
+            "goal_type": "task",
+            "priority": 0.5,
+            "status": "active"
+          },
+          "current_task": "等待灵感触发",
+          "executive_load": 0.0,
+          "working_memory_count": 0,
+          "sandbox_built": false,
+          "awaiting_ready": false,
+          "narrative_ready": false,
+          "current_phase": null,
+          "proactive_build_pending": false,
+          "narrative_triggered_phases": [],
+          "build_phase": null
+        }
+      },
+      "subscriptions": [
+        "control.module.init",
+        "control.network.cen.active",
+        "control.network.dmn.active",
+        "control.network.switch",
+        "data.identity.constraint",
+        "data.identity.updated",
+        "data.memory.trace.query.result",
+        "data.sandbox.narrative.ready",
+        "fragment.insight.new",
+        "identity.constraints",
+        "identity.initialized"
+      ],
+      "goal_stack": [
+        {
+          "id": "7c6bb279",
+          "name": "持续探索人性与城市记忆的小说创作",
+          "goal_type": "life",
+          "priority": 1.0,
+          "status": "active"
+        },
+        {
+          "id": "3f9ab4a2",
+          "name": "完成今日的脑中世界推演与叙事生成",
+          "goal_type": "daily",
+          "priority": 0.8,
+          "status": "active"
+        },
+        {
+          "id": "62696589",
+          "name": "叙事线就绪，进入创作执行",
+          "goal_type": "task",
+          "priority": 0.6,
+          "status": "active"
+        }
+      ],
+      "current_goal": {
+        "id": "62696589",
+        "name": "叙事线就绪，进入创作执行",
+        "goal_type": "task",
+        "priority": 0.6,
+        "status": "active"
+      },
+      "working_memory": [],
+      "executive_load": 0.0,
+      "current_task": "后台待机",
+      "sandbox_built": false,
+      "awaiting_ready": false,
+      "narrative_ready": true,
+      "current_phase": "deep_night",
+      "proactive_build_pending": false,
+      "narrative_triggered_phases": [
+        "simulation",
+        "creation"
+      ],
+      "build_phase": null,
+      "latest_traces": [],
+      "identity_constraints": {
+        "name": "林逸",
+        "pen_name": "静观者",
+        "values": [
+          "真实",
+          "共情",
+          "美",
+          "孤独",
+          "自由"
+        ],
+        "traits": {
+          "开放性": 0.85,
+          "内倾性": 0.75,
+          "神经质": 0.5,
+          "尽责性": 0.6,
+          "敏感性": 0.8
+        },
+        "interests": [
+          "城市边缘人",
+          "记忆",
+          "雨",
+          "旧物",
+          "未说出口的话"
+        ],
+        "self_narrative": "我是一个在人群边缘写字的人。我相信那些被忽略的瞬间里藏着真正的小说。",
+        "rhythm_preferences": {
+          "preferred_writing_hours": [
+            19,
+            23
+          ],
+          "sleep_start": 0,
+          "wake_up": 6
+        },
+        "integrity_score": 1.0,
+        "voice_signature": {}
+      }
+    },
+    "mental_sandbox": {
+      "name": "mental_sandbox",
+      "state": {
+        "active": true,
+        "energy_cost": 0.25,
+        "last_tick": 86400000.0,
+        "custom": {
+          "simulation_round": 1,
+          "narrative_line_count": 7,
+          "character_count": 1,
+          "world_built": true
+        }
+      },
+      "subscriptions": [
+        "control.module.init",
+        "control.sandbox.build",
+        "control.sandbox.simulate",
+        "data.identity.constraint",
+        "data.identity.updated",
+        "data.memory.trace.query.result"
+      ],
+      "min_rounds": 3,
+      "max_rounds": 6,
+      "depth_thresholds": {
+        "conflict_depth": 0.6,
+        "character_development": 0.5,
+        "emotional_shift": 0.5,
+        "coherence_score": 0.6
+      },
+      "world_model": {
+        "name": "脑中世界",
+        "ontology": {
+          "genre": "严肃文学",
+          "tone": "忧郁",
+          "setting": "黎明中无名的城市"
+        },
+        "rules": [
+          "行动有情感后果",
+          "随机性塑造命运"
+        ],
+        "history": [
+          "Round 1: 面对未被解决的过去 -> 大成功",
+          "Round 2: 面对未被解决的过去 -> 成功",
+          "Round 3: 面对未被解决的过去 -> 失败",
+          "Round 1: 面对未被解决的过去 -> 大成功",
+          "Round 2: 面对未被解决的过去 -> 失败",
+          "Round 3: 面对未被解决的过去 -> 失败",
+          "Round 1: 面对未被解决的过去 -> 失败",
+          "Round 2: 面对未被解决的过去 -> 大成功",
+          "Round 3: 面对未被解决的过去 -> 失败",
+          "Round 1: 面对未被解决的过去 -> 大失败",
+          "Round 2: 面对未被解决的过去 -> 成功",
+          "Round 3: 面对未被解决的过去 -> 成功",
+          "Round 1: 面对未被解决的过去 -> 失败",
+          "Round 2: 面对未被解决的过去 -> 大成功",
+          "Round 3: 面对未被解决的过去 -> 成功",
+          "Round 1: 面对未被解决的过去 -> 失败",
+          "Round 2: 面对未被解决的过去 -> 大成功",
+          "Round 3: 面对未被解决的过去 -> 失败",
+          "Round 1: 面对未被解决的过去 -> 失败"
+        ],
+        "current_state": {
+          "time": "清晨",
+          "mood": "安静",
+          "last_outcome": "失败",
+          "last_action": "面对未被解决的过去"
+        },
+        "prediction_errors": [
+          {
+            "round": 1,
+            "expected": 48.45,
+            "observed": 84,
+            "error": 35.55
+          }
+        ],
+        "id": "a5f8eef5"
+      },
+      "characters": [
+        {
+          "name": "林逸",
+          "archetype": "在人群边缘写字的小说家",
+          "source_trace_ids": [
+            "identity_projection"
+          ],
+          "traits": {
+            "openness": 1.0,
+            "conscientiousness": 0.6,
+            "extraversion": 0.25,
+            "agreeableness": 0.8,
+            "neuroticism": 0.6415
+          },
+          "desires": [
+            {
+              "object": "城市边缘人",
+              "strength": 0.6,
+              "urgency": 0.5
+            },
+            {
+              "object": "记忆",
+              "strength": 0.6,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "林逸想要靠近世界以收集它，又害怕被它看见；他相信孤独里才有真正的小说，却又在孤独中怀疑这是否只是借口。",
+          "id": "6fc2fb40"
+        }
+      ],
+      "current_scene": {
+        "description": "林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+        "characters": [
+          "林逸"
+        ],
+        "setting": "黎明中无名的城市",
+        "conflict_level": 0.22,
+        "emotional_tone": -0.22,
+        "id": "dbdee5bc"
+      },
+      "narrative_lines": [
+        {
+          "scenes": [
+            {
+              "description": "林逸面对未被解决的过去，结果是大成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.835,
+              "emotional_tone": 0.835,
+              "id": "cb884174"
+            },
+            {
+              "description": "林逸面对未被解决的过去，结果是成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.345,
+              "emotional_tone": 0.345,
+              "id": "5c432c7f"
+            },
+            {
+              "description": "林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.251,
+              "emotional_tone": -0.251,
+              "id": "069d55bc"
+            }
+          ],
+          "conflicts": [
+            {
+              "parties": [
+                "林逸"
+              ],
+              "stakes": "对林逸来说，过去正悬在一句未说出口的话上。",
+              "intensity": 0.835,
+              "resolved": false,
+              "id": "a3f34829"
+            }
+          ],
+          "foreshadowing": [
+            "远处有一盏灯，将在某个需要的时刻熄灭。"
+          ],
+          "climax": {
+            "description": "林逸面对未被解决的过去，结果是大成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+            "characters": [
+              "林逸"
+            ],
+            "setting": "黎明中无名的城市",
+            "conflict_level": 0.835,
+            "emotional_tone": 0.835,
+            "id": "cb884174"
+          },
+          "status": "committed",
+          "id": "4fb32da0"
+        },
+        {
+          "scenes": [
+            {
+              "description": "林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.251,
+              "emotional_tone": -0.251,
+              "id": "069d55bc"
+            },
+            {
+              "description": "林逸面对未被解决的过去，结果是大成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.847,
+              "emotional_tone": 0.847,
+              "id": "7eb7707e"
+            },
+            {
+              "description": "林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.243,
+              "emotional_tone": -0.243,
+              "id": "fd41f20f"
+            },
+            {
+              "description": "林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.245,
+              "emotional_tone": -0.245,
+              "id": "6e0b2439"
+            }
+          ],
+          "conflicts": [
+            {
+              "parties": [
+                "林逸"
+              ],
+              "stakes": "对林逸来说，过去正悬在一句未说出口的话上。",
+              "intensity": 0.847,
+              "resolved": false,
+              "id": "d0408276"
+            }
+          ],
+          "foreshadowing": [
+            "远处有一盏灯，将在某个需要的时刻熄灭。",
+            "远处有一盏灯，将在某个需要的时刻熄灭。"
+          ],
+          "climax": {
+            "description": "林逸面对未被解决的过去，结果是大成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+            "characters": [
+              "林逸"
+            ],
+            "setting": "黎明中无名的城市",
+            "conflict_level": 0.847,
+            "emotional_tone": 0.847,
+            "id": "7eb7707e"
+          },
+          "status": "committed",
+          "id": "92bc4b82"
+        },
+        {
+          "scenes": [
+            {
+              "description": "林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.245,
+              "emotional_tone": -0.245,
+              "id": "6e0b2439"
+            },
+            {
+              "description": "林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.247,
+              "emotional_tone": -0.247,
+              "id": "57a79994"
+            },
+            {
+              "description": "林逸面对未被解决的过去，结果是大成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.851,
+              "emotional_tone": 0.851,
+              "id": "df9fa8df"
+            },
+            {
+              "description": "林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.238,
+              "emotional_tone": -0.238,
+              "id": "021dc0a4"
+            }
+          ],
+          "conflicts": [
+            {
+              "parties": [
+                "林逸"
+              ],
+              "stakes": "对林逸来说，过去正悬在一句未说出口的话上。",
+              "intensity": 0.851,
+              "resolved": false,
+              "id": "b856d564"
+            }
+          ],
+          "foreshadowing": [
+            "远处有一盏灯，将在某个需要的时刻熄灭。"
+          ],
+          "climax": {
+            "description": "林逸面对未被解决的过去，结果是大成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+            "characters": [
+              "林逸"
+            ],
+            "setting": "黎明中无名的城市",
+            "conflict_level": 0.851,
+            "emotional_tone": 0.851,
+            "id": "df9fa8df"
+          },
+          "status": "committed",
+          "id": "c96def35"
+        },
+        {
+          "scenes": [
+            {
+              "description": "林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.238,
+              "emotional_tone": -0.238,
+              "id": "021dc0a4"
+            },
+            {
+              "description": "林逸面对未被解决的过去，结果是大失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.74,
+              "emotional_tone": -0.74,
+              "id": "d3ce9684"
+            },
+            {
+              "description": "林逸面对未被解决的过去，结果是成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.354,
+              "emotional_tone": 0.354,
+              "id": "8afff9de"
+            },
+            {
+              "description": "林逸面对未被解决的过去，结果是成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.358,
+              "emotional_tone": 0.358,
+              "id": "3df92985"
+            }
+          ],
+          "conflicts": [
+            {
+              "parties": [
+                "林逸"
+              ],
+              "stakes": "对林逸来说，过去正悬在一句未说出口的话上。",
+              "intensity": 0.74,
+              "resolved": false,
+              "id": "aa2ddc71"
+            }
+          ],
+          "foreshadowing": [
+            "远处有一盏灯，将在某个需要的时刻熄灭。"
+          ],
+          "climax": {
+            "description": "林逸面对未被解决的过去，结果是大失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+            "characters": [
+              "林逸"
+            ],
+            "setting": "黎明中无名的城市",
+            "conflict_level": 0.74,
+            "emotional_tone": -0.74,
+            "id": "d3ce9684"
+          },
+          "status": "committed",
+          "id": "781d905e"
+        },
+        {
+          "scenes": [
+            {
+              "description": "林逸面对未被解决的过去，结果是成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.358,
+              "emotional_tone": 0.358,
+              "id": "3df92985"
+            },
+            {
+              "description": "林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.238,
+              "emotional_tone": -0.238,
+              "id": "91b82fb8"
+            },
+            {
+              "description": "林逸面对未被解决的过去，结果是大成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.86,
+              "emotional_tone": 0.86,
+              "id": "2a016af7"
+            },
+            {
+              "description": "林逸面对未被解决的过去，结果是成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.371,
+              "emotional_tone": 0.371,
+              "id": "a9e1ced8"
+            }
+          ],
+          "conflicts": [
+            {
+              "parties": [
+                "林逸"
+              ],
+              "stakes": "对林逸来说，过去正悬在一句未说出口的话上。",
+              "intensity": 0.86,
+              "resolved": false,
+              "id": "89769d23"
+            }
+          ],
+          "foreshadowing": [
+            "远处有一盏灯，将在某个需要的时刻熄灭。"
+          ],
+          "climax": {
+            "description": "林逸面对未被解决的过去，结果是大成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+            "characters": [
+              "林逸"
+            ],
+            "setting": "黎明中无名的城市",
+            "conflict_level": 0.86,
+            "emotional_tone": 0.86,
+            "id": "2a016af7"
+          },
+          "status": "committed",
+          "id": "17b15f69"
+        },
+        {
+          "scenes": [
+            {
+              "description": "林逸面对未被解决的过去，结果是成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.371,
+              "emotional_tone": 0.371,
+              "id": "a9e1ced8"
+            },
+            {
+              "description": "林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.225,
+              "emotional_tone": -0.225,
+              "id": "b53d083d"
+            },
+            {
+              "description": "林逸面对未被解决的过去，结果是大成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.873,
+              "emotional_tone": 0.873,
+              "id": "5ff6196a"
+            },
+            {
+              "description": "林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.217,
+              "emotional_tone": -0.217,
+              "id": "9b2a8e8d"
+            }
+          ],
+          "conflicts": [
+            {
+              "parties": [
+                "林逸"
+              ],
+              "stakes": "对林逸来说，过去正悬在一句未说出口的话上。",
+              "intensity": 0.873,
+              "resolved": false,
+              "id": "214138b4"
+            }
+          ],
+          "foreshadowing": [
+            "远处有一盏灯，将在某个需要的时刻熄灭。",
+            "远处有一盏灯，将在某个需要的时刻熄灭。",
+            "远处有一盏灯，将在某个需要的时刻熄灭。"
+          ],
+          "climax": {
+            "description": "林逸面对未被解决的过去，结果是大成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+            "characters": [
+              "林逸"
+            ],
+            "setting": "黎明中无名的城市",
+            "conflict_level": 0.873,
+            "emotional_tone": 0.873,
+            "id": "5ff6196a"
+          },
+          "status": "committed",
+          "id": "86a7d31a"
+        },
+        {
+          "scenes": [
+            {
+              "description": "林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.217,
+              "emotional_tone": -0.217,
+              "id": "9b2a8e8d"
+            },
+            {
+              "description": "林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+              "characters": [
+                "林逸"
+              ],
+              "setting": "黎明中无名的城市",
+              "conflict_level": 0.22,
+              "emotional_tone": -0.22,
+              "id": "dbdee5bc"
+            }
+          ],
+          "conflicts": [],
+          "foreshadowing": [],
+          "climax": null,
+          "status": "draft",
+          "id": "03dd64a0"
+        }
+      ],
+      "prediction_errors": [
+        {
+          "round": 1,
+          "dice": 84,
+          "target": 48.45,
+          "outcome": "失败",
+          "emotional_shift": -0.22,
+          "action": "面对未被解决的过去"
+        }
+      ],
+      "simulation_round": 1,
+      "identity_constraints": {
+        "name": "林逸",
+        "pen_name": "静观者",
+        "values": [
+          "真实",
+          "共情",
+          "美",
+          "孤独",
+          "自由"
+        ],
+        "traits": {
+          "开放性": 0.85,
+          "内倾性": 0.75,
+          "神经质": 0.5,
+          "尽责性": 0.6,
+          "敏感性": 0.8
+        },
+        "interests": [
+          "城市边缘人",
+          "记忆",
+          "雨",
+          "旧物",
+          "未说出口的话"
+        ],
+        "self_narrative": "我是一个在人群边缘写字的人。我相信那些被忽略的瞬间里藏着真正的小说。",
+        "rhythm_preferences": {
+          "preferred_writing_hours": [
+            19,
+            23
+          ],
+          "sleep_start": 0,
+          "wake_up": 6
+        },
+        "integrity_score": 1.0,
+        "voice_signature": {}
+      },
+      "pending_traces": []
+    },
+    "creation_executive": {
+      "name": "creation_executive",
+      "state": {
+        "active": true,
+        "energy_cost": 0.2,
+        "last_tick": 86400000.0,
+        "custom": {
+          "paragraphs_generated": 3,
+          "narrative_lines_received": 6
+        }
+      },
+      "subscriptions": [
+        "control.module.init",
+        "data.identity.constraint",
+        "data.identity.updated",
+        "data.memory.trace.query.result",
+        "data.sandbox.narrative.ready"
+      ],
+      "seed": 42,
+      "current_narrative_line": {
+        "scenes": [
+          {
+            "description": "林逸面对未被解决的过去，结果是成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+            "characters": [
+              "林逸"
+            ],
+            "setting": "黎明中无名的城市",
+            "conflict_level": 0.371,
+            "emotional_tone": 0.371,
+            "id": "a9e1ced8"
+          },
+          {
+            "description": "林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+            "characters": [
+              "林逸"
+            ],
+            "setting": "黎明中无名的城市",
+            "conflict_level": 0.225,
+            "emotional_tone": -0.225,
+            "id": "b53d083d"
+          },
+          {
+            "description": "林逸面对未被解决的过去，结果是大成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+            "characters": [
+              "林逸"
+            ],
+            "setting": "黎明中无名的城市",
+            "conflict_level": 0.873,
+            "emotional_tone": 0.873,
+            "id": "5ff6196a"
+          },
+          {
+            "description": "林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+            "characters": [
+              "林逸"
+            ],
+            "setting": "黎明中无名的城市",
+            "conflict_level": 0.217,
+            "emotional_tone": -0.217,
+            "id": "9b2a8e8d"
+          }
+        ],
+        "conflicts": [
+          {
+            "parties": [
+              "林逸"
+            ],
+            "stakes": "对林逸来说，过去正悬在一句未说出口的话上。",
+            "intensity": 0.873,
+            "resolved": false,
+            "id": "214138b4"
+          }
+        ],
+        "foreshadowing": [
+          "远处有一盏灯，将在某个需要的时刻熄灭。",
+          "远处有一盏灯，将在某个需要的时刻熄灭。",
+          "远处有一盏灯，将在某个需要的时刻熄灭。"
+        ],
+        "climax": {
+          "description": "林逸面对未被解决的过去，结果是大成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。",
+          "characters": [
+            "林逸"
+          ],
+          "setting": "黎明中无名的城市",
+          "conflict_level": 0.873,
+          "emotional_tone": 0.873,
+          "id": "5ff6196a"
+        },
+        "status": "committed",
+        "id": "86a7d31a"
+      },
+      "draft_buffer": [
+        "窗外，黎明中无名的城市以灰色的增量展开。林逸从一个静止的点注视着它，好像整个清晨都是一句写出来只为被修改的句子。接下来发生的事缓慢展开：林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。林逸以一种知道平凡时刻才是真正人生情节的清晰观察着它。林逸还在试图命名那种感觉，这时林逸面对未被解决的过去，结果是大成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。这感觉不像惊讶，更像延迟了多年的认出。林逸只对空房间说出这些话，但它们听起来像是一封写给永远不会读到的人的信：‘即使故事忘了我，我还在这里。’于是清晨沉入它自身不确定的结局，留给林逸一种奇特的孤独：终于理解了下一个句子，却仍然需要勇气去写出它。",
+        "窗外，黎明中无名的城市以灰色的增量展开。林逸从一个静止的点注视着它，好像整个清晨都是一句写出来只为被修改的句子。接下来发生的事缓慢展开：林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。林逸以一种知道平凡时刻才是真正人生情节的清晰观察着它。林逸还在试图命名那种感觉，这时林逸面对未被解决的过去，结果是大失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。这感觉不像惊讶，更像延迟了多年的认出。然后，仿佛这一刻一直在等待许可：林逸面对未被解决的过去，结果是成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。林逸注意到空气似乎改变了对沉默的主意。出声地，林逸什么也没说；但内在有一个声音不断重复同一行，好像在练习一句可能永远不会到来的忏悔。于是清晨沉入它",
+        "窗外，黎明中无名的城市以灰色的增量展开。林逸从一个静止的点注视着它，好像整个清晨都是一句写出来只为被修改的句子。接下来发生的事缓慢展开：林逸面对未被解决的过去，结果是成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。林逸以一种知道平凡时刻才是真正人生情节的清晰观察着它。林逸还在试图命名那种感觉，这时林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。这感觉不像惊讶，更像延迟了多年的认出。然后，仿佛这一刻一直在等待许可：林逸面对未被解决的过去，结果是大成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。林逸注意到空气似乎改变了对沉默的主意。林逸只对空房间说出这些话，但它们听起来像是一封写给永远不会读到的人的信：‘即使故事忘了我，我还在这里。’于是"
+      ],
+      "style_profile": {
+        "default_setting": "安静的公寓",
+        "default_protagonist": "林逸",
+        "default_time": "清晨",
+        "identity": {
+          "name": "林逸",
+          "pen_name": "静观者",
+          "values": [
+            "真实",
+            "共情",
+            "美",
+            "孤独",
+            "自由"
+          ],
+          "traits": {
+            "开放性": 0.85,
+            "内倾性": 0.75,
+            "神经质": 0.5,
+            "尽责性": 0.6,
+            "敏感性": 0.8
+          },
+          "interests": [
+            "城市边缘人",
+            "记忆",
+            "雨",
+            "旧物",
+            "未说出口的话"
+          ],
+          "self_narrative": "我是一个在人群边缘写字的人。我相信那些被忽略的瞬间里藏着真正的小说。",
+          "rhythm_preferences": {
+            "preferred_writing_hours": [
+              19,
+              23
+            ],
+            "sleep_start": 0,
+            "wake_up": 6
+          },
+          "integrity_score": 1.0,
+          "voice_signature": {}
+        }
+      },
+      "focus_stack": [
+        "城市边缘人",
+        "记忆",
+        "雨",
+        "旧物",
+        "未说出口的话"
+      ],
+      "pending_query": false,
+      "trace_results": []
+    },
+    "novel_output": {
+      "name": "novel_output",
+      "state": {
+        "active": true,
+        "energy_cost": 0.05,
+        "last_tick": 86400000.0,
+        "custom": {
+          "published_count": 3,
+          "last_paragraph_index": 2
+        }
+      },
+      "subscriptions": [
+        "control.module.init",
+        "data.novel.paragraph"
+      ],
+      "title": "脑中世界纪事",
+      "author_name": "林逸",
+      "paragraphs": [
+        "窗外，黎明中无名的城市以灰色的增量展开。林逸从一个静止的点注视着它，好像整个清晨都是一句写出来只为被修改的句子。接下来发生的事缓慢展开：林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。林逸以一种知道平凡时刻才是真正人生情节的清晰观察着它。林逸还在试图命名那种感觉，这时林逸面对未被解决的过去，结果是大成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。这感觉不像惊讶，更像延迟了多年的认出。林逸只对空房间说出这些话，但它们听起来像是一封写给永远不会读到的人的信：‘即使故事忘了我，我还在这里。’于是清晨沉入它自身不确定的结局，留给林逸一种奇特的孤独：终于理解了下一个句子，却仍然需要勇气去写出它。",
+        "窗外，黎明中无名的城市以灰色的增量展开。林逸从一个静止的点注视着它，好像整个清晨都是一句写出来只为被修改的句子。接下来发生的事缓慢展开：林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。林逸以一种知道平凡时刻才是真正人生情节的清晰观察着它。林逸还在试图命名那种感觉，这时林逸面对未被解决的过去，结果是大失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。这感觉不像惊讶，更像延迟了多年的认出。然后，仿佛这一刻一直在等待许可：林逸面对未被解决的过去，结果是成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。林逸注意到空气似乎改变了对沉默的主意。出声地，林逸什么也没说；但内在有一个声音不断重复同一行，好像在练习一句可能永远不会到来的忏悔。于是清晨沉入它",
+        "窗外，黎明中无名的城市以灰色的增量展开。林逸从一个静止的点注视着它，好像整个清晨都是一句写出来只为被修改的句子。接下来发生的事缓慢展开：林逸面对未被解决的过去，结果是成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。林逸以一种知道平凡时刻才是真正人生情节的清晰观察着它。林逸还在试图命名那种感觉，这时林逸面对未被解决的过去，结果是失败。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。这感觉不像惊讶，更像延迟了多年的认出。然后，仿佛这一刻一直在等待许可：林逸面对未被解决的过去，结果是大成功。空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。林逸注意到空气似乎改变了对沉默的主意。林逸只对空房间说出这些话，但它们听起来像是一封写给永远不会读到的人的信：‘即使故事忘了我，我还在这里。’于是"
+      ],
+      "world_settings": {},
+      "version": 3
+    }
+  }
+}

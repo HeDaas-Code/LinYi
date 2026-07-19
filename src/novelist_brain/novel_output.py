@@ -22,6 +22,7 @@ class NovelOutput(Module):
     def __init__(self, name: str = "novel_output") -> None:
         super().__init__(name)
         self.title: str = ""
+        self.author_name: str = "林逸"
         self.paragraphs: list[str] = []
         self.world_settings: dict[str, Any] = {}
         self.version: int = 0
@@ -47,6 +48,13 @@ class NovelOutput(Module):
         self.title = novel_context.get("title", "")
         self.world_settings = novel_context.get("world_settings", {})
 
+        identity = context.get("identity")
+        if isinstance(identity, dict):
+            self.author_name = identity.get("name") or identity.get("pen_name") or self.author_name
+        elif identity is not None:
+            # LinYiProfile or any object with name / pen_name attributes.
+            self.author_name = getattr(identity, "name", None) or getattr(identity, "pen_name", None) or self.author_name
+
     def on_bus_message(self, message: BusMessage) -> None:
         """Handle incoming paragraphs."""
         if not self._state.active:
@@ -65,6 +73,7 @@ class NovelOutput(Module):
             "energy_cost": self._state.energy_cost,
             "last_tick": self._state.last_tick,
             "title": self.title,
+            "author_name": self.author_name,
             "version": self.version,
             "paragraph_count": len(self.paragraphs),
             "published_count": self._state.custom["published_count"],
@@ -78,6 +87,7 @@ class NovelOutput(Module):
         base.update(
             {
                 "title": self.title,
+                "author_name": self.author_name,
                 "paragraphs": list(self.paragraphs),
                 "world_settings": dict(self.world_settings),
                 "version": self.version,
@@ -89,6 +99,7 @@ class NovelOutput(Module):
         """Restore novel output state."""
         super().from_dict(data, **kwargs)
         self.title = data.get("title", self.title)
+        self.author_name = data.get("author_name", self.author_name)
         self.paragraphs = list(data.get("paragraphs", []))
         self.world_settings = dict(data.get("world_settings", {}))
         self.version = int(data.get("version", self.version))
@@ -121,6 +132,7 @@ class NovelOutput(Module):
                 "index": index,
                 "version": self.version,
                 "title": self.title,
+                "author": self.author_name,
                 "narrative_line_id": payload.get("narrative_line_id"),
                 "source": payload.get("source", "unknown"),
             },

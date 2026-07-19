@@ -20,96 +20,96 @@ class SocialInput(Module):
 
     SOCIAL_TABLE: list[dict[str, Any]] = [
         {
-            "content": "A stranger at the square asks for the time and then lingers a moment too long.",
+            "content": "广场上的陌生人向我借火，然后停留得比必要久了一点。",
             "modality": "dialogue",
             "valence": 0.0,
             "arousal": 0.4,
             "salience": 0.55,
-            "tags": ["social", "stranger", "square"],
+            "tags": ["社交", "陌生人", "广场"],
             "norm_violated": False,
         },
         {
-            "content": "In the café, two friends argue about money in voices meant to be private.",
+            "content": "咖啡馆里，两个朋友用本该私密的音量争论钱的事，我不得不听见。",
             "modality": "dialogue",
             "valence": -0.2,
             "arousal": 0.5,
             "salience": 0.6,
-            "tags": ["social", "cafe", "conflict"],
+            "tags": ["社交", "咖啡馆", "冲突"],
             "norm_violated": True,
         },
         {
-            "content": "A child points at your notebook and asks why you are writing sad things.",
+            "content": "一个孩子指着我磨破边的笔记本问：‘叔叔，你为什么总写难过的事？’",
             "modality": "dialogue",
             "valence": 0.1,
             "arousal": 0.5,
             "salience": 0.65,
-            "tags": ["social", "child", "notebook"],
+            "tags": ["社交", "孩子", "笔记本"],
             "norm_violated": False,
         },
         {
-            "content": "You hold the door open; the nod exchanged feels like a small contract.",
+            "content": "我扶着门等后面的人，他点头致谢，那一下点头像一份小小的契约。",
             "modality": "event",
             "valence": 0.2,
             "arousal": 0.2,
             "salience": 0.35,
-            "tags": ["social", "politeness", "gesture"],
+            "tags": ["社交", "礼貌", "手势"],
             "norm_violated": False,
         },
         {
-            "content": "Someone cuts the line; the room pretends not to notice.",
+            "content": "有人插队，整个房间假装没有看见。我把这一幕写进便签。",
             "modality": "event",
             "valence": -0.3,
             "arousal": 0.5,
             "salience": 0.55,
-            "tags": ["social", "norm", "transgression"],
+            "tags": ["社交", "规则", "越界"],
             "norm_violated": True,
         },
         {
-            "content": "An acquaintance talks for ten minutes without asking a single question.",
+            "content": "一个熟人讲了十分钟，没有问过我一句话。我微笑，心想这也许就是小说材料。",
             "modality": "dialogue",
             "valence": -0.1,
             "arousal": 0.4,
             "salience": 0.5,
-            "tags": ["social", "acquaintance", "monologue"],
+            "tags": ["社交", "熟人", "独白"],
             "norm_violated": True,
         },
         {
-            "content": "At the table beside you, laughter rises and falls like a single instrument.",
+            "content": "邻桌的笑声起落得像一件乐器，我坐在自己的沉默里，像它的倒影。",
             "modality": "event",
             "valence": 0.3,
             "arousal": 0.4,
             "salience": 0.45,
-            "tags": ["social", "laughter", "cafe"],
+            "tags": ["社交", "笑声", "咖啡馆"],
             "norm_violated": False,
         },
     ]
 
     INTRUSION_TABLE: list[dict[str, Any]] = [
         {
-            "content": "A neighbor's footsteps cross the ceiling at an odd hour.",
+            "content": "楼上邻居的脚步声在不该有的时辰穿过天花板，像另一个人的生活漏了进来。",
             "modality": "event",
             "valence": 0.0,
             "arousal": 0.2,
             "salience": 0.25,
-            "tags": ["social", "neighbor", "intrusion"],
+            "tags": ["社交", "邻居", "侵入"],
             "norm_violated": False,
         },
         {
-            "content": "Distant sirens remind you that the city is awake even when you are not.",
+            "content": "远处的警笛提醒我，即使我不醒着，城市也醒着。",
             "modality": "event",
             "valence": -0.1,
             "arousal": 0.3,
             "salience": 0.3,
-            "tags": ["social", "city", "sound"],
+            "tags": ["社交", "城市", "声音"],
             "norm_violated": False,
         },
         {
-            "content": "Someone coughs behind a closed door.",
+            "content": "门后有人咳嗽，那是一个我无法见面的存在发出的唯一信号。",
             "modality": "event",
             "valence": 0.0,
             "arousal": 0.1,
             "salience": 0.15,
-            "tags": ["social", "sound", "indoor"],
+            "tags": ["社交", "声音", "室内"],
             "norm_violated": False,
         },
     ]
@@ -169,20 +169,37 @@ class SocialInput(Module):
             if isinstance(constraints, dict):
                 self._constraints = constraints
 
+    # Phase-specific activity levels for social input.
+    _PHASE_ACTIVITY: dict[str, float] = {
+        "social": 1.0,
+        "simulation": 0.5,
+        "incubation": 0.4,
+        "morning": 0.2,
+        "reflection": 0.2,
+        "creation": 0.1,
+        "deep_night": 0.05,
+    }
+
     def tick(self, delta: TickDelta) -> None:
-        """Generate social fragments, mostly during the social phase."""
+        """Generate social fragments according to the phase activity map."""
         phase = delta.phase
         self._state.custom["last_phase"] = phase
 
-        if phase == "social":
-            fragment = self._generate_social_fragment(delta.absolute_time)
-            self._emit_social(fragment)
+        activity = self._PHASE_ACTIVITY.get(phase, 0.1)
+        if self._rng.random() > activity:
             return
 
-        # Occasional light social intrusion in other phases.
-        if self._rng.random() < self.INTRUSION_CHANCE:
+        if phase == "social":
+            fragment = self._generate_social_fragment(delta.absolute_time)
+        else:
             fragment = self._generate_intrusion(delta.absolute_time)
-            self._emit_social(fragment)
+
+        # Reduce energy cost at night so social input does not drain sleep.
+        if phase in ("deep_night", "creation"):
+            fragment.arousal = max(0.0, fragment.arousal - 0.15)
+            fragment.salience = max(0.0, fragment.salience - 0.1)
+
+        self._emit_social(fragment)
 
     def _emit_social(self, fragment: Fragment) -> None:
         """Publish the social fragment and its associated state events."""
@@ -269,13 +286,18 @@ class SocialInput(Module):
 
         interests = self._constraints.get("interests", [])
         values = self._constraints.get("values", [])
-        if not interests and not values:
+        anchors = self._constraints.get("anchors", {})
+        anchor_places = anchors.get("places", []) if isinstance(anchors, dict) else []
+        if not interests and not values and not anchor_places:
             return content
 
+        if self._rng.random() < 0.2 and anchor_places:
+            place = self._rng.choice(anchor_places)
+            return f"{content}（这发生在{place}附近）"
         if self._rng.random() < 0.2 and interests:
             interest = self._rng.choice(interests)
-            return f"{content} (you notice it through the lens of {interest})"
+            return f"{content}（我透过{interest}的棱镜看着这一幕）"
         if self._rng.random() < 0.1 and values:
             value = self._rng.choice(values)
-            return f"{content} [{value}]"
+            return f"{content}［{value}］"
         return content

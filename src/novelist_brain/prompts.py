@@ -10,11 +10,16 @@ identity + context + instruction + outputSpec。
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TYPE_CHECKING
+
+from src.novelist_brain.persistence import dataclass_to_dict
+
+if TYPE_CHECKING:
+    from src.novelist_brain.identity import LinYiProfile
 
 
 IDENTITY_TEMPLATE = (
-    "你是{name}，一位{trait_summary}的小说家。\n"
+    "你是{name_line}，一位{trait_summary}的小说家。\n"
     "核心价值观：{values}。\n"
     "自我叙事：{self_narrative}\n"
     "你书写严肃文学，关注日常瞬间中透出的内在生活。"
@@ -36,10 +41,20 @@ def _format_traits(traits: dict[str, float] | None) -> str:
     return "、".join(parts) if parts else "内省而敏锐"
 
 
-def build_identity_block(identity: dict[str, Any]) -> str:
-    """返回所有 prompt 共用的身份块。"""
+def _format_name_line(identity: dict[str, Any] | LinYiProfile) -> str:
+    name = identity.get("name") or identity.get("pen_name") or "小说家"
+    pen_name = identity.get("pen_name", "")
+    if pen_name and pen_name != name:
+        return f"{name}（{pen_name}）"
+    return name
+
+
+def build_identity_block(identity: dict[str, Any] | LinYiProfile | LinYiProfile) -> str:
+    """返回所有 prompt 共用的身份块。支持 dict 或 LinYiProfile。"""
+    if not isinstance(identity, dict):
+        identity = dataclass_to_dict(identity) or {}
     return IDENTITY_TEMPLATE.format(
-        name=identity.get("name") or identity.get("pen_name") or "小说家",
+        name_line=_format_name_line(identity),
         trait_summary=_format_traits(identity.get("traits")),
         values="、".join(identity.get("values", []) or ["真实", "美"]),
         self_narrative=identity.get("self_narrative", ""),
@@ -51,7 +66,7 @@ def build_identity_block(identity: dict[str, Any]) -> str:
 # ----------------------------------------------------------------------
 
 def build_dream_prompt(
-    identity: dict[str, Any],
+    identity: dict[str, Any] | LinYiProfile,
     recent_traces: list[dict[str, Any]],
     mood_vector: dict[str, float] | None,
 ) -> tuple[str, str]:
@@ -86,7 +101,7 @@ def build_dream_prompt(
 
 
 def build_reflection_prompt(
-    identity: dict[str, Any],
+    identity: dict[str, Any] | LinYiProfile,
     day_summary: str,
     mood_vector: dict[str, float] | None,
 ) -> tuple[str, str]:
@@ -114,7 +129,7 @@ def build_reflection_prompt(
 
 
 def build_insight_prompt(
-    identity: dict[str, Any],
+    identity: dict[str, Any] | LinYiProfile,
     wandering_themes: list[str],
     trace_previews: list[str],
 ) -> tuple[str, str]:
@@ -143,7 +158,7 @@ def build_insight_prompt(
 # ----------------------------------------------------------------------
 
 def build_cen_plan_prompt(
-    identity: dict[str, Any],
+    identity: dict[str, Any] | LinYiProfile,
     current_time: str,
     phase: str,
     energy: float,
@@ -180,7 +195,7 @@ def build_cen_plan_prompt(
 # ----------------------------------------------------------------------
 
 def build_coc_judgment_prompt(
-    identity: dict[str, Any],
+    identity: dict[str, Any] | LinYiProfile,
     world_rules: list[str],
     scene_description: str,
     character_states: list[dict[str, Any]],
@@ -223,7 +238,7 @@ def build_coc_judgment_prompt(
 # ----------------------------------------------------------------------
 
 def build_novel_paragraph_prompt(
-    identity: dict[str, Any],
+    identity: dict[str, Any] | LinYiProfile,
     narrative_line: dict[str, Any],
     relevant_traces: list[dict[str, Any]],
     previous_paragraph: str,
@@ -277,7 +292,7 @@ def build_novel_paragraph_prompt(
 # ----------------------------------------------------------------------
 
 def build_encounter_prompt(
-    identity: dict[str, Any],
+    identity: dict[str, Any] | LinYiProfile,
     space: str,
     mode: str,
     mood_vector: dict[str, float] | None,

@@ -193,15 +193,11 @@ class OpenAILLMService(LLMService):
     ) -> str:
         """Request a chat completion.
 
-        For reasoning models (e.g. MiniMax-M3), the model often dumps its
-        reasoning into ``content`` before producing the final answer. We
-        handle two cases:
-        1. If ``reasoning_content`` is present, the final answer is in
-           ``content`` — return it directly.
-        2. If ``content`` itself contains reasoning traces (marked by
-           English meta phrases like "Let me", "I should", "Count:",
-           "Let me count", etc.), we strip the reasoning prefix and
-           extract the final Chinese passage.
+        Reasoning models (e.g. MiniMax-M3) may return their full chain of
+        thought.  We first try to obtain a clean Chinese answer from
+        ``content``; if that is empty, we mine the same clean answer from
+        ``reasoning_content``.  In both cases the answer is passed through
+        ``_strip_reasoning_prefix`` so that English meta-text is removed.
         """
         messages: list[dict[str, str]] = []
         if context and context.get("system"):
@@ -237,24 +233,25 @@ class OpenAILLMService(LLMService):
         content = message.get("content") or ""
         reasoning = message.get("reasoning_content") or ""
 
-        # Case 1: reasoning model with proper split — content is the answer.
-        if reasoning.strip() and content.strip():
-            # Some providers put the final answer in content after reasoning.
-            # Check if content looks like reasoning (English meta) or actual answer.
-            cleaned = self._strip_reasoning_prefix(content)
+        candidates: list[str] = []
+        if content.strip():
+            candidates.append(content.strip())
+        if reasoning.strip():
+            candidates.append(reasoning.strip())
+
+        for raw in candidates:
+            cleaned = self._strip_reasoning_prefix(raw)
             if cleaned.strip():
                 return cleaned.strip()
-            # Otherwise fall back to reasoning extraction.
-            return self._extract_final_answer(reasoning)
 
-        # Case 2: content has the answer.
-        if content.strip():
-            cleaned = self._strip_reasoning_prefix(content)
-            return cleaned.strip() if cleaned.strip() else content.strip()
-
-        # Case 3: only reasoning available.
+        # Last resort: try to extract a quoted block from reasoning.
         if reasoning.strip():
-            return self._extract_final_answer(reasoning)
+            extracted = self._extract_final_answer(reasoning)
+            if extracted.strip():
+                return extracted.strip()
+
+        if content.strip():
+            return content.strip()
 
         raise LLMCallError(f"Empty content and reasoning in response: {response}")
 

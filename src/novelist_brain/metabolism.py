@@ -65,7 +65,7 @@ class Metabolism(Module):
     COST_TABLE: dict[str, dict[str, float]] = {
         "cen": {"energy": 1.5, "compute": 2.0, "time": 0.8},
         "sandbox": {"energy": 2.0, "compute": 2.5, "time": 1.0},
-        "dmn": {"energy": 0.3, "compute": 0.5, "time": 0.3},
+        "dmn": {"energy": 0.2, "compute": 0.3, "time": 0.2},
         "sn": {"energy": 0.5, "compute": 0.5, "time": 0.2},
         "creation": {"energy": 1.8, "compute": 1.5, "time": 1.2},
         "social": {"energy": 0.8, "compute": 0.6, "time": 0.8},
