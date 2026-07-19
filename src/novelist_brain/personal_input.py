@@ -177,6 +177,7 @@ class PersonalInput(Module):
 
     def __init__(self, name: str = "personal_input", seed: int | None = None) -> None:
         super().__init__(name)
+        self._seed = seed
         self._rng = random.Random(seed)
         self._constraints: dict[str, Any] = {}
         self._last_mood: dict[str, Any] = {}
@@ -199,6 +200,25 @@ class PersonalInput(Module):
         identity = context.get("identity", {})
         if identity:
             self._constraints = identity
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize personal input state."""
+        base = super().to_dict()
+        base["seed"] = self._seed
+        base["constraints"] = self._constraints
+        base["last_mood"] = self._last_mood
+        return base
+
+    def from_dict(self, data: dict[str, Any], **kwargs: Any) -> None:
+        """Restore personal input state."""
+        super().from_dict(data, **kwargs)
+        self._seed = data.get("seed")
+        if self._seed is not None:
+            self._rng = random.Random(self._seed)
+        else:
+            self._rng = random.Random()
+        self._constraints = data.get("constraints", {})
+        self._last_mood = data.get("last_mood", {})
 
     def on_bus_message(self, message: BusMessage) -> None:
         """Capture identity constraints broadcast by the identity core."""

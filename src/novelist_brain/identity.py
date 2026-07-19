@@ -7,6 +7,7 @@ from typing import Any
 
 from src.novelist_brain.models import BusMessage, ModuleState, TickDelta
 from src.novelist_brain.module import Module
+from src.novelist_brain.persistence import dataclass_to_dict, reconstruct_dataclass
 
 
 @dataclass
@@ -74,6 +75,19 @@ class IdentityCore(Module):
             "self_narrative": self._profile.self_narrative,
             "voice_signature": dict(self._profile.voice_signature),
         }
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize identity core state."""
+        base = super().to_dict()
+        base["profile"] = dataclass_to_dict(self._profile)
+        return base
+
+    def from_dict(self, data: dict[str, Any], **kwargs: Any) -> None:
+        """Restore identity core state."""
+        super().from_dict(data, **kwargs)
+        profile_data = data.get("profile")
+        if profile_data:
+            self._profile = reconstruct_dataclass(IdentityProfile, profile_data)
 
     def init(self, context: dict[str, Any]) -> None:
         """Initialize from context, optionally overriding the profile."""

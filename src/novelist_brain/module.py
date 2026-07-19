@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
 from src.novelist_brain.models import ModuleState
+from src.novelist_brain.persistence import dataclass_to_dict, reconstruct_dataclass
 
 if TYPE_CHECKING:
     from src.novelist_brain.bus import BusRouter
@@ -35,6 +36,26 @@ class Module(ABC):
     def get_state(self) -> ModuleState:
         """Return the current module state."""
         return self._state
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a serializable snapshot of the module's base state."""
+        return {
+            "name": self.name,
+            "state": dataclass_to_dict(self._state),
+            "subscriptions": sorted(self._subscriptions),
+        }
+
+    def from_dict(self, data: dict[str, Any], **kwargs: Any) -> None:
+        """Restore the module's base state from a snapshot.
+
+        Subclasses should call ``super().from_dict(data, **kwargs)`` and then
+        restore their own internal fields.
+        """
+        self.name = data.get("name", self.name)
+        self._subscriptions = set(data.get("subscriptions", []))
+        self._state = reconstruct_dataclass(
+            ModuleState, data.get("state", {})
+        )
 
     def register(self, router: BusRouter) -> None:
         """Attach this module to a bus router."""

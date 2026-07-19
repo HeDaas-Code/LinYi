@@ -119,6 +119,7 @@ class SocialInput(Module):
 
     def __init__(self, name: str = "social_input", seed: int | None = None) -> None:
         super().__init__(name)
+        self._seed = seed
         self._rng = random.Random(seed)
         self._fragment_count = 0
         self._constraints: dict[str, Any] = {}
@@ -141,6 +142,24 @@ class SocialInput(Module):
         identity = context.get("identity", {})
         if identity:
             self._constraints = identity
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize social input state."""
+        base = super().to_dict()
+        base["seed"] = self._seed
+        base["constraints"] = self._constraints
+        return base
+
+    def from_dict(self, data: dict[str, Any], **kwargs: Any) -> None:
+        """Restore social input state."""
+        super().from_dict(data, **kwargs)
+        self._seed = data.get("seed")
+        if self._seed is not None:
+            self._rng = random.Random(self._seed)
+        else:
+            self._rng = random.Random()
+        self._constraints = data.get("constraints", {})
+        self._fragment_count = self._state.custom.get("fragment_count", 0)
 
     def on_bus_message(self, message: BusMessage) -> None:
         """Capture identity constraints broadcast by the identity core."""

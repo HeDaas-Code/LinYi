@@ -8,10 +8,13 @@ external API keys.
 
 from __future__ import annotations
 
+import argparse
+import datetime
 import sys
 from typing import Any
 
 from src.novelist_brain.bus import BusRouter
+from src.novelist_brain.persistence import PersistenceManager
 from src.novelist_brain.cen import CentralExecutiveNetwork
 from src.novelist_brain.clock import Clock
 from src.novelist_brain.creation_executive import CreationExecutive
@@ -153,6 +156,85 @@ def build_context(
     }
 
 
+def _apply_loaded_context(
+    context: dict[str, Any], state: dict[str, Any]
+) -> dict[str, Any]:
+    """Overlay default agent context with values recovered from a saved state."""
+    modules = state.get("modules", {})
+
+    identity_data = modules.get("identity_core", {})
+    if identity_data:
+        context["identity"] = identity_data.get("profile", context["identity"])
+
+    metabolism_data = modules.get("metabolism", {})
+    if metabolism_data:
+        context["metabolism"] = metabolism_data.get("resources", context["metabolism"])
+
+    memory_data = modules.get("memory_system", {})
+    if memory_data:
+        context["memory"].update(
+            {
+                "working_memory_capacity": memory_data.get(
+                    "working_memory_capacity", context["memory"]["working_memory_capacity"]
+                ),
+                "consolidation_threshold": memory_data.get(
+                    "consolidation_threshold", context["memory"]["consolidation_threshold"]
+                ),
+                "min_tag_overlap": memory_data.get(
+                    "min_tag_overlap", context["memory"]["min_tag_overlap"]
+                ),
+            }
+        )
+
+    sn_data = modules.get("salience_network", {})
+    if sn_data:
+        context["salience_network"] = {
+            "energy": sn_data.get("energy", 80.0),
+            "last_network": sn_data.get("last_network", "dmn"),
+        }
+
+    sandbox_data = modules.get("mental_sandbox", {})
+    if sandbox_data:
+        context["sandbox"].update(
+            {
+                "min_rounds": sandbox_data.get("min_rounds", context["sandbox"]["min_rounds"]),
+                "max_rounds": sandbox_data.get("max_rounds", context["sandbox"]["max_rounds"]),
+                "seed": sandbox_data.get("seed", context["sandbox"]["seed"]),
+                "world": sandbox_data.get("world_model", context["sandbox"]["world"]),
+                "depth_thresholds": sandbox_data.get("depth_thresholds", {}),
+            }
+        )
+
+    creation_data = modules.get("creation_executive", {})
+    if creation_data:
+        context["creation"].update(
+            {
+                "seed": creation_data.get("seed", context["creation"]["seed"]),
+                "style_profile": creation_data.get("style_profile", {}),
+                "focus_stack": creation_data.get("focus_stack", []),
+            }
+        )
+
+    novel_data = modules.get("novel_output", {})
+    if novel_data:
+        context["novel"].update(
+            {
+                "title": novel_data.get("title", context["novel"]["title"]),
+                "world_settings": novel_data.get("world_settings", {}),
+            }
+        )
+
+    dynamics_data = modules.get("dynamics", {})
+    if dynamics_data:
+        context["dynamics"] = dynamics_data.get("dynamics", context["dynamics"])
+
+    cen_data = modules.get("central_executive_network", {})
+    if cen_data:
+        context["goals"] = cen_data.get("goal_stack", [])
+
+    return context
+
+
 def create_modules(llm_service: MockLLMService) -> list[Any]:
     """Instantiate all functional modules in the required order."""
     return [
@@ -171,7 +253,7 @@ def create_modules(llm_service: MockLLMService) -> list[Any]:
     ]
 
 
-def run_day() -> None:
+def run_day(load_path: str | None = None, save_path: str = "agent_state.json") -> None:
     """Run the novelist brain through one full daily cycle."""
     print("=" * 60)
     print("小说家大脑原型 v1 — 启动")
@@ -185,7 +267,19 @@ def run_day() -> None:
     llm_service = MockLLMService(seed=42)
     context = build_context(router, clock, llm_service)
 
+    saved_state: dict[str, Any] | None = None
+    if load_path is not None:
+        print(f"正在从 {load_path} 加载状态...")
+        saved_state = PersistenceManager.load(load_path)
+        context = _apply_loaded_context(context, saved_state)
+
     modules = create_modules(llm_service)
+
+    if saved_state is not None:
+        for module in modules:
+            module_data = saved_state.get("modules", {}).get(module.name)
+            if module_data is not None:
+                module.from_dict(module_data, llm_service=llm_service)
 
     # Register every module to the router first so subscriptions exist.
     for module in modules:
@@ -301,6 +395,20 @@ def run_day() -> None:
           f"published={novel_output.get_state()['published_count']}")
     print(f"动力系统 habit strengths: {dynamics.dynamics.habit_strengths}")
 
+    agent_state = {
+        "version": 1,
+        "saved_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "clock": {
+            "tick": clock.tick,
+            "absolute_time_ms": clock.absolute_time_ms,
+            "hour": clock.hour,
+            "phase": clock.phase,
+        },
+        "modules": {module.name: module.to_dict() for module in modules},
+    }
+    PersistenceManager.save(agent_state, save_path)
+    print(f"\n状态已保存至 {save_path}")
+
     # Return a non-zero exit code if no paragraph was produced.
     if not novel_output.paragraphs:
         print("\n错误: 未生成任何小说段落。", file=sys.stderr)
@@ -310,4 +418,18 @@ def run_day() -> None:
 
 
 if __name__ == "__main__":
-    run_day()
+    parser = argparse.ArgumentParser(description="小说家大脑原型 v1")
+    parser.add_argument(
+        "--save-path",
+        type=str,
+        default="agent_state.json",
+        help="运行结束后保存状态的路径 (默认: agent_state.json)",
+    )
+    parser.add_argument(
+        "--load-path",
+        type=str,
+        default=None,
+        help="运行前加载状态的路径",
+    )
+    args = parser.parse_args()
+    run_day(load_path=args.load_path, save_path=args.save_path)

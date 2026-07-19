@@ -20,6 +20,7 @@ from src.novelist_brain.models import (
     WorldModel,
 )
 from src.novelist_brain.module import Module
+from src.novelist_brain.persistence import dataclass_to_dict, reconstruct_dataclass
 
 
 _DEFAULT_MIN_ROUNDS = 3
@@ -157,6 +158,76 @@ class MentalSandbox(Module):
             "current_scene_id": self._current_scene.id if self._current_scene else None,
             "depth_metrics": self._compute_depth_metrics(),
         }
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize the full mental sandbox state."""
+        base = super().to_dict()
+        base.update(
+            {
+                "min_rounds": self._min_rounds,
+                "max_rounds": self._max_rounds,
+                "depth_thresholds": self._depth_thresholds,
+                "world_model": dataclass_to_dict(self._world_model)
+                if self._world_model
+                else None,
+                "characters": [dataclass_to_dict(c) for c in self._characters],
+                "current_scene": dataclass_to_dict(self._current_scene)
+                if self._current_scene
+                else None,
+                "narrative_lines": [
+                    dataclass_to_dict(line) for line in self._narrative_lines
+                ],
+                "prediction_errors": list(self._prediction_errors),
+                "simulation_round": self._simulation_round,
+                "identity_constraints": self._identity_constraints,
+                "pending_traces": [
+                    dataclass_to_dict(t) for t in self._pending_traces
+                ],
+            }
+        )
+        return base
+
+    def from_dict(self, data: dict[str, Any], **kwargs: Any) -> None:
+        """Restore the full mental sandbox state."""
+        super().from_dict(data, **kwargs)
+        llm = kwargs.get("llm_service")
+        if llm is not None:
+            self._llm = llm
+        self._rng = random.Random()
+        self._min_rounds = int(data.get("min_rounds", self._min_rounds))
+        self._max_rounds = int(data.get("max_rounds", self._max_rounds))
+        self._depth_thresholds = dict(
+            data.get("depth_thresholds", self._depth_thresholds)
+        )
+
+        world_data = data.get("world_model")
+        self._world_model = (
+            reconstruct_dataclass(WorldModel, world_data) if world_data else None
+        )
+        self._characters = [
+            reconstruct_dataclass(CharacterProjection, c)
+            for c in data.get("characters", [])
+        ]
+        scene_data = data.get("current_scene")
+        self._current_scene = (
+            reconstruct_dataclass(Scene, scene_data) if scene_data else None
+        )
+        self._narrative_lines = [
+            reconstruct_dataclass(NarrativeLine, line)
+            for line in data.get("narrative_lines", [])
+        ]
+        self._prediction_errors = list(data.get("prediction_errors", []))
+        self._simulation_round = int(data.get("simulation_round", 0))
+        self._identity_constraints = data.get("identity_constraints", {})
+        self._pending_traces = [
+            reconstruct_dataclass(Trace, t)
+            for t in data.get("pending_traces", [])
+        ]
+
+        self._state.custom["simulation_round"] = self._simulation_round
+        self._state.custom["character_count"] = len(self._characters)
+        self._state.custom["narrative_line_count"] = len(self._narrative_lines)
+        self._state.custom["world_built"] = self._world_model is not None
 
     # ------------------------------------------------------------------
     # Public accessors
@@ -492,6 +563,18 @@ class MentalSandbox(Module):
                 priority=7,
                 ttl=5,
             )
+            # Reset simulation bookkeeping so the next build/simulate cycle
+            # starts fresh while characters and world model continue to evolve.
+            self._simulation_round = 0
+            self._prediction_errors.clear()
+            if self._world_model is not None:
+                self._world_model.prediction_errors.clear()
+            next_line = NarrativeLine()
+            if self._current_scene is not None:
+                next_line.scenes.append(self._current_scene)
+            self._narrative_lines.append(next_line)
+            self._state.custom["simulation_round"] = 0
+            self._state.custom["narrative_line_count"] = len(self._narrative_lines)
 
     def _any_depth_metric_passes(self, metrics: dict[str, float]) -> bool:
         return any(

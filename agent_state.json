@@ -1,0 +1,4204 @@
+{
+  "version": 1,
+  "saved_at": "2026-07-19T03:11:08.153105+00:00",
+  "clock": {
+    "tick": 48,
+    "absolute_time_ms": 86400000.0,
+    "hour": 0.0,
+    "phase": "deep_night"
+  },
+  "modules": {
+    "identity_core": {
+      "name": "identity_core",
+      "state": {
+        "active": true,
+        "energy_cost": 0.0,
+        "last_tick": 0.0,
+        "custom": {
+          "broadcast_count": 9,
+          "last_phase": "deep_night"
+        }
+      },
+      "subscriptions": [
+        "control.identity.request",
+        "control.module.init",
+        "data.identity.profile"
+      ],
+      "profile": {
+        "name": "novelist",
+        "pen_name": "",
+        "values": [
+          "truth",
+          "empathy",
+          "beauty",
+          "freedom"
+        ],
+        "traits": {
+          "openness": 0.8,
+          "introversion": 0.7,
+          "neuroticism": 0.5,
+          "conscientiousness": 0.6
+        },
+        "interests": [
+          "urban life",
+          "memory",
+          "loneliness",
+          "time"
+        ],
+        "self_narrative": "I am a quiet observer who turns ordinary moments into fiction.",
+        "voice_signature": {}
+      }
+    },
+    "metabolism": {
+      "name": "metabolism",
+      "state": {
+        "active": true,
+        "energy_cost": 0.0,
+        "last_tick": 0.0,
+        "custom": {
+          "warning_issued": false,
+          "tick_count": 48,
+          "last_phase": "deep_night"
+        }
+      },
+      "subscriptions": [
+        "control.metabolism.allocate",
+        "control.module.init",
+        "event.module.consume"
+      ],
+      "resources": {
+        "energy": 89.68000000000005,
+        "compute_budget": 87.67999999999998,
+        "time_currency": 64.64000000000034,
+        "social_capital": 50.0,
+        "exhausted": false
+      }
+    },
+    "dynamics": {
+      "name": "dynamics",
+      "state": {
+        "active": true,
+        "energy_cost": 0.0,
+        "last_tick": 0.0,
+        "custom": {
+          "event_count": 7,
+          "paragraph_count": 2
+        }
+      },
+      "subscriptions": [
+        "control.module.init",
+        "data.novel.paragraph",
+        "data.sandbox.event.resolved"
+      ],
+      "dynamics": {
+        "reward_prediction_error": 0.6,
+        "punishment_prediction_error": 0.0,
+        "habit_strengths": {
+          "reflection": 0.5,
+          "creation": 0.5,
+          "simulation": 0.5,
+          "memory": 0.5,
+          "social": 0.5
+        },
+        "value_function": {
+          "sandbox": -0.0045,
+          "novel": 0.114
+        },
+        "last_outcome": {}
+      }
+    },
+    "memory_system": {
+      "name": "memory_system",
+      "state": {
+        "active": true,
+        "energy_cost": 0.0,
+        "last_tick": 86400000.0,
+        "custom": {
+          "fragment_count": 67,
+          "trace_count": 10,
+          "consolidation_runs": 47
+        }
+      },
+      "subscriptions": [
+        "control.memory.consolidate",
+        "control.memory.query",
+        "control.module.init",
+        "fragment.cen.new",
+        "fragment.dmn.new",
+        "fragment.dream.new",
+        "fragment.memory.new",
+        "fragment.novel.new",
+        "fragment.personal.new",
+        "fragment.sandbox.new",
+        "fragment.social.new"
+      ],
+      "fragments": {
+        "c862e3c1": {
+          "content": "You are falling upward into a room with no doors. (touched by the old theme of loneliness)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.4,
+          "salience": 0.3,
+          "timestamp": 1800000.0,
+          "tags": [
+            "dream",
+            "liminal",
+            "night"
+          ],
+          "embedding": [],
+          "id": "c862e3c1"
+        },
+        "63c2996b": {
+          "content": "A door appeared in the wall of rain. You opened it and found a room where every clock ran backwards.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": 0.0,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 1800000.0,
+          "tags": [
+            "dream",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life"
+          ],
+          "embedding": [],
+          "id": "63c2996b"
+        },
+        "a691724b": {
+          "content": "Distant sirens remind you that the city is awake even when you are not.",
+          "source": "social",
+          "modality": "event",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.3,
+          "timestamp": 3600000.0,
+          "tags": [
+            "social",
+            "city",
+            "sound"
+          ],
+          "embedding": [],
+          "id": "a691724b"
+        },
+        "fa0806cb": {
+          "content": "A half-remembered dream dissolves into the ceiling. (touched by the old theme of urban life)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.25,
+          "timestamp": 3600000.0,
+          "tags": [
+            "dream",
+            "night",
+            "fragments"
+          ],
+          "embedding": [],
+          "id": "fa0806cb"
+        },
+        "61c0d883": {
+          "content": "A door appeared in the wall of rain. You opened it and found a room where every clock ran backwards.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": 0.0,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 3600000.0,
+          "tags": [
+            "dream",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life"
+          ],
+          "embedding": [],
+          "id": "61c0d883"
+        },
+        "d7469a6f": {
+          "content": "Someone coughs behind a closed door. [freedom]",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.1,
+          "salience": 0.15,
+          "timestamp": 5400000.0,
+          "tags": [
+            "social",
+            "sound",
+            "indoor"
+          ],
+          "embedding": [],
+          "id": "d7469a6f"
+        },
+        "98d2d936": {
+          "content": "You are falling upward into a room with no doors.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.4,
+          "salience": 0.3,
+          "timestamp": 5400000.0,
+          "tags": [
+            "dream",
+            "liminal",
+            "night"
+          ],
+          "embedding": [],
+          "id": "98d2d936"
+        },
+        "2a7bc405": {
+          "content": "Someone who looked like your younger self was sitting at the desk, writing in a language you had forgotten.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": 0.0,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 5400000.0,
+          "tags": [
+            "dream",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life"
+          ],
+          "embedding": [],
+          "id": "2a7bc405"
+        },
+        "d4ae860c": {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.25,
+          "timestamp": 7200000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "d4ae860c"
+        },
+        "debba8dc": {
+          "content": "You are falling upward into a room with no doors. [empathy]",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.4,
+          "salience": 0.3,
+          "timestamp": 7200000.0,
+          "tags": [
+            "dream",
+            "liminal",
+            "night"
+          ],
+          "embedding": [],
+          "id": "debba8dc"
+        },
+        "7d3054c3": {
+          "content": "A door appeared in the wall of rain. You opened it and found a room where every clock ran backwards.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": 0.0,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 7200000.0,
+          "tags": [
+            "dream",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life"
+          ],
+          "embedding": [],
+          "id": "7d3054c3"
+        },
+        "c41848e6": {
+          "content": "A neighbor's footsteps cross the ceiling at an odd hour.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.25,
+          "timestamp": 9000000.0,
+          "tags": [
+            "social",
+            "neighbor",
+            "intrusion"
+          ],
+          "embedding": [],
+          "id": "c41848e6"
+        },
+        "714bfa89": {
+          "content": "A half-remembered dream dissolves into the ceiling. [empathy]",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.25,
+          "timestamp": 9000000.0,
+          "tags": [
+            "dream",
+            "night",
+            "fragments"
+          ],
+          "embedding": [],
+          "id": "714bfa89"
+        },
+        "ddc2415b": {
+          "content": "A door appeared in the wall of rain. You opened it and found a room where every clock ran backwards.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": 0.0,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 9000000.0,
+          "tags": [
+            "dream",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life"
+          ],
+          "embedding": [],
+          "id": "ddc2415b"
+        },
+        "642d43d6": {
+          "content": "You are falling upward into a room with no doors.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.4,
+          "salience": 0.3,
+          "timestamp": 10800000.0,
+          "tags": [
+            "dream",
+            "liminal",
+            "night"
+          ],
+          "embedding": [],
+          "id": "642d43d6"
+        },
+        "73f6f5e6": {
+          "content": "A door appeared in the wall of rain. You opened it and found a room where every clock ran backwards.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": 0.0,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 10800000.0,
+          "tags": [
+            "dream",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life"
+          ],
+          "embedding": [],
+          "id": "73f6f5e6"
+        },
+        "2789692f": {
+          "content": "A half-remembered dream dissolves into the ceiling.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.25,
+          "timestamp": 12600000.0,
+          "tags": [
+            "dream",
+            "night",
+            "fragments"
+          ],
+          "embedding": [],
+          "id": "2789692f"
+        },
+        "c7532f5c": {
+          "content": "A door appeared in the wall of rain. You opened it and found a room where every clock ran backwards.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": 0.0,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 12600000.0,
+          "tags": [
+            "dream",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life"
+          ],
+          "embedding": [],
+          "id": "c7532f5c"
+        },
+        "da613c83": {
+          "content": "A half-remembered dream dissolves into the ceiling.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.25,
+          "timestamp": 14400000.0,
+          "tags": [
+            "dream",
+            "night",
+            "fragments"
+          ],
+          "embedding": [],
+          "id": "da613c83"
+        },
+        "13ffeb6f": {
+          "content": "A door appeared in the wall of rain. You opened it and found a room where every clock ran backwards.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": 0.0,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 14400000.0,
+          "tags": [
+            "dream",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life"
+          ],
+          "embedding": [],
+          "id": "13ffeb6f"
+        },
+        "227041ac": {
+          "content": "A distant train whistle threads through sleep.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.2,
+          "salience": 0.2,
+          "timestamp": 16200000.0,
+          "tags": [
+            "dream",
+            "sound",
+            "night"
+          ],
+          "embedding": [],
+          "id": "227041ac"
+        },
+        "8a673bbf": {
+          "content": "Someone who looked like your younger self was sitting at the desk, writing in a language you had forgotten.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": 0.0,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 16200000.0,
+          "tags": [
+            "dream",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life"
+          ],
+          "embedding": [],
+          "id": "8a673bbf"
+        },
+        "d34e82fe": {
+          "content": "A distant train whistle threads through sleep. (touched by the old theme of time)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.2,
+          "salience": 0.2,
+          "timestamp": 18000000.0,
+          "tags": [
+            "dream",
+            "sound",
+            "night"
+          ],
+          "embedding": [],
+          "id": "d34e82fe"
+        },
+        "cb980f58": {
+          "content": "A door appeared in the wall of rain. You opened it and found a room where every clock ran backwards.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.01,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 18000000.0,
+          "tags": [
+            "dream",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life"
+          ],
+          "embedding": [],
+          "id": "cb980f58"
+        },
+        "ba8c514c": {
+          "content": "A half-remembered dream dissolves into the ceiling.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.25,
+          "timestamp": 19800000.0,
+          "tags": [
+            "dream",
+            "night",
+            "fragments"
+          ],
+          "embedding": [],
+          "id": "ba8c514c"
+        },
+        "4b3a2c6a": {
+          "content": "A door appeared in the wall of rain. You opened it and found a room where every clock ran backwards.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": -0.021,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 19800000.0,
+          "tags": [
+            "dream",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life"
+          ],
+          "embedding": [],
+          "id": "4b3a2c6a"
+        },
+        "3c42e887": {
+          "content": "Coffee steam rises while the city mutters awake outside.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.2,
+          "arousal": 0.4,
+          "salience": 0.4,
+          "timestamp": 21600000.0,
+          "tags": [
+            "morning",
+            "coffee",
+            "city"
+          ],
+          "embedding": [],
+          "id": "3c42e887"
+        },
+        "6a26b7e0": {
+          "content": "The alarm releases you into a gray morning.",
+          "source": "personal",
+          "modality": "event",
+          "valence": -0.2,
+          "arousal": 0.4,
+          "salience": 0.45,
+          "timestamp": 23400000.0,
+          "tags": [
+            "morning",
+            "waking",
+            "routine"
+          ],
+          "embedding": [],
+          "id": "6a26b7e0"
+        },
+        "88843b14": {
+          "content": "Coffee steam rises while the city mutters awake outside.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.2,
+          "arousal": 0.4,
+          "salience": 0.4,
+          "timestamp": 25200000.0,
+          "tags": [
+            "morning",
+            "coffee",
+            "city"
+          ],
+          "embedding": [],
+          "id": "88843b14"
+        },
+        "557d88f9": {
+          "content": "Coffee steam rises while the city mutters awake outside.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.2,
+          "arousal": 0.4,
+          "salience": 0.4,
+          "timestamp": 27000000.0,
+          "tags": [
+            "morning",
+            "coffee",
+            "city"
+          ],
+          "embedding": [],
+          "id": "557d88f9"
+        },
+        "6da07c0c": {
+          "content": "Distant sirens remind you that the city is awake even when you are not. (you notice it through the lens of loneliness)",
+          "source": "social",
+          "modality": "event",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.3,
+          "timestamp": 28800000.0,
+          "tags": [
+            "social",
+            "city",
+            "sound"
+          ],
+          "embedding": [],
+          "id": "6da07c0c"
+        },
+        "6e5bad2a": {
+          "content": "A sentence arrives almost fully formed and is written down before doubt can touch it.",
+          "source": "personal",
+          "modality": "concept",
+          "valence": 0.4,
+          "arousal": 0.6,
+          "salience": 0.7,
+          "timestamp": 28800000.0,
+          "tags": [
+            "creation",
+            "writing",
+            "insight"
+          ],
+          "embedding": [],
+          "id": "6e5bad2a"
+        },
+        "54e59df7": {
+          "content": "A sentence arrives almost fully formed and is written down before doubt can touch it.",
+          "source": "personal",
+          "modality": "concept",
+          "valence": 0.4,
+          "arousal": 0.6,
+          "salience": 0.7,
+          "timestamp": 30600000.0,
+          "tags": [
+            "creation",
+            "writing",
+            "insight"
+          ],
+          "embedding": [],
+          "id": "54e59df7"
+        },
+        "243ae12c": {
+          "content": "The cursor blinks in a silence that feels like waiting. (touched by the old theme of loneliness)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 32400000.0,
+          "tags": [
+            "creation",
+            "writing",
+            "tension"
+          ],
+          "embedding": [],
+          "id": "243ae12c"
+        },
+        "f1854c12": {
+          "content": "A sentence arrives almost fully formed and is written down before doubt can touch it.",
+          "source": "personal",
+          "modality": "concept",
+          "valence": 0.4,
+          "arousal": 0.6,
+          "salience": 0.7,
+          "timestamp": 34200000.0,
+          "tags": [
+            "creation",
+            "writing",
+            "insight"
+          ],
+          "embedding": [],
+          "id": "f1854c12"
+        },
+        "6779d656": {
+          "content": "The cursor blinks in a silence that feels like waiting.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 36000000.0,
+          "tags": [
+            "creation",
+            "writing",
+            "tension"
+          ],
+          "embedding": [],
+          "id": "6779d656"
+        },
+        "4dbc37f2": {
+          "content": "A sentence arrives almost fully formed and is written down before doubt can touch it.",
+          "source": "personal",
+          "modality": "concept",
+          "valence": 0.4,
+          "arousal": 0.6,
+          "salience": 0.7,
+          "timestamp": 37800000.0,
+          "tags": [
+            "creation",
+            "writing",
+            "insight"
+          ],
+          "embedding": [],
+          "id": "4dbc37f2"
+        },
+        "b89fcf59": {
+          "content": "A character's voice surfaces, unexpected and exact. (touched by the old theme of time)",
+          "source": "personal",
+          "modality": "concept",
+          "valence": 0.5,
+          "arousal": 0.6,
+          "salience": 0.75,
+          "timestamp": 39600000.0,
+          "tags": [
+            "creation",
+            "character",
+            "voice"
+          ],
+          "embedding": [],
+          "id": "b89fcf59"
+        },
+        "a15da812": {
+          "content": "The cursor blinks in a silence that feels like waiting. (touched by the old theme of memory)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 41400000.0,
+          "tags": [
+            "creation",
+            "writing",
+            "tension"
+          ],
+          "embedding": [],
+          "id": "a15da812"
+        },
+        "3d02ec1b": {
+          "content": "At the table beside you, laughter rises and falls like a single instrument.",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.3,
+          "arousal": 0.4,
+          "salience": 0.45,
+          "timestamp": 43200000.0,
+          "tags": [
+            "social",
+            "laughter",
+            "cafe"
+          ],
+          "embedding": [],
+          "id": "3d02ec1b"
+        },
+        "543ac2cf": {
+          "content": "A child points at your notebook and asks why you are writing sad things.",
+          "source": "social",
+          "modality": "dialogue",
+          "valence": 0.1,
+          "arousal": 0.5,
+          "salience": 0.65,
+          "timestamp": 45000000.0,
+          "tags": [
+            "social",
+            "child",
+            "notebook"
+          ],
+          "embedding": [],
+          "id": "543ac2cf"
+        },
+        "b1c66a04": {
+          "content": "A stranger at the square asks for the time and then lingers a moment too long.",
+          "source": "social",
+          "modality": "dialogue",
+          "valence": 0.0,
+          "arousal": 0.4,
+          "salience": 0.55,
+          "timestamp": 46800000.0,
+          "tags": [
+            "social",
+            "stranger",
+            "square"
+          ],
+          "embedding": [],
+          "id": "b1c66a04"
+        },
+        "a1fd975a": {
+          "content": "A stranger at the square asks for the time and then lingers a moment too long.",
+          "source": "social",
+          "modality": "dialogue",
+          "valence": 0.0,
+          "arousal": 0.4,
+          "salience": 0.55,
+          "timestamp": 48600000.0,
+          "tags": [
+            "social",
+            "stranger",
+            "square"
+          ],
+          "embedding": [],
+          "id": "a1fd975a"
+        },
+        "eaa4c643": {
+          "content": "A quiet thought passes, leaving almost no trace.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.2,
+          "timestamp": 50400000.0,
+          "tags": [
+            "personal",
+            "neutral"
+          ],
+          "embedding": [],
+          "id": "eaa4c643"
+        },
+        "e18fc57e": {
+          "content": "A quiet thought passes, leaving almost no trace.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.2,
+          "timestamp": 52200000.0,
+          "tags": [
+            "personal",
+            "neutral"
+          ],
+          "embedding": [],
+          "id": "e18fc57e"
+        },
+        "b4b3e63c": {
+          "content": "A quiet thought passes, leaving almost no trace. (touched by the old theme of memory)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.2,
+          "timestamp": 54000000.0,
+          "tags": [
+            "personal",
+            "neutral"
+          ],
+          "embedding": [],
+          "id": "b4b3e63c"
+        },
+        "70c5c8e9": {
+          "content": "A quiet thought passes, leaving almost no trace. (touched by the old theme of time)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.2,
+          "timestamp": 55800000.0,
+          "tags": [
+            "personal",
+            "neutral"
+          ],
+          "embedding": [],
+          "id": "70c5c8e9"
+        },
+        "ca759e90": {
+          "content": "A quiet thought passes, leaving almost no trace.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.2,
+          "timestamp": 57600000.0,
+          "tags": [
+            "personal",
+            "neutral"
+          ],
+          "embedding": [],
+          "id": "ca759e90"
+        },
+        "b5868c4f": {
+          "content": "A quiet thought passes, leaving almost no trace. (touched by the old theme of memory)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.2,
+          "timestamp": 59400000.0,
+          "tags": [
+            "personal",
+            "neutral"
+          ],
+          "embedding": [],
+          "id": "b5868c4f"
+        },
+        "39c84769": {
+          "content": "The diary receives a confession it will keep.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 61200000.0,
+          "tags": [
+            "reflection",
+            "diary",
+            "confession"
+          ],
+          "embedding": [],
+          "id": "39c84769"
+        },
+        "718fff7a": {
+          "content": "The diary receives a confession it will keep.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 63000000.0,
+          "tags": [
+            "reflection",
+            "diary",
+            "confession"
+          ],
+          "embedding": [],
+          "id": "718fff7a"
+        },
+        "5128e640": {
+          "content": "Someone coughs behind a closed door. (you notice it through the lens of memory)",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.1,
+          "salience": 0.15,
+          "timestamp": 64800000.0,
+          "tags": [
+            "social",
+            "sound",
+            "indoor"
+          ],
+          "embedding": [],
+          "id": "5128e640"
+        },
+        "ccdbcf75": {
+          "content": "A line in the notebook embarrasses you now; it is also the truest thing there. (touched by the old theme of memory)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.1,
+          "arousal": 0.4,
+          "salience": 0.55,
+          "timestamp": 64800000.0,
+          "tags": [
+            "reflection",
+            "notebook",
+            "truth"
+          ],
+          "embedding": [],
+          "id": "ccdbcf75"
+        },
+        "fd2bde93": {
+          "content": "The diary receives a confession it will keep.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 66600000.0,
+          "tags": [
+            "reflection",
+            "diary",
+            "confession"
+          ],
+          "embedding": [],
+          "id": "fd2bde93"
+        },
+        "ebe1b4eb": {
+          "content": "Steps on wet pavement, no destination in mind. (touched by the old theme of memory)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 68400000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "ebe1b4eb"
+        },
+        "f6d6bd2d": {
+          "content": "A stranger's gesture lodges in attention without reason.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 70200000.0,
+          "tags": [
+            "incubation",
+            "observation",
+            "stranger"
+          ],
+          "embedding": [],
+          "id": "f6d6bd2d"
+        },
+        "f91b93c8": {
+          "content": "A stranger's gesture lodges in attention without reason.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 72000000.0,
+          "tags": [
+            "incubation",
+            "observation",
+            "stranger"
+          ],
+          "embedding": [],
+          "id": "f91b93c8"
+        },
+        "63541c72": {
+          "content": "Steps on wet pavement, no destination in mind. [beauty]",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 73800000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "63541c72"
+        },
+        "cc359d28": {
+          "content": "The problem you left at the desk follows you at a distance. (touched by the old theme of time)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 75600000.0,
+          "tags": [
+            "incubation",
+            "problem",
+            "wandering"
+          ],
+          "embedding": [],
+          "id": "cc359d28"
+        },
+        "6feb3971": {
+          "content": "A streetlamp comes on while you are still looking at it.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.2,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 77400000.0,
+          "tags": [
+            "incubation",
+            "light",
+            "evening"
+          ],
+          "embedding": [],
+          "id": "6feb3971"
+        },
+        "f2e3f0c4": {
+          "content": "The problem you left at the desk follows you at a distance.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 79200000.0,
+          "tags": [
+            "incubation",
+            "problem",
+            "wandering"
+          ],
+          "embedding": [],
+          "id": "f2e3f0c4"
+        },
+        "b77219b3": {
+          "content": "Steps on wet pavement, no destination in mind.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 81000000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "b77219b3"
+        },
+        "55fe13fe": {
+          "content": "Distant sirens remind you that the city is awake even when you are not. [beauty]",
+          "source": "social",
+          "modality": "event",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.3,
+          "timestamp": 82800000.0,
+          "tags": [
+            "social",
+            "city",
+            "sound"
+          ],
+          "embedding": [],
+          "id": "55fe13fe"
+        },
+        "75943f9e": {
+          "content": "A streetlamp comes on while you are still looking at it. (touched by the old theme of memory)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.2,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 82800000.0,
+          "tags": [
+            "incubation",
+            "light",
+            "evening"
+          ],
+          "embedding": [],
+          "id": "75943f9e"
+        },
+        "2628d5e1": {
+          "content": "Steps on wet pavement, no destination in mind.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 84600000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "2628d5e1"
+        },
+        "473be1d2": {
+          "content": "A half-remembered dream dissolves into the ceiling.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.25,
+          "timestamp": 86400000.0,
+          "tags": [
+            "dream",
+            "night",
+            "fragments"
+          ],
+          "embedding": [],
+          "id": "473be1d2"
+        },
+        "2e702066": {
+          "content": "A door appeared in the wall of rain. You opened it and found a room where every clock ran backwards.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": 0.045,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 86400000.0,
+          "tags": [
+            "creation",
+            "dream",
+            "insight",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life",
+            "writing"
+          ],
+          "embedding": [],
+          "id": "2e702066"
+        }
+      },
+      "traces": {
+        "6e52d19a": {
+          "fragment_ids": [
+            "3c42e887"
+          ],
+          "importance": 0.08000000000000002,
+          "recency": 0.9856631986401876,
+          "relevance": 0.3516989595920563,
+          "emotional_weight": 0.08000000000000002,
+          "narrative_role": "character",
+          "content": "Coffee steam rises while the city mutters awake outside.",
+          "tags": [
+            "city",
+            "coffee",
+            "morning"
+          ],
+          "id": "6e52d19a"
+        },
+        "a3db9ef3": {
+          "fragment_ids": [
+            "6a26b7e0"
+          ],
+          "importance": 0.09000000000000001,
+          "recency": 0.9856631986401876,
+          "relevance": 0.35569895959205633,
+          "emotional_weight": 0.08000000000000002,
+          "narrative_role": "character",
+          "content": "The alarm releases you into a gray morning.",
+          "tags": [
+            "morning",
+            "routine",
+            "waking"
+          ],
+          "id": "a3db9ef3"
+        },
+        "36581452": {
+          "fragment_ids": [
+            "88843b14"
+          ],
+          "importance": 0.08000000000000002,
+          "recency": 0.9856631986401876,
+          "relevance": 0.3516989595920563,
+          "emotional_weight": 0.08000000000000002,
+          "narrative_role": "character",
+          "content": "Coffee steam rises while the city mutters awake outside.",
+          "tags": [
+            "city",
+            "coffee",
+            "morning"
+          ],
+          "id": "36581452"
+        },
+        "c253cdbd": {
+          "fragment_ids": [
+            "557d88f9"
+          ],
+          "importance": 0.08000000000000002,
+          "recency": 0.9856631986401876,
+          "relevance": 0.3516989595920563,
+          "emotional_weight": 0.08000000000000002,
+          "narrative_role": "character",
+          "content": "Coffee steam rises while the city mutters awake outside.",
+          "tags": [
+            "city",
+            "coffee",
+            "morning"
+          ],
+          "id": "c253cdbd"
+        },
+        "fca23365": {
+          "fragment_ids": [
+            "6e5bad2a"
+          ],
+          "importance": 0.27999999999999997,
+          "recency": 0.9856631986401876,
+          "relevance": 0.4796989595920563,
+          "emotional_weight": 0.24,
+          "narrative_role": "character",
+          "content": "A sentence arrives almost fully formed and is written down before doubt can touch it.",
+          "tags": [
+            "creation",
+            "insight",
+            "writing"
+          ],
+          "id": "fca23365"
+        },
+        "8e534b41": {
+          "fragment_ids": [
+            "54e59df7"
+          ],
+          "importance": 0.27999999999999997,
+          "recency": 0.9856631986401876,
+          "relevance": 0.4796989595920563,
+          "emotional_weight": 0.24,
+          "narrative_role": "character",
+          "content": "A sentence arrives almost fully formed and is written down before doubt can touch it.",
+          "tags": [
+            "creation",
+            "insight",
+            "writing"
+          ],
+          "id": "8e534b41"
+        },
+        "1f18b2c5": {
+          "fragment_ids": [
+            "f1854c12"
+          ],
+          "importance": 0.27999999999999997,
+          "recency": 0.9856631986401876,
+          "relevance": 0.4796989595920563,
+          "emotional_weight": 0.24,
+          "narrative_role": "character",
+          "content": "A sentence arrives almost fully formed and is written down before doubt can touch it.",
+          "tags": [
+            "creation",
+            "insight",
+            "writing"
+          ],
+          "id": "1f18b2c5"
+        },
+        "85c903ab": {
+          "fragment_ids": [
+            "4dbc37f2"
+          ],
+          "importance": 0.27999999999999997,
+          "recency": 0.9856631986401876,
+          "relevance": 0.4796989595920563,
+          "emotional_weight": 0.24,
+          "narrative_role": "character",
+          "content": "A sentence arrives almost fully formed and is written down before doubt can touch it.",
+          "tags": [
+            "creation",
+            "insight",
+            "writing"
+          ],
+          "id": "85c903ab"
+        },
+        "adc08232": {
+          "fragment_ids": [
+            "b89fcf59"
+          ],
+          "importance": 0.375,
+          "recency": 0.9856631986401876,
+          "relevance": 0.5356989595920563,
+          "emotional_weight": 0.3,
+          "narrative_role": "character",
+          "content": "A character's voice surfaces, unexpected and exact. (touched by the old theme of time)",
+          "tags": [
+            "character",
+            "creation",
+            "voice"
+          ],
+          "id": "adc08232"
+        },
+        "752bc090": {
+          "fragment_ids": [
+            "3d02ec1b"
+          ],
+          "importance": 0.135,
+          "recency": 0.9856631986401876,
+          "relevance": 0.38569895959205625,
+          "emotional_weight": 0.12,
+          "narrative_role": "character",
+          "content": "At the table beside you, laughter rises and falls like a single instrument.",
+          "tags": [
+            "cafe",
+            "laughter",
+            "social"
+          ],
+          "id": "752bc090"
+        }
+      },
+      "working_memory": [
+        {
+          "content": "A quiet thought passes, leaving almost no trace.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.2,
+          "timestamp": 57600000.0,
+          "tags": [
+            "personal",
+            "neutral"
+          ],
+          "embedding": [],
+          "id": "ca759e90"
+        },
+        {
+          "content": "A quiet thought passes, leaving almost no trace. (touched by the old theme of memory)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.2,
+          "salience": 0.2,
+          "timestamp": 59400000.0,
+          "tags": [
+            "personal",
+            "neutral"
+          ],
+          "embedding": [],
+          "id": "b5868c4f"
+        },
+        {
+          "content": "The diary receives a confession it will keep.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 61200000.0,
+          "tags": [
+            "reflection",
+            "diary",
+            "confession"
+          ],
+          "embedding": [],
+          "id": "39c84769"
+        },
+        {
+          "content": "The diary receives a confession it will keep.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 63000000.0,
+          "tags": [
+            "reflection",
+            "diary",
+            "confession"
+          ],
+          "embedding": [],
+          "id": "718fff7a"
+        },
+        {
+          "content": "Someone coughs behind a closed door. (you notice it through the lens of memory)",
+          "source": "social",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.1,
+          "salience": 0.15,
+          "timestamp": 64800000.0,
+          "tags": [
+            "social",
+            "sound",
+            "indoor"
+          ],
+          "embedding": [],
+          "id": "5128e640"
+        },
+        {
+          "content": "A line in the notebook embarrasses you now; it is also the truest thing there. (touched by the old theme of memory)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.1,
+          "arousal": 0.4,
+          "salience": 0.55,
+          "timestamp": 64800000.0,
+          "tags": [
+            "reflection",
+            "notebook",
+            "truth"
+          ],
+          "embedding": [],
+          "id": "ccdbcf75"
+        },
+        {
+          "content": "The diary receives a confession it will keep.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 66600000.0,
+          "tags": [
+            "reflection",
+            "diary",
+            "confession"
+          ],
+          "embedding": [],
+          "id": "fd2bde93"
+        },
+        {
+          "content": "Steps on wet pavement, no destination in mind. (touched by the old theme of memory)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 68400000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "ebe1b4eb"
+        },
+        {
+          "content": "A stranger's gesture lodges in attention without reason.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 70200000.0,
+          "tags": [
+            "incubation",
+            "observation",
+            "stranger"
+          ],
+          "embedding": [],
+          "id": "f6d6bd2d"
+        },
+        {
+          "content": "A stranger's gesture lodges in attention without reason.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 72000000.0,
+          "tags": [
+            "incubation",
+            "observation",
+            "stranger"
+          ],
+          "embedding": [],
+          "id": "f91b93c8"
+        },
+        {
+          "content": "Steps on wet pavement, no destination in mind. [beauty]",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 73800000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "63541c72"
+        },
+        {
+          "content": "The problem you left at the desk follows you at a distance. (touched by the old theme of time)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 75600000.0,
+          "tags": [
+            "incubation",
+            "problem",
+            "wandering"
+          ],
+          "embedding": [],
+          "id": "cc359d28"
+        },
+        {
+          "content": "A streetlamp comes on while you are still looking at it.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.2,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 77400000.0,
+          "tags": [
+            "incubation",
+            "light",
+            "evening"
+          ],
+          "embedding": [],
+          "id": "6feb3971"
+        },
+        {
+          "content": "The problem you left at the desk follows you at a distance.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 79200000.0,
+          "tags": [
+            "incubation",
+            "problem",
+            "wandering"
+          ],
+          "embedding": [],
+          "id": "f2e3f0c4"
+        },
+        {
+          "content": "Steps on wet pavement, no destination in mind.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 81000000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "b77219b3"
+        },
+        {
+          "content": "Distant sirens remind you that the city is awake even when you are not. [beauty]",
+          "source": "social",
+          "modality": "event",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.3,
+          "timestamp": 82800000.0,
+          "tags": [
+            "social",
+            "city",
+            "sound"
+          ],
+          "embedding": [],
+          "id": "55fe13fe"
+        },
+        {
+          "content": "A streetlamp comes on while you are still looking at it. (touched by the old theme of memory)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.2,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 82800000.0,
+          "tags": [
+            "incubation",
+            "light",
+            "evening"
+          ],
+          "embedding": [],
+          "id": "75943f9e"
+        },
+        {
+          "content": "Steps on wet pavement, no destination in mind.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 84600000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "2628d5e1"
+        },
+        {
+          "content": "A half-remembered dream dissolves into the ceiling.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.25,
+          "timestamp": 86400000.0,
+          "tags": [
+            "dream",
+            "night",
+            "fragments"
+          ],
+          "embedding": [],
+          "id": "473be1d2"
+        },
+        {
+          "content": "A door appeared in the wall of rain. You opened it and found a room where every clock ran backwards.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": 0.045,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 86400000.0,
+          "tags": [
+            "creation",
+            "dream",
+            "insight",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life",
+            "writing"
+          ],
+          "embedding": [],
+          "id": "2e702066"
+        }
+      ],
+      "consolidation_queue": [
+        {
+          "content": "A half-remembered dream dissolves into the ceiling.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.25,
+          "timestamp": 86400000.0,
+          "tags": [
+            "dream",
+            "night",
+            "fragments"
+          ],
+          "embedding": [],
+          "id": "473be1d2"
+        },
+        {
+          "content": "A door appeared in the wall of rain. You opened it and found a room where every clock ran backwards.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": 0.045,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 86400000.0,
+          "tags": [
+            "creation",
+            "dream",
+            "insight",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life",
+            "writing"
+          ],
+          "embedding": [],
+          "id": "2e702066"
+        }
+      ],
+      "working_memory_capacity": 20,
+      "consolidation_threshold": 0.35,
+      "min_tag_overlap": 2,
+      "last_time_ms": 86400000.0
+    },
+    "personal_input": {
+      "name": "personal_input",
+      "state": {
+        "active": true,
+        "energy_cost": 0.0,
+        "last_tick": 0.0,
+        "custom": {
+          "fragment_count": 44,
+          "last_phase": "deep_night"
+        }
+      },
+      "subscriptions": [
+        "control.module.init",
+        "data.identity.constraint",
+        "identity.constraints",
+        "identity.initialized"
+      ],
+      "seed": 42,
+      "constraints": {
+        "name": "novelist",
+        "pen_name": "",
+        "values": [
+          "truth",
+          "empathy",
+          "beauty",
+          "freedom"
+        ],
+        "traits": {
+          "openness": 0.8,
+          "introversion": 0.7,
+          "neuroticism": 0.5,
+          "conscientiousness": 0.6
+        },
+        "interests": [
+          "urban life",
+          "memory",
+          "loneliness",
+          "time"
+        ],
+        "self_narrative": "I am a quiet observer who turns ordinary moments into fiction.",
+        "voice_signature": {}
+      },
+      "last_mood": {
+        "valence": 0.0,
+        "arousal": 0.3,
+        "phase": "deep_night",
+        "source": "personal_input"
+      }
+    },
+    "social_input": {
+      "name": "social_input",
+      "state": {
+        "active": true,
+        "energy_cost": 0.0,
+        "last_tick": 0.0,
+        "custom": {
+          "fragment_count": 11,
+          "last_phase": "deep_night"
+        }
+      },
+      "subscriptions": [
+        "control.module.init",
+        "data.identity.constraint",
+        "identity.constraints",
+        "identity.initialized"
+      ],
+      "seed": 42,
+      "constraints": {
+        "name": "novelist",
+        "pen_name": "",
+        "values": [
+          "truth",
+          "empathy",
+          "beauty",
+          "freedom"
+        ],
+        "traits": {
+          "openness": 0.8,
+          "introversion": 0.7,
+          "neuroticism": 0.5,
+          "conscientiousness": 0.6
+        },
+        "interests": [
+          "urban life",
+          "memory",
+          "loneliness",
+          "time"
+        ],
+        "self_narrative": "I am a quiet observer who turns ordinary moments into fiction.",
+        "voice_signature": {}
+      }
+    },
+    "salience_network": {
+      "name": "salience_network",
+      "state": {
+        "active": true,
+        "energy_cost": 0.0,
+        "last_tick": 0.0,
+        "custom": {
+          "evaluation_count": 79,
+          "switch_count": 4,
+          "rejected_count": 0,
+          "last_network": "dmn",
+          "cen_hold_ticks": 0
+        }
+      },
+      "subscriptions": [
+        "control.module.init",
+        "data.metabolism.state",
+        "data.personal.state",
+        "data.social.state",
+        "fragment.cen.new",
+        "fragment.dmn.new",
+        "fragment.dream.new",
+        "fragment.insight.new",
+        "fragment.memory.new",
+        "fragment.novel.new",
+        "fragment.personal.new",
+        "fragment.reflection.new",
+        "fragment.sandbox.new",
+        "fragment.social.new"
+      ],
+      "energy": 89.68000000000005,
+      "phase": "deep_night",
+      "personal_state": {
+        "phase": "deep_night",
+        "latest_fragment": {
+          "content": "A half-remembered dream dissolves into the ceiling.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.25,
+          "timestamp": 86400000.0,
+          "tags": [
+            "dream",
+            "night",
+            "fragments"
+          ],
+          "embedding": [],
+          "id": "473be1d2"
+        },
+        "mood": {
+          "valence": 0.0,
+          "arousal": 0.3,
+          "phase": "deep_night",
+          "source": "personal_input"
+        },
+        "fragment_count": 44,
+        "constraints_applied": true
+      },
+      "social_state": {
+        "latest_fragment": {
+          "content": "Distant sirens remind you that the city is awake even when you are not. [beauty]",
+          "source": "social",
+          "modality": "event",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.3,
+          "timestamp": 82800000.0,
+          "tags": [
+            "social",
+            "city",
+            "sound"
+          ],
+          "embedding": [],
+          "id": "55fe13fe"
+        },
+        "fragment_count": 11,
+        "energy_cost": 1.2,
+        "constraints_applied": true
+      },
+      "last_network": "dmn",
+      "evaluation_count": 79,
+      "cen_hold_ticks": 0
+    },
+    "default_mode_network": {
+      "name": "default_mode_network",
+      "state": {
+        "active": true,
+        "energy_cost": 0.0,
+        "last_tick": 86400000.0,
+        "custom": {
+          "activation_level": 0.0,
+          "current_theme": "urban life, memory, loneliness, time",
+          "wandering_trace_count": 0,
+          "dream_queue_count": 0,
+          "reflection_buffer_count": 0
+        }
+      },
+      "subscriptions": [
+        "control.module.init",
+        "control.network.cen.active",
+        "control.network.dmn.active",
+        "control.network.switch",
+        "data.memory.trace.query.result",
+        "event.novel.paragraph.published",
+        "fragment.cen.new",
+        "fragment.dmn.new",
+        "fragment.dream.new",
+        "fragment.insight.new",
+        "fragment.memory.new",
+        "fragment.novel.new",
+        "fragment.personal.new",
+        "fragment.reflection.new",
+        "fragment.sandbox.new",
+        "fragment.social.new",
+        "identity.constraints",
+        "identity.initialized"
+      ],
+      "activation_level": 1.0,
+      "current_theme": "creation, insight, writing",
+      "identity_constraints": {
+        "name": "novelist",
+        "pen_name": "",
+        "values": [
+          "truth",
+          "empathy",
+          "beauty",
+          "freedom"
+        ],
+        "traits": {
+          "openness": 0.8,
+          "introversion": 0.7,
+          "neuroticism": 0.5,
+          "conscientiousness": 0.6
+        },
+        "interests": [
+          "urban life",
+          "memory",
+          "loneliness",
+          "time"
+        ],
+        "self_narrative": "I am a quiet observer who turns ordinary moments into fiction.",
+        "voice_signature": {}
+      },
+      "last_phase": "deep_night",
+      "wandering_traces": [],
+      "dream_queue": [
+        {
+          "content": "Outside, an unnamed city at dawn unfolded in gray increments. world watched it from a still point, as though the whole morning were a sentence written only to be revised. What happened next unfolded slowly: In a 大成功, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, while the city held its breath outside the window. world observed it with the particular clarity of someone who knows that ordinary moments are the true plot of a life. world was still trying to name the feeling when In a 成功, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, and the silence that followed was itself a kind of answer. The sensation was less like surprise than like recognition delayed by years. Then, as if the moment had been waiting for permission: In a 失败, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, while the city held its breath outside the window. world noticed how the air seemed to change its mind about silence. world spoke the words only to the empty room, yet they sounded like a letter written to someone who might never read it: 'I am still here, even when the story forgets me. ' Somewhere beneath the surface of the moment moved the residue of older days—a character returning not as fact but as weather, changing the temperature of everything world touched. When the light finally shifted, world remained in place, holding the moment like a fragile manuscript: one more paragraph, one more silence, one more step toward the story that was slowly becoming real.",
+          "source": "novel",
+          "modality": "scene",
+          "valence": 0.2,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 0.0,
+          "tags": [
+            "novel",
+            "feedback"
+          ],
+          "embedding": [],
+          "id": "3d2b2d9e"
+        },
+        {
+          "content": "Coffee steam blurred the window; outside, commuters moved like figures in an unfinished sketch.",
+          "source": "dmn",
+          "modality": "emotion",
+          "valence": 0.048,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 0.0,
+          "tags": [
+            "city",
+            "coffee",
+            "loneliness",
+            "memory",
+            "morning",
+            "reflection",
+            "time",
+            "urban life"
+          ],
+          "embedding": [],
+          "id": "86045ab4"
+        },
+        {
+          "content": "an unnamed city at dawn held its breath at morning, as if the world itself were waiting for Coffee to make the first move. Light fell through the window in pale slabs, illuminating dust motes that drifted like thoughts suspended between memory and the present moment. What happened next unfolded slowly: In a 失败, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, while the city held its breath outside the window. Coffee observed it with the particular clarity of someone who knows that ordinary moments are the true plot of a life. Coffee was still trying to name the feeling when In a 大成功, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, while the city held its breath outside the window, while the city held its breath outside the window. The sensation was less like surprise than like recognition delayed by years. Then, as if the moment had been waiting for permission: In a 失败, what happens when Coffee attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, and the silence that followed was itself a kind of answer. Coffee noticed how the air seemed to change its mind about silence. 'I keep thinking about what you said,' Coffee admitted, the words escaping like moths. world looked away. 'Some things aren't meant to be finished,' world replied. 'Only carried. ' Somewhere beneath the surface of the moment moved the residue of older days—a character returning not as fact but as weather, changing the temperature of everything Coffee touched. And so the morning settled into its own uncertain conclusion, leaving Coffee with the peculiar loneliness of a person who has finally understood the next sentence but must still find the courage to write it.",
+          "source": "novel",
+          "modality": "scene",
+          "valence": 0.2,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 0.0,
+          "tags": [
+            "novel",
+            "feedback"
+          ],
+          "embedding": [],
+          "id": "6ad2a91f"
+        },
+        {
+          "content": "A line in the notebook embarrasses you now; it is also the truest thing there. (touched by the old theme of memory)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.1,
+          "arousal": 0.4,
+          "salience": 0.55,
+          "timestamp": 64800000.0,
+          "tags": [
+            "reflection",
+            "notebook",
+            "truth"
+          ],
+          "embedding": [],
+          "id": "ccdbcf75"
+        },
+        {
+          "content": "Coffee steam blurred the window; outside, commuters moved like figures in an unfinished sketch.",
+          "source": "dmn",
+          "modality": "emotion",
+          "valence": 0.051,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 0.0,
+          "tags": [
+            "city",
+            "coffee",
+            "loneliness",
+            "memory",
+            "morning",
+            "reflection",
+            "time",
+            "urban life"
+          ],
+          "embedding": [],
+          "id": "9cb80f62"
+        },
+        {
+          "content": "The city woke slowly, unfolding its streets like a letter written in gray ink.",
+          "source": "dmn",
+          "modality": "emotion",
+          "valence": 0.073,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 0.0,
+          "tags": [
+            "loneliness",
+            "memory",
+            "reflection",
+            "time",
+            "urban life"
+          ],
+          "embedding": [],
+          "id": "d91ed387"
+        },
+        {
+          "content": "The problem you left at the desk follows you at a distance. (touched by the old theme of time)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 75600000.0,
+          "tags": [
+            "incubation",
+            "problem",
+            "wandering"
+          ],
+          "embedding": [],
+          "id": "cc359d28"
+        },
+        {
+          "content": "The problem you left at the desk follows you at a distance.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 79200000.0,
+          "tags": [
+            "incubation",
+            "problem",
+            "wandering"
+          ],
+          "embedding": [],
+          "id": "f2e3f0c4"
+        },
+        {
+          "content": "A half-remembered dream dissolves into the ceiling.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.25,
+          "timestamp": 86400000.0,
+          "tags": [
+            "dream",
+            "night",
+            "fragments"
+          ],
+          "embedding": [],
+          "id": "473be1d2"
+        },
+        {
+          "content": "A door appeared in the wall of rain. You opened it and found a room where every clock ran backwards.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": 0.045,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 86400000.0,
+          "tags": [
+            "creation",
+            "dream",
+            "insight",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life",
+            "writing"
+          ],
+          "embedding": [],
+          "id": "2e702066"
+        }
+      ],
+      "reflection_buffer": [
+        {
+          "content": "Coffee steam blurred the window; outside, commuters moved like figures in an unfinished sketch.",
+          "source": "dmn",
+          "modality": "concept",
+          "valence": 0.082,
+          "arousal": 0.6,
+          "salience": 0.85,
+          "timestamp": 0.0,
+          "tags": [
+            "insight",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life"
+          ],
+          "embedding": [],
+          "id": "f8d3fd1f"
+        },
+        {
+          "content": "Steps on wet pavement, no destination in mind. (touched by the old theme of memory)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 68400000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "ebe1b4eb"
+        },
+        {
+          "content": "A stranger's gesture lodges in attention without reason.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.4,
+          "timestamp": 72000000.0,
+          "tags": [
+            "incubation",
+            "observation",
+            "stranger"
+          ],
+          "embedding": [],
+          "id": "f91b93c8"
+        },
+        {
+          "content": "Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: Coffee steam blurred the window; outside, commuters moved like figures in an unfinished sketch. | Steps on wet pavement, no destination in mind. (touched by the old theme of memory) | A stranger's gesture lodges in attention without reason, though no one was sure whether it had really happened.",
+          "source": "dmn",
+          "modality": "concept",
+          "valence": 0.093,
+          "arousal": 0.6,
+          "salience": 0.85,
+          "timestamp": 0.0,
+          "tags": [
+            "creation",
+            "insight",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life",
+            "writing"
+          ],
+          "embedding": [],
+          "id": "3175eb07"
+        },
+        {
+          "content": "Steps on wet pavement, no destination in mind. [beauty]",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 73800000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "63541c72"
+        },
+        {
+          "content": "Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: A stranger's gesture lodges in attention without reason. | Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: Coffee steam blurred the window; outside, commuters moved like figures in an unfinished sketch. | Steps on wet pavement, no destination in mind. (touched by the old theme of memory) | A stranger's gesture lodges in attention without reason, though no one was sure whether it had really happened. | Steps on wet pavement, no destination in mind. [beauty], while the city held its breath outside the window.",
+          "source": "dmn",
+          "modality": "concept",
+          "valence": 0.082,
+          "arousal": 0.6,
+          "salience": 0.85,
+          "timestamp": 0.0,
+          "tags": [
+            "creation",
+            "insight",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life",
+            "writing"
+          ],
+          "embedding": [],
+          "id": "4fee9f5a"
+        },
+        {
+          "content": "The problem you left at the desk follows you at a distance. (touched by the old theme of time)",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 75600000.0,
+          "tags": [
+            "incubation",
+            "problem",
+            "wandering"
+          ],
+          "embedding": [],
+          "id": "cc359d28"
+        },
+        {
+          "content": "Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: Steps on wet pavement, no destination in mind. [beauty] | Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: A stranger's gesture lodges in attention without reason. | Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: Coffee steam blurred the window; outside, commuters moved like figures in an unfinished sketch. | Steps on wet pavement, no destination in mind. (touched by the old theme of memory) | A stranger's gesture lodges in attention without reason, though no one was sure whether it had really happened. | Steps on wet pavement, no destination in mind. [beauty], while the city held its breath outside the window. | The problem you left at the desk follows you at a distance. (touched by the old theme of time), while the city held its breath outside the window.",
+          "source": "dmn",
+          "modality": "concept",
+          "valence": 0.056,
+          "arousal": 0.6,
+          "salience": 0.85,
+          "timestamp": 0.0,
+          "tags": [
+            "creation",
+            "insight",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life",
+            "writing"
+          ],
+          "embedding": [],
+          "id": "b32df5f3"
+        },
+        {
+          "content": "A streetlamp comes on while you are still looking at it.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.2,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 77400000.0,
+          "tags": [
+            "incubation",
+            "light",
+            "evening"
+          ],
+          "embedding": [],
+          "id": "6feb3971"
+        },
+        {
+          "content": "Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: The problem you left at the desk follows you at a distance. (touched by the old theme of time) | Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: Steps on wet pavement, no destination in mind. [beauty] | Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: A stranger's gesture lodges in attention without reason. | Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: Coffee steam blurred the window; outside, commuters moved like figures in an unfinished sketch. | Steps on wet pavement, no destination in mind. (touched by the old theme of memory) | A stranger's gesture lodges in attention without reason, though no one was sure whether it had really happened. | Steps on wet pavement, no destination in mind. [beauty], while the city held its breath outside the window. | The problem you left at the desk follows you at a distance. (touched by the old theme of time), while the city held its breath outside the window. | A streetlamp comes on while you are still looking at it, though no one was sure whether it had really happened.",
+          "source": "dmn",
+          "modality": "concept",
+          "valence": 0.054,
+          "arousal": 0.6,
+          "salience": 0.85,
+          "timestamp": 0.0,
+          "tags": [
+            "creation",
+            "insight",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life",
+            "writing"
+          ],
+          "embedding": [],
+          "id": "3dee8315"
+        },
+        {
+          "content": "The problem you left at the desk follows you at a distance.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": -0.1,
+          "arousal": 0.4,
+          "salience": 0.5,
+          "timestamp": 79200000.0,
+          "tags": [
+            "incubation",
+            "problem",
+            "wandering"
+          ],
+          "embedding": [],
+          "id": "f2e3f0c4"
+        },
+        {
+          "content": "Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: A streetlamp comes on while you are still looking at it. | Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: The problem you left at the desk follows you at a distance. (touched by the old theme of time) | Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: Steps on wet pavement, no destination in mind. [beauty] | Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: A stranger's gesture lodges in attention without reason. | Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: Coffee steam blurred the window; outside, commuters moved like figures in an unfinished sketch. | Steps on wet pavement, no destination in mind. (touched by the old theme of memory) | A stranger's gesture lodges in attention without reason, though no one was sure whether it had really happened. | Steps on wet pavement, no destination in mind. [beauty], while the city held its breath outside the window. | The problem you left at the desk follows you at a distance. (touched by the old theme of time), while the city held its breath outside the window. | A streetlamp comes on while you are still looking at it, though no one was sure whether it had really happened. | The problem you left at the desk follows you at a distance, while the city held its breath outside the window.",
+          "source": "dmn",
+          "modality": "concept",
+          "valence": 0.052,
+          "arousal": 0.6,
+          "salience": 0.85,
+          "timestamp": 0.0,
+          "tags": [
+            "creation",
+            "insight",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life",
+            "writing"
+          ],
+          "embedding": [],
+          "id": "b056037f"
+        },
+        {
+          "content": "Steps on wet pavement, no destination in mind.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 81000000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "b77219b3"
+        },
+        {
+          "content": "Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: The problem you left at the desk follows you at a distance. | Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: A streetlamp comes on while you are still looking at it. | Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: The problem you left at the desk follows you at a distance. (touched by the old theme of time) | Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: Steps on wet pavement, no destination in mind. [beauty] | Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: A stranger's gesture lodges in attention without reason. | Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: Coffee steam blurred the window; outside, commuters moved like figures in an unfinished sketch. | Steps on wet pavement, no destination in mind. (touched by the old theme of memory) | A stranger's gesture lodges in attention without reason, though no one was sure whether it had really happened. | Steps on wet pavement, no destination in mind. [beauty], while the city held its breath outside the window. | The problem you left at the desk follows you at a distance. (touched by the old theme of time), while the city held its breath outside the window. | A streetlamp comes on while you are still looking at it, though no one was sure whether it had really happened. | The problem you left at the desk follows you at a distance, while the city held its breath outside the window. | Steps on wet pavement, no destination in mind, and the silence that followed was itself a kind of answer.",
+          "source": "dmn",
+          "modality": "concept",
+          "valence": 0.06,
+          "arousal": 0.6,
+          "salience": 0.85,
+          "timestamp": 0.0,
+          "tags": [
+            "creation",
+            "insight",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life",
+            "writing"
+          ],
+          "embedding": [],
+          "id": "b5805178"
+        },
+        {
+          "content": "Distant sirens remind you that the city is awake even when you are not. [beauty]",
+          "source": "social",
+          "modality": "event",
+          "valence": -0.1,
+          "arousal": 0.3,
+          "salience": 0.3,
+          "timestamp": 82800000.0,
+          "tags": [
+            "social",
+            "city",
+            "sound"
+          ],
+          "embedding": [],
+          "id": "55fe13fe"
+        },
+        {
+          "content": "A streetlamp comes on while you are still looking at it. (touched by the old theme of memory)",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.2,
+          "arousal": 0.2,
+          "salience": 0.3,
+          "timestamp": 82800000.0,
+          "tags": [
+            "incubation",
+            "light",
+            "evening"
+          ],
+          "embedding": [],
+          "id": "75943f9e"
+        },
+        {
+          "content": "Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: The problem you left at the desk follows you at a distance. | Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: A streetlamp comes on while you are still looking at it. | Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: The problem you left at the desk follows you at a distance. (touched by the old theme of time) | Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: Steps on wet pavement, no destination in mind. [beauty] | Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: A stranger's gesture lodges in attention without reason. | Create a insight fragment on the theme of creation, insight, writing. Identity: I am a quiet observer who turns ordinary moments into fiction. Recent traces: A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. | A sentence arrives almost fully formed and is written down before doubt can touch it. Raw material: Coffee steam blurred the window; outside, commuters moved like figures in an unfinished sketch. | Steps on wet pavement, no destination in mind. (touched by the old theme of memory) | A stranger's gesture lodges in attention without reason, though no one was sure whether it had really happened. | Steps on wet pavement, no destination in mind. [beauty], while the city held its breath outside the window. | The problem you left at the desk follows you at a distance. (touched by the old theme of time), while the city held its breath outside the window. | A streetlamp comes on while you are still looking at it, though no one was sure whether it had really happened. | The problem you left at the desk follows you at a distance, while the city held its breath outside the window. | Steps on wet pavement, no destination in mind, and the silence that followed was itself a kind of answer. | Distant sirens remind you that the city is awake even when you are not. [beauty] | A streetlamp comes on while you are still looking at it. (touched by the old theme of memory), while the city held its breath outside the window.",
+          "source": "dmn",
+          "modality": "concept",
+          "valence": 0.055,
+          "arousal": 0.6,
+          "salience": 0.85,
+          "timestamp": 0.0,
+          "tags": [
+            "creation",
+            "insight",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life",
+            "writing"
+          ],
+          "embedding": [],
+          "id": "11b335bf"
+        },
+        {
+          "content": "Steps on wet pavement, no destination in mind.",
+          "source": "personal",
+          "modality": "event",
+          "valence": 0.1,
+          "arousal": 0.3,
+          "salience": 0.35,
+          "timestamp": 84600000.0,
+          "tags": [
+            "incubation",
+            "walking",
+            "city"
+          ],
+          "embedding": [],
+          "id": "2628d5e1"
+        },
+        {
+          "content": "A half-remembered dream dissolves into the ceiling.",
+          "source": "personal",
+          "modality": "emotion",
+          "valence": 0.0,
+          "arousal": 0.3,
+          "salience": 0.25,
+          "timestamp": 86400000.0,
+          "tags": [
+            "dream",
+            "night",
+            "fragments"
+          ],
+          "embedding": [],
+          "id": "473be1d2"
+        },
+        {
+          "content": "A door appeared in the wall of rain. You opened it and found a room where every clock ran backwards.",
+          "source": "dream",
+          "modality": "scene",
+          "valence": 0.045,
+          "arousal": 0.7,
+          "salience": 0.4,
+          "timestamp": 86400000.0,
+          "tags": [
+            "creation",
+            "dream",
+            "insight",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life",
+            "writing"
+          ],
+          "embedding": [],
+          "id": "2e702066"
+        }
+      ]
+    },
+    "central_executive_network": {
+      "name": "central_executive_network",
+      "state": {
+        "active": false,
+        "energy_cost": 0.0,
+        "last_tick": 86400000.0,
+        "custom": {
+          "goal_stack": [
+            {
+              "id": "04f85291",
+              "name": "持续探索人性与城市记忆的小说创作",
+              "goal_type": "life",
+              "priority": 1.0,
+              "status": "active"
+            },
+            {
+              "id": "49e0bb46",
+              "name": "完成今日的脑中世界推演与叙事生成",
+              "goal_type": "daily",
+              "priority": 0.8,
+              "status": "active"
+            },
+            {
+              "id": "e1e76653",
+              "name": "等待灵感触发",
+              "goal_type": "task",
+              "priority": 0.5,
+              "status": "active"
+            }
+          ],
+          "current_goal": {
+            "id": "e1e76653",
+            "name": "等待灵感触发",
+            "goal_type": "task",
+            "priority": 0.5,
+            "status": "active"
+          },
+          "current_task": "等待灵感触发",
+          "executive_load": 0.0,
+          "working_memory_count": 0,
+          "sandbox_built": false,
+          "awaiting_ready": false,
+          "narrative_ready": false,
+          "current_phase": null,
+          "proactive_build_pending": false,
+          "narrative_triggered_phases": [],
+          "build_phase": null
+        }
+      },
+      "subscriptions": [
+        "control.module.init",
+        "control.network.cen.active",
+        "control.network.dmn.active",
+        "control.network.switch",
+        "data.memory.trace.query.result",
+        "data.sandbox.narrative.ready",
+        "fragment.insight.new",
+        "identity.constraints",
+        "identity.initialized"
+      ],
+      "goal_stack": [
+        {
+          "id": "04f85291",
+          "name": "持续探索人性与城市记忆的小说创作",
+          "goal_type": "life",
+          "priority": 1.0,
+          "status": "active"
+        },
+        {
+          "id": "49e0bb46",
+          "name": "完成今日的脑中世界推演与叙事生成",
+          "goal_type": "daily",
+          "priority": 0.8,
+          "status": "active"
+        },
+        {
+          "id": "350079a6",
+          "name": "基于灵感检索记忆痕迹",
+          "goal_type": "task",
+          "priority": 0.75,
+          "status": "active"
+        }
+      ],
+      "current_goal": {
+        "id": "350079a6",
+        "name": "基于灵感检索记忆痕迹",
+        "goal_type": "task",
+        "priority": 0.75,
+        "status": "active"
+      },
+      "working_memory": [
+        {
+          "content": "Create a insight fragment on the theme of urban life, memory, loneliness, time. Identity: I am a quiet observer who turns ordinary moments into fiction. Raw material: The city woke slowly, unfolding its streets like a letter written in gray ink. | Coffee steam blurred the window; outside, commuters moved like figures in an unfinished sketch. | Steps on wet pavement, no destination in mind. (touched by the old theme of memory), while the city held its breath outside the window.",
+          "source": "dmn",
+          "modality": "concept",
+          "valence": 0.092,
+          "arousal": 0.6,
+          "salience": 0.85,
+          "timestamp": 0.0,
+          "tags": [
+            "insight",
+            "loneliness",
+            "memory",
+            "time",
+            "urban life"
+          ],
+          "embedding": [],
+          "id": "70d7ae00"
+        }
+      ],
+      "executive_load": 0.0,
+      "current_task": "后台待机",
+      "sandbox_built": false,
+      "awaiting_ready": false,
+      "narrative_ready": false,
+      "current_phase": "deep_night",
+      "proactive_build_pending": false,
+      "narrative_triggered_phases": [
+        "creation",
+        "simulation"
+      ],
+      "build_phase": null,
+      "latest_traces": [],
+      "identity_constraints": {
+        "name": "novelist",
+        "pen_name": "",
+        "values": [
+          "truth",
+          "empathy",
+          "beauty",
+          "freedom"
+        ],
+        "traits": {
+          "openness": 0.8,
+          "introversion": 0.7,
+          "neuroticism": 0.5,
+          "conscientiousness": 0.6
+        },
+        "interests": [
+          "urban life",
+          "memory",
+          "loneliness",
+          "time"
+        ],
+        "self_narrative": "I am a quiet observer who turns ordinary moments into fiction.",
+        "voice_signature": {}
+      }
+    },
+    "mental_sandbox": {
+      "name": "mental_sandbox",
+      "state": {
+        "active": true,
+        "energy_cost": 0.25,
+        "last_tick": 86400000.0,
+        "custom": {
+          "simulation_round": 1,
+          "narrative_line_count": 3,
+          "character_count": 46,
+          "world_built": true
+        }
+      },
+      "subscriptions": [
+        "control.module.init",
+        "control.sandbox.build",
+        "control.sandbox.simulate",
+        "data.identity.constraint",
+        "data.memory.trace.query.result"
+      ],
+      "min_rounds": 3,
+      "max_rounds": 6,
+      "depth_thresholds": {
+        "conflict_depth": 0.6,
+        "character_development": 0.5,
+        "emotional_shift": 0.5,
+        "coherence_score": 0.6
+      },
+      "world_model": {
+        "name": "脑中世界",
+        "ontology": {
+          "genre": "literary fiction",
+          "tone": "melancholic",
+          "setting": "an unnamed city at dawn"
+        },
+        "rules": [
+          "actions have emotional consequences",
+          "randomness shapes fate"
+        ],
+        "history": [
+          "Round 1: Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer. -> 大成功",
+          "Round 2: Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer. -> 成功",
+          "Round 3: Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer. -> 失败",
+          "Round 1: Suggest a meaningful action in a literary fiction story, while the city held its breath outside the window. -> 大成功",
+          "Round 2: Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer. -> 失败",
+          "Round 3: Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer. -> 失败",
+          "Round 1: Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer. -> 失败"
+        ],
+        "current_state": {
+          "time": "morning",
+          "mood": "quiet",
+          "last_outcome": "失败",
+          "last_action": "Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer."
+        },
+        "prediction_errors": [
+          {
+            "round": 1,
+            "expected": 40.1,
+            "observed": 59,
+            "error": 18.9
+          }
+        ],
+        "id": "7afcb6d7"
+      },
+      "characters": [
+        {
+          "name": "Coffee",
+          "archetype": "the urban wanderer",
+          "source_trace_ids": [
+            "6e52d19a"
+          ],
+          "traits": {
+            "openness": 0.42134000000000005,
+            "conscientiousness": 0.513,
+            "extraversion": 0.524,
+            "agreeableness": 0.586,
+            "neuroticism": 0.40165
+          },
+          "desires": [
+            {
+              "object": "to find meaning in the city",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "Describe an internal conflict for a the urban wanderer named Coffee based on: Coffee steam rises while the city mutters awake outside, while the city held its breath outside the window.",
+          "id": "eb018d04"
+        },
+        {
+          "name": "Coffee",
+          "archetype": "the urban wanderer",
+          "source_trace_ids": [
+            "36581452"
+          ],
+          "traits": {
+            "openness": 0.458,
+            "conscientiousness": 0.467,
+            "extraversion": 0.411,
+            "agreeableness": 0.648,
+            "neuroticism": 0.468
+          },
+          "desires": [
+            {
+              "object": "to find meaning in the city",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "Describe an internal conflict for a the urban wanderer named Coffee based on: Coffee steam rises while the city mutters awake outside, though no one was sure whether it had really happened.",
+          "id": "c012facd"
+        },
+        {
+          "name": "Coffee",
+          "archetype": "the urban wanderer",
+          "source_trace_ids": [
+            "c253cdbd"
+          ],
+          "traits": {
+            "openness": 0.38,
+            "conscientiousness": 0.459,
+            "extraversion": 0.411,
+            "agreeableness": 0.386,
+            "neuroticism": 0.469
+          },
+          "desires": [
+            {
+              "object": "to find meaning in the city",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "Describe an internal conflict for a the urban wanderer named Coffee based on: Coffee steam rises while the city mutters awake outside, and the silence that followed was itself a kind of answer.",
+          "id": "71ebfd49"
+        },
+        {
+          "name": "Coffee",
+          "archetype": "the urban wanderer",
+          "source_trace_ids": [
+            "6e52d19a"
+          ],
+          "traits": {
+            "openness": 0.624,
+            "conscientiousness": 0.446,
+            "extraversion": 0.521,
+            "agreeableness": 0.632,
+            "neuroticism": 0.426
+          },
+          "desires": [
+            {
+              "object": "to find meaning in the city",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "Describe an internal conflict for a the urban wanderer named Coffee based on: Coffee steam rises while the city mutters awake outside, and the silence that followed was itself a kind of answer.",
+          "id": "85870f14"
+        },
+        {
+          "name": "Coffee",
+          "archetype": "the urban wanderer",
+          "source_trace_ids": [
+            "36581452"
+          ],
+          "traits": {
+            "openness": 0.591,
+            "conscientiousness": 0.505,
+            "extraversion": 0.582,
+            "agreeableness": 0.318,
+            "neuroticism": 0.308
+          },
+          "desires": [
+            {
+              "object": "to find meaning in the city",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "Describe an internal conflict for a the urban wanderer named Coffee based on: Coffee steam rises while the city mutters awake outside, while the city held its breath outside the window.",
+          "id": "aacf536e"
+        },
+        {
+          "name": "Coffee",
+          "archetype": "the urban wanderer",
+          "source_trace_ids": [
+            "c253cdbd"
+          ],
+          "traits": {
+            "openness": 0.419,
+            "conscientiousness": 0.356,
+            "extraversion": 0.393,
+            "agreeableness": 0.34,
+            "neuroticism": 0.323
+          },
+          "desires": [
+            {
+              "object": "to find meaning in the city",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "Describe an internal conflict for a the urban wanderer named Coffee based on: Coffee steam rises while the city mutters awake outside, while the city held its breath outside the window.",
+          "id": "29c76ff5"
+        },
+        {
+          "name": "Character-fca2",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "fca23365"
+          ],
+          "traits": {
+            "openness": 0.587,
+            "conscientiousness": 0.521,
+            "extraversion": 0.448,
+            "agreeableness": 0.384,
+            "neuroticism": 0.4
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "He measured every word as if language were a currency about to collapse.",
+          "id": "3f9e6845"
+        },
+        {
+          "name": "Character-8e53",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "8e534b41"
+          ],
+          "traits": {
+            "openness": 0.677,
+            "conscientiousness": 0.606,
+            "extraversion": 0.544,
+            "agreeableness": 0.368,
+            "neuroticism": 0.539
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "She carried her secrets lightly, the way others carry keys.",
+          "id": "a1bffeb9"
+        },
+        {
+          "name": "Character-1f18",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "1f18b2c5"
+          ],
+          "traits": {
+            "openness": 0.445,
+            "conscientiousness": 0.526,
+            "extraversion": 0.696,
+            "agreeableness": 0.556,
+            "neuroticism": 0.487
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "He measured every word as if language were a currency about to collapse.",
+          "id": "f44d020c"
+        },
+        {
+          "name": "Character-85c9",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "85c903ab"
+          ],
+          "traits": {
+            "openness": 0.601,
+            "conscientiousness": 0.665,
+            "extraversion": 0.61,
+            "agreeableness": 0.392,
+            "neuroticism": 0.33
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "He measured every word as if language were a currency about to collapse.",
+          "id": "a314ecc4"
+        },
+        {
+          "name": "Character-fca2",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "fca23365"
+          ],
+          "traits": {
+            "openness": 0.491,
+            "conscientiousness": 0.492,
+            "extraversion": 0.384,
+            "agreeableness": 0.677,
+            "neuroticism": 0.583
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "She carried her secrets lightly, the way others carry keys.",
+          "id": "3d8e4be8"
+        },
+        {
+          "name": "Character-8e53",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "8e534b41"
+          ],
+          "traits": {
+            "openness": 0.49,
+            "conscientiousness": 0.609,
+            "extraversion": 0.458,
+            "agreeableness": 0.666,
+            "neuroticism": 0.458
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "She carried her secrets lightly, the way others carry keys.",
+          "id": "f7b01676"
+        },
+        {
+          "name": "Character-1f18",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "1f18b2c5"
+          ],
+          "traits": {
+            "openness": 0.475,
+            "conscientiousness": 0.486,
+            "extraversion": 0.525,
+            "agreeableness": 0.405,
+            "neuroticism": 0.495
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "He measured every word as if language were a currency about to collapse.",
+          "id": "93d38c38"
+        },
+        {
+          "name": "Character-85c9",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "85c903ab"
+          ],
+          "traits": {
+            "openness": 0.665,
+            "conscientiousness": 0.532,
+            "extraversion": 0.388,
+            "agreeableness": 0.699,
+            "neuroticism": 0.473
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "He measured every word as if language were a currency about to collapse.",
+          "id": "51b007c2"
+        },
+        {
+          "name": "Character-fca2",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "fca23365"
+          ],
+          "traits": {
+            "openness": 0.423,
+            "conscientiousness": 0.426,
+            "extraversion": 0.344,
+            "agreeableness": 0.551,
+            "neuroticism": 0.558
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "He measured every word as if language were a currency about to collapse.",
+          "id": "be8cdaa6"
+        },
+        {
+          "name": "Character-8e53",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "8e534b41"
+          ],
+          "traits": {
+            "openness": 0.523,
+            "conscientiousness": 0.431,
+            "extraversion": 0.453,
+            "agreeableness": 0.698,
+            "neuroticism": 0.479
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "She carried her secrets lightly, the way others carry keys.",
+          "id": "309e7bc6"
+        },
+        {
+          "name": "Character-1f18",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "1f18b2c5"
+          ],
+          "traits": {
+            "openness": 0.687,
+            "conscientiousness": 0.67,
+            "extraversion": 0.305,
+            "agreeableness": 0.588,
+            "neuroticism": 0.525
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "She carried her secrets lightly, the way others carry keys.",
+          "id": "bdda86ac"
+        },
+        {
+          "name": "Character-85c9",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "85c903ab"
+          ],
+          "traits": {
+            "openness": 0.557,
+            "conscientiousness": 0.492,
+            "extraversion": 0.556,
+            "agreeableness": 0.345,
+            "neuroticism": 0.45
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "He measured every word as if language were a currency about to collapse.",
+          "id": "b39c8443"
+        },
+        {
+          "name": "Character-fca2",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "fca23365"
+          ],
+          "traits": {
+            "openness": 0.532,
+            "conscientiousness": 0.698,
+            "extraversion": 0.65,
+            "agreeableness": 0.405,
+            "neuroticism": 0.47
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "She carried her secrets lightly, the way others carry keys.",
+          "id": "5dc2a601"
+        },
+        {
+          "name": "Character-8e53",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "8e534b41"
+          ],
+          "traits": {
+            "openness": 0.45,
+            "conscientiousness": 0.686,
+            "extraversion": 0.648,
+            "agreeableness": 0.419,
+            "neuroticism": 0.512
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "She carried her secrets lightly, the way others carry keys.",
+          "id": "7ee3c934"
+        },
+        {
+          "name": "Character-1f18",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "1f18b2c5"
+          ],
+          "traits": {
+            "openness": 0.579,
+            "conscientiousness": 0.458,
+            "extraversion": 0.605,
+            "agreeableness": 0.516,
+            "neuroticism": 0.554
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "He measured every word as if language were a currency about to collapse.",
+          "id": "3b17ebb2"
+        },
+        {
+          "name": "Character-85c9",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "85c903ab"
+          ],
+          "traits": {
+            "openness": 0.555,
+            "conscientiousness": 0.412,
+            "extraversion": 0.43,
+            "agreeableness": 0.308,
+            "neuroticism": 0.599
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "She carried her secrets lightly, the way others carry keys.",
+          "id": "99945af2"
+        },
+        {
+          "name": "Character-fca2",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "fca23365"
+          ],
+          "traits": {
+            "openness": 0.66,
+            "conscientiousness": 0.661,
+            "extraversion": 0.423,
+            "agreeableness": 0.323,
+            "neuroticism": 0.583
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "He measured every word as if language were a currency about to collapse.",
+          "id": "14c80492"
+        },
+        {
+          "name": "Character-8e53",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "8e534b41"
+          ],
+          "traits": {
+            "openness": 0.68,
+            "conscientiousness": 0.438,
+            "extraversion": 0.494,
+            "agreeableness": 0.328,
+            "neuroticism": 0.548
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "He measured every word as if language were a currency about to collapse.",
+          "id": "4bcb7ef2"
+        },
+        {
+          "name": "Character-1f18",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "1f18b2c5"
+          ],
+          "traits": {
+            "openness": 0.626,
+            "conscientiousness": 0.451,
+            "extraversion": 0.49,
+            "agreeableness": 0.52,
+            "neuroticism": 0.4
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "He measured every word as if language were a currency about to collapse.",
+          "id": "0a616441"
+        },
+        {
+          "name": "Character-85c9",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "85c903ab"
+          ],
+          "traits": {
+            "openness": 0.658,
+            "conscientiousness": 0.539,
+            "extraversion": 0.385,
+            "agreeableness": 0.516,
+            "neuroticism": 0.539
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "She carried her secrets lightly, the way others carry keys.",
+          "id": "fbf854a5"
+        },
+        {
+          "name": "Character-fca2",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "fca23365"
+          ],
+          "traits": {
+            "openness": 0.456,
+            "conscientiousness": 0.506,
+            "extraversion": 0.698,
+            "agreeableness": 0.56,
+            "neuroticism": 0.451
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "He measured every word as if language were a currency about to collapse.",
+          "id": "f19cc513"
+        },
+        {
+          "name": "Character-8e53",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "8e534b41"
+          ],
+          "traits": {
+            "openness": 0.551,
+            "conscientiousness": 0.448,
+            "extraversion": 0.39,
+            "agreeableness": 0.435,
+            "neuroticism": 0.496
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "She carried her secrets lightly, the way others carry keys.",
+          "id": "10543086"
+        },
+        {
+          "name": "Character-1f18",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "1f18b2c5"
+          ],
+          "traits": {
+            "openness": 0.465,
+            "conscientiousness": 0.478,
+            "extraversion": 0.328,
+            "agreeableness": 0.552,
+            "neuroticism": 0.389
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "He measured every word as if language were a currency about to collapse.",
+          "id": "e49d493c"
+        },
+        {
+          "name": "Character-85c9",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "85c903ab"
+          ],
+          "traits": {
+            "openness": 0.668,
+            "conscientiousness": 0.67,
+            "extraversion": 0.328,
+            "agreeableness": 0.395,
+            "neuroticism": 0.521
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "She carried her secrets lightly, the way others carry keys.",
+          "id": "f99e1657"
+        },
+        {
+          "name": "Character-fca2",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "fca23365"
+          ],
+          "traits": {
+            "openness": 0.46,
+            "conscientiousness": 0.452,
+            "extraversion": 0.674,
+            "agreeableness": 0.528,
+            "neuroticism": 0.462
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "He measured every word as if language were a currency about to collapse.",
+          "id": "b31382fb"
+        },
+        {
+          "name": "Character-8e53",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "8e534b41"
+          ],
+          "traits": {
+            "openness": 0.631,
+            "conscientiousness": 0.654,
+            "extraversion": 0.376,
+            "agreeableness": 0.339,
+            "neuroticism": 0.449
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "He measured every word as if language were a currency about to collapse.",
+          "id": "dad59dd6"
+        },
+        {
+          "name": "Character-1f18",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "1f18b2c5"
+          ],
+          "traits": {
+            "openness": 0.523,
+            "conscientiousness": 0.552,
+            "extraversion": 0.592,
+            "agreeableness": 0.569,
+            "neuroticism": 0.615
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "She carried her secrets lightly, the way others carry keys.",
+          "id": "1e2d83ff"
+        },
+        {
+          "name": "Character-85c9",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "85c903ab"
+          ],
+          "traits": {
+            "openness": 0.426,
+            "conscientiousness": 0.533,
+            "extraversion": 0.436,
+            "agreeableness": 0.645,
+            "neuroticism": 0.395
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "She carried her secrets lightly, the way others carry keys.",
+          "id": "ff0e59e7"
+        },
+        {
+          "name": "Character-fca2",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "fca23365"
+          ],
+          "traits": {
+            "openness": 0.453,
+            "conscientiousness": 0.547,
+            "extraversion": 0.469,
+            "agreeableness": 0.411,
+            "neuroticism": 0.395
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "She carried her secrets lightly, the way others carry keys.",
+          "id": "e75ef67c"
+        },
+        {
+          "name": "Character-8e53",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "8e534b41"
+          ],
+          "traits": {
+            "openness": 0.673,
+            "conscientiousness": 0.545,
+            "extraversion": 0.645,
+            "agreeableness": 0.52,
+            "neuroticism": 0.335
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "She carried her secrets lightly, the way others carry keys.",
+          "id": "7745d945"
+        },
+        {
+          "name": "Character-1f18",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "1f18b2c5"
+          ],
+          "traits": {
+            "openness": 0.696,
+            "conscientiousness": 0.663,
+            "extraversion": 0.688,
+            "agreeableness": 0.671,
+            "neuroticism": 0.575
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "He measured every word as if language were a currency about to collapse.",
+          "id": "73e28c8d"
+        },
+        {
+          "name": "Character-85c9",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "85c903ab"
+          ],
+          "traits": {
+            "openness": 0.446,
+            "conscientiousness": 0.558,
+            "extraversion": 0.385,
+            "agreeableness": 0.46,
+            "neuroticism": 0.338
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "She carried her secrets lightly, the way others carry keys.",
+          "id": "e6b18cfd"
+        },
+        {
+          "name": "Character-fca2",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "fca23365"
+          ],
+          "traits": {
+            "openness": 0.51,
+            "conscientiousness": 0.708,
+            "extraversion": 0.406,
+            "agreeableness": 0.614,
+            "neuroticism": 0.457
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "She carried her secrets lightly, the way others carry keys.",
+          "id": "ab458338"
+        },
+        {
+          "name": "Character-8e53",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "8e534b41"
+          ],
+          "traits": {
+            "openness": 0.523,
+            "conscientiousness": 0.699,
+            "extraversion": 0.698,
+            "agreeableness": 0.522,
+            "neuroticism": 0.536
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "She carried her secrets lightly, the way others carry keys.",
+          "id": "b90735ca"
+        },
+        {
+          "name": "Character-1f18",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "1f18b2c5"
+          ],
+          "traits": {
+            "openness": 0.442,
+            "conscientiousness": 0.501,
+            "extraversion": 0.687,
+            "agreeableness": 0.532,
+            "neuroticism": 0.483
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "He measured every word as if language were a currency about to collapse.",
+          "id": "0580e92b"
+        },
+        {
+          "name": "Character-85c9",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "85c903ab"
+          ],
+          "traits": {
+            "openness": 0.62,
+            "conscientiousness": 0.429,
+            "extraversion": 0.534,
+            "agreeableness": 0.501,
+            "neuroticism": 0.576
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "He measured every word as if language were a currency about to collapse.",
+          "id": "e475612e"
+        },
+        {
+          "name": "Character-fca2",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "fca23365"
+          ],
+          "traits": {
+            "openness": 0.443,
+            "conscientiousness": 0.7,
+            "extraversion": 0.332,
+            "agreeableness": 0.374,
+            "neuroticism": 0.499
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "He measured every word as if language were a currency about to collapse.",
+          "id": "9f91a53e"
+        },
+        {
+          "name": "Character-8e53",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "8e534b41"
+          ],
+          "traits": {
+            "openness": 0.599,
+            "conscientiousness": 0.483,
+            "extraversion": 0.348,
+            "agreeableness": 0.656,
+            "neuroticism": 0.394
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "He measured every word as if language were a currency about to collapse.",
+          "id": "8b198cbc"
+        },
+        {
+          "name": "Character-1f18",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "1f18b2c5"
+          ],
+          "traits": {
+            "openness": 0.574,
+            "conscientiousness": 0.598,
+            "extraversion": 0.468,
+            "agreeableness": 0.533,
+            "neuroticism": 0.477
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "She carried her secrets lightly, the way others carry keys.",
+          "id": "2d72a22c"
+        },
+        {
+          "name": "Character-85c9",
+          "archetype": "the stranger",
+          "source_trace_ids": [
+            "85c903ab"
+          ],
+          "traits": {
+            "openness": 0.676,
+            "conscientiousness": 0.473,
+            "extraversion": 0.586,
+            "agreeableness": 0.395,
+            "neuroticism": 0.439
+          },
+          "desires": [
+            {
+              "object": "to make sense of the past",
+              "strength": 0.5,
+              "urgency": 0.5
+            }
+          ],
+          "relationships": [],
+          "internal_conflict": "He measured every word as if language were a currency about to collapse.",
+          "id": "e73a0606"
+        }
+      ],
+      "current_scene": {
+        "description": "In a 失败, what happens when Coffee attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, while the city held its breath outside the window.",
+        "characters": [
+          "Coffee"
+        ],
+        "setting": "an unnamed city at dawn",
+        "conflict_level": 0.325,
+        "emotional_tone": -0.325,
+        "id": "535d5136"
+      },
+      "narrative_lines": [
+        {
+          "scenes": [
+            {
+              "description": "In a 大成功, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, while the city held its breath outside the window.",
+              "characters": [],
+              "setting": "an unnamed city at dawn",
+              "conflict_level": 0.8,
+              "emotional_tone": 0.8,
+              "id": "05651913"
+            },
+            {
+              "description": "In a 成功, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, and the silence that followed was itself a kind of answer.",
+              "characters": [],
+              "setting": "an unnamed city at dawn",
+              "conflict_level": 0.3,
+              "emotional_tone": 0.3,
+              "id": "fb82cf3e"
+            },
+            {
+              "description": "In a 失败, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, while the city held its breath outside the window.",
+              "characters": [],
+              "setting": "an unnamed city at dawn",
+              "conflict_level": 0.3,
+              "emotional_tone": -0.3,
+              "id": "36c96707"
+            }
+          ],
+          "conflicts": [
+            {
+              "parties": [
+                "world"
+              ],
+              "stakes": "What is at stake for the protagonist, though no one was sure whether it had really happened.",
+              "intensity": 0.8,
+              "resolved": false,
+              "id": "aef37e94"
+            }
+          ],
+          "foreshadowing": [
+            "Foreshadow a future event based on the current world, and the silence that followed was itself a kind of answer."
+          ],
+          "climax": {
+            "description": "In a 大成功, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, while the city held its breath outside the window.",
+            "characters": [],
+            "setting": "an unnamed city at dawn",
+            "conflict_level": 0.8,
+            "emotional_tone": 0.8,
+            "id": "05651913"
+          },
+          "status": "committed",
+          "id": "35cb9112"
+        },
+        {
+          "scenes": [
+            {
+              "description": "In a 失败, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, while the city held its breath outside the window.",
+              "characters": [],
+              "setting": "an unnamed city at dawn",
+              "conflict_level": 0.3,
+              "emotional_tone": -0.3,
+              "id": "36c96707"
+            },
+            {
+              "description": "In a 大成功, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, while the city held its breath outside the window, while the city held its breath outside the window.",
+              "characters": [],
+              "setting": "an unnamed city at dawn",
+              "conflict_level": 0.8,
+              "emotional_tone": 0.8,
+              "id": "ce3b13e5"
+            },
+            {
+              "description": "In a 失败, what happens when Coffee attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, and the silence that followed was itself a kind of answer.",
+              "characters": [
+                "Coffee"
+              ],
+              "setting": "an unnamed city at dawn",
+              "conflict_level": 0.32,
+              "emotional_tone": -0.32,
+              "id": "258f02c8"
+            },
+            {
+              "description": "In a 失败, what happens when Coffee attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, while the city held its breath outside the window.",
+              "characters": [
+                "Coffee"
+              ],
+              "setting": "an unnamed city at dawn",
+              "conflict_level": 0.322,
+              "emotional_tone": -0.322,
+              "id": "cfebbc0c"
+            }
+          ],
+          "conflicts": [
+            {
+              "parties": [
+                "world"
+              ],
+              "stakes": "What is at stake for the protagonist, while the city held its breath outside the window.",
+              "intensity": 0.8,
+              "resolved": false,
+              "id": "aba1f47f"
+            }
+          ],
+          "foreshadowing": [
+            "Foreshadow a future event based on the current world, and the silence that followed was itself a kind of answer.",
+            "Foreshadow a future event based on the current world, and the silence that followed was itself a kind of answer.",
+            "Foreshadow a future event based on the current world, while the city held its breath outside the window."
+          ],
+          "climax": {
+            "description": "In a 大成功, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, while the city held its breath outside the window, while the city held its breath outside the window.",
+            "characters": [],
+            "setting": "an unnamed city at dawn",
+            "conflict_level": 0.8,
+            "emotional_tone": 0.8,
+            "id": "ce3b13e5"
+          },
+          "status": "committed",
+          "id": "8fb9ed4c"
+        },
+        {
+          "scenes": [
+            {
+              "description": "In a 失败, what happens when Coffee attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, while the city held its breath outside the window.",
+              "characters": [
+                "Coffee"
+              ],
+              "setting": "an unnamed city at dawn",
+              "conflict_level": 0.322,
+              "emotional_tone": -0.322,
+              "id": "cfebbc0c"
+            },
+            {
+              "description": "In a 失败, what happens when Coffee attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, while the city held its breath outside the window.",
+              "characters": [
+                "Coffee"
+              ],
+              "setting": "an unnamed city at dawn",
+              "conflict_level": 0.325,
+              "emotional_tone": -0.325,
+              "id": "535d5136"
+            }
+          ],
+          "conflicts": [],
+          "foreshadowing": [],
+          "climax": null,
+          "status": "draft",
+          "id": "53c71a6d"
+        }
+      ],
+      "prediction_errors": [
+        {
+          "round": 1,
+          "dice": 59,
+          "target": 40.1,
+          "outcome": "失败",
+          "emotional_shift": -0.325,
+          "action": "Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer."
+        }
+      ],
+      "simulation_round": 1,
+      "identity_constraints": {},
+      "pending_traces": []
+    },
+    "creation_executive": {
+      "name": "creation_executive",
+      "state": {
+        "active": true,
+        "energy_cost": 0.2,
+        "last_tick": 86400000.0,
+        "custom": {
+          "paragraphs_generated": 2,
+          "narrative_lines_received": 2
+        }
+      },
+      "subscriptions": [
+        "control.module.init",
+        "data.identity.constraint",
+        "data.memory.trace.query.result",
+        "data.sandbox.narrative.ready"
+      ],
+      "seed": 42,
+      "current_narrative_line": {
+        "scenes": [
+          {
+            "description": "In a 失败, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, while the city held its breath outside the window.",
+            "characters": [],
+            "setting": "an unnamed city at dawn",
+            "conflict_level": 0.3,
+            "emotional_tone": -0.3,
+            "id": "36c96707"
+          },
+          {
+            "description": "In a 大成功, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, while the city held its breath outside the window, while the city held its breath outside the window.",
+            "characters": [],
+            "setting": "an unnamed city at dawn",
+            "conflict_level": 0.8,
+            "emotional_tone": 0.8,
+            "id": "ce3b13e5"
+          },
+          {
+            "description": "In a 失败, what happens when Coffee attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, and the silence that followed was itself a kind of answer.",
+            "characters": [
+              "Coffee"
+            ],
+            "setting": "an unnamed city at dawn",
+            "conflict_level": 0.32,
+            "emotional_tone": -0.32,
+            "id": "258f02c8"
+          },
+          {
+            "description": "In a 失败, what happens when Coffee attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, while the city held its breath outside the window.",
+            "characters": [
+              "Coffee"
+            ],
+            "setting": "an unnamed city at dawn",
+            "conflict_level": 0.322,
+            "emotional_tone": -0.322,
+            "id": "cfebbc0c"
+          }
+        ],
+        "conflicts": [
+          {
+            "parties": [
+              "world"
+            ],
+            "stakes": "What is at stake for the protagonist, while the city held its breath outside the window.",
+            "intensity": 0.8,
+            "resolved": false,
+            "id": "aba1f47f"
+          }
+        ],
+        "foreshadowing": [
+          "Foreshadow a future event based on the current world, and the silence that followed was itself a kind of answer.",
+          "Foreshadow a future event based on the current world, and the silence that followed was itself a kind of answer.",
+          "Foreshadow a future event based on the current world, while the city held its breath outside the window."
+        ],
+        "climax": {
+          "description": "In a 大成功, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, while the city held its breath outside the window, while the city held its breath outside the window.",
+          "characters": [],
+          "setting": "an unnamed city at dawn",
+          "conflict_level": 0.8,
+          "emotional_tone": 0.8,
+          "id": "ce3b13e5"
+        },
+        "status": "committed",
+        "id": "8fb9ed4c"
+      },
+      "draft_buffer": [
+        "Outside, an unnamed city at dawn unfolded in gray increments. world watched it from a still point, as though the whole morning were a sentence written only to be revised. What happened next unfolded slowly: In a 大成功, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, while the city held its breath outside the window. world observed it with the particular clarity of someone who knows that ordinary moments are the true plot of a life. world was still trying to name the feeling when In a 成功, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, and the silence that followed was itself a kind of answer. The sensation was less like surprise than like recognition delayed by years. Then, as if the moment had been waiting for permission: In a 失败, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, while the city held its breath outside the window. world noticed how the air seemed to change its mind about silence. world spoke the words only to the empty room, yet they sounded like a letter written to someone who might never read it: 'I am still here, even when the story forgets me. ' Somewhere beneath the surface of the moment moved the residue of older days—a character returning not as fact but as weather, changing the temperature of everything world touched. When the light finally shifted, world remained in place, holding the moment like a fragile manuscript: one more paragraph, one more silence, one more step toward the story that was slowly becoming real.",
+        "an unnamed city at dawn held its breath at morning, as if the world itself were waiting for Coffee to make the first move. Light fell through the window in pale slabs, illuminating dust motes that drifted like thoughts suspended between memory and the present moment. What happened next unfolded slowly: In a 失败, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, while the city held its breath outside the window. Coffee observed it with the particular clarity of someone who knows that ordinary moments are the true plot of a life. Coffee was still trying to name the feeling when In a 大成功, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, while the city held its breath outside the window, while the city held its breath outside the window. The sensation was less like surprise than like recognition delayed by years. Then, as if the moment had been waiting for permission: In a 失败, what happens when Coffee attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, and the silence that followed was itself a kind of answer. Coffee noticed how the air seemed to change its mind about silence. 'I keep thinking about what you said,' Coffee admitted, the words escaping like moths. world looked away. 'Some things aren't meant to be finished,' world replied. 'Only carried. ' Somewhere beneath the surface of the moment moved the residue of older days—a character returning not as fact but as weather, changing the temperature of everything Coffee touched. And so the morning settled into its own uncertain conclusion, leaving Coffee with the peculiar loneliness of a person who has finally understood the next sentence but must still find the courage to write it."
+      ],
+      "style_profile": {},
+      "focus_stack": [],
+      "pending_query": false,
+      "trace_results": [
+        {
+          "fragment_ids": [
+            "3c42e887"
+          ],
+          "importance": 0.08000000000000002,
+          "recency": 0.9856631986401876,
+          "relevance": 0.3516989595920563,
+          "emotional_weight": 0.08000000000000002,
+          "narrative_role": "character",
+          "content": "Coffee steam rises while the city mutters awake outside.",
+          "tags": [
+            "city",
+            "coffee",
+            "morning"
+          ],
+          "id": "6e52d19a"
+        },
+        {
+          "fragment_ids": [
+            "88843b14"
+          ],
+          "importance": 0.08000000000000002,
+          "recency": 0.9856631986401876,
+          "relevance": 0.3516989595920563,
+          "emotional_weight": 0.08000000000000002,
+          "narrative_role": "character",
+          "content": "Coffee steam rises while the city mutters awake outside.",
+          "tags": [
+            "city",
+            "coffee",
+            "morning"
+          ],
+          "id": "36581452"
+        },
+        {
+          "fragment_ids": [
+            "557d88f9"
+          ],
+          "importance": 0.08000000000000002,
+          "recency": 0.9856631986401876,
+          "relevance": 0.3516989595920563,
+          "emotional_weight": 0.08000000000000002,
+          "narrative_role": "character",
+          "content": "Coffee steam rises while the city mutters awake outside.",
+          "tags": [
+            "city",
+            "coffee",
+            "morning"
+          ],
+          "id": "c253cdbd"
+        }
+      ]
+    },
+    "novel_output": {
+      "name": "novel_output",
+      "state": {
+        "active": true,
+        "energy_cost": 0.05,
+        "last_tick": 86400000.0,
+        "custom": {
+          "published_count": 2,
+          "last_paragraph_index": 1
+        }
+      },
+      "subscriptions": [
+        "control.module.init",
+        "data.novel.paragraph"
+      ],
+      "title": "脑中世界纪事",
+      "paragraphs": [
+        "Outside, an unnamed city at dawn unfolded in gray increments. world watched it from a still point, as though the whole morning were a sentence written only to be revised. What happened next unfolded slowly: In a 大成功, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, while the city held its breath outside the window. world observed it with the particular clarity of someone who knows that ordinary moments are the true plot of a life. world was still trying to name the feeling when In a 成功, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, and the silence that followed was itself a kind of answer. The sensation was less like surprise than like recognition delayed by years. Then, as if the moment had been waiting for permission: In a 失败, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, while the city held its breath outside the window. world noticed how the air seemed to change its mind about silence. world spoke the words only to the empty room, yet they sounded like a letter written to someone who might never read it: 'I am still here, even when the story forgets me. ' Somewhere beneath the surface of the moment moved the residue of older days—a character returning not as fact but as weather, changing the temperature of everything world touched. When the light finally shifted, world remained in place, holding the moment like a fragile manuscript: one more paragraph, one more silence, one more step toward the story that was slowly becoming real.",
+        "an unnamed city at dawn held its breath at morning, as if the world itself were waiting for Coffee to make the first move. Light fell through the window in pale slabs, illuminating dust motes that drifted like thoughts suspended between memory and the present moment. What happened next unfolded slowly: In a 失败, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, while the city held its breath outside the window. Coffee observed it with the particular clarity of someone who knows that ordinary moments are the true plot of a life. Coffee was still trying to name the feeling when In a 大成功, what happens when the figure attempts to Suggest a meaningful action in a literary fiction story, while the city held its breath outside the window, while the city held its breath outside the window. The sensation was less like surprise than like recognition delayed by years. Then, as if the moment had been waiting for permission: In a 失败, what happens when Coffee attempts to Suggest a meaningful action in a literary fiction story, and the silence that followed was itself a kind of answer, and the silence that followed was itself a kind of answer. Coffee noticed how the air seemed to change its mind about silence. 'I keep thinking about what you said,' Coffee admitted, the words escaping like moths. world looked away. 'Some things aren't meant to be finished,' world replied. 'Only carried. ' Somewhere beneath the surface of the moment moved the residue of older days—a character returning not as fact but as weather, changing the temperature of everything Coffee touched. And so the morning settled into its own uncertain conclusion, leaving Coffee with the peculiar loneliness of a person who has finally understood the next sentence but must still find the courage to write it."
+      ],
+      "world_settings": {},
+      "version": 2
+    }
+  }
+}

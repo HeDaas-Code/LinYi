@@ -8,6 +8,7 @@ from typing import Any
 
 from src.novelist_brain.models import BusMessage, Fragment, ModuleState, TickDelta, Trace
 from src.novelist_brain.module import Module
+from src.novelist_brain.persistence import dataclass_to_dict, reconstruct_dataclass
 
 
 # Half-life for recency decay: 1 day expressed in milliseconds to match
@@ -219,6 +220,64 @@ class MemorySystem(Module):
             "consolidation_queue_count": len(self._consolidation_queue),
             "consolidation_runs": self._state.custom["consolidation_runs"],
         }
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize the full memory system state."""
+        base = super().to_dict()
+        base.update(
+            {
+                "fragments": {
+                    fid: dataclass_to_dict(f) for fid, f in self._fragments.items()
+                },
+                "traces": {
+                    tid: dataclass_to_dict(t) for tid, t in self._traces.items()
+                },
+                "working_memory": [dataclass_to_dict(f) for f in self._working_memory],
+                "consolidation_queue": [
+                    dataclass_to_dict(f) for f in self._consolidation_queue
+                ],
+                "working_memory_capacity": self._working_memory_capacity,
+                "consolidation_threshold": self._consolidation_threshold,
+                "min_tag_overlap": self._min_tag_overlap,
+                "last_time_ms": self._last_time_ms,
+            }
+        )
+        return base
+
+    def from_dict(self, data: dict[str, Any], **kwargs: Any) -> None:
+        """Restore the full memory system state."""
+        super().from_dict(data, **kwargs)
+        self._working_memory_capacity = data.get(
+            "working_memory_capacity", self._working_memory_capacity
+        )
+        self._consolidation_threshold = data.get(
+            "consolidation_threshold", self._consolidation_threshold
+        )
+        self._min_tag_overlap = data.get("min_tag_overlap", self._min_tag_overlap)
+        self._last_time_ms = data.get("last_time_ms", self._last_time_ms)
+
+        self._fragments = {
+            fid: reconstruct_dataclass(Fragment, f)
+            for fid, f in data.get("fragments", {}).items()
+        }
+        self._traces = {
+            tid: reconstruct_dataclass(Trace, t)
+            for tid, t in data.get("traces", {}).items()
+        }
+        self._working_memory = [
+            reconstruct_dataclass(Fragment, f)
+            for f in data.get("working_memory", [])
+        ]
+        self._consolidation_queue = [
+            reconstruct_dataclass(Fragment, f)
+            for f in data.get("consolidation_queue", [])
+        ]
+
+        self._state.custom["fragment_count"] = len(self._fragments)
+        self._state.custom["trace_count"] = len(self._traces)
+        self._state.custom.setdefault(
+            "consolidation_runs", 0
+        )
 
     # ------------------------------------------------------------------
     # Fragment handling

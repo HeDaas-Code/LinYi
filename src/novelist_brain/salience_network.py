@@ -233,3 +233,34 @@ class SalienceNetwork(Module):
         state.custom["last_network"] = self._last_network
         state.custom["evaluation_count"] = self._evaluation_count
         return state
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize salience network state."""
+        base = super().to_dict()
+        base.update(
+            {
+                "energy": self._energy,
+                "phase": self._phase,
+                "personal_state": self._personal_state,
+                "social_state": self._social_state,
+                "last_network": self._last_network,
+                "evaluation_count": self._evaluation_count,
+                "cen_hold_ticks": self._cen_hold_ticks,
+            }
+        )
+        return base
+
+    def from_dict(self, data: dict[str, Any], **kwargs: Any) -> None:
+        """Restore salience network state."""
+        super().from_dict(data, **kwargs)
+        self._energy = float(data.get("energy", self._energy))
+        self._phase = data.get("phase", self._phase)
+        self._personal_state = data.get("personal_state", {})
+        self._social_state = data.get("social_state", {})
+        self._last_network = data.get("last_network", self._last_network)
+        self._evaluation_count = int(data.get("evaluation_count", 0))
+        self._cen_hold_ticks = int(data.get("cen_hold_ticks", 0))
+
+        self._state.custom["last_network"] = self._last_network
+        self._state.custom["evaluation_count"] = self._evaluation_count
+        self._state.custom["cen_hold_ticks"] = self._cen_hold_ticks

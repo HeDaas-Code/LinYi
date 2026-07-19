@@ -8,6 +8,7 @@ from typing import Any, Literal
 from src.novelist_brain.llm import LLMService, MockLLMService
 from src.novelist_brain.models import BusMessage, Fragment, ModuleState, TickDelta, Trace
 from src.novelist_brain.module import Module
+from src.novelist_brain.persistence import dataclass_to_dict, reconstruct_dataclass
 
 
 class DefaultModeNetwork(Module):
@@ -101,6 +102,50 @@ class DefaultModeNetwork(Module):
             }
         )
         return self._state
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize DMN state."""
+        base = super().to_dict()
+        base.update(
+            {
+                "activation_level": self._activation_level,
+                "current_theme": self._current_theme,
+                "identity_constraints": self._identity_constraints,
+                "last_phase": self._last_phase,
+                "wandering_traces": [
+                    dataclass_to_dict(t) for t in self._wandering_traces
+                ],
+                "dream_queue": [dataclass_to_dict(f) for f in self._dream_queue],
+                "reflection_buffer": [
+                    dataclass_to_dict(f) for f in self._reflection_buffer
+                ],
+            }
+        )
+        return base
+
+    def from_dict(self, data: dict[str, Any], **kwargs: Any) -> None:
+        """Restore DMN state."""
+        super().from_dict(data, **kwargs)
+        llm = kwargs.get("llm_service")
+        if llm is not None:
+            self._llm = llm
+        self._rng = random.Random()
+        self._activation_level = float(data.get("activation_level", 0.0))
+        self._current_theme = data.get("current_theme", "")
+        self._identity_constraints = data.get("identity_constraints", {})
+        self._last_phase = data.get("last_phase")
+        self._wandering_traces = [
+            reconstruct_dataclass(Trace, t)
+            for t in data.get("wandering_traces", [])
+        ]
+        self._dream_queue = [
+            reconstruct_dataclass(Fragment, f)
+            for f in data.get("dream_queue", [])
+        ]
+        self._reflection_buffer = [
+            reconstruct_dataclass(Fragment, f)
+            for f in data.get("reflection_buffer", [])
+        ]
 
     def init(self, context: dict[str, Any]) -> None:
         """Initialize DMN from agent context."""

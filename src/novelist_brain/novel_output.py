@@ -72,6 +72,27 @@ class NovelOutput(Module):
             "world_settings": self.world_settings,
         }
 
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize novel output state."""
+        base = super().to_dict()
+        base.update(
+            {
+                "title": self.title,
+                "paragraphs": list(self.paragraphs),
+                "world_settings": dict(self.world_settings),
+                "version": self.version,
+            }
+        )
+        return base
+
+    def from_dict(self, data: dict[str, Any], **kwargs: Any) -> None:
+        """Restore novel output state."""
+        super().from_dict(data, **kwargs)
+        self.title = data.get("title", self.title)
+        self.paragraphs = list(data.get("paragraphs", []))
+        self.world_settings = dict(data.get("world_settings", {}))
+        self.version = int(data.get("version", self.version))
+
     # ------------------------------------------------------------------
     # Message handlers
     # ------------------------------------------------------------------

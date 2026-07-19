@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import random
 import re
 from abc import ABC, abstractmethod
@@ -105,3 +106,150 @@ class MockLLMService(LLMService):
         base = hash(text) % 10000
         local_rng = random.Random(self._seed ^ base)
         return [round(local_rng.random(), 6) for _ in range(self._dimensions)]
+
+
+class LLMError(Exception):
+    """Base exception for LLM service failures."""
+
+
+class LLMConfigurationError(LLMError):
+    """Raised when the LLM service is missing required configuration."""
+
+
+class LLMCallError(LLMError):
+    """Raised when an LLM API call fails."""
+
+
+class OpenAILLMService(LLMService):
+    """OpenAI-compatible LLM service implementation.
+
+    Supports any provider with an OpenAI-compatible chat completions and
+    embeddings endpoint. Configuration is read from the provided constructor
+    arguments, falling back to environment variables when omitted.
+
+    The ``openai`` package is imported lazily inside ``__init__`` so the
+    module remains importable even when the package is not installed.
+    """
+
+    def __init__(
+        self,
+        *,
+        base_url: str | None = None,
+        api_key: str | None = None,
+        model: str = "gpt-3.5-turbo",
+        embedding_model: str = "text-embedding-3-small",
+        temperature: float = 0.7,
+        max_tokens: int = 256,
+        timeout: float = 30.0,
+    ) -> None:
+        try:
+            import openai
+        except ImportError as exc:  # pragma: no cover - optional dependency
+            raise LLMConfigurationError(
+                "The 'openai' package is required for OpenAILLMService. "
+                "Install it with: pip install openai"
+            ) from exc
+
+        self._base_url = base_url or os.getenv("OPENAI_BASE_URL")
+        self._api_key = api_key or os.getenv("OPENAI_API_KEY")
+        self._model = model
+        self._embedding_model = embedding_model
+        self._temperature = temperature
+        self._max_tokens = max_tokens
+        self._timeout = timeout
+        self._openai = openai
+
+        if not self._api_key:
+            raise LLMConfigurationError(
+                "OpenAI API key is required. Set OPENAI_API_KEY or pass api_key."
+            )
+
+        client_kwargs: dict[str, Any] = {"api_key": self._api_key}
+        if self._base_url:
+            client_kwargs["base_url"] = self._base_url
+        if timeout is not None:
+            client_kwargs["timeout"] = self._timeout
+
+        self._client = openai.OpenAI(**client_kwargs)
+
+    def complete(
+        self,
+        prompt: str,
+        context: dict[str, Any] | None = None,
+        temperature: float = 0.7,
+        max_tokens: int = 256,
+    ) -> str:
+        """Request a chat completion from the configured OpenAI endpoint."""
+        messages: list[dict[str, str]] = []
+        if context and context.get("system"):
+            messages.append({"role": "system", "content": str(context["system"])})
+        messages.append({"role": "user", "content": prompt})
+
+        try:
+            response = self._client.chat.completions.create(
+                model=self._model,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+        except self._openai.APIError as exc:
+            raise LLMCallError(f"OpenAI chat completion failed: {exc}") from exc
+        except Exception as exc:
+            raise LLMCallError(f"Unexpected error during completion: {exc}") from exc
+
+        content = response.choices[0].message.content
+        if content is None:
+            return ""
+        return content
+
+    def embed(self, text: str) -> list[float]:
+        """Request an embedding vector from the configured OpenAI endpoint."""
+        try:
+            response = self._client.embeddings.create(
+                input=[text],
+                model=self._embedding_model,
+            )
+        except self._openai.APIError as exc:
+            raise LLMCallError(f"OpenAI embedding failed: {exc}") from exc
+        except Exception as exc:
+            raise LLMCallError(f"Unexpected error during embedding: {exc}") from exc
+
+        return response.data[0].embedding
+
+
+def create_llm_service(config: dict[str, Any]) -> LLMService:
+    """Factory that returns a real LLM service or falls back to the mock.
+
+    When ``config`` explicitly requests the mock, or when no OpenAI API key
+    is available, a :class:`MockLLMService` is returned. Otherwise an
+    :class:`OpenAILLMService` is constructed from ``config`` and environment
+    variables.
+    """
+    if config.get("use_mock", False):
+        return MockLLMService(
+            seed=config.get("seed"),
+            dimensions=config.get("dimensions", 64),
+        )
+
+    api_key = config.get("api_key") or os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return MockLLMService(
+            seed=config.get("seed"),
+            dimensions=config.get("dimensions", 64),
+        )
+
+    try:
+        return OpenAILLMService(
+            base_url=config.get("base_url"),
+            api_key=api_key,
+            model=config.get("model", "gpt-3.5-turbo"),
+            embedding_model=config.get("embedding_model", "text-embedding-3-small"),
+            temperature=float(config.get("temperature", 0.7)),
+            max_tokens=int(config.get("max_tokens", 256)),
+            timeout=float(config.get("timeout", 30.0)),
+        )
+    except LLMConfigurationError:
+        return MockLLMService(
+            seed=config.get("seed"),
+            dimensions=config.get("dimensions", 64),
+        )

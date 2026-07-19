@@ -8,6 +8,7 @@ from typing import Any
 from src.novelist_brain.llm import LLMService, MockLLMService
 from src.novelist_brain.models import BusMessage, ModuleState, NarrativeLine, Scene, TickDelta, Trace
 from src.novelist_brain.module import Module
+from src.novelist_brain.persistence import dataclass_to_dict, reconstruct_dataclass
 
 
 _PROSE_TEMPLATES: dict[str, list[str]] = {
@@ -72,6 +73,7 @@ class CreationExecutive(Module):
         seed: int | None = None,
     ) -> None:
         super().__init__(name)
+        self._seed = seed
         self._llm = llm_service if llm_service is not None else MockLLMService()
         self._rng = random.Random(seed)
         self._current_narrative_line: NarrativeLine | None = None
@@ -139,6 +141,55 @@ class CreationExecutive(Module):
             "paragraphs_generated": self._state.custom["paragraphs_generated"],
             "narrative_lines_received": self._state.custom["narrative_lines_received"],
         }
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize creation executive state."""
+        base = super().to_dict()
+        base.update(
+            {
+                "seed": self._seed,
+                "current_narrative_line": dataclass_to_dict(self._current_narrative_line)
+                if self._current_narrative_line
+                else None,
+                "draft_buffer": list(self._draft_buffer),
+                "style_profile": dict(self._style_profile),
+                "focus_stack": list(self._focus_stack),
+                "pending_query": self._pending_query,
+                "trace_results": [
+                    dataclass_to_dict(t) for t in self._trace_results
+                ],
+            }
+        )
+        return base
+
+    def from_dict(self, data: dict[str, Any], **kwargs: Any) -> None:
+        """Restore creation executive state."""
+        super().from_dict(data, **kwargs)
+        llm = kwargs.get("llm_service")
+        if llm is not None:
+            self._llm = llm
+        self._seed = data.get("seed")
+        if self._seed is not None:
+            self._rng = random.Random(self._seed)
+            if isinstance(self._llm, MockLLMService):
+                self._llm = MockLLMService(seed=self._seed)
+        else:
+            self._rng = random.Random()
+
+        line_data = data.get("current_narrative_line")
+        self._current_narrative_line = (
+            reconstruct_dataclass(NarrativeLine, line_data)
+            if line_data
+            else None
+        )
+        self._draft_buffer = list(data.get("draft_buffer", []))
+        self._style_profile = dict(data.get("style_profile", {}))
+        self._focus_stack = list(data.get("focus_stack", []))
+        self._pending_query = bool(data.get("pending_query", False))
+        self._trace_results = [
+            reconstruct_dataclass(Trace, t)
+            for t in data.get("trace_results", [])
+        ]
 
     # ------------------------------------------------------------------
     # Message handlers

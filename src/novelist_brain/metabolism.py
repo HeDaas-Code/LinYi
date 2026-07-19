@@ -7,6 +7,7 @@ from typing import Any
 
 from src.novelist_brain.models import BusMessage, ModuleState, TickDelta
 from src.novelist_brain.module import Module
+from src.novelist_brain.persistence import dataclass_to_dict, reconstruct_dataclass
 
 
 @dataclass
@@ -105,12 +106,25 @@ class Metabolism(Module):
         }
         return state
 
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize metabolism state."""
+        base = super().to_dict()
+        base["resources"] = dataclass_to_dict(self._metabolism)
+        return base
+
+    def from_dict(self, data: dict[str, Any], **kwargs: Any) -> None:
+        """Restore metabolism state."""
+        super().from_dict(data, **kwargs)
+        resources = data.get("resources")
+        if resources:
+            self._metabolism = reconstruct_dataclass(MetabolismState, resources)
+
     def init(self, context: dict[str, Any]) -> None:
         """Initialize resources from context overrides."""
         metabolism_data = context.get("metabolism", {})
         self._metabolism = MetabolismState(**metabolism_data)
-        self._state.custom["warning_issued"] = False
-        self._state.custom["tick_count"] = 0
+        self._state.custom.setdefault("warning_issued", False)
+        self._state.custom.setdefault("tick_count", 0)
 
     def on_bus_message(self, message: BusMessage) -> None:
         """Handle allocation requests and consumption reports."""

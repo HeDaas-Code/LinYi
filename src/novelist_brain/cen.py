@@ -9,6 +9,7 @@ from typing import Any, Literal
 from src.novelist_brain.llm import LLMService, MockLLMService
 from src.novelist_brain.models import BusMessage, Fragment, ModuleState, TickDelta, Trace
 from src.novelist_brain.module import Module
+from src.novelist_brain.persistence import dataclass_to_dict, reconstruct_dataclass
 
 
 @dataclass
@@ -40,6 +41,7 @@ class CentralExecutiveNetwork(Module):
     """
 
     _WORKING_MEMORY_CAPACITY = 10
+    _CEN_PHASES: frozenset[str] = frozenset({"creation", "simulation"})
 
     def __init__(self, name: str = "central_executive_network") -> None:
         # Initialize the goal stack before the base class calls _initial_state().
@@ -57,6 +59,10 @@ class CentralExecutiveNetwork(Module):
         self._awaiting_ready = False
         self._narrative_ready = False
         self._latest_traces: list[Trace] = []
+        self._current_phase: str | None = None
+        self._proactive_build_pending = False
+        self._narrative_triggered_phases: set[str] = set()
+        self._build_phase: str | None = None
 
         self.subscribe(
             "control.network.cen.active",
@@ -92,6 +98,10 @@ class CentralExecutiveNetwork(Module):
                 "sandbox_built": False,
                 "awaiting_ready": False,
                 "narrative_ready": False,
+                "current_phase": None,
+                "proactive_build_pending": False,
+                "narrative_triggered_phases": [],
+                "build_phase": None,
             },
         )
 
@@ -107,9 +117,79 @@ class CentralExecutiveNetwork(Module):
                 "sandbox_built": self._sandbox_built,
                 "awaiting_ready": self._awaiting_ready,
                 "narrative_ready": self._narrative_ready,
+                "current_phase": self._current_phase,
+                "proactive_build_pending": self._proactive_build_pending,
+                "narrative_triggered_phases": list(self._narrative_triggered_phases),
+                "build_phase": self._build_phase,
             }
         )
         return self._state
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize CEN state."""
+        base = super().to_dict()
+        base.update(
+            {
+                "goal_stack": [g.to_dict() for g in self._goal_stack],
+                "current_goal": self._current_goal.to_dict()
+                if self._current_goal
+                else None,
+                "working_memory": [
+                    dataclass_to_dict(f) for f in self._working_memory
+                ],
+                "executive_load": self._executive_load,
+                "current_task": self._current_task,
+                "sandbox_built": self._sandbox_built,
+                "awaiting_ready": self._awaiting_ready,
+                "narrative_ready": self._narrative_ready,
+                "current_phase": self._current_phase,
+                "proactive_build_pending": self._proactive_build_pending,
+                "narrative_triggered_phases": list(self._narrative_triggered_phases),
+                "build_phase": self._build_phase,
+                "latest_traces": [
+                    dataclass_to_dict(t) for t in self._latest_traces
+                ],
+                "identity_constraints": self._identity_constraints,
+            }
+        )
+        return base
+
+    def from_dict(self, data: dict[str, Any], **kwargs: Any) -> None:
+        """Restore CEN state."""
+        super().from_dict(data, **kwargs)
+        llm = kwargs.get("llm_service")
+        if llm is not None:
+            self._llm = llm
+        self._goal_stack = [
+            reconstruct_dataclass(Goal, g)
+            for g in data.get("goal_stack", [])
+        ]
+        current_goal_data = data.get("current_goal")
+        self._current_goal = (
+            reconstruct_dataclass(Goal, current_goal_data)
+            if current_goal_data
+            else None
+        )
+        self._working_memory = [
+            reconstruct_dataclass(Fragment, f)
+            for f in data.get("working_memory", [])
+        ]
+        self._executive_load = float(data.get("executive_load", 0.0))
+        self._current_task = data.get("current_task", self._current_task)
+        self._sandbox_built = bool(data.get("sandbox_built", False))
+        self._awaiting_ready = bool(data.get("awaiting_ready", False))
+        self._narrative_ready = bool(data.get("narrative_ready", False))
+        self._current_phase = data.get("current_phase")
+        # These flags are intentionally reset when loading so that a new run/day
+        # can generate fresh narrative lines in each high-energy phase.
+        self._proactive_build_pending = False
+        self._narrative_triggered_phases: set[str] = set()
+        self._build_phase = None
+        self._latest_traces = [
+            reconstruct_dataclass(Trace, t)
+            for t in data.get("latest_traces", [])
+        ]
+        self._identity_constraints = data.get("identity_constraints", {})
 
     def init(self, context: dict[str, Any]) -> None:
         """Initialize CEN from agent context."""
@@ -156,6 +236,57 @@ class CentralExecutiveNetwork(Module):
     def tick(self, delta: TickDelta) -> None:
         """Advance CEN: drive sandbox simulation until the narrative is ready."""
         self._state.last_tick = delta.absolute_time
+        self._current_phase = delta.phase
+
+        # Phase-driven activation: CEN owns the high-energy creation/simulation phases.
+        if delta.phase in self._CEN_PHASES:
+            if not self._state.active:
+                self._activate()
+                self.emit(
+                    topic="control.network.cen.active",
+                    payload={"reason": "phase_driven", "phase": delta.phase},
+                    channel="control",
+                    priority=8,
+                    ttl=3,
+                )
+
+            # Proactively schedule a sandbox build once per high-energy phase,
+            # even when no external insight fragment has arrived.
+            if (
+                not self._sandbox_built
+                and not self._awaiting_ready
+                and delta.phase not in self._narrative_triggered_phases
+                and not self._proactive_build_pending
+            ):
+                self._proactive_build_pending = True
+                self._current_task = "基于阶段主动检索记忆"
+                interests = self._identity_constraints.get("interests", ["memory"])
+                self.emit(
+                    topic="control.memory.query",
+                    payload={
+                        "query_type": "tags",
+                        "tags": list(interests)[:5],
+                        "limit": 5,
+                        "sort_by": "relevance",
+                        "requester": self.name,
+                        "reason": "phase_driven_proactive_build",
+                    },
+                    channel="control",
+                    priority=6,
+                    ttl=3,
+                )
+                self._broadcast_plan()
+        else:
+            if self._state.active:
+                self._deactivate()
+                self.emit(
+                    topic="control.network.dmn.active",
+                    payload={"reason": "phase_exit", "phase": delta.phase},
+                    channel="control",
+                    priority=8,
+                    ttl=3,
+                )
+
         if not self._state.active:
             return
 
@@ -244,7 +375,11 @@ class CentralExecutiveNetwork(Module):
         if not self._state.active:
             return
 
-        if not self._sandbox_built:
+        was_proactive = self._proactive_build_pending
+        if was_proactive:
+            self._proactive_build_pending = False
+
+        if not self._sandbox_built and not self._awaiting_ready:
             self._build_sandbox()
 
     def _build_sandbox(self) -> None:
@@ -254,6 +389,7 @@ class CentralExecutiveNetwork(Module):
         self._sandbox_built = True
         self._awaiting_ready = True
         self._narrative_ready = False
+        self._build_phase = self._current_phase
 
         trace_ids = [t.id for t in self._latest_traces]
         payload = {
@@ -288,6 +424,10 @@ class CentralExecutiveNetwork(Module):
         self._awaiting_ready = False
         self._narrative_ready = True
         self._sandbox_built = False
+
+        if self._build_phase in self._CEN_PHASES:
+            self._narrative_triggered_phases.add(self._build_phase)
+        self._build_phase = None
 
         task = Goal("叙事线就绪，进入创作执行", "task", 0.6)
         self._push_task(task)

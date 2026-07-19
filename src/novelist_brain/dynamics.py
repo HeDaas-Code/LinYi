@@ -7,6 +7,7 @@ from typing import Any
 
 from src.novelist_brain.models import BusMessage, ModuleState, TickDelta
 from src.novelist_brain.module import Module
+from src.novelist_brain.persistence import dataclass_to_dict, reconstruct_dataclass
 
 
 @dataclass
@@ -96,13 +97,27 @@ class Dynamics(Module):
         }
         return state
 
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize dynamics state."""
+        base = super().to_dict()
+        base["dynamics"] = dataclass_to_dict(self._dynamics)
+        return base
+
+    def from_dict(self, data: dict[str, Any], **kwargs: Any) -> None:
+        """Restore dynamics state."""
+        super().from_dict(data, **kwargs)
+        dynamics_data = data.get("dynamics")
+        if dynamics_data:
+            self._dynamics = reconstruct_dataclass(DynamicsState, dynamics_data)
+            self._initialize_habits()
+
     def init(self, context: dict[str, Any]) -> None:
         """Initialize dynamics state from context overrides."""
         dynamics_data = context.get("dynamics", {})
         self._dynamics = DynamicsState(**dynamics_data)
         self._initialize_habits()
-        self._state.custom["event_count"] = 0
-        self._state.custom["paragraph_count"] = 0
+        self._state.custom.setdefault("event_count", 0)
+        self._state.custom.setdefault("paragraph_count", 0)
 
     def on_bus_message(self, message: BusMessage) -> None:
         """Handle resolved sandbox events and published novel paragraphs."""
