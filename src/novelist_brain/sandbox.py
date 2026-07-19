@@ -459,6 +459,70 @@ class MentalSandbox(Module):
     ) -> str:
         """Generate a brief narrative consequence string."""
         char_name = character.name if character else "the figure"
+        # Use the structured COC judgment prompt when a real LLM is available.
+        from src.novelist_brain import prompts as prompts_mod
+        from src.novelist_brain.llm import LLMCallError, MockLLMService
+
+        scene_desc = self._current_scene.description if self._current_scene else ""
+        character_states = []
+        if character is not None:
+            character_states.append(
+                {
+                    "name": character.name,
+                    "sanity": getattr(character, "sanity", 50),
+                    "traits_summary": ", ".join(
+                        f"{k}={v:.2f}" for k, v in character.traits.__dict__.items()
+                    ),
+                }
+            )
+
+        identity = getattr(self, "_identity_constraints", {}) or {}
+        world_rules = [
+            str(rule) for rule in (self.world_model.rules or [])
+        ][:5] or ["ordinary realism"]
+
+        system, user = prompts_mod.build_coc_judgment_prompt(
+            identity=identity,
+            world_rules=world_rules,
+            scene_description=scene_desc,
+            character_states=character_states,
+            pending_action=action,
+        )
+
+        try:
+            response = self._llm.complete(
+                user,
+                context={"system": system},
+                temperature=0.7,
+                max_tokens=1200,
+            )
+        except LLMCallError:
+            response = ""
+
+        # The prompt asks for JSON. Try to extract a usable outcome string.
+        text = response.strip()
+        if text:
+            import json as _json
+            # Find the first {...} block.
+            match = None
+            for start in range(len(text)):
+                if text[start] == "{":
+                    end = text.find("}", start)
+                    if end != -1:
+                        candidate = text[start : end + 1]
+                        try:
+                            match = _json.loads(candidate)
+                            break
+                        except _json.JSONDecodeError:
+                            continue
+            if match and isinstance(match, dict):
+                outcome_text = match.get("outcome") or ""
+                if outcome_text:
+                    return outcome_text
+            # If JSON parse failed, fall back to the raw text (truncated).
+            return text[:240]
+
+        # Fallback for mock LLM or empty response.
         prompt = (
             f"In a {outcome}, what happens when {char_name} attempts to {action}?"
         )

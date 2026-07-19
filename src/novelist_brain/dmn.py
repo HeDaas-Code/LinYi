@@ -5,7 +5,8 @@ from __future__ import annotations
 import random
 from typing import Any, Literal
 
-from src.novelist_brain.llm import LLMService, MockLLMService
+from src.novelist_brain import prompts
+from src.novelist_brain.llm import LLMCallError, LLMService, MockLLMService
 from src.novelist_brain.models import BusMessage, Fragment, ModuleState, TickDelta, Trace
 from src.novelist_brain.module import Module
 from src.novelist_brain.persistence import dataclass_to_dict, reconstruct_dataclass
@@ -320,14 +321,18 @@ class DefaultModeNetwork(Module):
         return None
 
     def _make_dream_fragment(self) -> Fragment:
-        trace_texts = [t.content for t in self._wandering_traces if t.content]
-        queue_texts = [f.content for f in self._dream_queue[-3:]]
-        prompt = self._build_prompt(
-            "dream",
-            trace_texts,
-            queue_texts,
+        trace_dicts = [self._trace_to_dict(t) for t in self._wandering_traces]
+        queue_fragments = self._dream_queue[-3:]
+        mood_vector = self._estimate_mood()
+        system, user = prompts.build_dream_prompt(
+            self._identity_constraints, trace_dicts, mood_vector
         )
-        content = self._generate_text(prompt, self._DREAM_TEMPLATES)
+        content = self._generate_text(
+            user,
+            context={"system": system},
+            fallback=self._DREAM_TEMPLATES,
+            max_tokens=900,
+        )
 
         valence = self._aggregate_valence(self._dream_queue)
         arousal = 0.7
@@ -344,14 +349,19 @@ class DefaultModeNetwork(Module):
         )
 
     def _make_reflection_fragment(self) -> Fragment:
-        trace_texts = [t.content for t in self._wandering_traces if t.content]
+        trace_dicts = [self._trace_to_dict(t) for t in self._wandering_traces]
         buffer_texts = [f.content for f in self._reflection_buffer[-5:]]
-        prompt = self._build_prompt(
-            "reflection",
-            trace_texts,
-            buffer_texts,
+        day_summary = " | ".join(buffer_texts) or "An unremarkable day."
+        mood_vector = self._estimate_mood()
+        system, user = prompts.build_reflection_prompt(
+            self._identity_constraints, day_summary, mood_vector
         )
-        content = self._generate_text(prompt, self._REFLECTION_TEMPLATES)
+        content = self._generate_text(
+            user,
+            context={"system": system},
+            fallback=self._REFLECTION_TEMPLATES,
+            max_tokens=700,
+        )
 
         valence = self._aggregate_valence(self._reflection_buffer)
         arousal = 0.3
@@ -370,12 +380,16 @@ class DefaultModeNetwork(Module):
     def _make_insight_fragment(self) -> Fragment:
         trace_texts = [t.content for t in self._wandering_traces if t.content]
         buffer_texts = [f.content for f in self._reflection_buffer[-3:]]
-        prompt = self._build_prompt(
-            "insight",
-            trace_texts,
-            buffer_texts,
+        wandering_themes = self._current_theme.split(", ") if self._current_theme else []
+        system, user = prompts.build_insight_prompt(
+            self._identity_constraints, wandering_themes, trace_texts + buffer_texts
         )
-        content = self._generate_text(prompt, self._INSIGHT_TEMPLATES)
+        content = self._generate_text(
+            user,
+            context={"system": system},
+            fallback=self._INSIGHT_TEMPLATES,
+            max_tokens=700,
+        )
 
         valence = self._aggregate_valence(self._reflection_buffer)
         arousal = 0.6
@@ -391,29 +405,43 @@ class DefaultModeNetwork(Module):
             tags=self._collect_tags("insight"),
         )
 
-    def _build_prompt(
-        self,
-        mode: Literal["dream", "reflection", "insight"],
-        trace_texts: list[str],
-        extra_texts: list[str],
-    ) -> str:
-        parts: list[str] = [f"Create a {mode} fragment on the theme of {self._current_theme}."]
-        self_narrative = self._identity_constraints.get(
-            "self_narrative", "I turn ordinary moments into fiction."
-        )
-        parts.append(f"Identity: {self_narrative}")
-        if trace_texts:
-            parts.append("Recent traces: " + " | ".join(trace_texts[:3]))
-        if extra_texts:
-            parts.append("Raw material: " + " | ".join(extra_texts[:3]))
-        return " ".join(parts)
+    @staticmethod
+    def _trace_to_dict(trace: Trace) -> dict[str, Any]:
+        return {
+            "content": trace.content,
+            "summary": trace.content[:160],
+            "tags": list(trace.tags),
+            "narrative_role": getattr(trace, "narrative_role", "theme"),
+        }
 
-    def _generate_text(self, prompt: str, fallback_templates: list[str]) -> str:
+    def _estimate_mood(self) -> dict[str, float]:
+        fragments = self._reflection_buffer[-8:] + self._dream_queue[-3:]
+        if not fragments:
+            return {"valence": 0.0, "arousal": 0.3}
+        valence = sum(f.valence for f in fragments) / len(fragments)
+        arousal = sum(f.arousal for f in fragments) / len(fragments)
+        return {"valence": float(valence), "arousal": float(arousal)}
+
+    def _generate_text(
+        self,
+        prompt: str,
+        *,
+        context: dict[str, Any] | None = None,
+        fallback: list[str],
+        max_tokens: int = 256,
+    ) -> str:
         if self._llm is not None:
-            text = self._llm.complete(prompt, max_tokens=120).strip()
+            try:
+                text = self._llm.complete(
+                    prompt,
+                    context=context,
+                    max_tokens=max_tokens,
+                ).strip()
+            except LLMCallError:
+                text = ""
             if text:
                 return text
-        return self._rng.choice(fallback_templates)
+        return self._rng.choice(fallback)
 
     def _aggregate_valence(self, fragments: list[Fragment]) -> float:
         if not fragments:

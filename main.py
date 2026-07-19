@@ -2,14 +2,17 @@
 
 This script assembles all modules, runs a full daily cycle from 00:00 to
 24:00, and prints the resulting novel paragraphs together with runtime
-statistics.  It uses only the built-in MockLLMService and requires no
-external API keys.
+statistics.  It uses the OpenAI-compatible LLM endpoint when configured
+via ``--llm-base-url`` / ``--llm-api-key`` / ``--llm-model`` (or via
+environment variables ``OPENAI_BASE_URL`` / ``OPENAI_API_KEY``), and
+falls back to :class:`MockLLMService` when no configuration is provided.
 """
 
 from __future__ import annotations
 
 import argparse
 import datetime
+import os
 import sys
 from typing import Any
 
@@ -21,7 +24,7 @@ from src.novelist_brain.creation_executive import CreationExecutive
 from src.novelist_brain.dmn import DefaultModeNetwork
 from src.novelist_brain.dynamics import Dynamics
 from src.novelist_brain.identity import IdentityCore, IdentityProfile
-from src.novelist_brain.llm import MockLLMService
+from src.novelist_brain.llm import LLMService, MockLLMService, create_llm_service
 from src.novelist_brain.memory import MemorySystem
 from src.novelist_brain.metabolism import Metabolism
 from src.novelist_brain.models import BusMessage, TickDelta
@@ -35,6 +38,11 @@ from src.novelist_brain.social_input import SocialInput
 # Each tick advances the clock by 30 minutes.  24h / 30m = 48 ticks.
 TICK_DURATION_MINUTES = 30
 MAX_TICKS = (24 * 60) // TICK_DURATION_MINUTES
+
+# Default LLM configuration. Override via CLI flags or environment variables.
+DEFAULT_LLM_BASE_URL = "http://117.72.106.189:3000/v1"
+DEFAULT_LLM_API_KEY = "sk-PGqpNXJDiZt6LcrHIZJuLVBdoaQa4GGcWCrfDQhcfOzz4VT8"
+DEFAULT_LLM_MODEL = "MiniMax-M3"
 
 
 IMPORTANT_TOPICS: set[str] = {
@@ -96,12 +104,12 @@ def summarize_message(message: BusMessage) -> str | None:
 def build_context(
     router: BusRouter,
     clock: Clock,
-    llm_service: MockLLMService,
+    llm_service: LLMService,
 ) -> dict[str, Any]:
     """Assemble the shared agent context passed to every module."""
     identity_profile = {
-        "name": "novelist",
-        "pen_name": "",
+        "name": "the Novelist",
+        "pen_name": "quiet_observer",
         "values": ["truth", "empathy", "beauty", "freedom"],
         "traits": {
             "openness": 0.8,
@@ -116,7 +124,7 @@ def build_context(
         "voice_signature": {},
     }
 
-    return {
+    context = {
         "bus": router,
         "clock": clock,
         "llm_service": llm_service,
@@ -151,9 +159,18 @@ def build_context(
                 "current_state": {"time": "morning", "mood": "quiet"},
             },
         },
-        "creation": {"seed": 42},
+        "creation": {
+            "seed": 42,
+            "style_profile": {
+                "default_setting": "the quiet apartment",
+                "default_protagonist": "the writer",
+                "default_time": "morning",
+                "identity": identity_profile,
+            },
+        },
         "novel": {"title": "脑中世界纪事"},
     }
+    return context
 
 
 def _apply_loaded_context(
@@ -235,7 +252,7 @@ def _apply_loaded_context(
     return context
 
 
-def create_modules(llm_service: MockLLMService) -> list[Any]:
+def create_modules(llm_service: LLMService) -> list[Any]:
     """Instantiate all functional modules in the required order."""
     return [
         IdentityCore(name="identity_core"),
@@ -253,7 +270,36 @@ def create_modules(llm_service: MockLLMService) -> list[Any]:
     ]
 
 
-def run_day(load_path: str | None = None, save_path: str = "agent_state.json") -> None:
+def _make_llm_service(args: argparse.Namespace) -> LLMService:
+    """Build the LLM service from CLI args + environment."""
+    base_url = args.llm_base_url or os.getenv("OPENAI_BASE_URL")
+    api_key = args.llm_api_key or os.getenv("OPENAI_API_KEY")
+    model = args.llm_model or os.getenv("OPENAI_MODEL")
+
+    if args.use_mock or (not base_url and not api_key):
+        # No LLM configured: use the mock.
+        return MockLLMService(seed=42)
+
+    config: dict[str, Any] = {
+        "base_url": base_url,
+        "api_key": api_key,
+        "model": model or "gpt-3.5-turbo",
+        "temperature": 0.75,
+        "max_tokens": 4096,
+        "timeout": 180.0,
+    }
+    service = create_llm_service(config)
+    print(
+        f"使用 LLM: model={config['model']}, base_url={config['base_url']}"
+    )
+    return service
+
+
+def run_day(
+    load_path: str | None = None,
+    save_path: str = "agent_state.json",
+    llm_service: LLMService | None = None,
+) -> None:
     """Run the novelist brain through one full daily cycle."""
     print("=" * 60)
     print("小说家大脑原型 v1 — 启动")
@@ -264,7 +310,8 @@ def run_day(load_path: str | None = None, save_path: str = "agent_state.json") -
         start_hour=0.0,
         tick_duration_ms=TICK_DURATION_MINUTES * 60 * 1000.0,
     )
-    llm_service = MockLLMService(seed=42)
+    if llm_service is None:
+        llm_service = MockLLMService(seed=42)
     context = build_context(router, clock, llm_service)
 
     saved_state: dict[str, Any] | None = None
@@ -431,5 +478,33 @@ if __name__ == "__main__":
         default=None,
         help="运行前加载状态的路径",
     )
+    parser.add_argument(
+        "--llm-base-url",
+        type=str,
+        default=DEFAULT_LLM_BASE_URL,
+        help="OpenAI 兼容 LLM 的 base URL",
+    )
+    parser.add_argument(
+        "--llm-api-key",
+        type=str,
+        default=DEFAULT_LLM_API_KEY,
+        help="OpenAI 兼容 LLM 的 API key",
+    )
+    parser.add_argument(
+        "--llm-model",
+        type=str,
+        default=DEFAULT_LLM_MODEL,
+        help="LLM 模型名 (默认: MiniMax-M3)",
+    )
+    parser.add_argument(
+        "--use-mock",
+        action="store_true",
+        help="强制使用 MockLLMService，不调用真实 LLM",
+    )
     args = parser.parse_args()
-    run_day(load_path=args.load_path, save_path=args.save_path)
+    service = _make_llm_service(args)
+    run_day(
+        load_path=args.load_path,
+        save_path=args.save_path,
+        llm_service=service,
+    )

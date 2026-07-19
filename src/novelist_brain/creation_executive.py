@@ -5,7 +5,8 @@ from __future__ import annotations
 import random
 from typing import Any
 
-from src.novelist_brain.llm import LLMService, MockLLMService
+from src.novelist_brain import prompts
+from src.novelist_brain.llm import LLMCallError, LLMService, MockLLMService
 from src.novelist_brain.models import BusMessage, ModuleState, NarrativeLine, Scene, TickDelta, Trace
 from src.novelist_brain.module import Module
 from src.novelist_brain.persistence import dataclass_to_dict, reconstruct_dataclass
@@ -288,7 +289,96 @@ class CreationExecutive(Module):
     def _compose_paragraph(
         self, narrative_line: NarrativeLine, traces: list[Trace]
     ) -> str:
-        """Convert a narrative line into a 200-500 word literary paragraph."""
+        """Convert a narrative line into a 200-500 word literary paragraph.
+
+        When a real LLM is available, delegate the prose generation to the
+        model using a structured prompt. Otherwise fall back to the
+        template-based composer.
+        """
+        if self._llm is not None and not isinstance(self._llm, MockLLMService):
+            paragraph = self._compose_paragraph_with_llm(narrative_line, traces)
+            if paragraph:
+                paragraph = self._normalize_spacing(paragraph)
+                paragraph = self._remove_duplicate_sentences(paragraph)
+                words = paragraph.split()
+                if len(words) > 500:
+                    paragraph = " ".join(words[:500])
+                return paragraph
+
+        return self._compose_paragraph_with_templates(narrative_line, traces)
+
+    def _compose_paragraph_with_llm(
+        self, narrative_line: NarrativeLine, traces: list[Trace]
+    ) -> str:
+        """Use the LLM to compose the paragraph."""
+        scenes = narrative_line.scenes
+        if not scenes:
+            return ""
+
+        setting = self._resolve_setting(narrative_line)
+        protagonist, _ = self._resolve_characters(narrative_line)
+
+        narrative_line_dict = {
+            "scenes": [
+                {
+                    "setting": s.setting or setting,
+                    "description": s.description or "",
+                    "emotional_tone": s.emotional_tone,
+                }
+                for s in scenes[:4]
+            ],
+            "conflicts": [
+                {"description": c.stakes or (c.parties[0] if c.parties else "")}
+                for c in narrative_line.conflicts[:3]
+            ],
+            "foreshadowing": list(narrative_line.foreshadowing or []),
+        }
+        relevant_traces = [
+            {
+                "content": t.content,
+                "summary": t.content[:160],
+                "narrative_role": t.narrative_role,
+                "tags": list(t.tags),
+            }
+            for t in traces[:4]
+        ]
+        previous_paragraph = self._draft_buffer[-1] if self._draft_buffer else ""
+
+        system, user = prompts.build_novel_paragraph_prompt(
+            identity=self._identity_constraints_for_prompt(),
+            narrative_line=narrative_line_dict,
+            relevant_traces=relevant_traces,
+            previous_paragraph=previous_paragraph,
+            style_profile=self._style_profile,
+        )
+
+        try:
+            text = self._llm.complete(
+                user,
+                context={"system": system},
+                temperature=0.85,
+                max_tokens=1600,
+            ).strip()
+        except LLMCallError:
+            text = ""
+        return text
+
+    def _identity_constraints_for_prompt(self) -> dict[str, Any]:
+        """Return identity constraints formatted for prompt builders."""
+        if self._style_profile.get("identity"):
+            return dict(self._style_profile["identity"])
+        return {
+            "name": "the novelist",
+            "values": ["truth", "beauty"],
+            "traits": {"introspection": 0.8, "observation": 0.7},
+            "self_narrative": "I turn ordinary moments into fiction.",
+            "interests": self._focus_stack or ["memory", "loneliness", "time"],
+        }
+
+    def _compose_paragraph_with_templates(
+        self, narrative_line: NarrativeLine, traces: list[Trace]
+    ) -> str:
+        """Template-based paragraph composer (fallback when no real LLM)."""
         scenes = narrative_line.scenes
         if not scenes:
             return self._fallback_paragraph()
