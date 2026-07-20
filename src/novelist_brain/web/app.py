@@ -681,6 +681,71 @@ def api_social_state() -> JSONResponse:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
+@api_router.get("/social/npcs/{npc_id}")
+def api_social_npc_detail(npc_id: str) -> JSONResponse:
+    """Return a single NPC's metadata + runtime relationship + counters.
+
+    WebUI Phase 3 NPC details panel (#22). Calls ``SocialInput.get_npc()``.
+    """
+    provider = get_provider()
+    social = provider.module("social_input")
+    if social is None:
+        raise HTTPException(status_code=404, detail="social_input not registered")
+    if not hasattr(social, "get_npc"):
+        raise HTTPException(status_code=501, detail="get_npc not implemented")
+    try:
+        data = social.get_npc(npc_id)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    if data is None:
+        raise HTTPException(status_code=404, detail=f"npc {npc_id} not found")
+    return _json_response(data)
+
+
+@api_router.get("/social/npcs/{npc_id}/history")
+def api_social_npc_history(npc_id: str, limit: int = 50) -> JSONResponse:
+    """Return recent encounters involving the given NPC, newest first.
+
+    WebUI Phase 3 dialogue history viewer (#22). Calls
+    ``SocialInput.get_npc_encounters()``. Only encounters with a
+    ``relationship_delta.target_id`` matching the NPC are returned —
+    eavesdrop/intrusion encounters cannot be attributed to a single NPC.
+    """
+    provider = get_provider()
+    social = provider.module("social_input")
+    if social is None:
+        raise HTTPException(status_code=404, detail="social_input not registered")
+    if not hasattr(social, "get_npc_encounters"):
+        raise HTTPException(status_code=501, detail="get_npc_encounters not implemented")
+    try:
+        data = social.get_npc_encounters(npc_id, limit=max(1, min(limit, 200)))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    return _json_response({"npc_id": npc_id, "encounters": data, "count": len(data)})
+
+
+@api_router.get("/social/encounters/{encounter_id}")
+def api_social_encounter(encounter_id: str) -> JSONResponse:
+    """Return a single encounter by id (WebUI Phase 3 #22).
+
+    Calls ``SocialInput.get_encounter()``. Returns 404 when the encounter is
+    no longer in the in-memory buffer (which keeps the most recent 50).
+    """
+    provider = get_provider()
+    social = provider.module("social_input")
+    if social is None:
+        raise HTTPException(status_code=404, detail="social_input not registered")
+    if not hasattr(social, "get_encounter"):
+        raise HTTPException(status_code=501, detail="get_encounter not implemented")
+    try:
+        data = social.get_encounter(encounter_id)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    if data is None:
+        raise HTTPException(status_code=404, detail=f"encounter {encounter_id} not found")
+    return _json_response(data)
+
+
 @api_router.get("/sandbox/state")
 def api_sandbox_state() -> JSONResponse:
     """Return the full mental sandbox state (WebUI Phase 4: 脑中世界).

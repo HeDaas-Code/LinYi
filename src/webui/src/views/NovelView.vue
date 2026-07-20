@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
 import { useAgentStore } from '@/stores/agent'
+import { downloadText, timestampSlug } from '@/utils/export'
 
 // NovelView (小说手稿) — Phase 4.
 //
@@ -11,6 +12,8 @@ import { useAgentStore } from '@/stores/agent'
 //   - Scrollable paragraph stream (typography tuned for long-form reading)
 //
 // Data source: /api/novel/manuscript → NovelOutput.paragraphs (public attrs).
+//
+// Phase 6: added "导出 .txt" and "导出 .md" buttons.
 
 const store = useAgentStore()
 
@@ -56,6 +59,55 @@ onBeforeUnmount(() => {
     pollTimer = null
   }
 })
+
+function exportTxt(): void {
+  if (!manuscript.value) return
+  const lines: string[] = []
+  lines.push(manuscript.value.title || '未命名')
+  lines.push(`作者：${manuscript.value.author_name || '林逸'}    版本：v${manuscript.value.version ?? 0}`)
+  lines.push('='.repeat(40))
+  lines.push('')
+  for (const p of manuscript.value.paragraphs) {
+    lines.push(`　　${p}`)
+    lines.push('')
+  }
+  downloadText(
+    `${manuscript.value.title || 'novel'}-${timestampSlug()}.txt`,
+    lines.join('\n'),
+  )
+}
+
+function exportMarkdown(): void {
+  if (!manuscript.value) return
+  const lines: string[] = []
+  lines.push(`# ${manuscript.value.title || '未命名'}`)
+  lines.push('')
+  lines.push(`> 作者：${manuscript.value.author_name || '林逸'} · 版本：v${manuscript.value.version ?? 0} · 段落数：${manuscript.value.paragraph_count ?? 0}`)
+  lines.push('')
+  if (worldSettings.value.length) {
+    lines.push('## 世界设定')
+    lines.push('')
+    for (const [k, v] of worldSettings.value) {
+      let val = '—'
+      if (Array.isArray(v)) val = v.join(' · ')
+      else if (typeof v === 'object' && v !== null) val = JSON.stringify(v)
+      else if (v !== null && v !== undefined) val = String(v)
+      lines.push(`- **${k}**: ${val}`)
+    }
+    lines.push('')
+  }
+  lines.push('## 正文')
+  lines.push('')
+  for (const p of manuscript.value.paragraphs) {
+    lines.push(p)
+    lines.push('')
+  }
+  downloadText(
+    `${manuscript.value.title || 'novel'}-${timestampSlug()}.md`,
+    lines.join('\n'),
+    'text/markdown;charset=utf-8',
+  )
+}
 </script>
 
 <template>
@@ -78,6 +130,8 @@ onBeforeUnmount(() => {
         >
           {{ showLatestOnly ? '仅最近 12 段' : '显示全文' }}
         </button>
+        <button class="btn-export" @click="exportTxt" :disabled="!paragraphs.length" title="导出为纯文本">.txt</button>
+        <button class="btn-export" @click="exportMarkdown" :disabled="!paragraphs.length" title="导出为 Markdown">.md</button>
         <button class="btn-refresh" @click="store.fetchNovelManuscript()">刷新</button>
       </div>
     </header>
@@ -204,7 +258,8 @@ onBeforeUnmount(() => {
 
 .btn-icon,
 .btn-toggle,
-.btn-refresh {
+.btn-refresh,
+.btn-export {
   padding: 4px 10px;
   font-size: 12px;
   background: var(--bg-2);
@@ -225,6 +280,17 @@ onBeforeUnmount(() => {
   background: var(--cen-soft);
   border-color: var(--cen);
   color: var(--cen);
+}
+
+.btn-export:hover:not(:disabled) {
+  background: var(--bg-3);
+  color: var(--text-primary);
+  border-color: var(--dmn);
+}
+
+.btn-export:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .meta-card {

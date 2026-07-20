@@ -10,10 +10,13 @@ import type {
   MemoryGraphResponse,
   MemoryTracesResponse,
   NetworksStateResponse,
+  NpcDetailResponse,
+  NpcHistoryResponse,
   NovelManuscriptResponse,
   SandboxStateResponse,
   ScheduleResponse,
   SnapshotResponse,
+  SocialEncounter,
   SocialStateResponse,
 } from '@/types'
 
@@ -60,6 +63,8 @@ interface AgentState {
   memoryGraph: MemoryGraphResponse | null
   // Phase 3-5 view-scoped data
   socialState: SocialStateResponse | null
+  npcDetail: NpcDetailResponse | null
+  npcHistory: NpcHistoryResponse | null
   sandboxState: SandboxStateResponse | null
   novelManuscript: NovelManuscriptResponse | null
   busEvents: BusEvent[]
@@ -81,6 +86,8 @@ export const useAgentStore = defineStore('agent', {
     memoryTraces: null,
     memoryGraph: null,
     socialState: null,
+    npcDetail: null,
+    npcHistory: null,
     sandboxState: null,
     novelManuscript: null,
     busEvents: [],
@@ -227,6 +234,42 @@ export const useAgentStore = defineStore('agent', {
       } finally {
         this.setLoading('socialState', false)
       }
+    },
+    async fetchNpcDetail(npcId: string) {
+      this.setLoading('npcDetail', true)
+      try {
+        this.npcDetail = await fetchJson<NpcDetailResponse>(`/api/social/npcs/${encodeURIComponent(npcId)}`)
+        this.lastError = null
+      } catch (e) {
+        this.lastError = (e as Error).message
+        this.npcDetail = null
+      } finally {
+        this.setLoading('npcDetail', false)
+      }
+    },
+    async fetchNpcHistory(npcId: string, limit: number = 50) {
+      this.setLoading('npcHistory', true)
+      try {
+        this.npcHistory = await fetchJson<NpcHistoryResponse>(`/api/social/npcs/${encodeURIComponent(npcId)}/history?limit=${limit}`)
+        this.lastError = null
+      } catch (e) {
+        this.lastError = (e as Error).message
+        this.npcHistory = null
+      } finally {
+        this.setLoading('npcHistory', false)
+      }
+    },
+    async fetchEncounter(encounterId: string): Promise<SocialEncounter | null> {
+      try {
+        return await fetchJson<SocialEncounter>(`/api/social/encounters/${encodeURIComponent(encounterId)}`)
+      } catch (e) {
+        this.lastError = (e as Error).message
+        return null
+      }
+    },
+    clearNpcSelection() {
+      this.npcDetail = null
+      this.npcHistory = null
     },
     async fetchSandboxState() {
       this.setLoading('sandboxState', true)

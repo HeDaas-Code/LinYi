@@ -2,6 +2,7 @@
 import { computed, onMounted, onBeforeUnmount } from 'vue'
 import { useAgentStore } from '@/stores/agent'
 import type { EosMetric, EosReport } from '@/types'
+import { downloadText, timestampSlug } from '@/utils/export'
 
 // EosView (EOS 观测台) — Phase 2.
 //
@@ -14,6 +15,8 @@ import type { EosMetric, EosReport } from '@/types'
 //
 // Data comes from /api/eos/reports (new in Phase 2) which returns the last
 // ~20 EvaluationReport instances in newest-first order.
+//
+// Phase 6: added "导出 Markdown" button to dump all loaded reports.
 
 const store = useAgentStore()
 
@@ -106,6 +109,56 @@ onBeforeUnmount(() => {
     pollTimer = null
   }
 })
+
+function exportMarkdown(): void {
+  const lines: string[] = []
+  lines.push(`# EOS 观测台导出`)
+  lines.push('')
+  lines.push(`- 生成时间: ${new Date().toLocaleString('zh-CN', { hour12: false })}`)
+  lines.push(`- 报告数量: ${reports.value.length}`)
+  lines.push(`- 总告警数: ${totalAlerts.value}`)
+  lines.push('')
+  for (const r of reports.value) {
+    lines.push(`## 报告 ${r.id} · ${new Date(r.timestamp).toLocaleString('zh-CN', { hour12: false })}`)
+    lines.push('')
+    lines.push(`- 触发: \`${r.trigger}\``)
+    if (r.summary) lines.push(`- 摘要: ${r.summary}`)
+    lines.push('')
+    if (r.alerts?.length) {
+      lines.push('### 告警')
+      lines.push('')
+      for (const a of r.alerts) {
+        lines.push(`- **${a.metric_name}** (\`${a.metric_id}\`) — 严重度 \`${a.severity}\`，当前值 \`${a.value}\``)
+      }
+      lines.push('')
+    }
+    if (r.recommendations?.length) {
+      lines.push('### 建议')
+      lines.push('')
+      for (const rec of r.recommendations) {
+        lines.push(`- ${rec}`)
+      }
+      lines.push('')
+    }
+    if (r.metrics?.length) {
+      lines.push('### 指标')
+      lines.push('')
+      lines.push('| 指标 | 类别 | 值 | 严重度 | 来源 |')
+      lines.push('|------|------|----|--------|------|')
+      for (const m of r.metrics) {
+        lines.push(`| ${m.name} | ${m.category} | ${m.value.toFixed(4)} | ${m.severity} | ${m.source} |`)
+      }
+      lines.push('')
+    }
+    lines.push('---')
+    lines.push('')
+  }
+  downloadText(
+    `eos-report-${timestampSlug()}.md`,
+    lines.join('\n'),
+    'text/markdown;charset=utf-8',
+  )
+}
 </script>
 
 <template>
@@ -126,6 +179,12 @@ onBeforeUnmount(() => {
           <span class="stat-value mono">{{ totalAlerts }}</span>
           <span class="stat-label">告警</span>
         </div>
+        <button
+          class="btn-export"
+          @click="exportMarkdown"
+          :disabled="!reports.length"
+          title="导出全部报告为 Markdown"
+        >导出 .md</button>
       </div>
     </header>
 
@@ -295,6 +354,29 @@ onBeforeUnmount(() => {
   letter-spacing: 0.08em;
   color: var(--text-muted);
   margin-top: 2px;
+}
+
+.btn-export {
+  align-self: center;
+  padding: 6px 14px;
+  font-size: 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s var(--ease-out);
+}
+
+.btn-export:hover:not(:disabled) {
+  background: var(--bg-3);
+  color: var(--text-primary);
+  border-color: var(--cen);
+}
+
+.btn-export:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .latest-header {

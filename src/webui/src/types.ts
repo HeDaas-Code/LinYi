@@ -369,6 +369,20 @@ export interface SocialStateResponse {
   }
 }
 
+// Phase 3 #22: NPC detail + dialogue history
+export interface NpcDetailResponse {
+  npc: SocialNPC
+  relationship: Relationship | null
+  encounter_count: number
+  last_seen_timestamp: number | null
+}
+
+export interface NpcHistoryResponse {
+  npc_id: string
+  encounters: SocialEncounter[]
+  count: number
+}
+
 // Phase 4: 脑中世界
 export interface WorldModel {
   id?: string

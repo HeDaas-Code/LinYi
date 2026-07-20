@@ -2,6 +2,7 @@
 import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
 import { useAgentStore } from '@/stores/agent'
 import type { Fragment, Trace } from '@/types'
+import { downloadSvgAsPng, timestampSlug } from '@/utils/export'
 
 // MemoryView (记忆宫殿) — Phase 2.
 //
@@ -103,6 +104,17 @@ const graphEdges = computed(() => {
 
 const selectedFragmentId = ref<string | null>(null)
 const selectedTraceId = ref<string | null>(null)
+
+const graphSvg = ref<SVGSVGElement | null>(null)
+
+function exportGraphPng(): void {
+  if (!graphSvg.value) return
+  downloadSvgAsPng(
+    graphSvg.value,
+    `memory-graph-${timestampSlug()}.png`,
+    2,
+  )
+}
 
 const selectedFragment = computed<Fragment | null>(() => {
   if (!selectedFragmentId.value) return null
@@ -253,8 +265,23 @@ onBeforeUnmount(() => {
       <!-- Graph + detail column -->
       <section class="graph-col">
         <div class="card graph-card">
-          <h2 class="card-title">关联图（前 80 节点）</h2>
-          <svg :viewBox="`0 0 ${GRAPH_W} ${GRAPH_H}`" class="graph" v-if="graphNodes.length">
+          <div class="graph-card-head">
+            <h2 class="card-title">关联图（前 80 节点）</h2>
+            <button
+              class="btn-export"
+              @click="exportGraphPng"
+              :disabled="!graphNodes.length"
+              title="导出关联图为 PNG"
+            >导出 PNG</button>
+          </div>
+          <svg
+            ref="graphSvg"
+            :viewBox="`0 0 ${GRAPH_W} ${GRAPH_H}`"
+            class="graph"
+            v-if="graphNodes.length"
+            :width="GRAPH_W"
+            :height="GRAPH_H"
+          >
             <g class="edges">
               <line
                 v-for="(e, i) in graphEdges"
@@ -455,6 +482,36 @@ onBeforeUnmount(() => {
 
 .graph-card {
   padding: 12px;
+}
+
+.graph-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.btn-export {
+  padding: 4px 12px;
+  font-size: 11px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s var(--ease-out);
+}
+
+.btn-export:hover:not(:disabled) {
+  background: var(--bg-3);
+  color: var(--text-primary);
+  border-color: var(--sn);
+}
+
+.btn-export:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .graph {

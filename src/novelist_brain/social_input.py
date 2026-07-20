@@ -823,6 +823,73 @@ class SocialInput(Module):
         }
 
     # ------------------------------------------------------------------
+    # Per-NPC detail accessors (added for WebUI Phase 3 NPC details panel)
+    # ------------------------------------------------------------------
+
+    def get_npc(self, npc_id: str) -> dict[str, Any] | None:
+        """Return static metadata + runtime relationship for a single NPC.
+
+        Returns ``None`` if the NPC id is unknown. The ``relationship`` field
+        is ``None`` when no encounter has yet produced a relationship delta
+        for this NPC.
+        """
+        npc = self._npcs.get(npc_id)
+        if npc is None:
+            return None
+        rel = self._state_data.relationships.get(npc_id)
+        # Count encounters that touched this NPC (only those with a
+        # relationship_delta carry the target_id; eavesdrop/intrusion do not).
+        encounter_count = sum(
+            1
+            for e in self._state_data.recent_encounters
+            if e.relationship_delta is not None
+            and e.relationship_delta.target_id == npc_id
+        )
+        last_seen_ts: float | None = None
+        for e in reversed(self._state_data.recent_encounters):
+            if (
+                e.relationship_delta is not None
+                and e.relationship_delta.target_id == npc_id
+            ):
+                last_seen_ts = e.timestamp
+                break
+        return {
+            "npc": dataclass_to_dict(npc),
+            "relationship": dataclass_to_dict(rel) if rel is not None else None,
+            "encounter_count": encounter_count,
+            "last_seen_timestamp": last_seen_ts,
+        }
+
+    def get_npc_encounters(self, npc_id: str, limit: int = 50) -> list[dict[str, Any]]:
+        """Return recent encounters involving ``npc_id``, newest first.
+
+        Only encounters with a ``relationship_delta.target_id`` matching the
+        NPC are returned. Encounters of type ``eavesdrop`` / ``intrusion`` do
+        not carry a target_id and therefore cannot be attributed to a single
+        NPC with the current data model.
+        """
+        if npc_id not in self._npcs:
+            return []
+        out: list[dict[str, Any]] = []
+        for e in self._state_data.recent_encounters:
+            if (
+                e.relationship_delta is not None
+                and e.relationship_delta.target_id == npc_id
+            ):
+                out.append(dataclass_to_dict(e))
+        out.reverse()  # newest first
+        if limit > 0:
+            out = out[:limit]
+        return out
+
+    def get_encounter(self, encounter_id: str) -> dict[str, Any] | None:
+        """Return a single encounter by id, or ``None`` if not in the buffer."""
+        for e in self._state_data.recent_encounters:
+            if e.id == encounter_id:
+                return dataclass_to_dict(e)
+        return None
+
+    # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
 

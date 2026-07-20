@@ -4,9 +4,17 @@ import { useAgentStore } from '@/stores/agent'
 
 // TopBar shows phase + hour + energy bar + mood + alert count, fed by the
 // /api/networks/state endpoint (with WS patches via the snapshot composable).
+//
+// On mobile (Phase 6) a hamburger button is shown on the left to toggle the
+// sidebar drawer; non-essential metrics are hidden to save space.
 
-defineProps<{
+const props = defineProps<{
   title: string
+  isMobile?: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'toggle-drawer'): void
 }>()
 
 const store = useAgentStore()
@@ -60,25 +68,33 @@ const alertTone = computed(() => {
   if (alertCount.value < 3) return 'warn'
   return 'error'
 })
+
+// Silence unused-prop lint when isMobile isn't otherwise read in script.
+void props
+void emit
 </script>
 
 <template>
   <header class="app-topbar">
+    <button v-if="isMobile" class="hamburger" @click="emit('toggle-drawer')" aria-label="打开菜单">
+      <span /><span /><span />
+    </button>
+
     <div class="topbar-title">{{ title }}</div>
 
-    <div class="topbar-divider" />
+    <div class="topbar-divider" v-if="!isMobile" />
 
-    <div class="metric phase-metric">
+    <div class="metric phase-metric" v-if="!isMobile">
       <span class="metric-label">阶段</span>
       <span class="phase-pill" :class="phaseClass">{{ phase }}</span>
     </div>
 
-    <div class="metric">
+    <div class="metric" v-if="!isMobile">
       <span class="metric-label">时间</span>
       <span class="metric-value mono">{{ hourLabel }}</span>
     </div>
 
-    <div class="metric energy-metric">
+    <div class="metric energy-metric" v-if="!isMobile">
       <span class="metric-label">能量</span>
       <div class="energy-bar">
         <div class="energy-fill" :class="`tone-${energyTone}`" :style="{ width: energyBarWidth }" />
@@ -86,16 +102,29 @@ const alertTone = computed(() => {
       <span class="metric-value mono">{{ energyPct }}</span>
     </div>
 
-    <div class="metric" v-if="moodLabel">
+    <div class="metric" v-if="moodLabel && !isMobile">
       <span class="metric-label">情绪</span>
       <span class="metric-value">{{ moodLabel }}</span>
     </div>
 
     <div class="spacer" />
 
+    <div class="metric phase-metric" v-if="isMobile">
+      <span class="phase-pill" :class="phaseClass">{{ phase }}</span>
+    </div>
+
+    <div class="metric" v-if="isMobile">
+      <span class="metric-value mono">{{ hourLabel }}</span>
+    </div>
+
+    <div class="metric" v-if="isMobile">
+      <span class="metric-value mono">{{ energyPct }}</span>
+    </div>
+
     <div class="metric alert-metric" :class="`tone-${alertTone}`">
       <span class="alert-dot" />
-      <span class="metric-value">{{ alertCount }} 警报</span>
+      <span class="metric-value" v-if="!isMobile">{{ alertCount }} 警报</span>
+      <span class="metric-value" v-else>{{ alertCount }}</span>
     </div>
 
     <div class="metric" v-if="store.lastError">
@@ -105,10 +134,39 @@ const alertTone = computed(() => {
 </template>
 
 <style scoped>
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 32px;
+  height: 32px;
+  padding: 6px 4px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.hamburger span {
+  display: block;
+  height: 2px;
+  width: 100%;
+  background: var(--text-primary);
+  border-radius: 1px;
+}
+
+.hamburger:hover {
+  background: var(--bg-2);
+}
+
 .topbar-title {
   font-size: 15px;
   font-weight: 600;
   color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .topbar-divider {

@@ -2,6 +2,7 @@
 import { computed, onMounted, onBeforeUnmount } from 'vue'
 import { useAgentStore } from '@/stores/agent'
 import type { Fragment } from '@/types'
+import { downloadText, timestampSlug } from '@/utils/export'
 
 // DreamView (日记·反思) — Phase 2.
 //
@@ -12,6 +13,8 @@ import type { Fragment } from '@/types'
 //
 // Phase 3 will add a "past days" archive by querying memory traces with
 // tag=reflection via POST /api/memory/query (not yet implemented).
+//
+// Phase 6: added "导出 Markdown" button to dump the current reflection buffer.
 
 const store = useAgentStore()
 
@@ -103,6 +106,38 @@ onBeforeUnmount(() => {
     pollTimer = null
   }
 })
+
+function exportMarkdown(): void {
+  const lines: string[] = []
+  lines.push(`# 日记 · 反思`)
+  lines.push('')
+  lines.push(`- 导出时间: ${new Date().toLocaleString('zh-CN', { hour12: false })}`)
+  lines.push(`- 条目数: ${reflections.value.length}`)
+  if (mood.value) {
+    lines.push(`- 情绪估算: valence ${mood.value.valence.toFixed(2)} · arousal ${mood.value.arousal.toFixed(2)}`)
+  }
+  lines.push('')
+  for (const group of dayGroups.value) {
+    lines.push(`## ${group.day}`)
+    lines.push('')
+    for (const f of group.items) {
+      const t = new Date(f.timestamp).toLocaleTimeString('zh-CN', { hour12: false })
+      lines.push(`### ${t} · v ${f.valence.toFixed(2)} / a ${f.arousal.toFixed(2)}`)
+      lines.push('')
+      lines.push(f.content)
+      lines.push('')
+      if (f.tags?.length) {
+        lines.push(`> tags: ${f.tags.join(', ')}`)
+        lines.push('')
+      }
+    }
+  }
+  downloadText(
+    `dream-reflections-${timestampSlug()}.md`,
+    lines.join('\n'),
+    'text/markdown;charset=utf-8',
+  )
+}
 </script>
 
 <template>
@@ -140,6 +175,12 @@ onBeforeUnmount(() => {
         </span>
         <span class="stat-label">总效价</span>
       </div>
+      <button
+        class="btn-export"
+        @click="exportMarkdown"
+        :disabled="!count"
+        title="导出反思记录为 Markdown"
+      >导出 .md</button>
     </div>
 
     <section class="card empty-card" v-if="count === 0">
@@ -246,6 +287,7 @@ onBeforeUnmount(() => {
 .summary-row {
   display: flex;
   gap: 16px;
+  align-items: center;
 }
 
 .summary-stat {
@@ -257,6 +299,29 @@ onBeforeUnmount(() => {
   border: 1px solid var(--border-soft);
   border-radius: 8px;
   min-width: 100px;
+}
+
+.btn-export {
+  margin-left: auto;
+  padding: 6px 14px;
+  font-size: 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s var(--ease-out);
+}
+
+.btn-export:hover:not(:disabled) {
+  background: var(--bg-3);
+  color: var(--text-primary);
+  border-color: var(--dmn);
+}
+
+.btn-export:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .stat-value {

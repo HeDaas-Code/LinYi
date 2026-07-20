@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, onBeforeUnmount } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
 import { useAgentStore } from '@/stores/agent'
 import type { SocialSpace, SocialNPC, SocialEncounter } from '@/types'
+import NpcDetails from '@/components/NpcDetails.vue'
 
 // SocialView (社会空间) — Phase 3.
 //
@@ -11,10 +12,13 @@ import type { SocialSpace, SocialNPC, SocialEncounter } from '@/types'
 //     gaze intensity as background color and encounter rate as size
 //   - Middle right: NPC list with archetype tag + relationship type
 //   - Bottom: recent encounters timeline with valence marker + dialogue mode
+//   - Side drawer (Phase 3 #22): NpcDetails panel when an NPC is clicked
 //
 // Data source: /api/social/state → SocialInput.visualize_state()
 
 const store = useAgentStore()
+
+const selectedNpcId = ref<string | null>(null)
 
 const current = computed(() => store.socialState?.current ?? null)
 const spaces = computed<SocialSpace[]>(() => store.socialState?.spaces ?? [])
@@ -92,6 +96,14 @@ function valenceColor(v: number): string {
   return 'var(--text-muted)'
 }
 
+function selectNpc(npcId: string) {
+  selectedNpcId.value = npcId
+}
+
+function closeNpcPanel() {
+  selectedNpcId.value = null
+}
+
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
 onMounted(() => {
@@ -146,103 +158,122 @@ onBeforeUnmount(() => {
       </div>
     </header>
 
-    <div class="grid-2">
-      <!-- Spaces -->
-      <section class="card">
-        <h2 class="card-title">空间</h2>
-        <div class="space-grid">
-          <div
-            v-for="s in spaces"
-            :key="s.id"
-            class="space-card"
-            :class="[`tone-${spaceTone(s.space_type)}`, { active: currentSpaceId === s.id }]"
-          >
-            <div class="space-head">
-              <span class="space-name">{{ s.name }}</span>
-              <span class="tag" :class="`tone-${spaceTone(s.space_type)}`">{{ s.space_type }}</span>
+    <div class="layout-with-panel" :class="{ 'panel-open': !!selectedNpcId }">
+      <div class="main-col">
+        <div class="grid-2">
+          <!-- Spaces -->
+          <section class="card">
+            <h2 class="card-title">空间</h2>
+            <div class="space-grid">
+              <div
+                v-for="s in spaces"
+                :key="s.id"
+                class="space-card"
+                :class="[`tone-${spaceTone(s.space_type)}`, { active: currentSpaceId === s.id }]"
+              >
+                <div class="space-head">
+                  <span class="space-name">{{ s.name }}</span>
+                  <span class="tag" :class="`tone-${spaceTone(s.space_type)}`">{{ s.space_type }}</span>
+                </div>
+                <div class="space-stats">
+                  <span class="muted">gaze {{ (s.gaze_intensity ?? 0).toFixed(2) }}</span>
+                  <span class="muted">rate {{ (s.encounter_base_rate ?? 0).toFixed(2) }}</span>
+                  <span class="muted">{{ npcs.filter(n => npcInSpace(n, s.id)).length }} NPC</span>
+                </div>
+                <div class="space-norms" v-if="s.norms?.length">
+                  <span class="norm" v-for="n in s.norms.slice(0, 2)" :key="n.id">{{ n.description }}</span>
+                </div>
+              </div>
             </div>
-            <div class="space-stats">
-              <span class="muted">gaze {{ (s.gaze_intensity ?? 0).toFixed(2) }}</span>
-              <span class="muted">rate {{ (s.encounter_base_rate ?? 0).toFixed(2) }}</span>
-              <span class="muted">{{ npcs.filter(n => npcInSpace(n, s.id)).length }} NPC</span>
-            </div>
-            <div class="space-norms" v-if="s.norms?.length">
-              <span class="norm" v-for="n in s.norms.slice(0, 2)" :key="n.id">{{ n.description }}</span>
-            </div>
-          </div>
+          </section>
+
+          <!-- NPCs + relationships -->
+          <section class="card">
+            <h2 class="card-title">NPC 与关系 <span class="hint muted">（点击查看详情）</span></h2>
+            <ul class="npc-list" v-if="npcs.length">
+              <li
+                v-for="npc in npcs"
+                :key="npc.id"
+                :class="['npc-row', { selected: selectedNpcId === npc.id }]"
+                @click="selectNpc(npc.id)"
+              >
+                <div class="npc-head">
+                  <span class="npc-name">{{ npc.name }}</span>
+                  <span class="tag" :class="`arch-${npc.archetype}`">{{ npc.archetype }}</span>
+                </div>
+                <div class="npc-spaces muted">
+                  {{ npc.space_ids.map(id => spaces.find(s => s.id === id)?.name ?? id).join(' · ') }}
+                </div>
+                <div class="npc-rel" v-if="relationshipFor(npc.id)">
+                  <span class="tag" :class="`rel-${relTone(relationshipFor(npc.id)!.type)}`">
+                    {{ relationshipFor(npc.id)!.type }}
+                  </span>
+                  <span class="mono muted">
+                    i {{ relationshipFor(npc.id)!.intensity.toFixed(2) }}
+                    · t {{ relationshipFor(npc.id)!.trust.toFixed(2) }}
+                  </span>
+                </div>
+              </li>
+            </ul>
+            <div class="empty muted" v-else>暂无 NPC。</div>
+          </section>
         </div>
-      </section>
 
-      <!-- NPCs + relationships -->
-      <section class="card">
-        <h2 class="card-title">NPC 与关系</h2>
-        <ul class="npc-list" v-if="npcs.length">
-          <li v-for="npc in npcs" :key="npc.id" class="npc-row">
-            <div class="npc-head">
-              <span class="npc-name">{{ npc.name }}</span>
-              <span class="tag" :class="`arch-${npc.archetype}`">{{ npc.archetype }}</span>
-            </div>
-            <div class="npc-spaces muted">
-              {{ npc.space_ids.map(id => spaces.find(s => s.id === id)?.name ?? id).join(' · ') }}
-            </div>
-            <div class="npc-rel" v-if="relationshipFor(npc.id)">
-              <span class="tag" :class="`rel-${relTone(relationshipFor(npc.id)!.type)}`">
-                {{ relationshipFor(npc.id)!.type }}
-              </span>
-              <span class="mono muted">
-                i {{ relationshipFor(npc.id)!.intensity.toFixed(2) }}
-                · t {{ relationshipFor(npc.id)!.trust.toFixed(2) }}
-              </span>
-            </div>
-          </li>
-        </ul>
-        <div class="empty muted" v-else>暂无 NPC。</div>
-      </section>
+        <!-- Gaze pressures -->
+        <section class="card" v-if="gazePressures.length">
+          <h2 class="card-title">凝视压力（最近 {{ gazePressures.length }} 条）</h2>
+          <ul class="gaze-list">
+            <li v-for="(g, i) in gazePressures.slice(0, 10)" :key="i" class="gaze-row">
+              <span class="gaze-src">{{ g.source }}</span>
+              <span class="muted">·</span>
+              <span class="gaze-norm">{{ g.norm }}</span>
+              <div class="gaze-bar">
+                <div class="gaze-fill" :style="{ width: `${Math.min(100, g.intensity * 100).toFixed(0)}%` }" />
+              </div>
+              <span class="mono">{{ g.intensity.toFixed(2) }}</span>
+              <span class="tag" v-if="g.internalized > 0.5">internalized</span>
+            </li>
+          </ul>
+        </section>
+
+        <!-- Encounter timeline -->
+        <section class="card">
+          <h2 class="card-title">遭遇时间线</h2>
+          <ul class="encounter-list" v-if="encounters.length">
+            <li v-for="e in encounters.slice(0, 30)" :key="e.id" class="encounter-row">
+              <span class="enc-marker" :style="{ background: valenceColor(e.valence) }" />
+              <div class="enc-body">
+                <div class="enc-meta">
+                  <span class="mono">{{ fmtTime(e.timestamp) }}</span>
+                  <span class="tag" :class="`enc-${encounterTone(e.encounter_type)}`">{{ e.encounter_type }}</span>
+                  <span class="tag">{{ e.dialogue_mode }}</span>
+                  <span class="muted">{{ spaces.find(s => s.id === e.space_id)?.name ?? e.space_id }}</span>
+                  <span class="muted" v-if="e.participants.length">{{ e.participants.length }} 人</span>
+                  <span class="muted">v {{ e.valence.toFixed(2) }}</span>
+                  <span class="muted">gaze {{ e.gaze_pressure.toFixed(2) }}</span>
+                </div>
+                <div class="enc-text">{{ e.content }}</div>
+                <div class="enc-foot" v-if="e.relationship_delta">
+                  <span class="muted">关系变化：</span>
+                  <span class="mono">{{ e.relationship_delta.target_name }} ({{ e.relationship_delta.type }}) Δ {{ e.relationship_delta.delta.toFixed(2) }}</span>
+                  <button
+                    v-if="e.relationship_delta.target_id"
+                    class="link-btn"
+                    @click.stop="selectNpc(e.relationship_delta!.target_id)"
+                  >查看 NPC</button>
+                </div>
+              </div>
+            </li>
+          </ul>
+          <div class="empty muted" v-else>暂无遭遇记录。</div>
+        </section>
+      </div>
+
+      <!-- Side drawer: NPC details panel -->
+      <aside class="side-panel" v-if="selectedNpcId">
+        <NpcDetails :npc-id="selectedNpcId" @close="closeNpcPanel" />
+      </aside>
     </div>
-
-    <!-- Gaze pressures -->
-    <section class="card" v-if="gazePressures.length">
-      <h2 class="card-title">凝视压力（最近 {{ gazePressures.length }} 条）</h2>
-      <ul class="gaze-list">
-        <li v-for="(g, i) in gazePressures.slice(0, 10)" :key="i" class="gaze-row">
-          <span class="gaze-src">{{ g.source }}</span>
-          <span class="muted">·</span>
-          <span class="gaze-norm">{{ g.norm }}</span>
-          <div class="gaze-bar">
-            <div class="gaze-fill" :style="{ width: `${Math.min(100, g.intensity * 100).toFixed(0)}%` }" />
-          </div>
-          <span class="mono">{{ g.intensity.toFixed(2) }}</span>
-          <span class="tag" v-if="g.internalized > 0.5">internalized</span>
-        </li>
-      </ul>
-    </section>
-
-    <!-- Encounter timeline -->
-    <section class="card">
-      <h2 class="card-title">遭遇时间线</h2>
-      <ul class="encounter-list" v-if="encounters.length">
-        <li v-for="e in encounters.slice(0, 30)" :key="e.id" class="encounter-row">
-          <span class="enc-marker" :style="{ background: valenceColor(e.valence) }" />
-          <div class="enc-body">
-            <div class="enc-meta">
-              <span class="mono">{{ fmtTime(e.timestamp) }}</span>
-              <span class="tag" :class="`enc-${encounterTone(e.encounter_type)}`">{{ e.encounter_type }}</span>
-              <span class="tag">{{ e.dialogue_mode }}</span>
-              <span class="muted">{{ spaces.find(s => s.id === e.space_id)?.name ?? e.space_id }}</span>
-              <span class="muted" v-if="e.participants.length">{{ e.participants.length }} 人</span>
-              <span class="muted">v {{ e.valence.toFixed(2) }}</span>
-              <span class="muted">gaze {{ e.gaze_pressure.toFixed(2) }}</span>
-            </div>
-            <div class="enc-text">{{ e.content }}</div>
-            <div class="enc-foot" v-if="e.relationship_delta">
-              <span class="muted">关系变化：</span>
-              <span class="mono">{{ e.relationship_delta.target_name }} ({{ e.relationship_delta.type }}) Δ {{ e.relationship_delta.delta.toFixed(2) }}</span>
-            </div>
-          </div>
-        </li>
-      </ul>
-      <div class="empty muted" v-else>暂无遭遇记录。</div>
-    </section>
 
     <div class="card empty-card" v-if="!store.socialState">
       <div class="empty-state">
@@ -261,6 +292,76 @@ onBeforeUnmount(() => {
   gap: 16px;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+.layout-with-panel {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.layout-with-panel.panel-open {
+  grid-template-columns: 1fr 380px;
+}
+
+.main-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.side-panel {
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - var(--topbar-height) - 32px);
+}
+
+.hint {
+  font-size: 10px;
+  font-weight: 400;
+  margin-left: 8px;
+}
+
+.npc-row {
+  cursor: pointer;
+  transition: background 0.12s var(--ease-out), border-color 0.12s var(--ease-out);
+  border: 1px solid transparent;
+}
+
+.npc-row:hover {
+  background: var(--bg-3);
+}
+
+.npc-row.selected {
+  background: var(--cen-soft);
+  border-color: var(--cen);
+}
+
+.link-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--cen);
+  padding: 1px 8px;
+  font-size: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-left: 8px;
+}
+
+.link-btn:hover {
+  background: var(--cen-soft);
+}
+
+@media (max-width: 900px) {
+  .layout-with-panel.panel-open {
+    grid-template-columns: 1fr;
+  }
+  .side-panel {
+    position: static;
+    max-height: none;
+  }
 }
 
 .view-header {
