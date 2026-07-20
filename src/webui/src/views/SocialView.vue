@@ -18,15 +18,12 @@ const store = useAgentStore()
 
 const current = computed(() => store.socialState?.current ?? null)
 const spaces = computed<SocialSpace[]>(() => store.socialState?.spaces ?? [])
-const roles = computed(() => store.socialState?.roles ?? [])
 const npcs = computed<SocialNPC[]>(() => store.socialState?.npcs ?? [])
 const relationships = computed(() => store.socialState?.relationships ?? [])
 const gazePressures = computed(() => store.socialState?.gaze_pressures ?? [])
 const encounters = computed<SocialEncounter[]>(() => store.socialState?.recent_encounters ?? [])
-const summary = computed(() => store.socialState?.summary ?? null)
 
 const currentSpaceId = computed(() => current.value?.space?.id ?? '')
-const currentRoleId = computed(() => current.value?.role?.id ?? '')
 const socialEnergy = computed(() => current.value?.social_energy ?? 0)
 const gazeLoad = computed(() => current.value?.accumulated_gaze_load ?? 0)
 

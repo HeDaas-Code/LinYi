@@ -157,7 +157,7 @@ onBeforeUnmount(() => {
         <button :class="['btn-toggle', { on: !paused }]" @click="paused = !paused">
           {{ paused ? '▶ 继续' : '⏸ 暂停' }}
         </button>
-        <button class="btn-refresh" @click="store.fetchBusEvents(limit.value)">立即刷新</button>
+        <button class="btn-refresh" @click="store.fetchBusEvents(limit)">立即刷新</button>
       </div>
     </header>
 
