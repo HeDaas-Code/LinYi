@@ -230,6 +230,7 @@ class PersonalInput(Module):
             "identity.initialized",
             "identity.constraints",
             "control.module.init",
+            "data.multimodal.image.new",
         )
 
     def _initial_state(self) -> ModuleState:
@@ -265,12 +266,14 @@ class PersonalInput(Module):
         self._last_mood = data.get("last_mood", {})
 
     def on_bus_message(self, message: BusMessage) -> None:
-        """Capture identity constraints broadcast by the identity core."""
+        """Capture identity constraints and multimodal image inputs."""
         if message.topic in ("data.identity.constraint", "identity.initialized", "identity.constraints"):
             payload = message.payload or {}
             constraints = payload.get("constraints") or payload
             if isinstance(constraints, dict):
                 self._constraints = constraints
+        elif message.topic == "data.multimodal.image.new":
+            self._on_multimodal_image(message.payload)
 
     # Daytime phases that produce life fragments.
     _ACTIVE_PHASES: set[str] = {"morning", "incubation", "social", "simulation"}
@@ -293,6 +296,37 @@ class PersonalInput(Module):
 
         fragment = self._generate_fragment(phase, delta.absolute_time)
         self._state.custom["fragment_count"] += 1
+        self._emit_fragment(fragment)
+
+    def _on_multimodal_image(self, payload: Any) -> None:
+        """Convert an external image input into a memory fragment.
+
+        Expected payload keys:
+        - ``image_url``: required, URL or base64 data URI of the image.
+        - ``description``: optional text caption / alt text.
+        - ``valence`` / ``arousal`` / ``salience``: optional emotional tags.
+        - ``tags``: optional list of tags.
+        - ``timestamp``: optional absolute time in ms.
+        """
+        if not isinstance(payload, dict):
+            return
+        image_url = payload.get("image_url")
+        if not image_url:
+            return
+
+        description = str(payload.get("description", "一幅进入系统的图像。"))
+        fragment = Fragment(
+            content=description,
+            source="multimodal",
+            modality="image",
+            valence=float(payload.get("valence", 0.0)),
+            arousal=float(payload.get("arousal", 0.3)),
+            salience=float(payload.get("salience", 0.5)),
+            timestamp=float(payload.get("timestamp", 0.0)),
+            tags=list(payload.get("tags", ["图像", "多模态"])),
+            image_url=str(image_url),
+        )
+        self._state.custom["fragment_count"] = self._state.custom.get("fragment_count", 0) + 1
         self._emit_fragment(fragment)
 
     def _emit_fragment(self, fragment: Fragment) -> None:

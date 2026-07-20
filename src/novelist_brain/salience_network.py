@@ -49,6 +49,9 @@ class SalienceNetwork(Module):
         self._last_network: str = "dmn"
         self._evaluation_count: int = 0
         self._cen_hold_ticks: int = 0
+        # Attachment-derived network preference biases.
+        self._dmn_bias: float = 0.0
+        self._cen_bias: float = 0.0
         super().__init__(name)
         self.subscribe(
             "fragment.personal.new",
@@ -65,6 +68,7 @@ class SalienceNetwork(Module):
             "data.personal.state",
             "data.social.state",
             "control.module.init",
+            "control.network.preference",
         )
 
     def _initial_state(self) -> ModuleState:
@@ -97,6 +101,14 @@ class SalienceNetwork(Module):
             self._personal_state = message.payload or {}
         elif message.topic == "data.social.state":
             self._social_state = message.payload or {}
+        elif message.topic == "control.network.preference":
+            self._handle_network_preference(message.payload or {})
+
+    def _handle_network_preference(self, payload: dict[str, Any]) -> None:
+        """Update DMN/CEN bias from attachment-derived control signal."""
+        if payload.get("source") == "attachment":
+            self._dmn_bias = float(payload.get("dmn_bias", 0.0))
+            self._cen_bias = float(payload.get("cen_bias", 0.0))
 
     def tick(self, delta: TickDelta) -> None:
         """Update internal phase tracking and broadcast current evaluation."""
@@ -203,27 +215,46 @@ class SalienceNetwork(Module):
         return float(min(1.0, max(0.0, fragment.salience)))
 
     def _decide_network(self, fragment: Fragment, score: float, phase: str) -> str:
-        """Choose the active network given a fragment, score, and phase."""
+        """Choose the active network given a fragment, score, and phase.
+
+        Attachment-derived ``_dmn_bias`` and ``_cen_bias`` gently nudge the
+        decision thresholds without overriding hard phase constraints.
+        """
         if self._energy < self.ENERGY_FORCE_DMN:
             return "dmn"
+
+        # Bias-adjusted thresholds: cen_bias makes CEN easier to enter,
+        # dmn_bias makes DMN easier to keep.
+        adjusted_salience_threshold = _clamp(
+            self.SALIENCE_HIGH_THRESHOLD - self._cen_bias + self._dmn_bias,
+            0.3,
+            0.9,
+        )
+        adjusted_score_threshold = _clamp(
+            0.3 - self._cen_bias + self._dmn_bias, 0.1, 0.6
+        )
 
         decision: str
         if phase in self.DMN_PHASES:
             # DMN phases dominate so that dreaming, reflection and incubation
             # are not interrupted by internally generated high-salience ideas.
-            decision = "dmn"
+            # Very strong CEN bias can still override during high-salience events.
+            if self._cen_bias > 0.15 and fragment.salience > adjusted_salience_threshold:
+                decision = "cen"
+            else:
+                decision = "dmn"
         elif phase in self.CEN_PHASES:
             decision = "cen"
-        elif fragment.salience > self.SALIENCE_HIGH_THRESHOLD:
+        elif fragment.salience > adjusted_salience_threshold:
             decision = "cen"
         else:
             # Default bias based on overall score: high score favors CEN.
-            decision = "cen" if score >= 0.3 else "dmn"
+            decision = "cen" if score >= adjusted_score_threshold else "dmn"
 
         # Once CEN is activated, keep it active for a short hold so that
         # low-salience distractors cannot immediately interrupt sandbox work.
         if self._last_network == "cen" and self._cen_hold_ticks > 0:
-            if decision != "cen" and fragment.salience <= self.SALIENCE_HIGH_THRESHOLD:
+            if decision != "cen" and fragment.salience <= adjusted_salience_threshold:
                 return "cen"
         return decision
 
@@ -248,6 +279,8 @@ class SalienceNetwork(Module):
                 "last_network": self._last_network,
                 "evaluation_count": self._evaluation_count,
                 "cen_hold_ticks": self._cen_hold_ticks,
+                "dmn_bias": self._dmn_bias,
+                "cen_bias": self._cen_bias,
             }
         )
         return base
@@ -262,7 +295,15 @@ class SalienceNetwork(Module):
         self._last_network = data.get("last_network", self._last_network)
         self._evaluation_count = int(data.get("evaluation_count", 0))
         self._cen_hold_ticks = int(data.get("cen_hold_ticks", 0))
+        self._dmn_bias = float(data.get("dmn_bias", 0.0))
+        self._cen_bias = float(data.get("cen_bias", 0.0))
 
         self._state.custom["last_network"] = self._last_network
         self._state.custom["evaluation_count"] = self._evaluation_count
         self._state.custom["cen_hold_ticks"] = self._cen_hold_ticks
+        self._state.custom["dmn_bias"] = self._dmn_bias
+        self._state.custom["cen_bias"] = self._cen_bias
+
+
+def _clamp(value: float, low: float = 0.0, high: float = 1.0) -> float:
+    return max(low, min(high, value))

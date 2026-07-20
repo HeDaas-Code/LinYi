@@ -11,6 +11,7 @@ from src.novelist_brain.models import (
     CharacterProjection,
     Conflict,
     Desire,
+    Fear,
     ModuleState,
     NarrativeLine,
     Scene,
@@ -21,6 +22,20 @@ from src.novelist_brain.models import (
 )
 from src.novelist_brain.module import Module
 from src.novelist_brain.persistence import dataclass_to_dict, reconstruct_dataclass
+from src.novelist_brain.trpg import (
+    GameMaster,
+    SkillCheckOutcome,
+    TRPGCharacterSheet,
+    build_character_sheet,
+    build_narrative_line,
+    emotional_shift_for_outcome,
+    projection_ratio_for_archetype,
+    resolve_skill_check,
+)
+from src.novelist_brain.trpg_rulebook import Rulebook
+from src.novelist_brain.trpg_state import ActorState
+from src.novelist_brain import trpg_extended
+from src.novelist_brain.sandbox_versioning import SandboxVersionManager
 
 
 _DEFAULT_MIN_ROUNDS = 3
@@ -69,6 +84,14 @@ class MentalSandbox(Module):
         self._simulation_round = 0
         self._identity_constraints: dict[str, Any] = {}
         self._pending_traces: list[Trace] = []
+        self._rulebook: Rulebook | None = None
+        self._gm = GameMaster(rulebook=Rulebook(), rng=self._rng)
+        self._character_sheets: dict[str, TRPGCharacterSheet] = {}
+        self._actor_states: dict[str, ActorState] = {}
+        self._skill_checks: list[Any] = []
+        self._current_chase: trpg_extended.Chase | None = None
+        self._current_combat: trpg_extended.CombatRound | None = None
+        self._version_manager: SandboxVersionManager | None = None
 
         self.subscribe(
             "control.sandbox.build",
@@ -77,6 +100,10 @@ class MentalSandbox(Module):
             "data.identity.constraint",
             "data.identity.updated",
             "control.module.init",
+            "data.social.trace",
+            "control.sandbox.fork",
+            "control.sandbox.version.merge",
+            "control.sandbox.version.discard",
         )
 
     # ------------------------------------------------------------------
@@ -107,7 +134,7 @@ class MentalSandbox(Module):
         seed = sandbox_context.get("seed")
         if seed is not None:
             self._rng = random.Random(seed)
-            if isinstance(self._llm, MockLLMService):
+            if self._llm.is_mock:
                 self._llm = MockLLMService(seed=seed)
 
         world_data = sandbox_context.get("world")
@@ -126,9 +153,28 @@ class MentalSandbox(Module):
 
         self._identity_constraints = context.get("identity", self._identity_constraints)
 
+        self._rulebook = context.get("sandbox", {}).get("rulebook")
+        if self._rulebook is None:
+            self._rulebook = Rulebook()
+        if self._world_model is not None:
+            self._gm = GameMaster(
+                rulebook=self._rulebook,
+                world_rules=self._world_model.rules,
+                rng=self._rng,
+            )
+
+        enable_ab_fork = sandbox_context.get("enable_ab_fork", True)
+        max_versions = sandbox_context.get("max_versions", 8)
+        context_vm = sandbox_context.get("version_manager")
+        if context_vm is not None:
+            self._version_manager = context_vm
+        elif enable_ab_fork and self._version_manager is None:
+            self._version_manager = SandboxVersionManager(max_versions=max_versions)
+
         self._process_pending_traces()
         self._ensure_protagonist_projection()
         self._ensure_narrative_line()
+        self._rebuild_character_sheets()
         self._state.custom["world_built"] = True
         self._emit_world_updated("sandbox.initialized")
 
@@ -144,6 +190,14 @@ class MentalSandbox(Module):
             self._handle_trace_results(message.payload)
         elif message.topic in ("data.identity.constraint", "data.identity.updated"):
             self._handle_identity_constraint(message.payload)
+        elif message.topic == "data.social.trace":
+            self._handle_social_trace(message.payload)
+        elif message.topic == "control.sandbox.fork":
+            self._handle_fork(message.payload or {})
+        elif message.topic == "control.sandbox.version.merge":
+            self._handle_version_merge(message.payload or {})
+        elif message.topic == "control.sandbox.version.discard":
+            self._handle_version_discard(message.payload or {})
 
     def tick(self, delta: TickDelta) -> None:
         """Advance sandbox bookkeeping by one tick."""
@@ -187,6 +241,32 @@ class MentalSandbox(Module):
                 "pending_traces": [
                     dataclass_to_dict(t) for t in self._pending_traces
                 ],
+                "character_sheets": {
+                    cid: (
+                        sheet.to_dict()
+                        if hasattr(sheet, "to_dict")
+                        else dataclass_to_dict(sheet)
+                    )
+                    for cid, sheet in self._character_sheets.items()
+                },
+                "skill_checks": [
+                    c.to_dict() if hasattr(c, "to_dict") else c
+                    for c in self._skill_checks
+                ],
+                "rulebook": self._rulebook.to_dict() if self._rulebook else None,
+                "actor_states": {
+                    cid: state.to_dict()
+                    for cid, state in self._actor_states.items()
+                },
+                "current_chase": self._current_chase.to_dict()
+                if self._current_chase
+                else None,
+                "current_combat": self._current_combat.to_dict()
+                if self._current_combat
+                else None,
+                "version_manager": self._version_manager.to_dict()
+                if self._version_manager
+                else None,
             }
         )
         return base
@@ -228,6 +308,27 @@ class MentalSandbox(Module):
             for t in data.get("pending_traces", [])
         ]
 
+        seed = data.get("seed")
+        if seed is not None:
+            self._rng = random.Random(seed)
+
+        rulebook_data = data.get("rulebook")
+        self._rulebook = Rulebook(rulebook_data) if rulebook_data else Rulebook()
+
+        if self._world_model is not None:
+            self._gm = GameMaster(
+                rulebook=self._rulebook,
+                world_rules=self._world_model.rules,
+                rng=self._rng,
+            )
+        self._rebuild_character_sheets()
+
+        version_manager_data = data.get("version_manager")
+        if version_manager_data:
+            self._version_manager = SandboxVersionManager.from_dict(
+                version_manager_data
+            )
+
         self._state.custom["simulation_round"] = self._simulation_round
         self._state.custom["character_count"] = len(self._characters)
         self._state.custom["narrative_line_count"] = len(self._narrative_lines)
@@ -260,6 +361,10 @@ class MentalSandbox(Module):
     @property
     def simulation_round(self) -> int:
         return self._simulation_round
+
+    @property
+    def version_manager(self) -> SandboxVersionManager | None:
+        return self._version_manager
 
     # ------------------------------------------------------------------
     # Message handlers
@@ -294,6 +399,7 @@ class MentalSandbox(Module):
         self._process_pending_traces()
         self._ensure_protagonist_projection()
         self._ensure_narrative_line()
+        self._rebuild_character_sheets()
         self._state.custom["world_built"] = True
         self._emit_world_updated("data.sandbox.world.updated")
 
@@ -305,20 +411,40 @@ class MentalSandbox(Module):
                 priority=5,
                 ttl=3,
             )
+            self.emit(
+                topic="data.sandbox.character.action",
+                payload={
+                    "character_id": character.id,
+                    "autonomy_score": 1.0 - character.projection_ratio,
+                    "action": "在场景中显形",
+                    "source": "build",
+                },
+                channel="data",
+                priority=4,
+                ttl=2,
+            )
 
-    def _handle_simulate(self, payload: Any) -> None:
-        """Run one COC-style simulation round."""
+    def _simulate_round(
+        self,
+        action: str | None = None,
+        character_id: str | None = None,
+        evaluate_ready: bool = False,
+    ) -> dict[str, Any]:
+        """Run one simulation round and return its resolution.
+
+        This is the core simulation step used both by the live ``_handle_simulate``
+        and by the version manager's what-if simulations.  Bus emissions and
+        narrative-ready evaluation are optional so that forked versions can run
+        silently.
+        """
         if self._world_model is None:
-            return
+            raise RuntimeError("sandbox world model is not built")
         if self._current_scene is None:
             self._current_scene = self._create_default_scene()
 
-        payload = payload or {}
-        if not isinstance(payload, dict):
-            payload = {}
-
-        action = payload.get("action", self._generate_action())
-        character = self._resolve_actor(payload.get("character_id"))
+        if action is None:
+            action = self._generate_action()
+        character = self._resolve_actor(character_id)
 
         resolution = self._resolve_event(action, character)
         self._simulation_round += 1
@@ -351,24 +477,61 @@ class MentalSandbox(Module):
         self._update_scene_and_characters(resolution, character)
         self._state.custom["simulation_round"] = self._simulation_round
 
-        self.emit(
-            topic="data.sandbox.event.resolved",
-            payload=resolution,
-            channel="data",
-            priority=6,
-            ttl=3,
-        )
-        self._emit_world_updated("data.sandbox.world.updated")
-        if character is not None:
+        if self._router is not None:
             self.emit(
-                topic="data.sandbox.character.updated",
-                payload={"character": character, "source": "simulate"},
+                topic="data.sandbox.event.resolved",
+                payload=resolution,
                 channel="data",
-                priority=5,
+                priority=6,
                 ttl=3,
             )
+            self._emit_world_updated("data.sandbox.world.updated")
+            if character is not None:
+                self.emit(
+                    topic="data.sandbox.character.updated",
+                    payload={"character": character, "source": "simulate"},
+                    channel="data",
+                    priority=5,
+                    ttl=3,
+                )
+                autonomy = 1.0 - character.projection_ratio
+                if resolution.get("outcome") in ("大成功", "大失败"):
+                    autonomy = min(1.0, autonomy + 0.15)
+                self.emit(
+                    topic="data.sandbox.character.action",
+                    payload={
+                        "character_id": character.id,
+                        "autonomy_score": round(autonomy, 3),
+                        "action": action,
+                        "outcome": resolution.get("outcome"),
+                        "source": "simulate",
+                    },
+                    channel="data",
+                    priority=4,
+                    ttl=2,
+                )
 
-        self._evaluate_narrative_ready()
+        if evaluate_ready:
+            self._evaluate_narrative_ready()
+
+        return resolution
+
+    def _handle_simulate(self, payload: Any) -> None:
+        """Run one COC-style simulation round (live mode with bus emits)."""
+        if self._world_model is None:
+            return
+        if self._current_scene is None:
+            self._current_scene = self._create_default_scene()
+
+        payload = payload or {}
+        if not isinstance(payload, dict):
+            payload = {}
+
+        self._simulate_round(
+            action=payload.get("action"),
+            character_id=payload.get("character_id"),
+            evaluate_ready=True,
+        )
 
     def _handle_trace_results(self, payload: Any) -> None:
         """Project characters from memory trace query results."""
@@ -411,25 +574,136 @@ class MentalSandbox(Module):
         elif isinstance(payload, dict):
             self._identity_constraints = payload
 
+    def _handle_social_trace(self, payload: Any) -> None:
+        """Incorporate social traces as world-model ontology and scene seeds."""
+        if not isinstance(payload, dict):
+            return
+        if self._world_model is None:
+            return
+        fragment = payload.get("fragment")
+        if fragment is None:
+            return
+        content = getattr(fragment, "content", str(fragment))
+        self._world_model.ontology.setdefault("social_traces", []).append(
+            {
+                "space_id": payload.get("space_id"),
+                "role_id": payload.get("role_id"),
+                "gaze_pressure": payload.get("gaze_pressure", 0.0),
+                "dialogue_mode": payload.get("dialogue_mode", "surface"),
+                "content": content,
+            }
+        )
+        # High-gaze social traces bleed into the current scene tension.
+        gaze = float(payload.get("gaze_pressure", 0.0) or 0.0)
+        if gaze > 0.5 and self._current_scene is not None:
+            self._current_scene.conflict_level = min(
+                1.0, self._current_scene.conflict_level + gaze * 0.1
+            )
+
+    def _handle_fork(self, payload: dict[str, Any]) -> None:
+        """Create a new sandbox version from the current state."""
+        if self._version_manager is None:
+            return
+        label = payload.get("label", "fork")
+        version = self._version_manager.fork(self, label=label)
+        self.emit(
+            topic="data.sandbox.version.forked",
+            payload={
+                "version_id": version.id,
+                "parent_id": version.parent_id,
+                "label": version.label,
+                "current_version_id": self._version_manager.current_version_id,
+            },
+            channel="data",
+            priority=6,
+            ttl=3,
+        )
+
+    def _handle_version_merge(self, payload: dict[str, Any]) -> None:
+        """Merge a version back into the live sandbox."""
+        if self._version_manager is None:
+            return
+        version_id = payload.get("version_id")
+        if not version_id:
+            return
+        self._version_manager.merge(self, version_id)
+        self._emit_world_updated("data.sandbox.world.updated")
+        self.emit(
+            topic="data.sandbox.version.merged",
+            payload={
+                "version_id": version_id,
+                "current_version_id": self._version_manager.current_version_id,
+            },
+            channel="data",
+            priority=6,
+            ttl=3,
+        )
+
+    def _handle_version_discard(self, payload: dict[str, Any]) -> None:
+        """Mark a version as abandoned."""
+        if self._version_manager is None:
+            return
+        version_id = payload.get("version_id")
+        if not version_id:
+            return
+        self._version_manager.discard(version_id)
+        self.emit(
+            topic="data.sandbox.version.discarded",
+            payload={"version_id": version_id},
+            channel="data",
+            priority=5,
+            ttl=2,
+        )
+
     # ------------------------------------------------------------------
     # COC-style resolution
     # ------------------------------------------------------------------
 
+    def _world_model_modifier(self) -> float:
+        """Return a small modifier derived from world rules and chance."""
+        modifier = self._rng.uniform(-10.0, 10.0)
+        if self._world_model and self._world_model.rules:
+            modifier += len(self._world_model.rules) * 2.0 - 5.0
+        return modifier
+
     def _resolve_event(
         self, action: str, character: CharacterProjection | None
     ) -> dict[str, Any]:
-        """Roll a d100 against a difficulty target and classify the outcome."""
+        """Resolve one sandbox round using the TRPG skill-check system.
+
+        If a character sheet exists for the acting character, the GM resolves
+        the round with a proper COC-style check.  Depending on the action
+        keywords and the current scene's conflict level, the GM may escalate to
+        an opposed check, a chase, or a combat round.  Otherwise the method
+        falls back to the legacy trait-based resolution so that the module is
+        never blocked by missing character sheets.
+        """
+        if character is not None and character.id in self._character_sheets:
+            sheet = self._character_sheets[character.id]
+            conflict_level = getattr(self._current_scene, "conflict_level", 0.0) or 0.0
+            other_characters = [c for c in self._characters if c.id != character.id]
+
+            resolution = self._resolve_trpg_action(
+                action=action,
+                character=character,
+                sheet=sheet,
+                conflict_level=conflict_level,
+                other_characters=other_characters,
+            )
+            skill_check_obj = resolution.pop("_skill_check_obj", None)
+            if skill_check_obj is not None:
+                self._skill_checks.append(skill_check_obj)
+                resolution["skill_check"] = skill_check_obj.to_dict()
+            return resolution
+
+        # Legacy fallback path.
         base_difficulty = 50.0
         if character is not None:
             base_difficulty += (character.traits.conscientiousness - 0.5) * 20.0
             base_difficulty += (character.traits.openness - 0.5) * 10.0
             base_difficulty -= (character.traits.neuroticism - 0.5) * 10.0
 
-        rule_modifier = self._rng.uniform(-10.0, 10.0)
-        if self._world_model and self._world_model.rules:
-            rule_modifier += len(self._world_model.rules) * 2.0 - 5.0
-
-        target = max(5.0, min(95.0, base_difficulty + rule_modifier))
+        target = max(5.0, min(95.0, base_difficulty + self._world_model_modifier()))
         dice = self._rng.randint(1, 100)
 
         if dice <= 5:
@@ -454,7 +728,236 @@ class MentalSandbox(Module):
             "round": self._simulation_round + 1,
             "character_id": character.id if character else None,
             "scene_id": self._current_scene.id if self._current_scene else None,
+            "skill_check": None,
+            "sanity_result": None,
+            "scene_delta": {},
         }
+
+    def _resolve_trpg_action(
+        self,
+        action: str,
+        character: CharacterProjection,
+        sheet: TRPGCharacterSheet,
+        conflict_level: float,
+        other_characters: list[CharacterProjection],
+    ) -> dict[str, Any]:
+        """Dispatch the right TRPG mechanic based on action and scene tension."""
+        action_lower = action.lower()
+        modifier = self._world_model_modifier()
+
+        opposed_keywords = ["对抗", "较量", "阻止", "压制", "争执", "争辩"]
+        chase_keywords = ["追", "逃", "追赶", "逃离", "追踪"]
+        combat_keywords = ["战斗", "攻击", "保护", "搏斗", "击打"]
+
+        is_opposed = any(kw in action_lower for kw in opposed_keywords)
+        is_chase = any(kw in action_lower for kw in chase_keywords)
+        is_combat = any(kw in action_lower for kw in combat_keywords)
+
+        scene = self._current_scene
+        scene_id = scene.id if scene else None
+
+        # Combat: high conflict or explicit combat action.
+        if is_combat or (conflict_level >= 0.8 and other_characters):
+            attackers = [sheet]
+            defender_sheets = [
+                self._character_sheets[c.id]
+                for c in other_characters[:1]
+                if c.id in self._character_sheets
+            ] or [build_character_sheet(other_characters[0], rng=self._rng)] if other_characters else []
+            if defender_sheets:
+                combat_round = self._gm.resolve_combat_round(attackers, defender_sheets)
+                self._current_combat = combat_round
+                self._apply_combat_damage(combat_round, attackers + defender_sheets)
+                narration = combat_round.narration
+                for attack in combat_round.attacks:
+                    narration += (
+                        f" {attack.get('attacker_id', '?')} 攻击 "
+                        f"{attack.get('defender_id', '?')}："
+                        f"{'命中' if attack.get('hit') else '未命中'}"
+                        f"（伤害 {attack.get('damage', 0)}）。"
+                    )
+                consequences = self._generate_consequences(action, "战斗", character)
+                consequences = f"{narration} {consequences}"
+                emotional_shift = self._combat_emotional_shift(combat_round)
+                return {
+                    "dice": min(
+                        (a.get("attack_roll", 100) for a in combat_round.attacks),
+                        default=100,
+                    ),
+                    "target": 0,
+                    "outcome": "战斗",
+                    "action": action,
+                    "consequences": consequences,
+                    "emotional_shift": round(emotional_shift, 3),
+                    "round": self._simulation_round + 1,
+                    "character_id": character.id,
+                    "scene_id": scene_id,
+                    "_skill_check_obj": None,
+                    "skill_check": None,
+                    "sanity_result": None,
+                    "scene_delta": {
+                        "tension_delta": abs(emotional_shift),
+                        "emotional_tone": emotional_shift,
+                        "combat_round": combat_round.to_dict(),
+                    },
+                }
+
+        # Chase: movement or pursuit keywords.
+        if is_chase and other_characters:
+            quarry = sheet
+            hunter = self._character_sheets.get(
+                other_characters[0].id,
+                build_character_sheet(other_characters[0], rng=self._rng),
+            )
+            chase = self._gm.resolve_chase(
+                quarry=quarry,
+                hunter=hunter,
+                obstacle=scene.setting if scene else "",
+                initial_distance=5.0,
+            )
+            self._current_chase = chase
+            consequences = self._generate_consequences(action, "追逐", character)
+            consequences = f"{chase.narration} {consequences}"
+            emotional_shift = 0.3 if not chase.resolved else 0.6
+            return {
+                "dice": 0,
+                "target": 0,
+                "outcome": "追逐",
+                "action": action,
+                "consequences": consequences,
+                "emotional_shift": round(emotional_shift, 3),
+                "round": self._simulation_round + 1,
+                "character_id": character.id,
+                "scene_id": scene_id,
+                "_skill_check_obj": None,
+                "skill_check": None,
+                "sanity_result": None,
+                "scene_delta": {
+                    "tension_delta": abs(emotional_shift),
+                    "emotional_tone": emotional_shift,
+                    "chase": chase.to_dict(),
+                },
+            }
+
+        # Opposed check: social/physical confrontation.
+        if is_opposed or (conflict_level >= 0.6 and other_characters):
+            responder = self._character_sheets.get(
+                other_characters[0].id,
+                build_character_sheet(other_characters[0], rng=self._rng),
+            )
+            opposed = self._gm.resolve_opposed(action, sheet, responder)
+            winner_id = opposed.winner_id
+            winner_name = (
+                character.name if winner_id == character.id else responder.name
+            )
+            outcome_cn = "成功" if winner_id == character.id else "失败"
+            narration = opposed.narration
+            consequences = self._generate_consequences(action, outcome_cn, character)
+            consequences = f"{narration} {consequences}"
+            emotional_shift = 0.4 if winner_id == character.id else -0.4
+            return {
+                "dice": opposed.initiator_check.roll,
+                "target": round(opposed.initiator_check.target, 2),
+                "outcome": outcome_cn,
+                "action": action,
+                "consequences": consequences,
+                "emotional_shift": round(emotional_shift, 3),
+                "round": self._simulation_round + 1,
+                "character_id": character.id,
+                "scene_id": scene_id,
+                "_skill_check_obj": opposed.initiator_check,
+                "skill_check": opposed.initiator_check.to_dict(),
+                "sanity_result": None,
+                "scene_delta": {
+                    "tension_delta": abs(emotional_shift),
+                    "emotional_tone": emotional_shift,
+                    "opposed": opposed.to_dict(),
+                },
+            }
+
+        # Standard skill check.
+        bonus_dice = 1 if conflict_level <= 0.2 else 0
+        penalty_dice = 1 if conflict_level >= 0.5 else 0
+        resolution = self._gm.resolve_round(
+            action=action,
+            sheet=sheet,
+            scene=scene,
+            difficulty=1.0,
+            modifier=modifier,
+            bonus_dice=bonus_dice,
+            penalty_dice=penalty_dice,
+            pushed=False,
+        )
+        outcome_cn = {
+            SkillCheckOutcome.CRITICAL_SUCCESS: "大成功",
+            SkillCheckOutcome.HARD_SUCCESS: "困难成功",
+            SkillCheckOutcome.SUCCESS: "成功",
+            SkillCheckOutcome.FAILURE: "失败",
+            SkillCheckOutcome.FUMBLE: "大失败",
+        }.get(resolution.check.outcome, "未知")
+
+        consequences = self._generate_consequences(action, outcome_cn, character)
+        if consequences == resolution.narration:
+            consequences = resolution.narration
+        else:
+            consequences = f"{resolution.narration} {consequences}"
+
+        self._apply_sanity_result(character.id, resolution.sanity_result)
+
+        return {
+            "dice": resolution.check.roll,
+            "target": round(resolution.check.target, 2),
+            "outcome": outcome_cn,
+            "action": action,
+            "consequences": consequences,
+            "emotional_shift": round(resolution.emotional_shift, 3),
+            "round": self._simulation_round + 1,
+            "character_id": character.id,
+            "scene_id": scene_id,
+            "_skill_check_obj": resolution.check,
+            "skill_check": resolution.check.to_dict(),
+            "sanity_result": resolution.sanity_result,
+            "scene_delta": resolution.scene_delta,
+        }
+
+    def _apply_combat_damage(
+        self, combat_round: trpg_extended.CombatRound, sheets: list[TRPGCharacterSheet]
+    ) -> None:
+        """Apply combat damage to actor states based on combat round results."""
+        sheet_by_id = {s.character_id: s for s in sheets}
+        for attack in combat_round.attacks:
+            defender_id = attack.get("defender_id")
+            damage = attack.get("damage", 0.0)
+            if defender_id in self._actor_states and damage:
+                self._actor_states[defender_id].apply_damage(float(damage))
+            if defender_id in sheet_by_id:
+                sheet_by_id[defender_id].hit_points = max(
+                    0.0, sheet_by_id[defender_id].hit_points - float(damage)
+                )
+
+    def _combat_emotional_shift(self, combat_round: trpg_extended.CombatRound) -> float:
+        """Return an emotional shift magnitude based on combat results."""
+        if not combat_round.attacks:
+            return 0.0
+        total_damage = sum(a.get("damage", 0.0) for a in combat_round.attacks)
+        hits = sum(1 for a in combat_round.attacks if a.get("hit"))
+        shift = 0.2 + min(0.6, total_damage / 10.0)
+        if hits == 0:
+            shift = -0.1
+        return round(max(-1.0, min(1.0, shift)), 3)
+
+    def _apply_sanity_result(
+        self, character_id: str, sanity_result: dict[str, Any] | None
+    ) -> None:
+        """Apply sanity loss to the actor state and sheet if available."""
+        if not sanity_result:
+            return
+        loss = sanity_result.get("sanity_loss", 0.0)
+        if loss and character_id in self._actor_states:
+            self._actor_states[character_id].apply_sanity_shock(float(loss))
+        if character_id in self._character_sheets:
+            sheet = self._character_sheets[character_id]
+            sheet.magic_points = max(0.0, sheet.magic_points - float(loss))
 
     def _generate_consequences(
         self,
@@ -467,7 +970,7 @@ class MentalSandbox(Module):
 
         # For the mock service, bypass the JSON-oriented prompt to avoid
         # leaking system instructions into the narrative.
-        if isinstance(self._llm, MockLLMService):
+        if self._llm.is_mock:
             return (
                 f"{char_name}{action}，结果是{outcome}。"
                 "空气中有什么东西轻轻移动了一下，像是一个尚未被命名的转折。"
@@ -590,7 +1093,7 @@ class MentalSandbox(Module):
             line.conflicts.append(conflict)
 
         if self._rng.random() < 0.35:
-            if isinstance(self._llm, MockLLMService):
+            if self._llm.is_mock:
                 foreshadowing = "远处有一盏灯，将在某个需要的时刻熄灭。"
             else:
                 foreshadowing = self._llm.complete(
@@ -630,12 +1133,17 @@ class MentalSandbox(Module):
         if ready and self.current_narrative_line is not None:
             line = self.current_narrative_line
             line.status = "committed"
+            # Narrative yield: how many scenes per round were produced.
+            narrative_yield = min(
+                1.0, len(line.scenes) / max(1, self._simulation_round)
+            )
             self.emit(
                 topic="data.sandbox.narrative.ready",
                 payload={
                     "narrative_line": line,
                     "depth_metrics": metrics,
                     "simulation_round": self._simulation_round,
+                    "narrative_yield": round(narrative_yield, 3),
                     "source": self.name,
                 },
                 channel="data",
@@ -646,6 +1154,7 @@ class MentalSandbox(Module):
             # starts fresh while characters and world model continue to evolve.
             self._simulation_round = 0
             self._prediction_errors.clear()
+            self._skill_checks.clear()
             if self._world_model is not None:
                 self._world_model.prediction_errors.clear()
             next_line = NarrativeLine()
@@ -746,13 +1255,15 @@ class MentalSandbox(Module):
         )
         protagonist = CharacterProjection(
             name="林逸",
-            archetype="在人群边缘写字的小说家",
+            archetype="主角：在人群边缘写字的小说家",
             source_trace_ids=["identity_projection"],
             traits=trait_vector,
             desires=desires,
             internal_conflict=internal_conflict,
+            projection_ratio=0.85,
         )
         self._characters.insert(0, protagonist)
+        self._rebuild_character_sheets()
         self.emit(
             topic="data.sandbox.character.updated",
             payload={"character": protagonist, "source": "identity_projection"},
@@ -760,13 +1271,27 @@ class MentalSandbox(Module):
             priority=6,
             ttl=5,
         )
+        self.emit(
+            topic="data.sandbox.character.action",
+            payload={
+                "character_id": protagonist.id,
+                "autonomy_score": 0.5,
+                "action": "进入脑中世界",
+                "source": "identity_projection",
+            },
+            channel="data",
+            priority=4,
+            ttl=2,
+        )
         self._state.custom["character_count"] = len(self._characters)
 
     def _process_pending_traces(self) -> None:
         """Convert queued character traces into character projections."""
+        added: list[CharacterProjection] = []
         for trace in self._pending_traces:
             character = self._character_from_trace(trace)
             self._characters.append(character)
+            added.append(character)
             self.emit(
                 topic="data.sandbox.character.updated",
                 payload={"character": character, "source": "trace_projection"},
@@ -775,6 +1300,21 @@ class MentalSandbox(Module):
                 ttl=3,
             )
         self._pending_traces.clear()
+        if added:
+            self._rebuild_character_sheets()
+            for character in added:
+                self.emit(
+                    topic="data.sandbox.character.action",
+                    payload={
+                        "character_id": character.id,
+                        "autonomy_score": 1.0 - character.projection_ratio,
+                        "action": "从记忆痕迹中浮现",
+                        "source": "trace_projection",
+                    },
+                    channel="data",
+                    priority=4,
+                    ttl=2,
+                )
         self._state.custom["character_count"] = len(self._characters)
 
     def _character_from_trace(self, trace: Trace) -> CharacterProjection:
@@ -801,7 +1341,7 @@ class MentalSandbox(Module):
         desire_object = _infer_desire(trace)
         desires = [Desire(object=desire_object, strength=0.5, urgency=0.5)]
 
-        if isinstance(self._llm, MockLLMService):
+        if self._llm.is_mock:
             internal_conflict = (
                 f"{name}想要靠近，又害怕被看见；"
                 "记忆越是清晰，沉默就越沉重。"
@@ -813,13 +1353,26 @@ class MentalSandbox(Module):
                 max_tokens=80,
             )
 
+        projection_ratio = projection_ratio_for_archetype(archetype)
+        fears = []
+        if emotional_weight > 0.6:
+            fears.append(
+                Fear(
+                    object="失去或被遗忘",
+                    intensity=round(emotional_weight, 3),
+                    permanent=False,
+                )
+            )
+
         return CharacterProjection(
             name=name,
             archetype=archetype,
             source_trace_ids=[trace.id],
             traits=traits,
             desires=desires,
+            fears=fears,
             internal_conflict=internal_conflict,
+            projection_ratio=projection_ratio,
         )
 
     # ------------------------------------------------------------------
@@ -831,6 +1384,11 @@ class MentalSandbox(Module):
         self._prediction_errors.clear()
         self._characters.clear()
         self._pending_traces.clear()
+        self._character_sheets.clear()
+        self._actor_states.clear()
+        self._skill_checks.clear()
+        self._current_chase = None
+        self._current_combat = None
         self._current_scene = None
         if self._world_model is not None:
             self._world_model.history.clear()
@@ -840,6 +1398,22 @@ class MentalSandbox(Module):
         self._state.custom["simulation_round"] = 0
         self._state.custom["character_count"] = 0
         self._state.custom["narrative_line_count"] = 0
+
+    def _rebuild_character_sheets(self) -> None:
+        """Build or refresh TRPG character sheets and actor states for all projections."""
+        for character in self._characters:
+            sheet = build_character_sheet(character, rng=self._rng)
+            self._character_sheets[character.id] = sheet
+            # Write default attributes/skills back to the projection so that
+            # serialization captures the full character card.
+            character.skills = dict(sheet.skills)
+            if character.id not in self._actor_states:
+                self._actor_states[character.id] = ActorState(
+                    hit_points=sheet.hit_points,
+                    max_hit_points=sheet.hit_points,
+                    magic_points=sheet.magic_points,
+                    max_magic_points=sheet.magic_points,
+                )
 
     def _ensure_narrative_line(self) -> None:
         if not self._narrative_lines:
@@ -853,7 +1427,7 @@ class MentalSandbox(Module):
         setting = "黎明中无名的城市"
         if self._world_model and self._world_model.ontology:
             setting = self._world_model.ontology.get("setting", setting)
-        if isinstance(self._llm, MockLLMService):
+        if self._llm.is_mock:
             description = f"{setting}的街道还沉浸在未被命名的寂静里，只有远处的灯光在缓慢呼吸。"
         else:
             description = self._llm.complete(
@@ -868,7 +1442,7 @@ class MentalSandbox(Module):
         )
 
     def _generate_action(self) -> str:
-        if isinstance(self._llm, MockLLMService):
+        if self._llm.is_mock:
             return "面对未被解决的过去"
         if self._world_model and self._world_model.ontology:
             genre = self._world_model.ontology.get("genre", "严肃文学")
@@ -879,7 +1453,7 @@ class MentalSandbox(Module):
 
     def _generate_stakes(self, character: CharacterProjection | None) -> str:
         char_name = character.name if character else "主角"
-        if isinstance(self._llm, MockLLMService):
+        if self._llm.is_mock:
             return f"对{char_name}来说，过去正悬在一句未说出口的话上。"
         return self._llm.complete(
             f"对 {char_name} 来说，什么处于危险之中？请用中文回答。", max_tokens=64

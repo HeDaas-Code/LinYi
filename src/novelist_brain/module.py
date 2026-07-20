@@ -18,6 +18,9 @@ class Module(ABC):
 
     Modules communicate exclusively through the bus; they never call each other
     directly. The global clock drives each module via :meth:`tick`.
+
+    Subclasses may declare metadata through :meth:`metadata` to support dynamic
+    discovery and dependency ordering in a :class:`ModuleRegistry`.
     """
 
     def __init__(self, name: str) -> None:
@@ -25,6 +28,29 @@ class Module(ABC):
         self._router: BusRouter | None = None
         self._subscriptions: set[str] = set()
         self._state = self._initial_state()
+        self._checkpoints: dict[str, dict[str, Any]] = {}
+
+    @classmethod
+    def metadata(cls) -> dict[str, Any]:
+        """Return module metadata used by the registry.
+
+        Keys:
+        - ``name``: canonical module name (defaults to lower-camel class name).
+        - ``version``: semantic version string.
+        - ``description``: short human-readable summary.
+        - ``dependencies``: list of canonical names that must be instantiated first.
+        - ``category``: optional grouping tag (e.g. ``input``, ``cognitive``, ``output``).
+        """
+        default_name = "".join(
+            ["_" + c.lower() if c.isupper() else c for c in cls.__name__]
+        ).lstrip("_")
+        return {
+            "name": default_name,
+            "version": "0.1.0",
+            "description": "",
+            "dependencies": [],
+            "category": "",
+        }
 
     @property
     def state(self) -> ModuleState:
@@ -36,6 +62,30 @@ class Module(ABC):
     def get_state(self) -> ModuleState:
         """Return the current module state."""
         return self._state
+
+    def checkpoint(self, checkpoint_id: str) -> None:
+        """Save a named snapshot of this module for later rollback."""
+        self._checkpoints[checkpoint_id] = self.to_dict()
+
+    def rollback(self, checkpoint_id: str | None = None) -> bool:
+        """Restore the module from a named checkpoint.
+
+        If ``checkpoint_id`` is omitted, the latest checkpoint is used.
+        Returns ``True`` if a rollback was performed.
+        """
+        if checkpoint_id is None:
+            if not self._checkpoints:
+                return False
+            checkpoint_id = next(reversed(self._checkpoints.keys()))
+        snapshot = self._checkpoints.get(checkpoint_id)
+        if snapshot is None:
+            return False
+        self.from_dict(snapshot)
+        return True
+
+    def clear_checkpoints(self) -> None:
+        """Discard all named checkpoints."""
+        self._checkpoints.clear()
 
     def to_dict(self) -> dict[str, Any]:
         """Return a serializable snapshot of the module's base state."""

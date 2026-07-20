@@ -243,12 +243,30 @@ def build_novel_paragraph_prompt(
     relevant_traces: list[dict[str, Any]],
     previous_paragraph: str,
     style_profile: dict[str, Any],
+    attachment_tone: dict[str, Any] | None = None,
 ) -> tuple[str, str]:
     system = build_identity_block(identity)
     if style_profile:
         voice = style_profile.get("voice_signature") or {}
         if isinstance(voice, dict) and voice:
             system += f"\n声音签名：{voice}。"
+
+    if attachment_tone:
+        tone = attachment_tone.get("tone") or {}
+        mood = tone.get("mood", "")
+        rhythm = tone.get("sentence_rhythm", "")
+        themes = tone.get("thematic_bias", [])
+        if mood or rhythm or themes:
+            system += (
+                f"\n当前依恋基调（{attachment_tone.get('style', 'secure')}，"
+                f"强度={attachment_tone.get('intensity', 0.0)}）："
+            )
+            if mood:
+                system += f"情绪{mood}；"
+            if rhythm:
+                system += f"节奏{rhythm}；"
+            if themes:
+                system += f"主题偏向{ '、'.join(themes)}。"
 
     scenes = narrative_line.get("scenes") or []
     scene_lines = []

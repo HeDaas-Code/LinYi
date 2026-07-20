@@ -19,11 +19,13 @@ class MetabolismState:
     time_currency: float = 80.0
     social_capital: float = 50.0
     exhausted: bool = False
+    max_energy: float = 100.0
 
     def __post_init__(self) -> None:
-        self.energy = self._clamp(self.energy, 0.0, 100.0)
-        self.compute_budget = self._clamp(self.compute_budget, 0.0, 100.0)
-        self.time_currency = self._clamp(self.time_currency, 0.0, 100.0)
+        self.max_energy = self._clamp(self.max_energy, 1.0, 1000.0)
+        self.energy = self._clamp(self.energy, 0.0, self.max_energy)
+        self.compute_budget = self._clamp(self.compute_budget, 0.0, self.max_energy)
+        self.time_currency = self._clamp(self.time_currency, 0.0, self.max_energy)
         self.social_capital = self._clamp(self.social_capital, 0.0, 100.0)
 
     @staticmethod

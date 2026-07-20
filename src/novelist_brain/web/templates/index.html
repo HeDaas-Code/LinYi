@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>脑中世界 · 小说家智能看板</title>
+  <link rel="stylesheet" href="/static/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">脑</div>
+        <div class="brand-text">
+          <div class="brand-title">脑中世界</div>
+          <div class="brand-sub">小说家智能看板</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <button class="nav-item active" data-view="overview">
+          <span class="nav-icon">⊞</span><span>总览</span>
+        </button>
+        <button class="nav-item" data-view="sandbox">
+          <span class="nav-icon">🌐</span><span>脑中世界</span>
+        </button>
+        <button class="nav-item" data-view="memory">
+          <span class="nav-icon">🧠</span><span>记忆图谱</span>
+        </button>
+        <button class="nav-item" data-view="trpg">
+          <span class="nav-icon">🎲</span><span>TRPG 角色</span>
+        </button>
+        <button class="nav-item" data-view="novel">
+          <span class="nav-icon">📖</span><span>小说手稿</span>
+        </button>
+        <button class="nav-item" data-view="bus">
+          <span class="nav-icon">📡</span><span>总线事件</span>
+        </button>
+        <button class="nav-item" data-view="eos">
+          <span class="nav-icon">📊</span><span>EOS 指标</span>
+        </button>
+        <button class="nav-item" data-view="config">
+          <span class="nav-icon">⚙</span><span>配置</span>
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="status-row">
+          <span id="conn-dot" class="dot"></span>
+          <span id="conn-status">连接中</span>
+        </div>
+        <div class="uptime" id="uptime">运行 0 秒</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <h1 id="page-title">系统总览</h1>
+        <div class="topbar-actions">
+          <button id="btn-refresh" class="btn btn-ghost">⟳ 刷新</button>
+          <button id="btn-theme" class="btn btn-ghost">◐</button>
+        </div>
+      </header>
+
+      <div class="content">
+        <section id="view-overview" class="view active">
+          <div class="kpi-grid" id="overview-kpi"></div>
+          <div class="grid-2">
+            <div class="panel">
+              <div class="panel-header"><h3>活跃网络分布</h3></div>
+              <div class="chart-wrap"><canvas id="chart-network"></canvas></div>
+            </div>
+            <div class="panel">
+              <div class="panel-header"><h3>代谢资源</h3></div>
+              <div class="chart-wrap"><canvas id="chart-metabolism"></canvas></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><h3>模块状态</h3></div>
+            <div class="table-wrap"><table id="module-table" class="data-table"><thead></thead><tbody></tbody></table></div>
+          </div>
+        </section>
+
+        <section id="view-sandbox" class="view">
+          <div class="toolbar">
+            <button class="btn" id="btn-build">🏗 构建世界</button>
+            <button class="btn" id="btn-simulate">▶ 推演一轮</button>
+            <button class="btn" id="btn-fork">🔀 分叉版本</button>
+            <button class="btn" id="btn-ab">⚖ A/B 推演</button>
+          </div>
+          <div class="grid-2">
+            <div class="panel">
+              <div class="panel-header"><h3>世界模型</h3></div>
+              <div id="world-cards" class="card-list"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-header"><h3>版本树</h3></div>
+              <div id="version-tree-viz" class="tree-wrap"></div>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="panel">
+              <div class="panel-header"><h3>深度指标</h3></div>
+              <div class="chart-wrap"><canvas id="chart-depth"></canvas></div>
+            </div>
+            <div class="panel">
+              <div class="panel-header"><h3>角色</h3></div>
+              <div id="sandbox-characters" class="card-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-memory" class="view">
+          <div class="kpi-grid" id="memory-kpi"></div>
+          <div class="grid-2">
+            <div class="panel wide">
+              <div class="panel-header"><h3>记忆网络</h3></div>
+              <canvas id="memory-canvas" width="900" height="500"></canvas>
+            </div>
+            <div class="panel">
+              <div class="panel-header"><h3>标签分布</h3></div>
+              <div class="chart-wrap"><canvas id="chart-tags"></canvas></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-trpg" class="view">
+          <div class="panel">
+            <div class="panel-header"><h3>角色卡</h3></div>
+            <div id="character-sheets" class="sheet-grid"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><h3>属性雷达</h3></div>
+            <div class="chart-wrap"><canvas id="chart-attributes"></canvas></div>
+          </div>
+        </section>
+
+        <section id="view-novel" class="view">
+          <div class="panel">
+            <div class="panel-header"><h2 id="novel-title">脑中世界纪事</h2><span id="novel-stats"></span></div>
+            <div id="novel-paragraphs" class="manuscript"></div>
+          </div>
+        </section>
+
+        <section id="view-bus" class="view">
+          <div class="toolbar">
+            <input type="text" id="bus-filter" class="input" placeholder="筛选 topic / channel / payload...">
+            <select id="bus-channel" class="input"><option value="">全部通道</option><option value="control">control</option><option value="data">data</option><option value="event">event</option></select>
+            <button class="btn" id="btn-bus-clear">清空</button>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><h3>事件流</h3><span id="bus-count"></span></div>
+            <div class="table-wrap"><table id="bus-table" class="data-table"><thead><tr><th>时间</th><th>通道</th><th>主题</th><th>摘要</th></tr></thead><tbody></tbody></table></div>
+          </div>
+        </section>
+
+        <section id="view-eos" class="view">
+          <div class="grid-2">
+            <div class="panel">
+              <div class="panel-header"><h3>EOS 评分趋势</h3></div>
+              <div class="chart-wrap"><canvas id="chart-eos"></canvas></div>
+            </div>
+            <div class="panel">
+              <div class="panel-header"><h3>告警统计</h3></div>
+              <div class="chart-wrap"><canvas id="chart-alerts"></canvas></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><h3>最新报告</h3></div>
+            <pre id="eos-latest" class="code-block"></pre>
+          </div>
+        </section>
+
+        <section id="view-config" class="view">
+          <div class="toolbar">
+            <button class="btn" id="btn-save-config">💾 保存配置</button>
+            <span class="hint">直接编辑 JSON，保存后实时生效（内存中）</span>
+          </div>
+          <div class="panel">
+            <pre id="config-editor" class="code-block" contenteditable="true"></pre>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="/static/dashboard.js"></script>
+</body>
+</html>

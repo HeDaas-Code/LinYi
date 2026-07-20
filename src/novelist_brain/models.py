@@ -12,14 +12,15 @@ class Fragment:
     """A piece of experience entering the system."""
 
     content: str
-    source: Literal["personal", "social", "memory", "dream", "novel", "dmn", "cen", "sandbox"] = "personal"
-    modality: Literal["event", "emotion", "dialogue", "scene", "concept"] = "event"
+    source: Literal["personal", "social", "memory", "dream", "novel", "dmn", "cen", "sandbox", "multimodal"] = "personal"
+    modality: Literal["event", "emotion", "dialogue", "scene", "concept", "image"] = "event"
     valence: float = 0.0
     arousal: float = 0.0
     salience: float = 0.0
     timestamp: float = 0.0
     tags: list[str] = field(default_factory=list)
     embedding: list[float] = field(default_factory=list)
+    image_url: str | None = None
     id: str = field(default_factory=lambda: str(uuid.uuid4())[:8])
 
     def __post_init__(self) -> None:
@@ -44,6 +45,17 @@ class Trace:
     content: str = ""
     tags: list[str] = field(default_factory=list)
     id: str = field(default_factory=lambda: str(uuid.uuid4())[:8])
+
+
+@dataclass
+class SocialTrace(Trace):
+    """A trace carrying social provenance for later world mapping."""
+
+    space_id: str = ""
+    role_id: str = ""
+    relationship_delta: dict[str, Any] = field(default_factory=dict)
+    gaze_pressure: float = 0.0
+    dialogue_mode: str = "surface"
 
 
 @dataclass
@@ -74,6 +86,55 @@ class Relationship:
     target_name: str
     type: str = "neutral"
     intensity: float = 0.0
+    trust: float = 0.0
+    history: list[str] = field(default_factory=list)
+
+
+@dataclass
+class Fear:
+    """A fear or phobia held by a sandbox character."""
+
+    object: str
+    intensity: float = 0.5
+    permanent: bool = False
+
+
+@dataclass
+class Condition:
+    """A temporary or persistent condition affecting a character."""
+
+    name: str
+    type: Literal["physical", "mental", "social", "magical"] = "physical"
+    intensity: float = 0.5
+    permanent: bool = False
+    source: str = ""
+    duration_rounds: int | None = None
+
+
+@dataclass
+class Item:
+    """An item in a character's inventory."""
+
+    id: str
+    name: str
+    category: Literal["weapon", "tool", "tome", "consumable", "clue", "general"] = "general"
+    description: str = ""
+    skill_bonus: dict[str, float] = field(default_factory=dict)
+    sanity_cost: float = 0.0
+    uses: int | None = None
+    effects: list[dict[str, Any]] = field(default_factory=list)
+
+
+@dataclass
+class SanitySystem:
+    """COC-style sanity system for a sandbox character."""
+
+    current_sanity: float = 50.0
+    max_sanity: float = 99.0
+    phobias: list[Fear] = field(default_factory=list)
+    manias: list[Fear] = field(default_factory=list)
+    coping_mechanisms: list[str] = field(default_factory=list)
+    cthulhu_mythos: float = 0.0
 
 
 @dataclass
@@ -84,9 +145,13 @@ class CharacterProjection:
     archetype: str = ""
     source_trace_ids: list[str] = field(default_factory=list)
     traits: TraitVector = field(default_factory=TraitVector)
+    skills: dict[str, float] = field(default_factory=dict)
+    sanity: SanitySystem = field(default_factory=SanitySystem)
     desires: list[Desire] = field(default_factory=list)
+    fears: list[Fear] = field(default_factory=list)
     relationships: list[Relationship] = field(default_factory=list)
     internal_conflict: str = ""
+    projection_ratio: float = 0.5
     id: str = field(default_factory=lambda: str(uuid.uuid4())[:8])
 
 
@@ -135,6 +200,7 @@ class WorldModel:
     history: list[str] = field(default_factory=list)
     current_state: dict[str, Any] = field(default_factory=dict)
     prediction_errors: list[dict[str, Any]] = field(default_factory=list)
+    campaign_arc: dict[str, Any] = field(default_factory=dict)
     id: str = field(default_factory=lambda: str(uuid.uuid4())[:8])
 
 

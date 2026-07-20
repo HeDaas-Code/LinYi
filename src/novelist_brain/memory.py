@@ -6,9 +6,19 @@ import math
 from collections import defaultdict
 from typing import Any
 
-from src.novelist_brain.models import BusMessage, Fragment, ModuleState, TickDelta, Trace
+from src.novelist_brain.models import (
+    BusMessage,
+    Fragment,
+    ModuleState,
+    SocialTrace,
+    TickDelta,
+    Trace,
+)
 from src.novelist_brain.module import Module
 from src.novelist_brain.persistence import dataclass_to_dict, reconstruct_dataclass
+
+# Imported lazily to avoid a hard dependency at import time.
+_HybridMemoryStore: Any = None
 
 
 # Half-life for recency decay: 1 day expressed in milliseconds to match
@@ -105,6 +115,55 @@ def _compute_recency_score(fragment: Fragment, current_time_ms: float) -> float:
     return float(decay)
 
 
+def _first_nonempty(values: Any) -> str:
+    """Return the first non-empty string from ``values``."""
+    for value in values:
+        if isinstance(value, str) and value:
+            return value
+    return ""
+
+
+def _most_common(values: Any) -> str:
+    """Return the most common value, falling back to the first."""
+    counts: dict[str, int] = defaultdict(int)
+    first = ""
+    for value in values:
+        if isinstance(value, str):
+            counts[value] += 1
+            if not first:
+                first = value
+    if counts:
+        return max(counts.items(), key=lambda item: item[1])[0]
+    return first
+
+
+def _merge_relationship_deltas(social_contexts: list[dict[str, Any]]) -> dict[str, Any]:
+    """Merge relationship deltas from multiple social contexts.
+
+    Keeps the last non-empty target_id and accumulates delta values when they
+    share the same target.
+    """
+    merged: dict[str, Any] = {}
+    total_delta = 0.0
+    target_id = ""
+    target_name = ""
+    for ctx in social_contexts:
+        rd = ctx.get("relationship_delta") or {}
+        if not isinstance(rd, dict):
+            continue
+        if rd.get("target_id"):
+            target_id = rd["target_id"]
+            target_name = rd.get("target_name", target_name)
+        delta = rd.get("delta", 0.0)
+        if isinstance(delta, (int, float)):
+            total_delta += float(delta)
+    if target_id:
+        merged["target_id"] = target_id
+        merged["target_name"] = target_name
+        merged["delta"] = total_delta
+    return merged
+
+
 class MemorySystem(Module):
     """Stores fragments, consolidates them into traces, and answers queries.
 
@@ -120,6 +179,7 @@ class MemorySystem(Module):
         working_memory_capacity: int = _WORKING_MEMORY_CAPACITY,
         consolidation_threshold: float = _CONSOLIDATION_THRESHOLD,
         min_tag_overlap: int = _MIN_TAG_OVERLAP,
+        store: Any = None,
     ) -> None:
         super().__init__(name)
         self._fragments: dict[str, Fragment] = {}
@@ -131,6 +191,13 @@ class MemorySystem(Module):
         self._min_tag_overlap = min_tag_overlap
         self._last_time_ms = 0.0
 
+        # Maps fragment_id -> social provenance captured from data.social.fragment.
+        self._social_provenance: dict[str, dict[str, Any]] = {}
+
+        # Optional local-database hybrid store.  When present, fragments and
+        # traces are persisted there in addition to the in-memory indexes.
+        self._store: Any = store
+
         self.subscribe(
             "fragment.personal.new",
             "fragment.social.new",
@@ -140,6 +207,7 @@ class MemorySystem(Module):
             "fragment.dmn.new",
             "fragment.cen.new",
             "fragment.sandbox.new",
+            "data.social.fragment",
             "control.memory.consolidate",
             "control.memory.query",
             "control.module.init",
@@ -170,10 +238,34 @@ class MemorySystem(Module):
             "min_tag_overlap", self._min_tag_overlap
         )
 
+        backend = memory_context.get("backend", "memory")
+        if backend == "sqlite" and self._store is None:
+            global _HybridMemoryStore
+            if _HybridMemoryStore is None:
+                from src.novelist_brain.memory_store import HybridMemoryStore
+
+                _HybridMemoryStore = HybridMemoryStore
+            self._store = _HybridMemoryStore(
+                db_path=memory_context.get("db_path", "memory_store.sqlite"),
+                embedding_dim=memory_context.get("embedding_dim", 1536),
+            )
+            self._sync_to_store()
+
+    def _sync_to_store(self) -> None:
+        """Persist any fragments/traces restored from snapshot into the store."""
+        if self._store is None:
+            return
+        for fragment in self._fragments.values():
+            self._store.save_fragment(fragment)
+        for trace in self._traces.values():
+            self._store.save_trace(trace)
+
     def on_bus_message(self, message: BusMessage) -> None:
         """Handle incoming fragments, consolidation commands, and queries."""
         if message.topic.startswith("fragment.") and message.topic.endswith(".new"):
             self._receive_fragment(message.payload)
+        elif message.topic == "data.social.fragment":
+            self._on_social_fragment(message.payload)
         elif message.topic == "control.memory.consolidate":
             self._run_consolidation(message.payload)
         elif message.topic == "control.memory.query":
@@ -221,6 +313,60 @@ class MemorySystem(Module):
             "consolidation_runs": self._state.custom["consolidation_runs"],
         }
 
+    def export_graph(self) -> dict[str, Any]:
+        """Export fragments and traces as a graph for dashboard visualization.
+
+        Nodes are memory items (fragments and traces) labelled by their first
+        few tags or a short content preview.  Edges connect items that share
+        at least one tag, weighted by the number of shared tags.
+        """
+        nodes: list[dict[str, Any]] = []
+        edges: list[dict[str, Any]] = []
+        node_ids: set[str] = set()
+
+        def _label(item: Any) -> str:
+            tags = getattr(item, "tags", None) or []
+            if tags:
+                return "#" + " #".join(list(tags)[:3])
+            content = getattr(item, "content", "") or ""
+            return content[:40] + "..." if len(content) > 40 else content
+
+        for fid, fragment in self._fragments.items():
+            nodes.append({
+                "id": fid,
+                "label": _label(fragment),
+                "type": "fragment",
+                "role": getattr(fragment, "narrative_role", "memory"),
+            })
+            node_ids.add(fid)
+
+        for tid, trace in self._traces.items():
+            nodes.append({
+                "id": tid,
+                "label": _label(trace),
+                "type": "trace",
+                "role": getattr(trace, "narrative_role", "memory"),
+            })
+            node_ids.add(tid)
+
+        items: list[tuple[str, Any]] = [
+            *[(fid, f) for fid, f in self._fragments.items()],
+            *[(tid, t) for tid, t in self._traces.items()],
+        ]
+        for i, (id_a, item_a) in enumerate(items):
+            tags_a = set(getattr(item_a, "tags", None) or [])
+            for id_b, item_b in items[i + 1 :]:
+                shared = tags_a & set(getattr(item_b, "tags", None) or [])
+                if shared:
+                    edges.append({
+                        "source": id_a,
+                        "target": id_b,
+                        "weight": len(shared),
+                        "shared_tags": sorted(shared),
+                    })
+
+        return {"nodes": nodes, "edges": edges}
+
     def to_dict(self) -> dict[str, Any]:
         """Serialize the full memory system state."""
         base = super().to_dict()
@@ -236,6 +382,7 @@ class MemorySystem(Module):
                 "consolidation_queue": [
                     dataclass_to_dict(f) for f in self._consolidation_queue
                 ],
+                "social_provenance": dict(self._social_provenance),
                 "working_memory_capacity": self._working_memory_capacity,
                 "consolidation_threshold": self._consolidation_threshold,
                 "min_tag_overlap": self._min_tag_overlap,
@@ -255,13 +402,14 @@ class MemorySystem(Module):
         )
         self._min_tag_overlap = data.get("min_tag_overlap", self._min_tag_overlap)
         self._last_time_ms = data.get("last_time_ms", self._last_time_ms)
+        self._social_provenance = dict(data.get("social_provenance", {}))
 
         self._fragments = {
             fid: reconstruct_dataclass(Fragment, f)
             for fid, f in data.get("fragments", {}).items()
         }
         self._traces = {
-            tid: reconstruct_dataclass(Trace, t)
+            tid: self._reconstruct_trace(t)
             for tid, t in data.get("traces", {}).items()
         }
         self._working_memory = [
@@ -278,6 +426,16 @@ class MemorySystem(Module):
         self._state.custom.setdefault(
             "consolidation_runs", 0
         )
+
+    @staticmethod
+    def _reconstruct_trace(t: dict[str, Any]) -> Trace:
+        """Restore a Trace, upgrading to SocialTrace when social fields exist."""
+        if any(
+            key in t
+            for key in ("space_id", "dialogue_mode", "gaze_pressure", "relationship_delta")
+        ):
+            return reconstruct_dataclass(SocialTrace, t)
+        return reconstruct_dataclass(Trace, t)
 
     # ------------------------------------------------------------------
     # Fragment handling
@@ -304,10 +462,56 @@ class MemorySystem(Module):
         self._trim_working_memory()
         self._state.custom["fragment_count"] = len(self._fragments)
 
+        if self._store is not None:
+            self._store.save_fragment(fragment)
+            self._store.add_edge(
+                source_id=fragment.source,
+                target_id=fragment.id,
+                edge_type="source_to_fragment",
+                weight=fragment.salience,
+            )
+
     def _trim_working_memory(self) -> None:
         """Keep working memory within its capacity limit."""
         while len(self._working_memory) > self._working_memory_capacity:
             self._working_memory.pop(0)
+
+    def _on_social_fragment(self, payload: Any) -> None:
+        """Capture social provenance for fragments produced by SocialInput.
+
+        The rich ``data.social.fragment`` event carries the encounter context
+        (space, role, gaze pressure, dialogue mode) needed to construct a
+        :class:`SocialTrace` during consolidation.
+        """
+        if not isinstance(payload, dict):
+            return
+        fragment = payload.get("fragment")
+        if fragment is None:
+            return
+        if isinstance(fragment, dict):
+            fid = fragment.get("id", "")
+        elif isinstance(fragment, Fragment):
+            fid = fragment.id
+        else:
+            return
+        if not fid:
+            return
+
+        encounter = payload.get("encounter") or {}
+        if isinstance(encounter, dict):
+            self._social_provenance[fid] = {
+                "space_id": encounter.get("space_id", ""),
+                "dialogue_mode": encounter.get("dialogue_mode", "surface"),
+                "gaze_pressure": float(encounter.get("gaze_pressure", 0.0)),
+                "relationship_delta": encounter.get("relationship_delta") or {},
+            }
+        else:
+            self._social_provenance[fid] = {
+                "space_id": getattr(encounter, "space_id", ""),
+                "dialogue_mode": getattr(encounter, "dialogue_mode", "surface"),
+                "gaze_pressure": float(getattr(encounter, "gaze_pressure", 0.0)),
+                "relationship_delta": getattr(encounter, "relationship_delta", None) or {},
+            }
 
     # ------------------------------------------------------------------
     # Consolidation
@@ -335,6 +539,15 @@ class MemorySystem(Module):
         self._state.custom["trace_count"] = len(self._traces)
 
         for trace in created_traces:
+            if self._store is not None:
+                self._store.save_trace(trace)
+                for fid in trace.fragment_ids:
+                    self._store.add_edge(
+                        source_id=fid,
+                        target_id=trace.id,
+                        edge_type="fragment_to_trace",
+                        weight=trace.importance,
+                    )
             self.emit(
                 topic="data.memory.trace.created",
                 payload={"trace": trace, "fragment_ids": trace.fragment_ids},
@@ -414,16 +627,43 @@ class MemorySystem(Module):
         tags = sorted(set(tag for f in fragments for tag in f.tags))
         content = " ".join(f.content for f in fragments)
 
-        trace = Trace(
-            fragment_ids=[f.id for f in fragments],
-            importance=importance,
-            recency=recency,
-            relevance=score,
-            emotional_weight=emotional_weight,
-            narrative_role=narrative_role,
-            content=content,
-            tags=tags,
-        )
+        # If any fragment carries social provenance, produce a SocialTrace so
+        # downstream mapping to the brain world can use space/role/gaze context.
+        social_contexts = [
+            self._social_provenance[f.id]
+            for f in fragments
+            if f.id in self._social_provenance
+        ]
+        if social_contexts:
+            trace: Trace = SocialTrace(
+                fragment_ids=[f.id for f in fragments],
+                importance=importance,
+                recency=recency,
+                relevance=score,
+                emotional_weight=emotional_weight,
+                narrative_role=narrative_role,
+                content=content,
+                tags=tags,
+                space_id=_first_nonempty(c.get("space_id", "") for c in social_contexts),
+                dialogue_mode=_most_common(
+                    c.get("dialogue_mode", "surface") for c in social_contexts
+                ),
+                gaze_pressure=max(
+                    (c.get("gaze_pressure", 0.0) for c in social_contexts), default=0.0
+                ),
+                relationship_delta=_merge_relationship_deltas(social_contexts),
+            )
+        else:
+            trace = Trace(
+                fragment_ids=[f.id for f in fragments],
+                importance=importance,
+                recency=recency,
+                relevance=score,
+                emotional_weight=emotional_weight,
+                narrative_role=narrative_role,
+                content=content,
+                tags=tags,
+            )
         return trace
 
     # ------------------------------------------------------------------

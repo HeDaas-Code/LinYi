@@ -102,6 +102,7 @@ class CreationExecutive(Module):
         self._pending_query: bool = False
         self._trace_results: list[Trace] = []
         self._identity_constraints: dict[str, Any] = {}
+        self._attachment_tone: dict[str, Any] | None = None
         self._current_phase: str | None = None
 
         self.subscribe(
@@ -109,6 +110,7 @@ class CreationExecutive(Module):
             "data.identity.constraint",
             "data.identity.updated",
             "data.memory.trace.query.result",
+            "control.creative.tone",
             "control.module.init",
         )
 
@@ -128,7 +130,7 @@ class CreationExecutive(Module):
         seed = creation_context.get("seed")
         if seed is not None:
             self._rng = random.Random(seed)
-            if isinstance(self._llm, MockLLMService):
+            if self._llm.is_mock:
                 self._llm = MockLLMService(seed=seed)
 
         self._style_profile = creation_context.get("style_profile", {})
@@ -144,6 +146,8 @@ class CreationExecutive(Module):
             self._handle_narrative_ready(message.payload)
         elif message.topic in ("data.identity.constraint", "data.identity.updated"):
             self._handle_identity_constraint(message.payload)
+        elif message.topic == "control.creative.tone":
+            self._handle_creative_tone(message.payload)
         elif message.topic == "data.memory.trace.query.result":
             self._handle_trace_results(message.payload)
 
@@ -216,6 +220,7 @@ class CreationExecutive(Module):
                 "trace_results": [
                     dataclass_to_dict(t) for t in self._trace_results
                 ],
+                "attachment_tone": self._attachment_tone,
             }
         )
         return base
@@ -229,7 +234,7 @@ class CreationExecutive(Module):
         self._seed = data.get("seed")
         if self._seed is not None:
             self._rng = random.Random(self._seed)
-            if isinstance(self._llm, MockLLMService):
+            if self._llm.is_mock:
                 self._llm = MockLLMService(seed=self._seed)
         else:
             self._rng = random.Random()
@@ -248,6 +253,7 @@ class CreationExecutive(Module):
             reconstruct_dataclass(Trace, t)
             for t in data.get("trace_results", [])
         ]
+        self._attachment_tone = data.get("attachment_tone")
 
     # ------------------------------------------------------------------
     # Message handlers
@@ -263,6 +269,19 @@ class CreationExecutive(Module):
             self._style_profile.update(constraints.get("voice_signature", {}))
             if not self._focus_stack:
                 self._focus_stack = list(constraints.get("interests", []))
+
+    def _handle_creative_tone(self, payload: Any) -> None:
+        """Update creative tone from attachment or other upstream modules."""
+        if not isinstance(payload, dict):
+            return
+        # Only attachment-sourced tones are supported for now.
+        if payload.get("source") != "attachment":
+            return
+        self._attachment_tone = {
+            "style": payload.get("style", "secure"),
+            "intensity": float(payload.get("intensity", 0.0)),
+            "tone": payload.get("tone", {}),
+        }
 
     def _handle_narrative_ready(self, payload: Any) -> None:
         """Extract narrative line and query memory for relevant traces."""
@@ -344,7 +363,7 @@ class CreationExecutive(Module):
         model using a structured prompt. Otherwise fall back to the
         template-based composer.
         """
-        if self._llm is not None and not isinstance(self._llm, MockLLMService):
+        if self._llm is not None and not self._llm.is_mock:
             paragraph = self._compose_paragraph_with_llm(narrative_line, traces)
             if paragraph:
                 paragraph = self._normalize_spacing(paragraph)
@@ -399,6 +418,7 @@ class CreationExecutive(Module):
             relevant_traces=relevant_traces,
             previous_paragraph=previous_paragraph,
             style_profile=self._style_profile,
+            attachment_tone=self._attachment_tone,
         )
 
         try:

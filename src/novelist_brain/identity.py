@@ -103,6 +103,10 @@ class LinYiProfile:
         "小时候住在南方小城，外婆总在雨天把椅子搬到门口看雨。"
         "她说雨是天空在写字，人要安静才能读懂。"
     )
+    baseline_mood: dict[str, float] = field(
+        default_factory=lambda: {"valence": 0.1, "arousal": 0.3, "dominance": 0.4}
+    )
+    voice: str = "third_person_limited"
 
     def __post_init__(self) -> None:
         defaults = {

@@ -10,6 +10,7 @@ from src.novelist_brain.llm import LLMService, MockLLMService
 from src.novelist_brain.models import BusMessage, Fragment, ModuleState, TickDelta, Trace
 from src.novelist_brain.module import Module
 from src.novelist_brain.persistence import dataclass_to_dict, reconstruct_dataclass
+from src.novelist_brain.sandbox_versioning import SandboxVersionManager
 
 
 @dataclass
@@ -44,10 +45,17 @@ class CentralExecutiveNetwork(Module):
     _CEN_PHASES: frozenset[str] = frozenset({"creation", "simulation"})
 
     def __init__(self, name: str = "central_executive_network") -> None:
-        # Initialize the goal stack before the base class calls _initial_state().
+        # Initialize fields that _initial_state() may read before super().__init__().
         self._goal_stack: list[Goal] = []
         self._current_goal: Goal | None = None
         self._setup_default_goals()
+        self._version_manager: SandboxVersionManager | None = None
+        self._sandbox_module: Any | None = None
+        self._enable_ab_fork = True
+        self._ab_max_rounds = 2
+        self._ab_in_progress = False
+        self._ab_versions: tuple[str, str] = ()
+        self._ab_rounds_remaining = 0
 
         super().__init__(name)
         self._working_memory: list[Fragment] = []
@@ -104,6 +112,9 @@ class CentralExecutiveNetwork(Module):
                 "proactive_build_pending": False,
                 "narrative_triggered_phases": [],
                 "build_phase": None,
+                "enable_ab_fork": self._enable_ab_fork,
+                "ab_in_progress": self._ab_in_progress,
+                "ab_rounds_remaining": self._ab_rounds_remaining,
             },
         )
 
@@ -123,6 +134,9 @@ class CentralExecutiveNetwork(Module):
                 "proactive_build_pending": self._proactive_build_pending,
                 "narrative_triggered_phases": list(self._narrative_triggered_phases),
                 "build_phase": self._build_phase,
+                "enable_ab_fork": self._enable_ab_fork,
+                "ab_in_progress": self._ab_in_progress,
+                "ab_rounds_remaining": self._ab_rounds_remaining,
             }
         )
         return self._state
@@ -152,6 +166,11 @@ class CentralExecutiveNetwork(Module):
                     dataclass_to_dict(t) for t in self._latest_traces
                 ],
                 "identity_constraints": self._identity_constraints,
+                "enable_ab_fork": self._enable_ab_fork,
+                "ab_max_rounds": self._ab_max_rounds,
+                "ab_in_progress": self._ab_in_progress,
+                "ab_versions": list(self._ab_versions),
+                "ab_rounds_remaining": self._ab_rounds_remaining,
             }
         )
         return base
@@ -192,6 +211,12 @@ class CentralExecutiveNetwork(Module):
             for t in data.get("latest_traces", [])
         ]
         self._identity_constraints = data.get("identity_constraints", {})
+        self._enable_ab_fork = bool(data.get("enable_ab_fork", self._enable_ab_fork))
+        self._ab_max_rounds = int(data.get("ab_max_rounds", self._ab_max_rounds))
+        # A/B state is intentionally reset on load so a resumed run starts fresh.
+        self._ab_in_progress = False
+        self._ab_versions = ()
+        self._ab_rounds_remaining = 0
 
     def init(self, context: dict[str, Any]) -> None:
         """Initialize CEN from agent context."""
@@ -208,6 +233,16 @@ class CentralExecutiveNetwork(Module):
             self._goal_stack = [Goal(**g) for g in goals]
             self._current_goal = self._goal_stack[-1] if self._goal_stack else None
             self._current_task = self._current_goal.name if self._current_goal else ""
+
+        sandbox_context = context.get("sandbox", {})
+        self._version_manager = sandbox_context.get("version_manager")
+        self._sandbox_module = sandbox_context.get("sandbox_module")
+        self._enable_ab_fork = bool(
+            sandbox_context.get("enable_ab_fork", self._enable_ab_fork)
+        )
+        self._ab_max_rounds = int(
+            sandbox_context.get("ab_max_rounds", self._ab_max_rounds)
+        )
 
     def on_bus_message(self, message: BusMessage) -> None:
         """Handle network switches, insight fragments, memory and sandbox events."""
@@ -306,18 +341,21 @@ class CentralExecutiveNetwork(Module):
         self._executive_load = self._compute_executive_load()
 
         if self._sandbox_built and self._awaiting_ready and not self._narrative_ready:
-            self._current_task = "运行脑中世界推演"
-            self.emit(
-                topic="control.sandbox.simulate",
-                payload={
-                    "current_goal": self._current_goal.to_dict() if self._current_goal else None,
-                    "current_task": self._current_task,
-                    "round_hint": len(self._working_memory),
-                },
-                channel="control",
-                priority=7,
-                ttl=3,
-            )
+            if self._enable_ab_fork and self._can_run_ab():
+                self._run_ab_step()
+            else:
+                self._current_task = "运行脑中世界推演"
+                self.emit(
+                    topic="control.sandbox.simulate",
+                    payload={
+                        "current_goal": self._current_goal.to_dict() if self._current_goal else None,
+                        "current_task": self._current_task,
+                        "round_hint": len(self._working_memory),
+                    },
+                    channel="control",
+                    priority=7,
+                    ttl=3,
+                )
 
         self._broadcast_plan()
 
@@ -335,6 +373,64 @@ class CentralExecutiveNetwork(Module):
     def _deactivate(self) -> None:
         self.pause()
         self._current_task = "后台待机"
+        self._broadcast_plan()
+
+    def _can_run_ab(self) -> bool:
+        """Return True if A/B forking can be orchestrated right now."""
+        return (
+            self._version_manager is not None
+            and self._sandbox_module is not None
+            and not self._ab_in_progress
+        )
+
+    def _run_ab_step(self) -> None:
+        """Orchestrate one step of the A/B fork/simulate/merge cycle."""
+        assert self._version_manager is not None
+        assert self._sandbox_module is not None
+
+        if not self._ab_in_progress:
+            # Start A/B: fork baseline and alternative from the live sandbox.
+            baseline = self._version_manager.fork(
+                self._sandbox_module, label="baseline"
+            )
+            alternative = self._version_manager.fork(
+                self._sandbox_module, label="alternative"
+            )
+            self._ab_versions = (baseline.id, alternative.id)
+            self._ab_in_progress = True
+            self._ab_rounds_remaining = max(1, self._ab_max_rounds)
+            self._current_task = "脑中世界 A/B 分叉推演"
+            self._broadcast_plan()
+            return
+
+        a_id, b_id = self._ab_versions
+        # Run one simulation round on each branch with different seeds.
+        self._version_manager.simulate(a_id, rounds=1, rng_seed=hash(a_id) % (2**31))
+        self._version_manager.simulate(b_id, rounds=1, rng_seed=hash(b_id) % (2**31))
+        self._ab_rounds_remaining -= 1
+
+        if self._ab_rounds_remaining > 0:
+            self._current_task = f"A/B 推演剩余 {self._ab_rounds_remaining} 轮"
+            self._broadcast_plan()
+            return
+
+        # Compare and merge the winner.
+        result = self._version_manager.compare(a_id, b_id)
+        winner_id = result["winner_id"]
+        loser_id = b_id if winner_id == a_id else a_id
+        self._version_manager.merge(self._sandbox_module, winner_id)
+        self._version_manager.discard(loser_id)
+        self._ab_in_progress = False
+        self._ab_versions = ()
+        self._ab_rounds_remaining = 0
+        self._current_task = f"合并 A/B 优胜分支 {winner_id}"
+        self.emit(
+            topic="data.sandbox.version.ab_completed",
+            payload=result,
+            channel="data",
+            priority=6,
+            ttl=3,
+        )
         self._broadcast_plan()
 
     def _push_task(self, task: Goal) -> None:
@@ -433,7 +529,7 @@ class CentralExecutiveNetwork(Module):
         )
         self._broadcast_plan()
 
-    def _handle_narrative_ready(self, payload: dict[str, Any]) -> None:
+    def _handle_narrative_ready(self, _payload: dict[str, Any]) -> None:
         self._awaiting_ready = False
         self._narrative_ready = True
         self._sandbox_built = False

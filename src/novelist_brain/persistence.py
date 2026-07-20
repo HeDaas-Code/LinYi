@@ -274,6 +274,133 @@ class PersistenceManager:
         return state
 
     @staticmethod
+    def verify(path: str) -> dict[str, Any]:
+        """Verify the integrity of the persisted state for ``path``.
+
+        Returns a report with ``valid``, ``errors``, ``snapshot_count`` and
+        ``delta_count``. This does not guarantee semantic correctness, only
+        structural recoverability.
+        """
+        errors: list[str] = []
+        snapshot_count = 0
+        delta_count = 0
+
+        try:
+            state = PersistenceManager.load(path)
+        except Exception as exc:
+            errors.append(f"load failed: {exc}")
+            state = None
+
+        if state is not None:
+            for key in ("version", "saved_at", "clock", "modules"):
+                if key not in state:
+                    errors.append(f"missing top-level key: {key}")
+            saved_at = state.get("saved_at")
+            if saved_at:
+                try:
+                    datetime.datetime.fromisoformat(saved_at)
+                except ValueError:
+                    errors.append(f"invalid saved_at timestamp: {saved_at}")
+
+        snapshot_count = len(PersistenceManager.list_snapshots(path))
+        delta_log = PersistenceManager._delta_log(path)
+        if os.path.isfile(delta_log):
+            with open(delta_log, "r", encoding="utf-8") as f:
+                delta_count = sum(1 for line in f if line.strip())
+
+        return {
+            "valid": len(errors) == 0,
+            "errors": errors,
+            "snapshot_count": snapshot_count,
+            "delta_count": delta_count,
+        }
+
+    @staticmethod
+    def emergency_snapshot(
+        agent_state: dict[str, Any],
+        path: str,
+        reason: str = "emergency",
+    ) -> str:
+        """Write an emergency snapshot outside the normal rotation.
+
+        Returns the path of the written emergency file.
+        """
+        directory = os.path.dirname(path)
+        if directory:
+            os.makedirs(directory, exist_ok=True)
+
+        timestamp = datetime.datetime.now(datetime.timezone.utc).strftime(
+            "%Y%m%dT%H%M%S"
+        )
+        emergency_path = f"{path}.emergency.{reason}.{timestamp}.json"
+
+        with open(emergency_path, "w", encoding="utf-8") as f:
+            json.dump(
+                agent_state,
+                f,
+                ensure_ascii=False,
+                indent=2,
+                cls=AgentStateEncoder,
+            )
+
+        return emergency_path
+
+    @staticmethod
+    def apply_retention(
+        path: str,
+        retention_policy: dict[str, Any] | None = None,
+    ) -> list[str]:
+        """Prune old snapshots according to ``retention_policy``.
+
+        Returns the list of removed files. Deltas are only cleared by
+        ``rotate()``; this method focuses on snapshot history.
+        """
+        removed: list[str] = []
+        retention_policy = retention_policy or {}
+        snapshot_cfg = retention_policy.get("snapshots", {"max_count": 10})
+        max_count = snapshot_cfg.get("max_count", 10)
+
+        snapshots = PersistenceManager.list_snapshots(path)
+        if len(snapshots) > max_count:
+            for old_path in snapshots[: len(snapshots) - max_count]:
+                try:
+                    os.remove(old_path)
+                    removed.append(old_path)
+                except OSError:
+                    pass
+
+        emergency_cfg = retention_policy.get("emergency_snapshots", {"max_count": 5})
+        emergency_max = emergency_cfg.get("max_count", 5)
+        directory = os.path.dirname(path) or "."
+        emergency_files = sorted(
+            os.path.join(directory, name)
+            for name in os.listdir(directory)
+            if name.startswith(os.path.basename(path) + ".emergency.")
+            and name.endswith(".json")
+        )
+        if len(emergency_files) > emergency_max:
+            for old_path in emergency_files[: len(emergency_files) - emergency_max]:
+                try:
+                    os.remove(old_path)
+                    removed.append(old_path)
+                except OSError:
+                    pass
+
+        return removed
+
+    @staticmethod
+    def list_snapshots(path: str) -> list[str]:
+        """Return absolute paths of all snapshot files for ``path``."""
+        snapshot_dir = PersistenceManager._snapshot_dir(path)
+        if not os.path.isdir(snapshot_dir):
+            return []
+        return sorted(
+            os.path.join(snapshot_dir, name)
+            for name in os.listdir(snapshot_dir)
+            if name.startswith("snapshot_") and name.endswith(".json")
+        )
+
+    @staticmethod
     def _read_delta_log(delta_log: str) -> list[dict[str, Any]]:
         """Read all delta records from ``delta_log``."""
         deltas: list[dict[str, Any]] = []
@@ -311,3 +438,29 @@ class PersistenceManager:
                 merged["modules"][module_name] = module_state
         merged["saved_at"] = delta.get("saved_at", merged.get("saved_at"))
         return merged
+
+
+class SnapshotStore:
+    """A path-bound persistence helper used by the recovery system.
+
+    It exposes a small imperative interface so that ``RecoveryManager`` can
+    request snapshot restores without knowing the agent's save path.
+    """
+
+    def __init__(self, path: str) -> None:
+        self._path = path
+
+    def restore_snapshot(self, snapshot_id: str | None = None) -> dict[str, Any]:
+        """Load a snapshot by id, or the latest snapshot + deltas if omitted."""
+        if snapshot_id:
+            snapshot_dir = PersistenceManager._snapshot_dir(self._path)
+            candidate = os.path.join(snapshot_dir, f"snapshot_{snapshot_id}.json")
+            if os.path.isfile(candidate):
+                with open(candidate, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            # Fall back to the generic loader; the id may be a full timestamp.
+            for snapshot_path in PersistenceManager.list_snapshots(self._path):
+                if snapshot_id in os.path.basename(snapshot_path):
+                    with open(snapshot_path, "r", encoding="utf-8") as f:
+                        return json.load(f)
+        return PersistenceManager.load(self._path)

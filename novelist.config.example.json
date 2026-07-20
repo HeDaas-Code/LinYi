@@ -1,0 +1,83 @@
+{
+  "version": "2.1.0",
+  "source": "user://novelist.config.json",
+  "llm": {
+    "default_model": "MiniMax-M3",
+    "fallback_model": "",
+    "providers": [
+      {
+        "name": "custom",
+        "api_key_env": "OPENAI_API_KEY",
+        "base_url": "http://localhost:3000/v1"
+      }
+    ],
+    "temperature": 0.75,
+    "max_tokens": 4096,
+    "timeout": 180.0
+  },
+  "persistence": {
+    "backend": "file",
+    "snapshot_interval": 100
+  },
+  "eos": {
+    "enabled": true,
+    "evaluation_interval_ticks": 6,
+    "report_on_phase_change": true,
+    "threshold_rules": [
+      {
+        "metric_id": "metabolic_balance_index",
+        "condition": "below",
+        "threshold": 0.25,
+        "severity": "critical",
+        "action": "request_recovery",
+        "cooldown_ms": 300000
+      }
+    ]
+  },
+  "memory": {
+    "backend": "sqlite",
+    "db_path": "memory_store.sqlite",
+    "embedding_dim": 1536,
+    "min_tag_overlap": 2,
+    "consolidation_threshold": 0.35,
+    "working_memory_capacity": 20
+  },
+  "multimodal": {
+    "enabled": true,
+    "supported_modalities": ["image"],
+    "vision_model": null,
+    "max_image_size_bytes": 5000000
+  },
+  "social": {
+    "starting_space": "home",
+    "starting_role": "recluse",
+    "npcs": [
+      {
+        "id": "npc_cafe_owner",
+        "name": "咖啡馆老板",
+        "space_ids": ["cafe"],
+        "archetype": "regular",
+        "initial_intensity": 0.15,
+        "initial_trust": 0.2,
+        "recurrence_weight": 1.2
+      }
+    ]
+  },
+  "fault": {
+    "retry_policy": {
+      "max_attempts": 3,
+      "base_delay_ms": 500,
+      "max_delay_ms": 8000,
+      "backoff_strategy": "exponential"
+    },
+    "auto_recover": true,
+    "max_concurrent_recoveries": 3,
+    "recovery_history_size": 50
+  },
+  "webui": {
+    "enabled": true,
+    "host": "127.0.0.1",
+    "port": 8080,
+    "refresh_interval_ms": 2000
+  }
+}

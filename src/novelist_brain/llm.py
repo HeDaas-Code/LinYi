@@ -14,14 +14,24 @@ import json
 import os
 import random
 import re
+import time
 import urllib.error
 import urllib.request
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Callable
+
+from src.novelist_brain.circuit_breaker import CircuitBreaker, CircuitState
+from src.novelist_brain.fault import AgentError, ErrorType, Severity, classify_exception
+from src.novelist_brain.models import BusMessage
 
 
 class LLMService(ABC):
-    """Pluggable LLM interface for the novelist brain prototype."""
+    """Pluggable LLM interface used by all brain modules."""
+
+    @property
+    def is_mock(self) -> bool:
+        """Return True if this service does not call a real external LLM."""
+        return False
 
     @abstractmethod
     def complete(
@@ -42,6 +52,10 @@ class LLMService(ABC):
 
 class MockLLMService(LLMService):
     """Template-based LLM mock with deterministic/random fallback behavior."""
+
+    @property
+    def is_mock(self) -> bool:
+        return True
 
     def __init__(self, seed: int | None = None, dimensions: int = 64) -> None:
         self._seed = seed
@@ -81,6 +95,15 @@ class MockLLMService(LLMService):
         temperature: float = 0.7,
         max_tokens: int = 256,
     ) -> str:
+        image_urls = _extract_image_urls(context)
+        if image_urls:
+            return self._rng.choice(
+                [
+                    "图像中的光线停顿在一个没有主人的角落，像一句被删掉的旁白。",
+                    "画面深处有一种未完成的安静，仿佛有人刚刚离开镜头。",
+                    "那只空椅子承受着整幅图的目光，它比任何人物都更接近真实。",
+                ]
+            )
         prompt_lower = prompt.lower()
         for keyword, templates in self._templates.items():
             if keyword in prompt_lower:
@@ -111,6 +134,227 @@ class LLMConfigurationError(LLMError):
 
 class LLMCallError(LLMError):
     """Raised when an LLM API call fails."""
+
+
+def _create_llm_call_completed_message(
+    source: str,
+    downstream_use: str = "unknown",
+    latency_ms: float = 0.0,
+    input_tokens: int = 0,
+    output_tokens: int = 0,
+) -> dict[str, Any]:
+    return {
+        "topic": "llm.call.completed",
+        "channel": "event",
+        "payload": {
+            "source": source,
+            "downstream_use": downstream_use,
+            "latency_ms": latency_ms,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+        },
+    }
+
+
+def _extract_image_urls(context: dict[str, Any] | None) -> list[str]:
+    """Extract image URLs from a completion context.
+
+    Supports both ``image_urls`` (list of strings) and ``image_url`` (single
+    string) keys so callers can pass vision inputs without changing the
+    ``complete()`` signature.
+    """
+    if not context:
+        return []
+    raw = context.get("image_urls")
+    if isinstance(raw, list):
+        return [str(u) for u in raw if u]
+    url = context.get("image_url")
+    if isinstance(url, str) and url:
+        return [url]
+    return []
+
+
+def _create_llm_call_failed_message(
+    source: str,
+    error: AgentError,
+    downstream_use: str = "unknown",
+) -> dict[str, Any]:
+    return {
+        "topic": "llm.call.failed",
+        "channel": "event",
+        "payload": {
+            "source": source,
+            "downstream_use": downstream_use,
+            "error": error.to_dict(),
+        },
+    }
+
+
+class ResilientLLMService(LLMService):
+    """Wraps a primary LLM service with retry, circuit breaker, fallback and fault publishing.
+
+    This wrapper keeps the ``LLMService`` interface, so modules do not need to
+    change how they call the LLM.  On failures it emits ``llm.call.failed`` and
+    ``control.fault.error`` events and falls back to a secondary service (by
+    default ``MockLLMService``) when the circuit is open or retries are exhausted.
+    """
+
+    @property
+    def is_mock(self) -> bool:
+        return self._primary.is_mock and self._fallback.is_mock
+
+    def __init__(
+        self,
+        primary: LLMService,
+        fallback: LLMService | None = None,
+        circuit_breaker: CircuitBreaker | None = None,
+        max_retries: int = 2,
+        base_delay_ms: int = 500,
+        fault_publisher: Callable[[AgentError], None] | None = None,
+        event_publisher: Callable[[dict[str, Any]], None] | None = None,
+        source: str = "llm_service",
+    ) -> None:
+        self._primary = primary
+        self._fallback = fallback if fallback is not None else MockLLMService()
+        self._circuit = circuit_breaker or CircuitBreaker(service="llm")
+        self._max_retries = max(0, max_retries)
+        self._base_delay_ms = base_delay_ms
+        self._fault_publisher = fault_publisher
+        self._event_publisher = event_publisher
+        self._source = source
+        self._degraded: bool = False
+
+    @property
+    def degraded(self) -> bool:
+        return self._degraded
+
+    @property
+    def circuit_state(self) -> CircuitState:
+        return self._circuit.state
+
+    def complete(
+        self,
+        prompt: str,
+        context: dict[str, Any] | None = None,
+        temperature: float = 0.7,
+        max_tokens: int = 256,
+    ) -> str:
+        start = time.time()
+        downstream_use = (context or {}).get("downstream_use", "unknown")
+
+        if not self._circuit.can_execute():
+            self._degraded = True
+            result = self._fallback.complete(prompt, context, temperature, max_tokens)
+            self._publish_completed(start, downstream_use)
+            return result
+
+        last_error: Exception | None = None
+        for attempt in range(self._max_retries + 1):
+            try:
+                result = self._primary.complete(prompt, context, temperature, max_tokens)
+                self._circuit.record_success()
+                self._degraded = False
+                self._publish_completed(start, downstream_use)
+                return result
+            except Exception as exc:
+                last_error = exc
+                self._circuit.record_failure()
+                error = self._make_agent_error(exc, downstream_use)
+                self._publish_fault(error)
+                if attempt < self._max_retries and self._should_retry(exc):
+                    delay = self._base_delay_ms * (2 ** attempt) / 1000.0
+                    time.sleep(delay)
+                    continue
+                break
+
+        # All retries exhausted or non-retryable: fall back.
+        self._degraded = True
+        try:
+            result = self._fallback.complete(prompt, context, temperature, max_tokens)
+            self._publish_completed(start, downstream_use, failed=True)
+            return result
+        except Exception as fallback_exc:
+            raise LLMCallError(
+                f"Primary and fallback LLM both failed: {fallback_exc}"
+            ) from fallback_exc
+
+    def embed(self, text: str) -> list[float]:
+        # Embeddings are less critical; on failure fall back silently.
+        if self._circuit.can_execute():
+            try:
+                return self._primary.embed(text)
+            except Exception:
+                self._circuit.record_failure()
+        return self._fallback.embed(text)
+
+    def _should_retry(self, exc: Exception) -> bool:
+        error_type, _ = classify_exception(exc)
+        return error_type in (
+            ErrorType.LLM_TIMEOUT,
+            ErrorType.LLM_RATE_LIMIT,
+            ErrorType.LLM_UNREACHABLE,
+        )
+
+    def _make_agent_error(
+        self, exc: Exception, downstream_use: str
+    ) -> AgentError:
+        error_type, severity = classify_exception(exc)
+        return AgentError(
+            source=self._source,
+            topic="llm.call.failed",
+            type=error_type,
+            severity=severity,
+            message=str(exc),
+            payload={
+                "downstream_use": downstream_use,
+                "circuit_state": self._circuit.state.value,
+            },
+            recoverable=error_type != ErrorType.IDENTITY_INCONSISTENCY,
+        )
+
+    def _publish_fault(self, error: AgentError) -> None:
+        if self._event_publisher is not None:
+            self._event_publisher(
+                {
+                    "topic": "llm.call.failed",
+                    "channel": "event",
+                    "payload": {
+                        "source": self._source,
+                        "error": error.to_dict(),
+                    },
+                }
+            )
+        if self._fault_publisher is not None:
+            self._fault_publisher(error)
+
+    def _publish_completed(
+        self, start: float, downstream_use: str, failed: bool = False
+    ) -> None:
+        if self._event_publisher is None:
+            return
+        latency_ms = (time.time() - start) * 1000
+        if failed:
+            self._event_publisher(
+                _create_llm_call_failed_message(
+                    self._source,
+                    AgentError(
+                        source=self._source,
+                        topic="llm.call.failed",
+                        type=ErrorType.LLM_UNREACHABLE,
+                        severity=Severity.HIGH,
+                        message="Primary failed, fallback used",
+                    ),
+                    downstream_use,
+                )
+            )
+        else:
+            self._event_publisher(
+                _create_llm_call_completed_message(
+                    self._source,
+                    downstream_use,
+                    latency_ms=latency_ms,
+                )
+            )
 
 
 class OpenAILLMService(LLMService):
@@ -152,7 +396,7 @@ class OpenAILLMService(LLMService):
 
     def _chat(
         self,
-        messages: list[dict[str, str]],
+        messages: list[dict[str, Any]],
         temperature: float,
         max_tokens: int,
     ) -> dict[str, Any]:
@@ -193,13 +437,15 @@ class OpenAILLMService(LLMService):
     ) -> str:
         """Request a chat completion.
 
-        Reasoning models (e.g. MiniMax-M3) may return their full chain of
-        thought.  We first try to obtain a clean Chinese answer from
-        ``content``; if that is empty, we mine the same clean answer from
-        ``reasoning_content``.  In both cases the answer is passed through
-        ``_strip_reasoning_prefix`` so that English meta-text is removed.
+        Supports text-only and vision (image_url) inputs via the ``image_url``
+        / ``image_urls`` keys in ``context``.  Reasoning models (e.g.
+        MiniMax-M3) may return their full chain of thought.  We first try to
+        obtain a clean Chinese answer from ``content``; if that is empty, we
+        mine the same clean answer from ``reasoning_content``.  In both cases
+        the answer is passed through ``_strip_reasoning_prefix`` so that
+        English meta-text is removed.
         """
-        messages: list[dict[str, str]] = []
+        messages: list[dict[str, Any]] = []
         if context and context.get("system"):
             system_prompt = str(context["system"])
             # Always enforce Chinese output, even when caller provides system.
@@ -219,7 +465,17 @@ class OpenAILLMService(LLMService):
                     ),
                 }
             )
-        messages.append({"role": "user", "content": prompt})
+
+        image_urls = _extract_image_urls(context)
+        if image_urls:
+            content: list[dict[str, Any]] = [
+                {"type": "text", "text": prompt},
+            ]
+            for url in image_urls:
+                content.append({"type": "image_url", "image_url": {"url": url}})
+            messages.append({"role": "user", "content": content})
+        else:
+            messages.append({"role": "user", "content": prompt})
 
         response = self._chat(
             messages,

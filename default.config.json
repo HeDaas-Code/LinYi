@@ -1,0 +1,428 @@
+{
+  "version": "2.1.0",
+  "source": "built-in",
+  "core": {
+    "name": "林逸",
+    "pen_name": "静观者",
+    "values": [
+      "真实",
+      "共情",
+      "美",
+      "孤独",
+      "自由",
+      "耐心"
+    ],
+    "traits": {
+      "开放性": 0.88,
+      "内倾性": 0.78,
+      "神经质": 0.55,
+      "尽责性": 0.62,
+      "敏感性": 0.82
+    },
+    "interests": [
+      "城市边缘人",
+      "记忆",
+      "雨",
+      "旧物",
+      "未说出口的话",
+      "凌晨的便利店",
+      "窗边的光线"
+    ],
+    "self_narrative": "我叫林逸，笔名静观者。我在人群边缘写字，相信那些被忽略的瞬间里藏着真正的小说。我习惯早起，喝一杯不加糖的黑咖啡，在窗边坐到城市苏醒。白天我观察、散步、与人保持礼貌的距离，因为太近会让我失语。晚上七点后，我开始写作——不是因为我有灵感，而是因为我已经用一整天收集到了足够的沉默。我害怕被世界看见，又害怕它完全忽略我；这种矛盾是我小说的燃料。",
+    "rhythm_preferences": {
+      "preferred_writing_hours": [
+        19,
+        23
+      ],
+      "sleep_start": 0,
+      "wake_up": 6,
+      "peak_energy": 21,
+      "meal_times": [
+        7,
+        12,
+        19
+      ]
+    },
+    "integrity_score": 1.0,
+    "voice_signature": {
+      "sentence_rhythm": "中短句为主，偶尔拖长，像呼吸",
+      "sensory_bias": "视觉与听觉优先，触觉谨慎",
+      "emotional_register": "克制、内省、有节制的忧郁",
+      "favorite_images": [
+        "雨",
+        "窗",
+        "旧台灯",
+        "空椅子",
+        "末班车"
+      ]
+    },
+    "internal_conflict": "林逸想要靠近世界以收集它，又害怕被它看见；他相信孤独里才有真正的小说，却又在孤独中怀疑这是否只是借口。",
+    "habits": {
+      "morning": "六点醒来，黑咖啡，窗边静坐二十分钟",
+      "daytime": "散步、观察、在便签上记下一句话",
+      "evening": "七点后写作，十一点前结束",
+      "night": "睡前重读当天写的一段，然后关掉台灯",
+      "quirks": [
+        "收集旧车票",
+        "在雨天出门",
+        "避免 eye contact"
+      ]
+    },
+    "anchors": {
+      "home": "城中老小区一间朝西的出租屋",
+      "objects": [
+        "旧台灯",
+        "磨破边的笔记本",
+        "黑咖啡杯",
+        "窗台的绿萝"
+      ],
+      "places": [
+        "凌晨的便利店",
+        "旧书店二楼",
+        "河边的栏杆"
+      ]
+    },
+    "current_novel": {
+      "title": "脑中世界纪事",
+      "theme": "一个在城市边缘观察他人的人，如何慢慢被自己的观察改变",
+      "protagonist": "林逸自身的投射",
+      "setting": "黎明中无名的城市"
+    },
+    "childhood_memory": "小时候住在南方小城，外婆总在雨天把椅子搬到门口看雨。她说雨是天空在写字，人要安静才能读懂。",
+    "baseline_mood": {
+      "valence": 0.1,
+      "arousal": 0.3,
+      "dominance": 0.4
+    },
+    "voice": "third_person_limited"
+  },
+  "physiology": {
+    "max_energy": 100.0,
+    "sleep_cycle_hours": 7.5,
+    "circadian_rhythm": [
+      {
+        "phase": "deep_night",
+        "energy_factor": 0.2,
+        "creativity_factor": 0.4
+      },
+      {
+        "phase": "morning",
+        "energy_factor": 0.9,
+        "creativity_factor": 0.7
+      },
+      {
+        "phase": "incubation",
+        "energy_factor": 0.8,
+        "creativity_factor": 0.85
+      },
+      {
+        "phase": "social",
+        "energy_factor": 0.75,
+        "creativity_factor": 0.5
+      },
+      {
+        "phase": "simulation",
+        "energy_factor": 0.7,
+        "creativity_factor": 0.9
+      },
+      {
+        "phase": "reflection",
+        "energy_factor": 0.6,
+        "creativity_factor": 0.8
+      },
+      {
+        "phase": "creation",
+        "energy_factor": 0.65,
+        "creativity_factor": 0.95
+      }
+    ],
+    "metabolism_rates": {
+      "rest": 0.5,
+      "thinking": 2.0,
+      "social": 3.0,
+      "creation": 4.0
+    },
+    "recovery_rates": {
+      "sleep": 8.0,
+      "nap": 4.0,
+      "leisure": 2.0
+    }
+  },
+  "creativity": {
+    "prose_style": {
+      "density": 0.65,
+      "lyricism": 0.55,
+      "dialogue_ratio": 0.3,
+      "paragraph_max_sentences": 6
+    },
+    "genre_weights": {
+      "literary": 0.6,
+      "realism": 0.3,
+      "magical_realism": 0.1
+    },
+    "taboo_words": [
+      "显然",
+      "突然",
+      "不得不说"
+    ],
+    "foreshadowing_strategy": "thematic",
+    "revision_threshold": 0.6
+  },
+  "social": {
+    "social_radius": 12,
+    "intimacy_thresholds": {
+      "stranger": 0.0,
+      "acquaintance": 0.2,
+      "friend": 0.5,
+      "intimate": 0.8
+    },
+    "fatigue_rate": 1.2,
+    "platform_rules": [
+      {
+        "platform": "town_square",
+        "max_daily_interactions": 5,
+        "topic_whitelist": [
+          "literature",
+          "daily_life"
+        ]
+      }
+    ],
+    "starting_space": "home",
+    "starting_role": "recluse",
+    "starting_social_energy": 100.0,
+    "spaces": null,
+    "roles": null,
+    "npcs": null
+  },
+  "memory": {
+    "backend": "memory",
+    "db_path": "memory_store.sqlite",
+    "embedding_dim": 1536,
+    "min_tag_overlap": 2,
+    "consolidation_threshold": 0.35,
+    "working_memory_capacity": 20
+  },
+  "multimodal": {
+    "enabled": true,
+    "supported_modalities": ["image"],
+    "vision_model": null,
+    "max_image_size_bytes": 5000000
+  },
+  "trpg": {
+    "rule_system": "COC",
+    "rulebook_path": null,
+    "embedded_rulebook": {
+      "name": "COC",
+      "version": "1.0",
+      "skills": [
+        {"name": "观察", "base_value": 25.0, "attributes": ["pow", "int"], "description": "注意环境中的细节与异常。", "tags": ["感知"]},
+        {"name": "潜行", "base_value": 20.0, "attributes": ["dex", "pow"], "description": "在阴影中移动而不被发现。", "tags": ["隐秘"]},
+        {"name": "说服", "base_value": 15.0, "attributes": ["app", "edu"], "description": "用语言影响他人的态度。", "tags": ["社交"]},
+        {"name": "图书馆使用", "base_value": 20.0, "attributes": ["int", "edu"], "description": "在书籍与档案中检索信息。", "tags": ["知识"]},
+        {"name": "格斗", "base_value": 25.0, "attributes": ["str", "dex"], "description": "近身肉搏与格斗技巧。", "tags": ["战斗"]},
+        {"name": "闪避", "base_value": 25.0, "attributes": ["dex"], "description": "躲开攻击与危险。", "tags": ["战斗"]},
+        {"name": "心理学", "base_value": 20.0, "attributes": ["pow", "int"], "description": "洞察他人的情绪与动机。", "tags": ["社交"]},
+        {"name": "追踪", "base_value": 20.0, "attributes": ["int", "pow"], "description": "循迹追踪目标。", "tags": ["感知"]}
+      ],
+      "actions": [
+        {"name": "观察", "skill": "观察", "keywords": ["看", "观察", "注视", "发现", "寻找"], "difficulty": 1.0, "default_modifier": 0.0},
+        {"name": "潜行", "skill": "潜行", "keywords": ["躲", "藏", "走", "离开", "避"], "difficulty": 1.0, "default_modifier": 0.0},
+        {"name": "说服", "skill": "说服", "keywords": ["说", "问", "劝", "解释", "谈"], "difficulty": 1.0, "default_modifier": 0.0},
+        {"name": "查阅", "skill": "图书馆使用", "keywords": ["查", "资料", "书", "档案"], "difficulty": 1.0, "default_modifier": 0.0},
+        {"name": "格斗", "skill": "格斗", "keywords": ["打", "斗", "攻击", "保护"], "difficulty": 1.0, "default_modifier": 0.0},
+        {"name": "闪避", "skill": "闪避", "keywords": ["躲闪", "回避", "让开"], "difficulty": 1.0, "default_modifier": 0.0},
+        {"name": "心理学", "skill": "心理学", "keywords": ["揣摩", "理解", "洞察"], "difficulty": 1.0, "default_modifier": 0.0},
+        {"name": "追踪", "skill": "追踪", "keywords": ["跟", "追踪", "追寻"], "difficulty": 1.0, "default_modifier": 0.0},
+        {"name": "对抗", "skill": "格斗", "keywords": ["对抗", "较量", "阻止", "压制"], "difficulty": 1.0, "default_modifier": 0.0},
+        {"name": "追逐", "skill": "追踪", "keywords": ["追", "逃", "追赶", "逃离"], "difficulty": 1.0, "default_modifier": 0.0},
+        {"name": "战斗", "skill": "格斗", "keywords": ["战斗", "攻击", "保护", "搏斗"], "difficulty": 1.0, "default_modifier": 0.0}
+      ],
+      "combat": {
+        "name": "standard",
+        "attack_skill": "格斗",
+        "dodge_skill": "闪避",
+        "damage_formula": "1d6+db",
+        "critical_multiplier": 2.0,
+        "impale_threshold": 0.2,
+        "max_combatants": 6
+      },
+      "sanity": {
+        "enabled": true,
+        "fumble_shock_range": [5.0, 10.0],
+        "fear_shock_threshold": 0.5,
+        "fear_shock_probability": 0.25,
+        "phobia_chance": 0.3,
+        "indefinite_insanity_threshold": 0.0,
+        "permanent_insanity_threshold": 0.0
+      },
+      "improvement": {
+        "enabled": true,
+        "success_improvement_chance": 0.0,
+        "failure_improvement_chance": 0.5,
+        "improvement_die": "1d10",
+        "max_improvement_per_skill": 5
+      },
+      "items": [
+        {"id": "knife", "name": "折叠刀", "category": "weapon", "description": "一把旧折叠刀，刃口有锈迹。", "skill_bonus": {"格斗": 5.0}, "sanity_cost": 0.0, "uses": null, "effects": []},
+        {"id": "lantern", "name": "煤油灯", "category": "tool", "description": "在黑暗中照亮前路。", "skill_bonus": {"观察": 10.0}, "sanity_cost": 0.0, "uses": null, "effects": []},
+        {"id": "whiskey", "name": "威士忌", "category": "consumable", "description": "一小瓶威士忌，可暂时平复神经。", "skill_bonus": {}, "sanity_cost": 0.0, "uses": 1, "effects": [{"type": "restore_mp", "formula": "1d3"}]},
+        {"id": "old_key", "name": "旧钥匙", "category": "clue", "description": "一把来历不明的铜钥匙。", "skill_bonus": {}, "sanity_cost": 0.0, "uses": null, "effects": []}
+      ],
+      "tomes": [
+        {"id": "necronomicon_excerpt", "name": "死灵之书残页", "mythos_rating": 5.0, "spells": ["窥视深渊"], "sanity_cost_first_read": 2.0, "sanity_cost_study": 3.0, "cthulhu_mythos_bonus": 1.0}
+      ],
+      "campaign_arcs": [
+        {"id": "urban_mythos", "name": "城市深处的低语", "stages": [{"name": "征兆", "theme": "失踪", "conflict_level": 0.3}, {"name": "追寻", "theme": "旧档案", "conflict_level": 0.6}, {"name": "真相", "theme": "深渊", "conflict_level": 0.9}], "required_themes": ["城市", "记忆", "孤独"], "climax_condition": "主角直面城市隐藏的真相"}
+      ],
+      "metadata": {"genre": "literary_coc", "locale": "zh-CN"}
+    },
+    "success_levels": {
+      "critical_success": 0.05,
+      "success": 0.5,
+      "failure": 1.0,
+      "critical_failure": 0.96
+    },
+    "character_sheet_template": {
+      "attributes": [
+        "str",
+        "con",
+        "dex",
+        "int",
+        "pow",
+        "app",
+        "edu",
+        "siz"
+      ],
+      "skill_slots": 12
+    },
+    "world_rules": [
+      {
+        "name": "行动有情感后果",
+        "description": "每个选择都会在世界模型中留下情绪痕迹。"
+      },
+      {
+        "name": "随机性塑造命运",
+        "description": "骰子判定引入不可预测性，意外即灵感。"
+      }
+    ],
+    "max_rounds_per_scene": 8,
+    "enable_gm": true,
+    "sanity_enabled": true,
+    "enable_ab_fork": true
+  },
+  "llm": {
+    "default_model": "MiniMax-M3",
+    "fallback_model": "",
+    "providers": [
+      {
+        "name": "openai",
+        "api_key_env": "sk-PGqpNXJDiZt6LcrHIZJuLVBdoaQa4GGcWCrfDQhcfOzz4VT8",
+        "base_url": "http://117.72.106.189:3000/v1"
+      }
+    ],
+    "temperature": 0.75,
+    "max_tokens": 4096,
+    "timeout": 180.0,
+    "retry_policy": {
+      "max_retries": 2,
+      "backoff_ms": 500
+    },
+    "token_budgets": {
+      "sandbox": 0.35,
+      "creation": 0.3,
+      "memory": 0.15,
+      "dmn": 0.1,
+      "cen": 0.08,
+      "sn": 0.02
+    },
+    "response_format_default": "text",
+    "use_mock": false,
+    "embedding_model": "text-embedding-3-small"
+  },
+  "persistence": {
+    "backend": "file",
+    "connection_string": "",
+    "snapshot_interval": 100,
+    "delta_log_path": "",
+    "retention": {
+      "fragments": {
+        "ttl": 604800,
+        "max_count": 5000
+      },
+      "traces": {
+        "min_importance": 0.1,
+        "max_count": 2000
+      },
+      "logs": {
+        "ttl": 2592000
+      },
+      "sandbox_versions": {
+        "max_count": 50,
+        "keep_committed": true
+      }
+    }
+  },
+  "eos": {
+    "enabled": true,
+    "evaluation_interval_ticks": 6,
+    "report_on_phase_change": true,
+    "sampling_rates": {
+      "event.clock.tick": 1.0,
+      "data.memory.fragment.stored": 1.0,
+      "data.memory.trace.created": 1.0,
+      "control.network.switch": 1.0
+    },
+    "threshold_rules": [
+      {
+        "metric_id": "metabolic_balance_index",
+        "condition": "below",
+        "threshold": 0.25,
+        "severity": "critical",
+        "action": "request_recovery",
+        "cooldown_ms": 300000
+      },
+      {
+        "metric_id": "gaze_load",
+        "condition": "above",
+        "threshold": 0.75,
+        "severity": "warning",
+        "action": "switch_network",
+        "cooldown_ms": 300000
+      },
+      {
+        "metric_id": "llm_failure_rate",
+        "condition": "above",
+        "threshold": 0.3,
+        "severity": "warning",
+        "action": "pause_module",
+        "cooldown_ms": 600000
+      }
+    ]
+  },
+  "fault": {
+    "retry_policy": {
+      "max_attempts": 3,
+      "base_delay_ms": 500,
+      "max_delay_ms": 8000,
+      "backoff_strategy": "exponential",
+      "retryable_errors": [
+        "LLM_TIMEOUT",
+        "LLM_RATE_LIMIT",
+        "LLM_UNREACHABLE",
+        "PERSISTENCE_FAILURE"
+      ],
+      "on_exhausted": "degrade"
+    },
+    "auto_recover": true,
+    "safe_mode_on_critical_identity": true,
+    "safe_mode_on_persistence_failure": true,
+    "max_concurrent_recoveries": 3,
+    "recovery_history_size": 50
+  },
+  "webui": {
+    "enabled": true,
+    "host": "127.0.0.1",
+    "port": 8080,
+    "refresh_interval_ms": 2000
+  }
+}

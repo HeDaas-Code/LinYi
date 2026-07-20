@@ -21,30 +21,56 @@ import sys
 import time
 from typing import Any
 
+from dataclasses import asdict
+
 from src.novelist_brain.bus import BusRouter
-from src.novelist_brain.persistence import PersistenceManager, dataclass_to_dict
+from src.novelist_brain.attachment import AttachmentModule
+from src.novelist_brain.circuit_breaker import CircuitBreaker
+from src.novelist_brain.config import (
+    ConfigRegistry,
+    FaultConfig,
+    NovelistConfig,
+    build_llm_config_dict,
+    load_config,
+)
+from src.novelist_brain.persistence import PersistenceManager, SnapshotStore, dataclass_to_dict
 from src.novelist_brain.cen import CentralExecutiveNetwork
 from src.novelist_brain.clock import Clock, RealTimeClock
 from src.novelist_brain.creation_executive import CreationExecutive
 from src.novelist_brain.dmn import DefaultModeNetwork
 from src.novelist_brain.dynamics import Dynamics
+from src.novelist_brain.eos import (
+    CreativeCollector,
+    EvaluationObservabilitySystem,
+    LLMCollector,
+    MemoryCollector,
+    MetabolismCollector,
+    NetworkCollector,
+    SandboxCollector,
+    SocialCollector,
+)
+from src.novelist_brain.fault import AgentError, ErrorType, Severity
 from src.novelist_brain.identity import IdentityCore, LinYiProfile
-from src.novelist_brain.llm import LLMService, MockLLMService, create_llm_service
+from src.novelist_brain.llm import (
+    LLMService,
+    MockLLMService,
+    ResilientLLMService,
+    create_llm_service,
+)
 from src.novelist_brain.memory import MemorySystem
+from src.novelist_brain.recovery import FaultManager, RecoveryManager
 from src.novelist_brain.metabolism import Metabolism
 from src.novelist_brain.models import BusMessage, TickDelta
+from src.novelist_brain.module_registry import ModuleRegistry
 from src.novelist_brain.novel_output import NovelOutput
 from src.novelist_brain.personal_input import PersonalInput
 from src.novelist_brain.salience_network import SalienceNetwork
 from src.novelist_brain.sandbox import MentalSandbox
+from src.novelist_brain.sandbox_versioning import SandboxVersionManager
 from src.novelist_brain.scheduler import DailyScheduler
 from src.novelist_brain.social_input import SocialInput
-
-
-# Default LLM configuration. Override via CLI flags or environment variables.
-DEFAULT_LLM_BASE_URL = "http://117.72.106.189:3000/v1"
-DEFAULT_LLM_API_KEY = "sk-PGqpNXJDiZt6LcrHIZJuLVBdoaQa4GGcWCrfDQhcfOzz4VT8"
-DEFAULT_LLM_MODEL = "MiniMax-M3"
+from src.novelist_brain.transaction import TransactionManager
+from src.novelist_brain.trpg_rulebook import Rulebook
 
 
 IMPORTANT_TOPICS: set[str] = {
@@ -108,45 +134,80 @@ def build_context(
     clock: Clock | RealTimeClock,
     llm_service: LLMService,
     scheduler: DailyScheduler | None = None,
+    config_registry: ConfigRegistry | None = None,
+    identity_profile: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Assemble the shared agent context passed to every module."""
-    # Use the identity core to provide 林逸's stable personality constraints.
-    identity_core = IdentityCore(name="identity_core")
-    identity_profile = identity_core.get_constraints()
+    """Assemble the shared agent context passed to every module.
+
+    Values are taken from the unified configuration system when available and
+    fall back to the historical hard-coded defaults for backward compatibility.
+    """
+    cfg = config_registry.config if config_registry is not None else NovelistConfig()
+    if identity_profile is None:
+        identity_profile = asdict(cfg.core)
+
+    max_energy = cfg.physiology.max_energy
+    initial_energy = max_energy * 0.8
+
+    world_rules = [
+        rule["name"] if isinstance(rule, dict) else str(rule)
+        for rule in cfg.trpg.world_rules
+    ] or [
+        "行动有情感后果",
+        "随机性塑造命运",
+    ]
+
+    if cfg.trpg.rulebook_path:
+        rulebook = Rulebook.from_file(cfg.trpg.rulebook_path)
+    elif cfg.trpg.embedded_rulebook:
+        rulebook = Rulebook(cfg.trpg.embedded_rulebook)
+    else:
+        rulebook = Rulebook()
 
     context = {
         "bus": router,
         "clock": clock,
         "scheduler": scheduler,
         "llm_service": llm_service,
+        "config": cfg,
         "identity": identity_profile,
         "metabolism": {
-            "energy": 80.0,
-            "compute_budget": 80.0,
-            "time_currency": 80.0,
+            "energy": initial_energy,
+            "compute_budget": initial_energy,
+            "time_currency": initial_energy,
             "social_capital": 50.0,
+            "max_energy": max_energy,
         },
         "dynamics": {},
         "memory": {
-            "working_memory_capacity": 20,
-            "consolidation_threshold": 0.35,
-            "min_tag_overlap": 2,
+            "working_memory_capacity": cfg.memory.working_memory_capacity,
+            "consolidation_threshold": cfg.memory.consolidation_threshold,
+            "min_tag_overlap": cfg.memory.min_tag_overlap,
+            "backend": cfg.memory.backend,
+            "db_path": cfg.memory.db_path,
+            "embedding_dim": cfg.memory.embedding_dim,
         },
         "sandbox": {
-            "min_rounds": 3,
-            "max_rounds": 6,
+            "min_rounds": max(1, cfg.trpg.max_rounds_per_scene // 2),
+            "max_rounds": cfg.trpg.max_rounds_per_scene,
             "seed": 42,
+            "rulebook": rulebook,
+            "enable_ab_fork": cfg.trpg.enable_ab_fork,
+            "ab_max_rounds": max(1, cfg.trpg.max_rounds_per_scene // 3),
+            "max_versions": 8,
+            "version_manager": SandboxVersionManager(max_versions=8)
+            if cfg.trpg.enable_ab_fork
+            else None,
             "world": {
                 "name": "脑中世界",
                 "ontology": {
                     "genre": "严肃文学",
                     "tone": "忧郁",
-                    "setting": "黎明中无名的城市",
+                    "setting": cfg.core.current_novel.get(
+                        "setting", "黎明中无名的城市"
+                    ),
                 },
-                "rules": [
-                    "行动有情感后果",
-                    "随机性塑造命运",
-                ],
+                "rules": world_rules,
                 "current_state": {"time": "清晨", "mood": "安静"},
             },
         },
@@ -154,12 +215,33 @@ def build_context(
             "seed": 42,
             "style_profile": {
                 "default_setting": "安静的公寓",
-                "default_protagonist": "林逸",
+                "default_protagonist": cfg.core.name,
                 "default_time": "清晨",
                 "identity": identity_profile,
+                "taboo_words": cfg.creativity.taboo_words,
+                "foreshadowing_strategy": cfg.creativity.foreshadowing_strategy,
             },
         },
-        "novel": {"title": "脑中世界纪事"},
+        "social": {
+            "starting_space": cfg.social.starting_space,
+            "starting_role": cfg.social.starting_role,
+            "starting_social_energy": cfg.social.starting_social_energy,
+            "fatigue_rate": cfg.social.fatigue_rate,
+            "spaces": cfg.social.spaces,
+            "roles": cfg.social.roles,
+            "npcs": cfg.social.npcs,
+        },
+        "novel": {"title": cfg.core.current_novel.get("title", "脑中世界纪事")},
+        "eos": {
+            "enabled": cfg.eos.enabled,
+            "evaluation_interval_ticks": cfg.eos.evaluation_interval_ticks,
+            "report_on_phase_change": cfg.eos.report_on_phase_change,
+            "sampling_rates": cfg.eos.sampling_rates,
+            "threshold_rules": cfg.eos.threshold_rules,
+        },
+        "fault": cfg.fault.to_dict(),
+        "modules": [],
+        "persistence": None,
     }
     return context
 
@@ -198,6 +280,11 @@ def _apply_loaded_context(
                 "min_tag_overlap": memory_data.get(
                     "min_tag_overlap", context["memory"]["min_tag_overlap"]
                 ),
+                # Keep the configured backend/path from the current config rather than
+                # whatever was saved in the snapshot, so users can switch backends.
+                "backend": context["memory"].get("backend", "memory"),
+                "db_path": context["memory"].get("db_path", "memory_store.sqlite"),
+                "embedding_dim": context["memory"].get("embedding_dim", 1536),
             }
         )
 
@@ -250,47 +337,186 @@ def _apply_loaded_context(
     return context
 
 
-def create_modules(llm_service: LLMService) -> list[Any]:
-    """Instantiate all functional modules in the required order."""
-    return [
-        IdentityCore(name="identity_core"),
-        Metabolism(name="metabolism"),
-        Dynamics(name="dynamics"),
-        MemorySystem(name="memory_system"),
-        PersonalInput(name="personal_input", seed=42),
-        SocialInput(name="social_input", seed=42),
-        SalienceNetwork(name="salience_network"),
-        DefaultModeNetwork(name="default_mode_network"),
-        CentralExecutiveNetwork(name="central_executive_network"),
-        MentalSandbox(name="mental_sandbox", llm_service=llm_service),
-        CreationExecutive(name="creation_executive", llm_service=llm_service, seed=42),
-        NovelOutput(name="novel_output"),
-    ]
+def create_modules(
+    llm_service: LLMService,
+    identity_core: IdentityCore | None = None,
+    config: NovelistConfig | None = None,
+) -> list[Any]:
+    """Instantiate all functional modules in dependency order.
+
+    Module instantiation is delegated to a :class:`ModuleRegistry` so that the
+    agent can be extended without modifying this function: new modules can be
+    registered explicitly or discovered from a plugin directory.
+    """
+    if identity_core is None:
+        identity_core = IdentityCore(name="identity_core")
+
+    eos_enabled = config.eos.enabled if config is not None else True
+    fault_config = config.fault if config is not None else FaultConfig()
+
+    registry = ModuleRegistry()
+    # Core / physiology.
+    registry.register(Metabolism, factory_options={"name": "metabolism"})
+    registry.register(Dynamics, factory_options={"name": "dynamics"})
+    # Memory.
+    registry.register(MemorySystem, factory_options={"name": "memory_system"})
+    # Input.
+    registry.register(PersonalInput, factory_options={"name": "personal_input", "seed": 42})
+    registry.register(SocialInput, factory_options={"name": "social_input", "seed": 42})
+    # Psychological extension modules (demonstrate §10 extensibility).
+    registry.register(AttachmentModule, factory_options={"name": "attachment"})
+    # Cognitive networks.
+    registry.register(SalienceNetwork, factory_options={"name": "salience_network"})
+    registry.register(DefaultModeNetwork, factory_options={"name": "default_mode_network"})
+    registry.register(CentralExecutiveNetwork, factory_options={"name": "central_executive_network"})
+    # Simulation / creation.
+    registry.register(MentalSandbox, factory_options={"name": "mental_sandbox", "llm_service": llm_service})
+    registry.register(CreationExecutive, factory_options={"name": "creation_executive", "llm_service": llm_service, "seed": 42})
+    registry.register(NovelOutput, factory_options={"name": "novel_output"})
+    # Resilience.
+    registry.register(FaultManager, factory_options={"name": "fault_manager"})
+    registry.register(RecoveryManager, factory_options={"name": "recovery_manager", "config": fault_config})
+    # Observability.
+    registry.register(EvaluationObservabilitySystem, factory_options={"name": "eos"})
+
+    # Discover optional user plugins from the configured plugin directory.
+    plugin_dir = config.plugin_directory if config is not None else None
+    if plugin_dir:
+        registry.discover(plugin_dir)
+
+    modules: list[Any] = [identity_core]
+    modules.extend(registry.instantiate())
+
+    eos = next((m for m in modules if isinstance(m, EvaluationObservabilitySystem)), None)
+    if eos is not None and eos_enabled:
+        eos.add_collector(LLMCollector())
+        eos.add_collector(MemoryCollector())
+        eos.add_collector(MetabolismCollector())
+        eos.add_collector(SandboxCollector())
+        eos.add_collector(SocialCollector())
+        eos.add_collector(NetworkCollector())
+        eos.add_collector(CreativeCollector())
+
+    return modules
 
 
-def _make_llm_service(args: argparse.Namespace) -> LLMService:
-    """Build the LLM service from CLI args + environment."""
-    base_url = args.llm_base_url or os.getenv("OPENAI_BASE_URL")
-    api_key = args.llm_api_key or os.getenv("OPENAI_API_KEY")
-    model = args.llm_model or os.getenv("OPENAI_MODEL")
+def _start_webui(
+    router: BusRouter,
+    modules: list[Any],
+    context: dict[str, Any],
+    cfg: NovelistConfig,
+) -> Any | None:
+    """Start the FastAPI dashboard in a background thread when enabled."""
+    if not cfg.webui.enabled:
+        return None
 
-    if args.use_mock or (not base_url and not api_key):
-        # No LLM configured: use the mock.
-        return MockLLMService(seed=42)
+    try:
+        import uvicorn
+        from src.novelist_brain.web import create_app, get_provider
+        from src.novelist_brain.web.bus_spy import BusSpy
+    except ImportError as exc:
+        print(f"WebUI 未启动：缺少依赖 ({exc})")
+        return None
 
-    config: dict[str, Any] = {
-        "base_url": base_url,
-        "api_key": api_key,
-        "model": model or "gpt-3.5-turbo",
-        "temperature": 0.75,
-        "max_tokens": 4096,
-        "timeout": 180.0,
-    }
-    service = create_llm_service(config)
-    print(
-        f"使用 LLM: model={config['model']}, base_url={config['base_url']}"
+    provider = get_provider()
+    provider.register(
+        router=router,
+        modules={module.name: module for module in modules},
+        context=context,
     )
+
+    spy = BusSpy(capacity=200)
+    spy.attach(router)
+
+    app = create_app()
+
+    import threading
+
+    def _run() -> None:
+        uvicorn.run(
+            app,
+            host=cfg.webui.host,
+            port=cfg.webui.port,
+            log_level="warning",
+            access_log=False,
+        )
+
+    thread = threading.Thread(target=_run, name="webui", daemon=True)
+    thread.start()
+    print(
+        f"WebUI 已启动: http://{cfg.webui.host}:{cfg.webui.port}"
+    )
+    return thread
+
+
+def _make_llm_service(
+    args: argparse.Namespace,
+    config_registry: ConfigRegistry | None = None,
+) -> LLMService:
+    """Build the LLM service from config, CLI args, and environment variables."""
+    cfg = config_registry.config if config_registry is not None else NovelistConfig()
+    service_config = build_llm_config_dict(cfg)
+
+    # CLI flags override config/env values for one-shot convenience.
+    if args.use_mock:
+        service_config["use_mock"] = True
+    if args.llm_base_url is not None:
+        service_config["base_url"] = args.llm_base_url
+    if args.llm_api_key is not None:
+        service_config["api_key"] = args.llm_api_key
+    if args.llm_model is not None:
+        service_config["model"] = args.llm_model
+
+    service = create_llm_service(service_config)
+    model = service_config.get("model", "mock")
+    base_url = service_config.get("base_url") or "(env)"
+    print(f"使用 LLM: model={model}, base_url={base_url}")
     return service
+
+
+def _wrap_llm_service(
+    router: BusRouter,
+    service: LLMService,
+    cfg: NovelistConfig,
+) -> ResilientLLMService:
+    """Wrap the raw LLM service with retry, circuit breaker and fault publishing."""
+
+    def fault_publisher(error: AgentError) -> None:
+        router.publish(
+            source="llm_service",
+            topic="control.fault.error",
+            channel="control",
+            payload={"error": error.to_dict()},
+            priority=9,
+            ttl=5,
+        )
+
+    def event_publisher(msg: dict[str, Any]) -> None:
+        router.publish(
+            source=msg["payload"]["source"],
+            topic=msg["topic"],
+            channel=msg["channel"],
+            payload=msg["payload"],
+            priority=5,
+            ttl=3,
+        )
+
+    retry_policy = cfg.fault.retry_policy
+    return ResilientLLMService(
+        primary=service,
+        fallback=MockLLMService(seed=42),
+        circuit_breaker=CircuitBreaker(
+            service="llm",
+            failure_threshold=max(1, retry_policy.max_attempts),
+            recovery_timeout_ms=30000,
+            half_open_max_calls=2,
+        ),
+        max_retries=max(0, retry_policy.max_attempts - 1),
+        base_delay_ms=retry_policy.base_delay_ms,
+        fault_publisher=fault_publisher,
+        event_publisher=event_publisher,
+        source="llm_service",
+    )
 
 
 def _build_agent_state(clock: RealTimeClock, modules: list[Any]) -> dict[str, Any]:
@@ -337,11 +563,17 @@ def run_agent(
     days: int | None = None,
     fast_forward: bool = False,
     llm_service: LLMService | None = None,
+    config_registry: ConfigRegistry | None = None,
 ) -> None:
     """Run the novelist brain as a resident agent loop."""
+    if config_registry is None:
+        config_registry = load_config()
+    cfg = config_registry.config
+
     print("=" * 60)
     print("小说家大脑 Agent v2 — 常驻循环启动")
     print("=" * 60)
+    print(f"配置来源: {cfg.source}")
 
     router = BusRouter()
     scheduler = DailyScheduler()
@@ -369,7 +601,26 @@ def run_agent(
     )
     if llm_service is None:
         llm_service = MockLLMService(seed=42)
-    context = build_context(router, clock, llm_service, scheduler=scheduler)
+
+    # Wrap the LLM service so that failures are retried, circuit-broken and
+    # published on the control bus for the fault/recovery managers.
+    llm_service = _wrap_llm_service(router, llm_service, cfg)
+    print(f"LLM 已启用 resilience: retries={cfg.fault.retry_policy.max_attempts}, "
+          f"circuit_threshold={cfg.fault.retry_policy.max_attempts}")
+
+    identity_profile = asdict(cfg.core)
+    identity_core = IdentityCore(
+        name="identity_core",
+        profile=LinYiProfile(**identity_profile),
+    )
+    context = build_context(
+        router,
+        clock,
+        llm_service,
+        scheduler=scheduler,
+        config_registry=config_registry,
+        identity_profile=identity_profile,
+    )
 
     # Feed runtime metabolism/identity/dynamics into the scheduler so that
     # fallback plans can be triggered when resources are low.
@@ -397,7 +648,19 @@ def run_agent(
     else:
         print(f"状态文件 {effective_load_path} 不存在，以空白状态启动。")
 
-    modules = create_modules(llm_service)
+    modules = create_modules(llm_service, identity_core=identity_core, config=cfg)
+
+    # Provide the full module list, a bound snapshot store, and a transaction
+    # manager to recovery logic and the main tick loop.
+    context["modules"] = modules
+    sandbox_module = next(
+        (m for m in modules if isinstance(m, MentalSandbox)), None
+    )
+    if sandbox_module is not None:
+        context["sandbox"]["sandbox_module"] = sandbox_module
+    context["persistence"] = SnapshotStore(save_path)
+    transaction_manager = TransactionManager(modules, context)
+    context["transaction_manager"] = transaction_manager
 
     if saved_state is not None:
         for module in modules:
@@ -415,6 +678,9 @@ def run_agent(
 
     # Deliver initialization-time messages.
     router.flush()
+
+    # Start the optional web dashboard in a background thread.
+    _start_webui(router, modules, context, cfg)
 
     # Start the day in DMN so dreaming/incubation can happen.
     router.publish(
@@ -446,6 +712,7 @@ def run_agent(
 
     sn = next(m for m in modules if isinstance(m, SalienceNetwork))
     metabolism = next(m for m in modules if isinstance(m, Metabolism))
+    eos = next(m for m in modules if isinstance(m, EvaluationObservabilitySystem))
 
     identity = context.get("identity", {})
     author_name = identity.get("name", "林逸")
@@ -478,9 +745,34 @@ def run_agent(
     min_ticks = 3 if days == 0 else 1
 
     def _persist_for_event(event_type: str) -> None:
-        PersistenceManager.save_incremental(
-            _build_agent_state(clock, modules), save_path, event_type=event_type
-        )
+        try:
+            PersistenceManager.save_incremental(
+                _build_agent_state(clock, modules), save_path, event_type=event_type
+            )
+        except Exception as exc:
+            emergency_path = PersistenceManager.emergency_snapshot(
+                _build_agent_state(clock, modules),
+                save_path,
+                reason=f"persist_failed_{event_type}",
+            )
+            router.publish(
+                source="persistence",
+                topic="control.fault.error",
+                channel="control",
+                payload={
+                    "error": AgentError(
+                        source="persistence",
+                        topic="control.fault.error",
+                        type=ErrorType.PERSISTENCE_FAILURE,
+                        severity=Severity.CRITICAL,
+                        message=f"Incremental persistence failed: {exc}",
+                        payload={"emergency_path": emergency_path},
+                    ).to_dict()
+                },
+                priority=10,
+                ttl=10,
+            )
+            router.flush()
 
     try:
         last_real_time = datetime.datetime.now()
@@ -503,10 +795,40 @@ def run_agent(
             for module in modules:
                 module.tick(delta)
 
-            # Route all queued messages.
-            delivered = router.flush()
+            # Route all queued messages inside a tick-level transaction so
+            # that a failure during message handling rolls back all module
+            # states to the start of the tick.
+            transaction_manager.begin(start_tick=clock.tick, eager=True)
+            try:
+                delivered = router.flush()
+            except Exception as exc:
+                restored = transaction_manager.rollback()
+                router.publish(
+                    source="transaction_manager",
+                    topic="control.fault.error",
+                    channel="control",
+                    payload={
+                        "error": AgentError(
+                            source="transaction_manager",
+                            topic="control.fault.error",
+                            type=ErrorType.MODULE_EXCEPTION,
+                            severity=Severity.HIGH,
+                            message=f"Tick transaction failed: {exc}",
+                            payload={"restored_modules": restored},
+                        ).to_dict()
+                    },
+                    priority=9,
+                    ttl=5,
+                )
+                router.flush()
+                delivered = []
+            else:
+                transaction_manager.commit()
 
-            # Phase boundary: print header and save incremental state.
+            # Feed all delivered messages to EOS for non-invasive observation.
+            for message in delivered:
+                eos.on_bus_message(message)
+
             if phase_changed:
                 timestamp = clock.now().strftime("%Y-%m-%d %H:%M")
                 phase_info = clock.current_phase_info
@@ -519,6 +841,7 @@ def run_agent(
 
             events: list[str] = []
             critical_event: str | None = None
+            eos_report_printed: bool = False
             for message in delivered:
                 summary = summarize_message(message)
                 if summary:
@@ -530,6 +853,17 @@ def run_agent(
                     critical_event = "identity_updated"
                 elif message.topic == "data.sandbox.narrative.ready":
                     critical_event = "narrative_ready"
+                elif message.topic == "control.eos.recommendation" and not eos_report_printed:
+                    payload = message.payload or {}
+                    alerts = payload.get("alerts", [])
+                    recommendations = payload.get("recommendations", [])
+                    if alerts or recommendations:
+                        events.append(
+                            f"  • eos/control.eos.recommendation: 告警={len(alerts)}, 建议={len(recommendations)}"
+                        )
+                        for rec in recommendations[:3]:
+                            events.append(f"      → {rec}")
+                    eos_report_printed = True
 
             if critical_event is not None:
                 _persist_for_event(critical_event)
@@ -548,11 +882,39 @@ def run_agent(
             current_date = clock.now().date()
             if current_date != previous_date:
                 previous_date = current_date
-                snapshot_path = PersistenceManager.rotate(
-                    save_path, _build_agent_state(clock, modules)
-                )
-                if snapshot_path:
-                    print(f"  新的一天，已创建快照: {snapshot_path}")
+                try:
+                    snapshot_path = PersistenceManager.rotate(
+                        save_path, _build_agent_state(clock, modules)
+                    )
+                    if snapshot_path:
+                        print(f"  新的一天，已创建快照: {snapshot_path}")
+                    PersistenceManager.apply_retention(
+                        save_path, cfg.persistence.retention
+                    )
+                except Exception as exc:
+                    emergency_path = PersistenceManager.emergency_snapshot(
+                        _build_agent_state(clock, modules),
+                        save_path,
+                        reason="rotate_failed",
+                    )
+                    router.publish(
+                        source="persistence",
+                        topic="control.fault.error",
+                        channel="control",
+                        payload={
+                            "error": AgentError(
+                                source="persistence",
+                                topic="control.fault.error",
+                                type=ErrorType.PERSISTENCE_FAILURE,
+                                severity=Severity.CRITICAL,
+                                message=f"Snapshot rotation failed: {exc}",
+                                payload={"emergency_path": emergency_path},
+                            ).to_dict()
+                        },
+                        priority=10,
+                        ttl=10,
+                    )
+                    router.flush()
 
             # In fast-forward mode, honor the requested wall-clock pacing so
             # the compressed run remains observable and debuggable.
@@ -614,13 +976,68 @@ def run_agent(
     )
     print(f"动力系统 habit strengths: {dynamics.dynamics.habit_strengths}")
 
+    eos_state = eos.get_state()
+    print(
+        f"EOS: reports={eos_state['reports_generated']}, "
+        f"alerts={eos_state['alerts_generated']}, "
+        f"last_report={eos_state['last_report_id'] or 'none'}"
+    )
+
+    fault_manager = next(
+        (m for m in modules if isinstance(m, FaultManager)), None
+    )
+    recovery_manager = next(
+        (m for m in modules if isinstance(m, RecoveryManager)), None
+    )
+    if fault_manager is not None:
+        fm_state = fault_manager.get_state()
+        print(
+            f"故障管理: faults_assessed={fm_state.get('faults_assessed', 0)}, "
+            f"fault_count={fm_state.get('fault_count', 0)}"
+        )
+    if recovery_manager is not None:
+        rm_state = recovery_manager.get_state()
+        print(
+            f"恢复管理: dispatched={rm_state.get('actions_dispatched', 0)}, "
+            f"succeeded={rm_state.get('actions_succeeded', 0)}, "
+            f"failed={rm_state.get('actions_failed', 0)}, "
+            f"safe_mode={rm_state.get('safe_mode', False)}"
+        )
+
     final_state = _build_agent_state(clock, modules)
-    snapshot_path = PersistenceManager.rotate(save_path, final_state)
-    if snapshot_path:
-        print(f"\n完整状态已旋转为快照: {snapshot_path}")
-    else:
-        PersistenceManager.save(final_state, save_path)
-        print(f"\n完整状态已保存至 {save_path}")
+    try:
+        snapshot_path = PersistenceManager.rotate(save_path, final_state)
+        if snapshot_path:
+            print(f"\n完整状态已旋转为快照: {snapshot_path}")
+        else:
+            PersistenceManager.save(final_state, save_path)
+            print(f"\n完整状态已保存至 {save_path}")
+    except Exception as exc:
+        emergency_path = PersistenceManager.emergency_snapshot(
+            final_state, save_path, reason="final_save_failed"
+        )
+        print(
+            f"\n最终持久化失败: {exc}\n"
+            f"已写入急诊快照: {emergency_path}"
+        )
+        router.publish(
+            source="persistence",
+            topic="control.fault.error",
+            channel="control",
+            payload={
+                "error": AgentError(
+                    source="persistence",
+                    topic="control.fault.error",
+                    type=ErrorType.PERSISTENCE_FAILURE,
+                    severity=Severity.CRITICAL,
+                    message=f"Final persistence failed: {exc}",
+                    payload={"emergency_path": emergency_path},
+                ).to_dict()
+            },
+            priority=10,
+            ttl=10,
+        )
+        router.flush()
 
 
 if __name__ == "__main__":
@@ -658,27 +1075,44 @@ if __name__ == "__main__":
         help="【仅测试】运行 N 个模拟天后退出；不传则常驻运行",
     )
     parser.add_argument(
+        "--config",
+        type=str,
+        default=None,
+        help="配置文件路径 (默认: novelist.config.json / novelist.config.yaml)",
+    )
+    parser.add_argument(
         "--llm-base-url",
         type=str,
-        default=DEFAULT_LLM_BASE_URL,
-        help="OpenAI 兼容 LLM 的 base URL",
+        default=None,
+        help="OpenAI 兼容 LLM 的 base URL (覆盖配置文件)",
     )
     parser.add_argument(
         "--llm-api-key",
         type=str,
-        default=DEFAULT_LLM_API_KEY,
-        help="OpenAI 兼容 LLM 的 API key",
+        default=None,
+        help="OpenAI 兼容 LLM 的 API key (覆盖配置文件)",
     )
     parser.add_argument(
         "--llm-model",
         type=str,
-        default=DEFAULT_LLM_MODEL,
-        help="LLM 模型名 (默认: MiniMax-M3)",
+        default=None,
+        help="LLM 模型名 (覆盖配置文件)",
     )
     parser.add_argument(
         "--use-mock",
         action="store_true",
         help="强制使用 MockLLMService，不调用真实 LLM",
+    )
+    parser.add_argument(
+        "--disable-webui",
+        action="store_true",
+        help="禁用 WebUI 仪表盘",
+    )
+    parser.add_argument(
+        "--webui-port",
+        type=int,
+        default=None,
+        help="WebUI 监听端口 (覆盖配置文件)",
     )
     args = parser.parse_args()
 
@@ -686,7 +1120,12 @@ if __name__ == "__main__":
     if tick_interval_seconds is None:
         tick_interval_seconds = 1.0 if args.fast_forward else 60.0
 
-    service = _make_llm_service(args)
+    config_registry = load_config(config_path=args.config)
+    if args.disable_webui:
+        config_registry.config.webui.enabled = False
+    if args.webui_port is not None:
+        config_registry.config.webui.port = args.webui_port
+    service = _make_llm_service(args, config_registry=config_registry)
     run_agent(
         load_path=args.load_path,
         save_path=args.save_path,
@@ -694,4 +1133,5 @@ if __name__ == "__main__":
         days=args.days,
         fast_forward=args.fast_forward,
         llm_service=service,
+        config_registry=config_registry,
     )
