@@ -31,7 +31,7 @@ import os
 import types
 import uuid
 from dataclasses import asdict, fields, is_dataclass
-from typing import Any, TypeVar, Union, get_args, get_origin, get_type_hints
+from typing import Any, Literal, TypeVar, Union, get_args, get_origin, get_type_hints
 
 T = TypeVar("T")
 
@@ -88,8 +88,19 @@ def _reconstruct_value(ftype: Any, value: Any) -> Any:
     if origin is Union or origin is types.UnionType:
         return _reconstruct_union(args, value)
 
-    if origin is not None and str(origin).startswith("typing.Literal"):
-        return value
+    # ``Literal[...]`` types: validate against the allowed literal values when
+    # possible, otherwise accept the value as-is. Using ``origin is Literal``
+    # avoids relying on CPython-specific ``str(origin)`` representations that
+    # may change across Python versions (the previous ``str(origin).startswith``
+    # check was fragile on 3.12+).
+    if origin is Literal:
+        allowed = {a for a in args if not isinstance(a, type)}
+        if not allowed or value in allowed:
+            return value
+        # Unknown literal value: fall back to the first allowed value to keep
+        # the dataclass constructor happy rather than raising.
+        first = next(iter(allowed), value)
+        return first
 
     return value
 
@@ -127,6 +138,43 @@ class AgentStateEncoder(json.JSONEncoder):
 
 class PersistenceManager:
     """Save and load agent state using snapshots and an incremental delta log."""
+
+    # In-memory cache of the last state written via ``save_incremental`` (or
+    # primed by ``rotate``), keyed by save path. Each entry stores the
+    # canonical JSON-serialized form of the per-module state and the clock so
+    # that subsequent incremental saves can compute a real diff without having
+    # to re-read the delta log from disk. The cache is best-effort: if it is
+    # missing (e.g. right after a process restart), the next ``save_incremental``
+    # falls back to writing a full baseline delta, which is still correct.
+    _baseline_cache: dict[str, dict[str, Any]] = {}
+
+    @classmethod
+    def _serialize_state(cls, state: Any) -> str:
+        """Canonical JSON form used for diffing nested state structures.
+
+        ``sort_keys=True`` ensures dict-key ordering does not cause spurious
+        diffs. ``AgentStateEncoder`` normalizes dataclasses, datetimes, sets,
+        tuples and UUIDs so comparisons are semantically meaningful.
+        """
+        return json.dumps(
+            state,
+            ensure_ascii=False,
+            cls=AgentStateEncoder,
+            sort_keys=True,
+        )
+
+    @classmethod
+    def _update_baseline_cache(cls, path: str, agent_state: dict[str, Any]) -> None:
+        """Refresh the in-memory baseline used to compute incremental deltas."""
+        current_modules = agent_state.get("modules", {})
+        current_clock = agent_state.get("clock", {})
+        cls._baseline_cache[path] = {
+            "modules": {
+                name: cls._serialize_state(state)
+                for name, state in current_modules.items()
+            },
+            "clock": cls._serialize_state(current_clock),
+        }
 
     @staticmethod
     def save(agent_state: dict[str, Any], path: str) -> None:
@@ -181,23 +229,58 @@ class PersistenceManager:
     def save_incremental(
         agent_state: dict[str, Any], path: str, event_type: str = "phase_boundary"
     ) -> None:
-        """Append a delta record to the incremental log.
+        """Append a true delta record to the incremental log.
 
-        The delta stores the full module state plus metadata.  This is slightly
-        larger than a minimal diff but keeps recovery simple and robust.
+        Only modules whose serialized form differs from the previously saved
+        baseline are written; ``clock`` is included only when it has changed.
+        When no baseline is available (first save after startup, or right
+        after ``rotate`` clears the log) the full state is written as the
+        baseline delta so subsequent loads can reconstruct the agent.
+
+        ``load`` already supports partial deltas via ``_apply_delta``, which
+        overlays only the modules present in each record and leaves the rest
+        of the snapshot untouched.
         """
         delta_log = PersistenceManager._delta_log(path)
         directory = os.path.dirname(delta_log)
         if directory:
             os.makedirs(directory, exist_ok=True)
 
-        delta_record = {
+        current_modules = agent_state.get("modules", {})
+        current_clock = agent_state.get("clock", {})
+        baseline = PersistenceManager._baseline_cache.get(path)
+
+        if baseline is None:
+            # No baseline yet: emit the full state as the baseline delta.
+            delta_modules = dict(current_modules)
+            delta_clock = current_clock
+        else:
+            baseline_modules = baseline.get("modules", {})
+            delta_modules = {
+                name: state
+                for name, state in current_modules.items()
+                if baseline_modules.get(name)
+                != PersistenceManager._serialize_state(state)
+            }
+            baseline_clock = baseline.get("clock")
+            current_clock_serialized = PersistenceManager._serialize_state(
+                current_clock
+            )
+            delta_clock = (
+                current_clock if baseline_clock != current_clock_serialized else None
+            )
+
+        delta_record: dict[str, Any] = {
             "version": agent_state.get("version", 1),
             "saved_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "event_type": event_type,
-            "clock": agent_state.get("clock", {}),
-            "modules": agent_state.get("modules", {}),
         }
+        if delta_clock is not None:
+            delta_record["clock"] = delta_clock
+        delta_record["modules"] = delta_modules
+
+        # Refresh the baseline so the next call can diff against this one.
+        PersistenceManager._update_baseline_cache(path, agent_state)
 
         with open(delta_log, "a", encoding="utf-8") as f:
             f.write(
@@ -230,6 +313,12 @@ class PersistenceManager:
         if os.path.exists(delta_log):
             os.remove(delta_log)
 
+        # Prime the baseline cache from the rotated state so the next
+        # ``save_incremental`` writes only true deltas instead of re-emitting
+        # the full state as a new baseline.
+        if isinstance(agent_state, dict):
+            PersistenceManager._update_baseline_cache(path, agent_state)
+
         return snapshot_path
 
     @staticmethod
@@ -261,11 +350,19 @@ class PersistenceManager:
             deltas = PersistenceManager._read_delta_log(delta_log)
             if deltas:
                 if state is None:
-                    # No snapshot yet but deltas exist; start from the first
-                    # delta as a best-effort recovery.
+                    # No snapshot yet but deltas exist: treat the first delta
+                    # as the baseline (it must be a full-state baseline delta
+                    # emitted by ``save_incremental`` when no prior baseline
+                    # was cached) and apply the rest on top.
                     state = deltas[0]
-                # Apply later deltas on top.
-                for delta in deltas[1:]:
+                    deltas_to_apply = deltas[1:]
+                else:
+                    # Snapshot exists: every delta in the log is an
+                    # incremental record that must be replayed on top of the
+                    # snapshot. Skipping ``deltas[0]`` here would silently
+                    # drop the first incremental save after the snapshot.
+                    deltas_to_apply = deltas
+                for delta in deltas_to_apply:
                     state = PersistenceManager._apply_delta(state, delta)
 
         if state is None:
@@ -425,7 +522,8 @@ class PersistenceManager:
         """Merge ``delta`` into ``state``.
 
         The delta overwrites top-level clock/module data while preserving any
-        fields present in ``state`` but absent from ``delta``.
+        fields present in ``state`` but absent from ``delta``. ``modules`` is
+        shallow-copied so the caller's ``state`` dict is not mutated.
         """
         merged: dict[str, Any] = dict(state)
         delta_clock = delta.get("clock")
@@ -433,9 +531,12 @@ class PersistenceManager:
             merged["clock"] = delta_clock
         delta_modules = delta.get("modules")
         if isinstance(delta_modules, dict):
-            merged.setdefault("modules", {})
+            # Copy the existing modules dict so we don't mutate the snapshot
+            # the caller passed in.
+            merged_modules = dict(merged.get("modules") or {})
             for module_name, module_state in delta_modules.items():
-                merged["modules"][module_name] = module_state
+                merged_modules[module_name] = module_state
+            merged["modules"] = merged_modules
         merged["saved_at"] = delta.get("saved_at", merged.get("saved_at"))
         return merged
 
