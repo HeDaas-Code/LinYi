@@ -22,3 +22,9 @@ API.info
 novelist.config.json
 novelist.config.yaml
 novelist.config.yml
+
+# Python virtual environment
+.venv/
+
+# code-review-graph generated artifacts
+.code-review-graph/

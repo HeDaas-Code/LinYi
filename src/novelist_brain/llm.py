@@ -523,38 +523,58 @@ class OpenAILLMService(LLMService):
           / "Wait, let me reconsider..."
         - Embedded counting: "(57) text (20) text"
 
-        Strategy:
-        1. Find the FIRST contiguous prose block (Chinese-heavy, no
-           English reasoning markers) of length >= 30.
+        Strategy
+        --------
+        1. Find the FIRST contiguous prose block — defined as a run of
+           **at least 20 Chinese characters** (no longer matching pure
+           whitespace, which was the previous bug) optionally interleaved
+           with Chinese punctuation.
         2. Cut it off at the first reasoning marker that appears AFTER
-           the start of the prose block.
+           the start of the prose block. Markers are matched on a word
+           boundary so common prose words like ``good`` or ``actually``
+           inside a Chinese sentence are not flagged.
         3. If the prose block ends with an incomplete sentence (no
-           Chinese sentence-ending punctuation), look ahead for the
-           next sentence ending.
+           Chinese sentence-ending punctuation), look ahead for the next
+           sentence ending.
+
+        Limitations
+        -----------
+        The long-term fix is to use structured outputs / tool calling so
+        reasoning models return clean prose directly. This regex-based
+        stripper is a best-effort patch and may still misfire on edge
+        cases; it errs on the side of preserving text rather than
+        discarding legitimate prose.
         """
         if not text:
             return text
         import re as _re
 
-        # Reasoning markers (case-insensitive English).
+        # Reasoning markers (case-insensitive English). Each alternative is
+        # anchored at a word boundary on both sides so that common prose
+        # substrings (e.g. "good" inside "goodbye", "actually" inside a
+        # quoted English snippet) are not false positives. The previous
+        # version matched bare substrings and swallowed legitimate prose.
         reasoning_markers_en = _re.compile(
-            r"(let me|i need|i should|i think|i want|the user|user wants|"
-            r"count:|let me count|let me think|let me draft|let me revise|"
-            r"wait,|actually,?|however,? i|now let me|i'll|i will|i should write|"
+            r"\b(?:"
+            r"let me|i need to|i should|i think|i want to|the user|user wants|"
+            r"let me count|let me think|let me draft|let me revise|"
+            r"wait|however,? i|now let me|i'll|i will|i should write|"
             r"let me reconsider|let me refine|let me check|i should make|"
-            r"good,?|i can|so the|i think the|let me write|total:|"
-            r"approximately|that fits|let me count more|good, within|"
-            r"draft \d|draft:|i should be|i want to|i need to|i'll write|"
+            r"i can|so the|i think the|let me write|"
+            r"approximately|that fits|let me count more|"
+            r"draft \d|draft:|i should be|i'll write|"
             r"let me polish|i want to make|previous text|"
-            r"i should avoid|i should not|i'll use|hmm,|"
+            r"i should avoid|i should not|i'll use|"
             r"check for|forbidden|reuse|refine|"
             r"character count|count: roughly|count: approximately|"
             r"let me read|let me consider|i interpret|"
             r"the instruction|instructions say|context mentions|"
-            r"so i should|i also|within range|on ties)",
+            r"so i should|i also|within range|on ties"
+            r")\b",
             _re.IGNORECASE,
         )
-        # Chinese reasoning markers.
+        # Chinese reasoning markers. These are distinctive enough to be
+        # safe as plain substring matches.
         reasoning_markers_zh = _re.compile(
             r"(我需要|让我想|让我数|让我重新|让我考虑|我应该|我来写|"
             r"我重新|用户想要|让我修改|让我检查|让我再|我先|"
@@ -563,12 +583,26 @@ class OpenAILLMService(LLMService):
             r"接下来我来|让我先)"
         )
 
-        # Find the first substantial Chinese run (>= 20 Chinese chars).
+        # Find the first substantial Chinese run. The previous regex
+        # ``[\u4e00-\u9fff...]{20,}`` allowed a run of pure whitespace
+        # (because ``\s`` was included) to satisfy the length requirement,
+        # which meant a 20-space indent could be mis-detected as prose.
+        # The new pattern requires at least 20 ACTUAL Chinese characters,
+        # optionally interleaved with Chinese punctuation or whitespace.
+        chinese_char_re = _re.compile(r"[\u4e00-\u9fff]")
         chinese_run_re = _re.compile(
-            r"[\u4e00-\u9fff，。、；：！？\u201c\u201d\u2018\u2019（）…—\s]{20,}"
+            r"[\u4e00-\u9fff，。、；：！？\u201c\u201d\u2018\u2019（）…—\s]+"
         )
-        match = chinese_run_re.search(text)
-        if not match:
+        # Scan candidate runs and accept the first one that has >= 20
+        # Chinese characters (counted explicitly, ignoring whitespace).
+        match = None
+        for candidate in chinese_run_re.finditer(text):
+            segment = candidate.group(0)
+            chinese_count = len(chinese_char_re.findall(segment))
+            if chinese_count >= 20:
+                match = candidate
+                break
+        if match is None:
             # No Chinese prose found — fall back to original.
             return text
 

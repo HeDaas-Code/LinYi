@@ -24,14 +24,24 @@ class AgentStateProvider:
         self._modules: dict[str, Any] = {}
         self._context: dict[str, Any] = {}
         self._started_at: float | None = None
+        # Live runtime objects that are NOT serializable as context but are
+        # useful for WebUI endpoints (e.g. clock, scheduler). Stored
+        # separately so they don't leak into the JSON snapshot.
+        self._runtime: dict[str, Any] = {}
 
     def register(
         self,
         router: BusRouter | None = None,
         modules: dict[str, Any] | None = None,
         context: dict[str, Any] | None = None,
+        runtime: dict[str, Any] | None = None,
     ) -> None:
-        """Register live references; safe to call multiple times."""
+        """Register live references; safe to call multiple times.
+
+        ``runtime`` holds non-serializable live objects (clock, scheduler,
+        etc.) that WebUI endpoints may need to inspect but which must NOT
+        appear in the JSON snapshot pushed to clients.
+        """
         with self._lock:
             if router is not None:
                 self._router = router
@@ -39,6 +49,8 @@ class AgentStateProvider:
                 self._modules.update(modules)
             if context is not None:
                 self._context.update(context)
+            if runtime is not None:
+                self._runtime.update(runtime)
             if self._started_at is None:
                 import time
 
@@ -72,11 +84,20 @@ class AgentStateProvider:
 
     def context_value(self, key: str, default: Any = None) -> Any:
         with self._lock:
-            return self._context.get(key, default)
+            # Fall back to runtime so callers can ask for "clock" / "scheduler"
+            # transparently regardless of where they live.
+            if key in self._context:
+                return self._context[key]
+            return self._runtime.get(key, default)
 
     def full_context(self) -> dict[str, Any]:
         with self._lock:
             return dict(self._context)
+
+    def runtime_value(self, key: str, default: Any = None) -> Any:
+        """Return a non-serializable runtime object (clock, scheduler, ...)."""
+        with self._lock:
+            return self._runtime.get(key, default)
 
     def snapshot(self) -> dict[str, Any]:
         """Return a complete dashboard snapshot."""

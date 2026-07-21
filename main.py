@@ -246,28 +246,61 @@ def build_context(
     return context
 
 
+def _coerce_module_dict(value: Any) -> dict[str, Any]:
+    """Coerce a loaded module state to a plain dict.
+
+    Handles both dict (the normal JSON-loaded case) and dataclass instances,
+    which may appear when state is reconstructed via ``reconstruct_dataclass``
+    upstream or passed in by tests. Centralizing the dict/dataclass handling
+    here means the rest of ``_apply_loaded_context`` can use ``.get()``
+    uniformly without per-field ``isinstance`` checks (audit finding #10).
+    """
+    if isinstance(value, dict):
+        return value
+    coerced = dataclass_to_dict(value)
+    if isinstance(coerced, dict):
+        return coerced
+    return {}
+
+
 def _apply_loaded_context(
     context: dict[str, Any], state: dict[str, Any]
 ) -> dict[str, Any]:
-    """Overlay default agent context with values recovered from a saved state."""
+    """Overlay default agent context with values recovered from a saved state.
+
+    Each module's saved state is normalized to a dict via
+    ``_coerce_module_dict`` so the function works whether the caller passed in
+    raw JSON-loaded dicts or reconstructed dataclass instances.
+    """
     modules = state.get("modules", {})
 
-    identity_data = modules.get("identity_core", {})
+    # Normalize all module states up-front so the field accesses below can
+    # assume plain dicts.
+    identity_data = _coerce_module_dict(modules.get("identity_core", {}))
+    metabolism_data = _coerce_module_dict(modules.get("metabolism", {}))
+    memory_data = _coerce_module_dict(modules.get("memory_system", {}))
+    sn_data = _coerce_module_dict(modules.get("salience_network", {}))
+    sandbox_data = _coerce_module_dict(modules.get("mental_sandbox", {}))
+    creation_data = _coerce_module_dict(modules.get("creation_executive", {}))
+    novel_data = _coerce_module_dict(modules.get("novel_output", {}))
+    dynamics_data = _coerce_module_dict(modules.get("dynamics", {}))
+    cen_data = _coerce_module_dict(modules.get("central_executive_network", {}))
+
     if identity_data:
-        loaded_profile = identity_data.get("profile", {})
+        loaded_profile = _coerce_module_dict(identity_data.get("profile", {}))
         # Only keep the saved identity if it is the canonical LinYi profile;
         # otherwise fall back to the freshly built default so old states are
         # migrated automatically.
-        if isinstance(loaded_profile, dict) and loaded_profile.get("name") == "林逸":
+        if loaded_profile.get("name") == "林逸":
             context["identity"] = loaded_profile
-        elif isinstance(loaded_profile, LinYiProfile) and loaded_profile.name == "林逸":
-            context["identity"] = dataclass_to_dict(loaded_profile)
 
-    metabolism_data = modules.get("metabolism", {})
     if metabolism_data:
-        context["metabolism"] = metabolism_data.get("resources", context["metabolism"])
+        resources = _coerce_module_dict(
+            metabolism_data.get("resources", context["metabolism"])
+        )
+        if resources:
+            context["metabolism"] = resources
 
-    memory_data = modules.get("memory_system", {})
     if memory_data:
         context["memory"].update(
             {
@@ -288,14 +321,12 @@ def _apply_loaded_context(
             }
         )
 
-    sn_data = modules.get("salience_network", {})
     if sn_data:
         context["salience_network"] = {
             "energy": sn_data.get("energy", 80.0),
             "last_network": sn_data.get("last_network", "dmn"),
         }
 
-    sandbox_data = modules.get("mental_sandbox", {})
     if sandbox_data:
         context["sandbox"].update(
             {
@@ -307,7 +338,6 @@ def _apply_loaded_context(
             }
         )
 
-    creation_data = modules.get("creation_executive", {})
     if creation_data:
         context["creation"].update(
             {
@@ -317,7 +347,6 @@ def _apply_loaded_context(
             }
         )
 
-    novel_data = modules.get("novel_output", {})
     if novel_data:
         context["novel"].update(
             {
@@ -326,11 +355,13 @@ def _apply_loaded_context(
             }
         )
 
-    dynamics_data = modules.get("dynamics", {})
     if dynamics_data:
-        context["dynamics"] = dynamics_data.get("dynamics", context["dynamics"])
+        dynamics_value = _coerce_module_dict(
+            dynamics_data.get("dynamics", context["dynamics"])
+        )
+        if dynamics_value:
+            context["dynamics"] = dynamics_value
 
-    cen_data = modules.get("central_executive_network", {})
     if cen_data:
         context["goals"] = cen_data.get("goal_stack", [])
 
@@ -405,6 +436,8 @@ def _start_webui(
     modules: list[Any],
     context: dict[str, Any],
     cfg: NovelistConfig,
+    clock: Any,
+    scheduler: Any,
 ) -> Any | None:
     """Start the FastAPI dashboard in a background thread when enabled."""
     if not cfg.webui.enabled:
@@ -423,6 +456,7 @@ def _start_webui(
         router=router,
         modules={module.name: module for module in modules},
         context=context,
+        runtime={"clock": clock, "scheduler": scheduler},
     )
 
     spy = BusSpy(capacity=200)
@@ -680,7 +714,7 @@ def run_agent(
     router.flush()
 
     # Start the optional web dashboard in a background thread.
-    _start_webui(router, modules, context, cfg)
+    _start_webui(router, modules, context, cfg, clock, scheduler)
 
     # Start the day in DMN so dreaming/incubation can happen.
     router.publish(
@@ -888,9 +922,6 @@ def run_agent(
                     )
                     if snapshot_path:
                         print(f"  新的一天，已创建快照: {snapshot_path}")
-                    PersistenceManager.apply_retention(
-                        save_path, cfg.persistence.retention
-                    )
                 except Exception as exc:
                     emergency_path = PersistenceManager.emergency_snapshot(
                         _build_agent_state(clock, modules),
@@ -913,6 +944,38 @@ def run_agent(
                         },
                         priority=10,
                         ttl=10,
+                    )
+                    router.flush()
+
+                # Retention pruning runs in its own try/except so it still
+                # executes when rotate() failed — otherwise old snapshots and
+                # emergency dumps would accumulate without bound during a
+                # long-running agent (audit finding #9).
+                try:
+                    removed = PersistenceManager.apply_retention(
+                        save_path, cfg.persistence.retention
+                    )
+                    if removed:
+                        print(
+                            f"  retention: 已清理 {len(removed)} 个旧快照/急诊文件"
+                        )
+                except Exception as exc:
+                    router.publish(
+                        source="persistence",
+                        topic="control.fault.error",
+                        channel="control",
+                        payload={
+                            "error": AgentError(
+                                source="persistence",
+                                topic="control.fault.error",
+                                type=ErrorType.PERSISTENCE_FAILURE,
+                                severity=Severity.LOW,
+                                message=f"Retention pruning failed: {exc}",
+                                payload={},
+                            ).to_dict()
+                        },
+                        priority=4,
+                        ttl=3,
                     )
                     router.flush()
 

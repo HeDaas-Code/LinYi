@@ -759,11 +759,13 @@ class MentalSandbox(Module):
         # Combat: high conflict or explicit combat action.
         if is_combat or (conflict_level >= 0.8 and other_characters):
             attackers = [sheet]
-            defender_sheets = [
-                self._character_sheets[c.id]
-                for c in other_characters[:1]
-                if c.id in self._character_sheets
-            ] or [build_character_sheet(other_characters[0], rng=self._rng)] if other_characters else []
+            # Pick a defender by scanning every other character rather than
+            # blindly grabbing ``other_characters[0]``. We prefer characters
+            # that already have a sheet, then fall back to building one on
+            # the fly. If multiple candidates exist we pick the one whose
+            # actor state has the most remaining HP, which keeps combat
+            # meaningful when many characters are present.
+            defender_sheets = self._select_defenders(other_characters)
             if defender_sheets:
                 combat_round = self._gm.resolve_combat_round(attackers, defender_sheets)
                 self._current_combat = combat_round
@@ -805,9 +807,10 @@ class MentalSandbox(Module):
         # Chase: movement or pursuit keywords.
         if is_chase and other_characters:
             quarry = sheet
+            opponent = self._select_opponent(other_characters, prefer="fastest")
             hunter = self._character_sheets.get(
-                other_characters[0].id,
-                build_character_sheet(other_characters[0], rng=self._rng),
+                opponent.id,
+                build_character_sheet(opponent, rng=self._rng),
             )
             chase = self._gm.resolve_chase(
                 quarry=quarry,
@@ -841,9 +844,10 @@ class MentalSandbox(Module):
 
         # Opposed check: social/physical confrontation.
         if is_opposed or (conflict_level >= 0.6 and other_characters):
+            opponent = self._select_opponent(other_characters, prefer="strongest")
             responder = self._character_sheets.get(
-                other_characters[0].id,
-                build_character_sheet(other_characters[0], rng=self._rng),
+                opponent.id,
+                build_character_sheet(opponent, rng=self._rng),
             )
             opposed = self._gm.resolve_opposed(action, sheet, responder)
             winner_id = opposed.winner_id
@@ -1466,6 +1470,72 @@ class MentalSandbox(Module):
             if character.id == character_id:
                 return character
         return self._characters[0] if self._characters else None
+
+    def _select_opponent(
+        self,
+        candidates: list[CharacterProjection],
+        prefer: str = "strongest",
+    ) -> CharacterProjection:
+        """Pick a single opponent from ``candidates``.
+
+        Previously this method always returned ``candidates[0]``, which meant
+        that combat/chase/opposed checks always targeted the first non-actor
+        character regardless of context. We now rank candidates so the choice
+        is meaningful:
+
+        * ``strongest`` — prefer the highest remaining HP (for combat/opposed)
+        * ``fastest`` — prefer the highest DEX (for chase)
+        * ``first`` — backwards-compatible fall-back (returns ``candidates[0]``)
+
+        ``prefer`` is a hint: if a candidate has no sheet/actor state we still
+        consider it (building a sheet on demand is the caller's job). When all
+        candidates are equally unknown we return the first one to preserve
+        deterministic behaviour.
+        """
+        if not candidates:
+            raise ValueError("cannot select an opponent from an empty list")
+        if len(candidates) == 1 or prefer == "first":
+            return candidates[0]
+
+        def _score(character: CharacterProjection) -> float:
+            sheet = self._character_sheets.get(character.id)
+            actor = self._actor_states.get(character.id)
+            if sheet is None and actor is None:
+                return 0.0
+            if prefer == "fastest":
+                dex = (
+                    sheet.skills.get("dex", sheet.skills.get("敏捷", 0.0))
+                    if sheet is not None
+                    else 0.0
+                )
+                return float(dex)
+            # Default: prefer survivors with high HP.
+            hp = (
+                actor.hit_points
+                if actor is not None
+                else (sheet.hit_points if sheet is not None else 0.0)
+            )
+            return float(hp)
+
+        return max(candidates, key=_score)
+
+    def _select_defenders(
+        self, candidates: list[CharacterProjection]
+    ) -> list[TRPGCharacterSheet]:
+        """Build the defender roster for a combat round.
+
+        Mirrors ``_select_opponent`` semantics but returns a list of sheets
+        (the combat resolver expects a list). We currently pick the strongest
+        single defender so multi-character brawls do not slow the simulation
+        down — callers that want bigger rosters can extend this later.
+        """
+        if not candidates:
+            return []
+        opponent = self._select_opponent(candidates, prefer="strongest")
+        sheet = self._character_sheets.get(opponent.id)
+        if sheet is None:
+            sheet = build_character_sheet(opponent, rng=self._rng)
+        return [sheet]
 
     def _emit_world_updated(self, topic: str) -> None:
         if self._world_model is None:
