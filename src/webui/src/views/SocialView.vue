@@ -3,22 +3,27 @@ import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
 import { useAgentStore } from '@/stores/agent'
 import type { SocialSpace, SocialNPC, SocialEncounter } from '@/types'
 import NpcDetails from '@/components/NpcDetails.vue'
+import SpaceSelector from '@/components/social/SpaceSelector.vue'
+import PixiCanvas from '@/components/social/PixiCanvas.vue'
+import GazeOverlay from '@/components/social/GazeOverlay.vue'
 
 // SocialView (社会空间) — Phase 3.
 //
-// Layout (SVG-based, PixiJS pixel-map migration deferred to a follow-up):
+// Layout (PixiJS pixel-map):
 //   - Top: current space + role + social energy bar + accumulated gaze load
-//   - Middle left: space grid (5 spaces) with current highlighted, showing
-//     gaze intensity as background color and encounter rate as size
-//   - Middle right: NPC list with archetype tag + relationship type
+//   - SpaceSelector (5 spaces) + PixiCanvas pixel-map with GazeOverlay
+//   - grid-2: NPC list (left) + gaze pressures (right)
 //   - Bottom: recent encounters timeline with valence marker + dialogue mode
 //   - Side drawer (Phase 3 #22): NpcDetails panel when an NPC is clicked
 //
 // Data source: /api/social/state → SocialInput.visualize_state()
+// Tilemap assets: /assets/tilemaps/{spaceId}/tilemap.json + tileset.png
 
 const store = useAgentStore()
 
 const selectedNpcId = ref<string | null>(null)
+const selectedSpaceId = ref<string>('')
+const pixiLoading = ref(false)
 
 const current = computed(() => store.socialState?.current ?? null)
 const spaces = computed<SocialSpace[]>(() => store.socialState?.spaces ?? [])
@@ -38,6 +43,22 @@ const energyTone = computed(() => {
   return 'high'
 })
 const gazePct = computed(() => `${(Math.max(0, Math.min(1, gazeLoad.value)) * 100).toFixed(0)}%`)
+
+// PixiCanvas integration:
+//   - selectedSpace: derived from selectedSpaceId (defaults to current space
+//     on mount); drives which tilemap is rendered.
+//   - npcsInSelectedSpace: NPCs that appear in the selected space — passed
+//     to PixiCanvas for sprite rendering.
+//   - linyiX/Y: pixel coords for 林逸's sprite on the tilemap. Centered for
+//     now; future work can read these from the agent state.
+const selectedSpace = computed<SocialSpace | null>(() =>
+  spaces.value.find((s) => s.id === selectedSpaceId.value) ?? null,
+)
+const npcsInSelectedSpace = computed<SocialNPC[]>(() =>
+  npcs.value.filter((n) => npcInSpace(n, selectedSpaceId.value)),
+)
+const linyiX = computed(() => 200)
+const linyiY = computed(() => 150)
 
 function spaceTone(t: string): string {
   switch (t) {
@@ -104,11 +125,33 @@ function closeNpcPanel() {
   selectedNpcId.value = null
 }
 
+function onSpaceChange(spaceId: string) {
+  selectedSpaceId.value = spaceId
+  // Pre-fetch the tilemap JSON into the store so the loading banner shows
+  // immediately; the PixiCanvas component will independently load the
+  // tileset.png + spritesheets in parallel.
+  pixiLoading.value = true
+  store.fetchSocialMap(spaceId).finally(() => {
+    pixiLoading.value = false
+  })
+}
+
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
 onMounted(() => {
   if (!store.socialState) {
-    store.fetchSocialState()
+    store.fetchSocialState().then(() => {
+      if (currentSpaceId.value) {
+        onSpaceChange(currentSpaceId.value)
+      } else if (spaces.value.length) {
+        // Fallback: pick the first space if no current space is reported.
+        onSpaceChange(spaces.value[0].id)
+      }
+    })
+  } else if (currentSpaceId.value) {
+    onSpaceChange(currentSpaceId.value)
+  } else if (spaces.value.length) {
+    onSpaceChange(spaces.value[0].id)
   }
   // Social encounters happen on phase changes (social phase 12:00-14:00);
   // 15s polling is plenty.
@@ -124,7 +167,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="social-view">
+  <div class="social-view" :class="`tone-${spaceTone(selectedSpace?.space_type ?? '')}`">
     <header class="view-header">
       <div>
         <h1 class="view-title">社会空间</h1>
@@ -160,33 +203,31 @@ onBeforeUnmount(() => {
 
     <div class="layout-with-panel" :class="{ 'panel-open': !!selectedNpcId }">
       <div class="main-col">
-        <div class="grid-2">
-          <!-- Spaces -->
-          <section class="card">
-            <h2 class="card-title">空间</h2>
-            <div class="space-grid">
-              <div
-                v-for="s in spaces"
-                :key="s.id"
-                class="space-card"
-                :class="[`tone-${spaceTone(s.space_type)}`, { active: currentSpaceId === s.id }]"
-              >
-                <div class="space-head">
-                  <span class="space-name">{{ s.name }}</span>
-                  <span class="tag" :class="`tone-${spaceTone(s.space_type)}`">{{ s.space_type }}</span>
-                </div>
-                <div class="space-stats">
-                  <span class="muted">gaze {{ (s.gaze_intensity ?? 0).toFixed(2) }}</span>
-                  <span class="muted">rate {{ (s.encounter_base_rate ?? 0).toFixed(2) }}</span>
-                  <span class="muted">{{ npcs.filter(n => npcInSpace(n, s.id)).length }} NPC</span>
-                </div>
-                <div class="space-norms" v-if="s.norms?.length">
-                  <span class="norm" v-for="n in s.norms.slice(0, 2)" :key="n.id">{{ n.description }}</span>
-                </div>
-              </div>
-            </div>
-          </section>
+        <!-- Space selector: 5 space tabs, drives PixiCanvas -->
+        <SpaceSelector
+          :spaces="spaces"
+          :current-space-id="selectedSpaceId"
+          @change="onSpaceChange"
+        />
 
+        <!-- PixiCanvas pixel-map with GazeOverlay + loading banner -->
+        <div class="pixi-wrapper">
+          <PixiCanvas
+            v-if="selectedSpace"
+            :space-id="selectedSpace.id"
+            :space="selectedSpace"
+            :npcs="npcsInSelectedSpace"
+            :current-npc-id="selectedNpcId"
+            :linyi-x="linyiX"
+            :linyi-y="linyiY"
+            @select-npc="selectNpc"
+          />
+          <GazeOverlay :gaze-intensity="selectedSpace?.gaze_intensity ?? 0" />
+          <div class="pixi-loading" v-if="pixiLoading">地图加载中…</div>
+          <div class="pixi-hint muted" v-if="!selectedSpace">请选择空间</div>
+        </div>
+
+        <div class="grid-2">
           <!-- NPCs + relationships -->
           <section class="card">
             <h2 class="card-title">NPC 与关系 <span class="hint muted">（点击查看详情）</span></h2>
@@ -217,24 +258,24 @@ onBeforeUnmount(() => {
             </ul>
             <div class="empty muted" v-else>暂无 NPC。</div>
           </section>
-        </div>
 
-        <!-- Gaze pressures -->
-        <section class="card" v-if="gazePressures.length">
-          <h2 class="card-title">凝视压力（最近 {{ gazePressures.length }} 条）</h2>
-          <ul class="gaze-list">
-            <li v-for="(g, i) in gazePressures.slice(0, 10)" :key="i" class="gaze-row">
-              <span class="gaze-src">{{ g.source }}</span>
-              <span class="muted">·</span>
-              <span class="gaze-norm">{{ g.norm }}</span>
-              <div class="gaze-bar">
-                <div class="gaze-fill" :style="{ width: `${Math.min(100, g.intensity * 100).toFixed(0)}%` }" />
-              </div>
-              <span class="mono">{{ g.intensity.toFixed(2) }}</span>
-              <span class="tag" v-if="g.internalized > 0.5">internalized</span>
-            </li>
-          </ul>
-        </section>
+          <!-- Gaze pressures -->
+          <section class="card" v-if="gazePressures.length">
+            <h2 class="card-title">凝视压力（最近 {{ gazePressures.length }} 条）</h2>
+            <ul class="gaze-list">
+              <li v-for="(g, i) in gazePressures.slice(0, 10)" :key="i" class="gaze-row">
+                <span class="gaze-src">{{ g.source }}</span>
+                <span class="muted">·</span>
+                <span class="gaze-norm">{{ g.norm }}</span>
+                <div class="gaze-bar">
+                  <div class="gaze-fill" :style="{ width: `${Math.min(100, g.intensity * 100).toFixed(0)}%` }" />
+                </div>
+                <span class="mono">{{ g.intensity.toFixed(2) }}</span>
+                <span class="tag" v-if="g.internalized > 0.5">internalized</span>
+              </li>
+            </ul>
+          </section>
+        </div>
 
         <!-- Encounter timeline -->
         <section class="card">
@@ -310,6 +351,32 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 16px;
   min-width: 0;
+}
+
+/* PixiCanvas pixel-map wrapper — sits between SpaceSelector and grid-2. */
+.pixi-wrapper {
+  position: relative;
+  background: var(--bg-1);
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  overflow: hidden;
+  height: 480px;
+  min-width: 0;
+}
+.pixi-loading,
+.pixi-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 13px;
+  color: var(--text-muted);
+  pointer-events: none;
+  background: rgba(10, 13, 20, 0.7);
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--border-soft);
+  z-index: 2;
 }
 
 .side-panel {

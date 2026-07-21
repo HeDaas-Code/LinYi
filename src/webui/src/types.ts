@@ -493,3 +493,83 @@ export interface BusEvent {
 export interface ConfigResponse {
   [section: string]: Record<string, unknown> | unknown
 }
+
+// ---------------------------------------------------------------------------
+// Phase 3 #21: PixiJS tilemap + spritesheet types
+// ---------------------------------------------------------------------------
+
+/** Tiled 1.9 兼容的 tilemap JSON 格式 */
+export interface TilemapTileset {
+  firstgid: number
+  source: string
+  tilewidth: number
+  tileheight: number
+  tilecount: number
+  columns: number
+}
+
+export interface TileLayer {
+  name: string
+  type: 'tilelayer'
+  width: number
+  height: number
+  data: number[]  // tile gid, 0=empty, row-major
+}
+
+export interface AnimatedSpriteObject {
+  name: string
+  type: string
+  x: number
+  y: number
+  width: number
+  height: number
+  properties: Array<{ name: string; type: string; value: string | number | boolean }>
+}
+
+export interface AnimatedSpriteLayer {
+  name: 'animatedSprites'
+  type: 'objectgroup'
+  objects: AnimatedSpriteObject[]
+}
+
+export type TilemapLayer = TileLayer | AnimatedSpriteLayer
+
+export interface TilemapData {
+  version: string
+  tiledversion: string
+  orientation: string
+  renderorder: string
+  width: number
+  height: number
+  tilewidth: number
+  tileheight: number
+  tilesets: TilemapTileset[]
+  layers: TilemapLayer[]
+}
+
+/** ai-town 兼容的 spritesheet JSON 格式 */
+export interface SpritesheetData {
+  frames: number
+  frameSize: { w: number; h: number }
+  animations: {
+    down: number[]
+    left: number[]
+    right: number[]
+    up: number[]
+  }
+  frameDuration: number
+}
+
+/** 角色精灵在地图上的运行时状态 */
+export interface CharacterSpriteState {
+  id: string          // character id (linyi / npc_xxx)
+  name: string
+  x: number           // pixel x
+  y: number           // pixel y
+  direction: 'down' | 'left' | 'right' | 'up'
+  isMoving: boolean
+  isViewer: boolean   // true for linyi
+  isThinking?: boolean
+  isSpeaking?: boolean
+  emoji?: string
+}

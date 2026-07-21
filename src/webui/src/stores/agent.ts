@@ -18,6 +18,7 @@ import type {
   SnapshotResponse,
   SocialEncounter,
   SocialStateResponse,
+  TilemapData,
 } from '@/types'
 
 // Central Pinia store for all WebUI data. Phase 1 uses simple REST fetches
@@ -65,6 +66,7 @@ interface AgentState {
   socialState: SocialStateResponse | null
   npcDetail: NpcDetailResponse | null
   npcHistory: NpcHistoryResponse | null
+  socialMap: TilemapData | null
   sandboxState: SandboxStateResponse | null
   novelManuscript: NovelManuscriptResponse | null
   busEvents: BusEvent[]
@@ -88,6 +90,7 @@ export const useAgentStore = defineStore('agent', {
     socialState: null,
     npcDetail: null,
     npcHistory: null,
+    socialMap: null,
     sandboxState: null,
     novelManuscript: null,
     busEvents: [],
@@ -270,6 +273,25 @@ export const useAgentStore = defineStore('agent', {
     clearNpcSelection() {
       this.npcDetail = null
       this.npcHistory = null
+    },
+    async fetchSocialMap(spaceId: string) {
+      this.setLoading('socialMap', true)
+      try {
+        // Static asset loaded from /public/assets/tilemaps/{spaceId}/tilemap.json
+        const response = await fetch(`/assets/tilemaps/${encodeURIComponent(spaceId)}/tilemap.json`, {
+          headers: { Accept: 'application/json' },
+        })
+        if (!response.ok) {
+          throw new Error(`Failed to load tilemap for ${spaceId}: ${response.status}`)
+        }
+        this.socialMap = (await response.json()) as TilemapData
+        this.lastError = null
+      } catch (e) {
+        this.lastError = (e as Error).message
+        this.socialMap = null
+      } finally {
+        this.setLoading('socialMap', false)
+      }
     },
     async fetchSandboxState() {
       this.setLoading('sandboxState', true)
