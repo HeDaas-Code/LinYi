@@ -14,11 +14,14 @@ from src.novelist_brain.models import (
     Fear,
     ModuleState,
     NarrativeLine,
+    OCCharacterSheet,
     Scene,
+    StoryBible,
     TickDelta,
     Trace,
     TraitVector,
     WorldModel,
+    WorldStateContract,
 )
 from src.novelist_brain.module import Module
 from src.novelist_brain.persistence import dataclass_to_dict, reconstruct_dataclass
@@ -32,20 +35,16 @@ from src.novelist_brain.trpg import (
     projection_ratio_for_archetype,
     resolve_skill_check,
 )
+from src.novelist_brain.trpg import (
+    _DEFAULT_MAX_ROUNDS,
+    _DEFAULT_MIN_ROUNDS,
+    _DEPTH_THRESHOLDS,
+    _compute_extended_metrics,
+)
 from src.novelist_brain.trpg_rulebook import Rulebook
-from src.novelist_brain.trpg_state import ActorState
+from src.novelist_brain.trpg_state import ActorState, LuckPool as TRPGLuckPool
 from src.novelist_brain import trpg_extended
 from src.novelist_brain.sandbox_versioning import SandboxVersionManager
-
-
-_DEFAULT_MIN_ROUNDS = 3
-_DEFAULT_MAX_ROUNDS = 7
-_DEPTH_THRESHOLDS = {
-    "conflict_depth": 0.6,
-    "character_development": 0.5,
-    "emotional_shift": 0.5,
-    "coherence_score": 0.6,
-}
 
 
 class MentalSandbox(Module):
@@ -77,6 +76,8 @@ class MentalSandbox(Module):
             self._depth_thresholds.update(depth_thresholds)
 
         self._world_model: WorldModel | None = None
+        self._world_contract: WorldStateContract | None = None
+        self._story_bible: StoryBible | None = None
         self._characters: list[CharacterProjection] = []
         self._current_scene: Scene | None = None
         self._narrative_lines: list[NarrativeLine] = []
@@ -92,6 +93,11 @@ class MentalSandbox(Module):
         self._current_chase: trpg_extended.Chase | None = None
         self._current_combat: trpg_extended.CombatRound | None = None
         self._version_manager: SandboxVersionManager | None = None
+        # Idempotency keys seen in the current tick (§3.2.1). Cleared on
+        # each ``tick()`` advance so a duplicate ``control.sandbox.simulate``
+        # within the same tick is a no-op, but the next tick may resend the
+        # same key.
+        self._simulate_idempotency_keys: set[str] = set()
 
         self.subscribe(
             "control.sandbox.build",
@@ -123,7 +129,25 @@ class MentalSandbox(Module):
         )
 
     def init(self, context: dict[str, Any]) -> None:
-        """Initialize sandbox from agent context."""
+        """Initialize sandbox from agent context.
+
+        New v2 context keys (preferred):
+        - 'story_bible': StoryBible instance (provides character_registry,
+          plot_compass, foreshadowing_ledger)
+        - 'world_contract': WorldStateContract instance (provides geography,
+          factions, rules, mysteries)
+
+        Legacy v1 context keys (still supported for backward compatibility):
+        - 'sandbox': {'world': dict, 'min_rounds': int, 'max_rounds': int,
+          'seed': int, 'rulebook': Rulebook, ...}
+
+        When v2 keys are present, the sandbox builds its world model from
+        ``WorldStateContract`` (via ``to_ontology()``) and its character
+        sheets from ``StoryBible.character_registry``. When only v1 keys are
+        present, the sandbox falls back to the legacy behavior (including
+        creating a default ``WorldModel`` if no world is provided) and emits
+        a deprecation warning.
+        """
         sandbox_context = context.get("sandbox", {})
         self._min_rounds = sandbox_context.get("min_rounds", self._min_rounds)
         self._max_rounds = sandbox_context.get("max_rounds", self._max_rounds)
@@ -137,23 +161,64 @@ class MentalSandbox(Module):
             if self._llm.is_mock:
                 self._llm = MockLLMService(seed=seed)
 
-        world_data = sandbox_context.get("world")
-        if world_data:
-            self._world_model = WorldModel(**world_data)
-        if self._world_model is None:
-            self._world_model = WorldModel(
-                name="default",
-                ontology={"genre": "literary fiction", "tone": "melancholic"},
-                rules=[
-                    "actions have emotional consequences",
-                    "randomness shapes fate",
-                ],
-                current_state={"time": "morning", "mood": "quiet"},
-            )
+        # === SubTask 1.4.1 + 1.4.2 ===
+        # Prefer v2 WorldStateContract / StoryBible; fall back to legacy
+        # WorldModel construction for backward compatibility.
+        world_contract = context.get("world_contract")
+        story_bible = context.get("story_bible")
 
+        if world_contract is not None:
+            # v2 path: build WorldModel from the contract's ontology
+            # projection so the rest of the sandbox (which still reads
+            # self._world_model) keeps working unchanged.
+            self._world_model = WorldModel(
+                name=getattr(world_contract, "novel_id", "v2_world"),
+                ontology=world_contract.to_ontology(),
+                rules=[
+                    r.statement if hasattr(r, "statement") else str(r)
+                    for r in (world_contract.rules or [])
+                ],
+                current_state=dict(world_contract.current_state or {}),
+            )
+            self._world_contract = world_contract
+        else:
+            # v1 legacy path
+            world_data = sandbox_context.get("world")
+            if world_data:
+                self._world_model = WorldModel(**world_data)
+            if self._world_model is None:
+                # Legacy fallback: create the hardcoded default world. Only
+                # reached when neither v2 contract nor v1 world data is
+                # supplied; emits a DeprecationWarning so callers know to
+                # migrate.
+                import warnings
+
+                warnings.warn(
+                    "MentalSandbox: no world_contract or world provided; "
+                    "falling back to hardcoded default WorldModel. "
+                    "This is deprecated; pass "
+                    "world_contract=WorldStateContract(...) instead.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+                self._world_model = WorldModel(
+                    name="default",
+                    ontology={"genre": "literary fiction", "tone": "melancholic"},
+                    rules=[
+                        "actions have emotional consequences",
+                        "randomness shapes fate",
+                    ],
+                    current_state={"time": "morning", "mood": "quiet"},
+                )
+            self._world_contract = None
+
+        # Store story_bible for character sheet rebuild (SubTask 1.4.4)
+        self._story_bible = story_bible
+
+        # === Continue with existing init logic ===
         self._identity_constraints = context.get("identity", self._identity_constraints)
 
-        self._rulebook = context.get("sandbox", {}).get("rulebook")
+        self._rulebook = sandbox_context.get("rulebook")
         if self._rulebook is None:
             self._rulebook = Rulebook()
         if self._world_model is not None:
@@ -201,7 +266,19 @@ class MentalSandbox(Module):
 
     def tick(self, delta: TickDelta) -> None:
         """Advance sandbox bookkeeping by one tick."""
+        # A new tick invalidates per-tick idempotency keys: callers may now
+        # resend ``control.sandbox.simulate`` with the same key.
+        self._simulate_idempotency_keys.clear()
         self._state.last_tick = delta.absolute_time
+
+    def clear_idempotency_keys(self) -> None:
+        """Drop all ``control.sandbox.simulate`` idempotency keys seen so far.
+
+        Useful when the caller explicitly wants to reset deduplication
+        without advancing the clock (e.g. between test scenarios or after a
+        ``control.sandbox.build`` reset).
+        """
+        self._simulate_idempotency_keys.clear()
 
     def get_state(self) -> dict[str, Any]:
         """Return a serializable snapshot of sandbox state."""
@@ -227,6 +304,12 @@ class MentalSandbox(Module):
                 "depth_thresholds": self._depth_thresholds,
                 "world_model": dataclass_to_dict(self._world_model)
                 if self._world_model
+                else None,
+                "world_contract": self._world_contract.to_dict()
+                if self._world_contract is not None
+                else None,
+                "story_bible": self._story_bible.to_dict()
+                if self._story_bible is not None
                 else None,
                 "characters": [dataclass_to_dict(c) for c in self._characters],
                 "current_scene": dataclass_to_dict(self._current_scene)
@@ -288,6 +371,24 @@ class MentalSandbox(Module):
         self._world_model = (
             reconstruct_dataclass(WorldModel, world_data) if world_data else None
         )
+
+        # === SubTask 1.4.2 serialization ===
+        # Restore v2 world_contract / story_bible if present. Old state
+        # files without these keys fall back to None, preserving backward
+        # compatibility.
+        wc_data = data.get("world_contract")
+        self._world_contract = (
+            WorldStateContract.from_dict(wc_data)
+            if isinstance(wc_data, dict)
+            else wc_data
+        )
+        sb_data = data.get("story_bible")
+        self._story_bible = (
+            StoryBible.from_dict(sb_data)
+            if isinstance(sb_data, dict)
+            else sb_data
+        )
+
         self._characters = [
             reconstruct_dataclass(CharacterProjection, c)
             for c in data.get("characters", [])
@@ -517,7 +618,12 @@ class MentalSandbox(Module):
         return resolution
 
     def _handle_simulate(self, payload: Any) -> None:
-        """Run one COC-style simulation round (live mode with bus emits)."""
+        """Run one COC-style simulation round (live mode with bus emits).
+
+        Idempotency: if ``payload['idempotency_key']`` is provided and was
+        seen before within the current tick, this call is a no-op. Keys are
+        cleared by :meth:`tick` so the next tick may resend the same key.
+        """
         if self._world_model is None:
             return
         if self._current_scene is None:
@@ -526,6 +632,15 @@ class MentalSandbox(Module):
         payload = payload or {}
         if not isinstance(payload, dict):
             payload = {}
+
+        # Idempotency check (§3.2.1). Only string keys are deduplicated; a
+        # missing key preserves the legacy non-idempotent behavior.
+        idempotency_key = payload.get("idempotency_key")
+        if idempotency_key is not None:
+            key_str = str(idempotency_key)
+            if key_str in self._simulate_idempotency_keys:
+                return
+            self._simulate_idempotency_keys.add(key_str)
 
         self._simulate_round(
             action=payload.get("action"),
@@ -1211,12 +1326,18 @@ class MentalSandbox(Module):
             if line.climax is not None:
                 coherence_score = min(1.0, coherence_score + 0.15)
 
-        return {
+        metrics = {
             "conflict_depth": round(conflict_depth, 3),
             "character_development": round(character_development, 3),
             "emotional_shift": round(emotional_shift, 3),
             "coherence_score": round(coherence_score, 3),
         }
+        # Stage 3.4.1 — merge in the three extended metrics so the
+        # ``_any_depth_metric_passes`` check can use the new thresholds
+        # (``hook_strength`` / ``foreshadowing_progress`` / ``scene_variety``)
+        # alongside the legacy four. The helper tolerates a missing line.
+        metrics.update(_compute_extended_metrics(line))
+        return metrics
 
     # ------------------------------------------------------------------
     # Character projection
@@ -1404,7 +1525,22 @@ class MentalSandbox(Module):
         self._state.custom["narrative_line_count"] = 0
 
     def _rebuild_character_sheets(self) -> None:
-        """Build or refresh TRPG character sheets and actor states for all projections."""
+        """Build or refresh TRPG character sheets and actor states.
+
+        v2 behavior: When ``self._story_bible`` is set, build sheets from
+        ``StoryBible.character_registry`` (a dict of ``OCCharacterSheet``).
+        The OC sheet's ``coc_attributes`` / ``coc_skills`` / ``sanity`` /
+        ``luck`` / ``hit_points`` / ``magic_points`` are used directly to
+        construct the ``TRPGCharacterSheet``, with no re-rolling.
+
+        v1 fallback: When no ``story_bible`` is present, use the legacy path
+        of calling ``build_character_sheet(character_projection, rng)`` for
+        each ``CharacterProjection``.
+        """
+        if self._story_bible is not None:
+            self._rebuild_character_sheets_from_oc()
+            return
+        # Legacy path
         for character in self._characters:
             sheet = build_character_sheet(character, rng=self._rng)
             self._character_sheets[character.id] = sheet
@@ -1419,6 +1555,103 @@ class MentalSandbox(Module):
                     max_magic_points=sheet.magic_points,
                 )
 
+    def _rebuild_character_sheets_from_oc(self) -> None:
+        """Build ``TRPGCharacterSheet`` instances from ``StoryBible.character_registry``.
+
+        Each ``OCCharacterSheet`` provides COC-compatible
+        ``coc_attributes`` / ``coc_skills`` / ``sanity`` / ``luck`` / hp / mp
+        directly. We construct ``TRPGCharacterSheet`` instances that mirror
+        these values so the existing COC simulation machinery (which expects
+        ``TRPGCharacterSheet``) works unchanged.
+        """
+        registry = self._story_bible.character_registry or {}
+        for cid, oc_sheet in registry.items():
+            # ``models.LuckPool`` and ``trpg_state.LuckPool`` are different
+            # types: convert the OC's luck into the TRPG-side type so the
+            # simulation can call ``sheet.luck.spend(...)``.
+            oc_luck = getattr(oc_sheet, "luck", None)
+            trpg_luck = TRPGLuckPool(
+                current=float(getattr(oc_luck, "current", 50) or 0),
+                max=float(getattr(oc_luck, "max", 99) or 99),
+            )
+            trpg_sheet = TRPGCharacterSheet(
+                character_id=cid,
+                name=oc_sheet.name or cid,
+                archetype=oc_sheet.archetype or "",
+                projection_ratio=oc_sheet.projection_ratio,
+                attributes=dict(oc_sheet.coc_attributes or {}),
+                skills=dict(oc_sheet.coc_skills or {}),
+                sanity=oc_sheet.sanity,
+                desires=list(oc_sheet.desires or []),
+                fears=list(oc_sheet.fears or []),
+                relationships=list((oc_sheet.relationships or {}).values()),
+                luck=trpg_luck,
+                hit_points=float(oc_sheet.hit_points or 0),
+                magic_points=float(oc_sheet.magic_points or 0),
+                conditions=list(oc_sheet.conditions or []),
+            )
+            self._character_sheets[cid] = trpg_sheet
+            if cid not in self._actor_states:
+                self._actor_states[cid] = ActorState(
+                    hit_points=trpg_sheet.hit_points,
+                    max_hit_points=trpg_sheet.hit_points,
+                    magic_points=trpg_sheet.magic_points,
+                    max_magic_points=trpg_sheet.magic_points,
+                )
+            # Sync the OC identity back into the CharacterProjection list so
+            # legacy code paths that read self._characters by name / id still
+            # work, and so _resolve_actor can find a projection whose id
+            # matches the sheet key.
+            self._sync_oc_to_projection(oc_sheet, cid)
+
+    def _sync_oc_to_projection(
+        self, oc_sheet: OCCharacterSheet, cid: str
+    ) -> None:
+        """Ensure a ``CharacterProjection`` exists for the given OC sheet.
+
+        Legacy code reads ``self._characters`` (list of
+        ``CharacterProjection``). For each OC in the registry, ensure a
+        corresponding projection exists with matching name/archetype/id, so
+        legacy code paths (e.g. ``_resolve_actor``) still work. When an
+        existing projection shares the OC's name, it is updated in place and
+        its ``id`` is aligned to ``cid`` so ``_character_sheets[projection.id]``
+        resolves correctly.
+        """
+        existing = next(
+            (c for c in self._characters if c.name == oc_sheet.name),
+            None,
+        )
+        if existing is not None:
+            # Update in place. Align the id so _resolve_actor ->
+            # _character_sheets[id] lookups succeed under the v2 path.
+            existing.id = cid
+            existing.archetype = oc_sheet.archetype or existing.archetype
+            existing.source_trace_ids = list(
+                oc_sheet.source_traces or existing.source_trace_ids
+            )
+            existing.internal_conflict = (
+                oc_sheet.internal_conflict or existing.internal_conflict
+            )
+            existing.projection_ratio = oc_sheet.projection_ratio
+            existing.skills = dict(oc_sheet.coc_skills or existing.skills)
+            return
+
+        # Create a new CharacterProjection mirroring the OC.
+        new_proj = CharacterProjection(
+            name=oc_sheet.name or cid,
+            archetype=oc_sheet.archetype,
+            source_trace_ids=list(oc_sheet.source_traces or []),
+            traits=oc_sheet.traits,
+            sanity=oc_sheet.sanity,
+            desires=list(oc_sheet.desires or []),
+            fears=list(oc_sheet.fears or []),
+            relationships=list((oc_sheet.relationships or {}).values()),
+            internal_conflict=oc_sheet.internal_conflict,
+            projection_ratio=oc_sheet.projection_ratio,
+            id=cid,
+        )
+        self._characters.append(new_proj)
+
     def _ensure_narrative_line(self) -> None:
         if not self._narrative_lines:
             line = NarrativeLine()
@@ -1428,6 +1661,20 @@ class MentalSandbox(Module):
             self._state.custom["narrative_line_count"] = 1
 
     def _create_default_scene(self) -> Scene:
+        """Create a new scene.
+
+        v2 behavior: When ``self._world_contract`` is set, pick a location
+        from its ``geography`` dict (weighted by ``activation_level`` when
+        available) and inject time / weather / atmosphere / present
+        characters / unresolved foreshadowings / conflict tension via
+        :meth:`_create_scene_from_contract`.
+
+        v1 fallback: When no ``world_contract`` is set, use the legacy
+        behavior of reading ``ontology['setting']`` from ``WorldModel``.
+        """
+        if self._world_contract is not None:
+            return self._create_scene_from_contract()
+        # Legacy path
         setting = "黎明中无名的城市"
         if self._world_model and self._world_model.ontology:
             setting = self._world_model.ontology.get("setting", setting)
@@ -1442,6 +1689,112 @@ class MentalSandbox(Module):
             characters=[c.name for c in self._characters],
             setting=setting,
             conflict_level=0.1,
+            emotional_tone=0.0,
+        )
+
+    def _create_scene_from_contract(self) -> Scene:
+        """Create a scene from ``WorldStateContract.geography``.
+
+        Picks a location from the geography dict (keys are location names,
+        values are dicts with optional ``activation_level`` /
+        ``description`` / ``mood``), then injects time / weather /
+        atmosphere / present characters / unresolved foreshadowings /
+        conflict tension derived from the contract's ``current_state``,
+        ``history`` and the optional ``StoryBible.foreshadowing_ledger``.
+        """
+        contract = self._world_contract
+        geography = contract.geography or {}
+
+        # Pick a location, weighted by activation_level (default 0.5).
+        if geography:
+            locations = list(geography.keys())
+            weights: list[float] = []
+            for loc_name in locations:
+                loc_data = (
+                    geography[loc_name]
+                    if isinstance(geography[loc_name], dict)
+                    else {}
+                )
+                activation = float(loc_data.get("activation_level", 0.5))
+                weights.append(max(0.1, activation))
+            total = sum(weights) or 1.0
+            weights = [w / total for w in weights]
+            chosen_location = self._rng.choices(
+                locations, weights=weights, k=1
+            )[0]
+            loc_data = (
+                geography[chosen_location]
+                if isinstance(geography[chosen_location], dict)
+                else {}
+            )
+            setting = chosen_location
+            description = loc_data.get(
+                "description", f"{setting}的氛围在等待故事发生。"
+            )
+            mood = loc_data.get("mood", contract.tone or "未明")
+        else:
+            setting = "无名之地"
+            description = "一片尚未被定义的空间，等待故事的足迹。"
+            mood = contract.tone or "未明"
+
+        # Inject time / weather / atmosphere from current_state.
+        current_state = contract.current_state or {}
+        time_of_day = current_state.get("time", "morning")
+        weather = current_state.get("weather", "晴")
+
+        # Present characters (limit to 4 to avoid crowd).
+        present_chars = [c.name for c in self._characters[:4]]
+
+        # Unresolved foreshadowings from story_bible (if available).
+        foreshadowings: list[str] = []
+        if self._story_bible is not None:
+            for entry in self._story_bible.foreshadowing_ledger or []:
+                status = getattr(entry, "status", "introduced")
+                if status in ("introduced", "reinforced"):
+                    foreshadowings.append(
+                        getattr(entry, "description", str(entry))
+                    )
+
+        # Conflict tension from recent history.
+        conflict_level = 0.1
+        recent_history = (contract.history or [])[-3:]
+        for h in recent_history:
+            h_desc = getattr(h, "description", str(h)).lower()
+            for kw in [
+                "冲突", "对抗", "危险", "发现", "confront", "danger",
+            ]:
+                if kw in h_desc:
+                    conflict_level = min(1.0, conflict_level + 0.2)
+                    break
+
+        if self._llm.is_mock:
+            full_description = (
+                f"{description}（时间：{time_of_day}，天气：{weather}）"
+                + (f"在场：{'、'.join(present_chars)}。" if present_chars else "")
+                + (
+                    f"未解伏笔：{'；'.join(foreshadowings[:2])}。"
+                    if foreshadowings
+                    else ""
+                )
+            )
+        else:
+            prompt = (
+                f"请用中文描写一个发生在「{setting}」的场景。"
+                f"时间：{time_of_day}，天气：{weather}，氛围：{mood}。"
+                f"在场角色：{', '.join(present_chars) if present_chars else '无'}。"
+                + (
+                    f"未解伏笔：{'；'.join(foreshadowings[:2])}。"
+                    if foreshadowings
+                    else ""
+                )
+            )
+            full_description = self._llm.complete(prompt, max_tokens=128)
+
+        return Scene(
+            description=full_description,
+            characters=present_chars,
+            setting=setting,
+            conflict_level=conflict_level,
             emotional_tone=0.0,
         )
 

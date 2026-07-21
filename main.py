@@ -25,6 +25,7 @@ from dataclasses import asdict
 
 from src.novelist_brain.bus import BusRouter
 from src.novelist_brain.attachment import AttachmentModule
+from src.novelist_brain.chapter_manager import ChapterManager
 from src.novelist_brain.circuit_breaker import CircuitBreaker
 from src.novelist_brain.config import (
     ConfigRegistry,
@@ -33,6 +34,7 @@ from src.novelist_brain.config import (
     build_llm_config_dict,
     load_config,
 )
+from src.novelist_brain.continuity_auditor import ContinuityAuditor
 from src.novelist_brain.persistence import PersistenceManager, SnapshotStore, dataclass_to_dict
 from src.novelist_brain.cen import CentralExecutiveNetwork
 from src.novelist_brain.clock import Clock, RealTimeClock
@@ -60,10 +62,13 @@ from src.novelist_brain.llm import (
 from src.novelist_brain.memory import MemorySystem
 from src.novelist_brain.recovery import FaultManager, RecoveryManager
 from src.novelist_brain.metabolism import Metabolism
-from src.novelist_brain.models import BusMessage, TickDelta
+from src.novelist_brain.models import BusMessage, StoryBible, TickDelta, WorldStateContract
 from src.novelist_brain.module_registry import ModuleRegistry
 from src.novelist_brain.novel_output import NovelOutput
+from src.novelist_brain.oc_character_system import OCCharacterSystem
 from src.novelist_brain.personal_input import PersonalInput
+from src.novelist_brain.planner import Planner
+from src.novelist_brain.quality_engine import QualityEngine
 from src.novelist_brain.salience_network import SalienceNetwork
 from src.novelist_brain.sandbox import MentalSandbox
 from src.novelist_brain.sandbox_versioning import SandboxVersionManager
@@ -71,19 +76,15 @@ from src.novelist_brain.scheduler import DailyScheduler
 from src.novelist_brain.social_input import SocialInput
 from src.novelist_brain.transaction import TransactionManager
 from src.novelist_brain.trpg_rulebook import Rulebook
+from src.novelist_brain.topics import ALL_TOPICS, REFACTOR_V2_TOPICS
+from src.novelist_brain.world_state import (
+    WorldStateStore,
+    load_or_create_world_state,
+)
+from src.novelist_brain.world_visual_debugger import WorldVisualDebugger
 
 
-IMPORTANT_TOPICS: set[str] = {
-    "event.clock.phase.changed",
-    "control.network.switch",
-    "control.sandbox.build",
-    "control.sandbox.simulate",
-    "data.memory.trace.created",
-    "data.sandbox.narrative.ready",
-    "data.novel.paragraph",
-    "event.novel.paragraph.published",
-    "control.metabolism.budget.exhausted",
-}
+IMPORTANT_TOPICS: set[str] = set(ALL_TOPICS)
 
 
 def format_hour(hour: float) -> str:
@@ -243,6 +244,25 @@ def build_context(
         "modules": [],
         "persistence": None,
     }
+
+    # v2 novel source layer (Task 1.5.2 / 1.6.2)
+    novel_v2_cfg = getattr(cfg, "novel_v2", None)
+    if novel_v2_cfg is None:
+        # Fallback to default v2 config (cfg may be a plain dict in tests)
+        novel_v2_cfg_dict = {
+            "novel_id": "linyi_default",
+            "story_bible_dir": "story_bible",
+            "world_state_dir": "world_state",
+            "chapter_dir": "chapters",
+            "oc_registry_dir": "oc_registry",
+        }
+    else:
+        novel_v2_cfg_dict = (
+            novel_v2_cfg if isinstance(novel_v2_cfg, dict)
+            else asdict(novel_v2_cfg) if hasattr(novel_v2_cfg, "__dataclass_fields__")
+            else {"novel_id": str(novel_v2_cfg)}
+        )
+    context["novel_v2"] = novel_v2_cfg_dict
     return context
 
 
@@ -404,6 +424,71 @@ def create_modules(
     registry.register(MentalSandbox, factory_options={"name": "mental_sandbox", "llm_service": llm_service})
     registry.register(CreationExecutive, factory_options={"name": "creation_executive", "llm_service": llm_service, "seed": 42})
     registry.register(NovelOutput, factory_options={"name": "novel_output"})
+    # v2 OC character system (registered via register_agent so it can be
+    # instantiated with novel_v2 config + llm_service without changing
+    # the registry's class-based API).
+    registry.register_agent(
+        "oc_character_system",
+        lambda name, **kw: OCCharacterSystem(name=name),
+        dependencies=["mental_sandbox"],  # OC world-fit check needs world_contract
+        category="novel_source",
+        description="OC character registry with COC sheet generation",
+    )
+    # v2 chapter structure & planning layer (Task 2.6)
+    registry.register_agent(
+        "chapter_manager",
+        lambda name, **kw: ChapterManager(
+            name=name,
+            novel_id=kw.get("novel_id", "linyi_default"),
+            chapters_dir=kw.get("chapters_dir", "chapters"),
+            max_versions=kw.get("max_versions", 20),
+        ),
+        dependencies=["novel_output"],  # replaces NovelOutput's flat paragraph list
+        category="novel_source",
+        description="卷/章/段三级结构与版本控制",
+    )
+    registry.register_agent(
+        "planner",
+        lambda name, **kw: Planner(
+            name=name,
+            llm_service=kw.get("llm_service"),
+        ),
+        dependencies=["mental_sandbox"],  # Planner consumes sandbox's narrative.ready
+        category="novel_source",
+        description="章节意图规划与四线编织",
+        factory_options={"llm_service": llm_service},
+    )
+    # v2 continuity audit & quality closure layer (Task 4.4)
+    registry.register_agent(
+        "continuity_auditor",
+        lambda name, **kw: ContinuityAuditor(
+            name=name,
+            novel_id=kw.get("novel_id", "linyi_default"),
+        ),
+        dependencies=["novel_output", "chapter_manager"],  # audits published paragraphs
+        category="novel_audit",
+        description="六维连续性审计（OOC/设定/时间线/伏笔/文风/节奏）",
+    )
+    registry.register_agent(
+        "quality_engine",
+        lambda name, **kw: QualityEngine(
+            name=name,
+            novel_id=kw.get("novel_id", "linyi_default"),
+        ),
+        dependencies=["continuity_auditor"],  # subscribes to data.novel.audit.issues
+        category="novel_audit",
+        description="质量闭环引擎：严重度分级派发与自动修订",
+    )
+    # v2 visual debugging data interface (Stage 5 Task 5.1) — exposes world
+    # snapshot / diff / COC replay topics for the WebUI SocialView and CLI
+    # tools. No upstream dependencies; reads world/OC state from the bus.
+    registry.register_agent(
+        "world_visual_debugger",
+        lambda name, **kw: WorldVisualDebugger(name=name),
+        dependencies=[],
+        category="debug",
+        description="可视化调试接口：世界快照/diff + COC 推演回放",
+    )
     # Resilience.
     registry.register(FaultManager, factory_options={"name": "fault_manager"})
     registry.register(RecoveryManager, factory_options={"name": "recovery_manager", "config": fault_config})
@@ -598,6 +683,7 @@ def run_agent(
     fast_forward: bool = False,
     llm_service: LLMService | None = None,
     config_registry: ConfigRegistry | None = None,
+    legacy_mode: bool = False,
 ) -> None:
     """Run the novelist brain as a resident agent loop."""
     if config_registry is None:
@@ -682,6 +768,61 @@ def run_agent(
     else:
         print(f"状态文件 {effective_load_path} 不存在，以空白状态启动。")
 
+    # === v2 novel source layer loading (Task 1.4 / 1.9) ===
+    novel_v2 = context.get("novel_v2", {})
+    novel_id = novel_v2.get("novel_id", "linyi_default")
+    world_state_dir = novel_v2.get("world_state_dir", "world_state")
+    story_bible_dir = novel_v2.get("story_bible_dir", "story_bible")
+
+    if not legacy_mode:
+        # Auto-detect v1 state and warn (Task 1.9)
+        if saved_state is not None:
+            state_version = saved_state.get("version", 1)
+            if state_version < 2:
+                print(
+                    "WARNING: 检测到 v1 状态文件。建议运行 "
+                    "`python tools/migrate_state_v1_to_v2.py` "
+                    "迁移到 v2 格式以启用全部新功能。"
+                    "当前将以兼容模式运行（v1 数据可用，v2 数据为空）。"
+                )
+                # Don't auto-migrate; let user run the script manually
+
+        # Load or create WorldStateContract
+        ws_store = WorldStateStore(base_dir=world_state_dir, novel_id=novel_id)
+        try:
+            world_contract = load_or_create_world_state(
+                ws_store, novel_id,
+                genre="严肃文学",  # fallback values
+                tone="忧郁",
+            )
+            context["world_contract"] = world_contract
+            print(f"WorldStateContract 已加载: version={world_contract.version}")
+        except Exception as exc:
+            print(f"WARNING: 加载 WorldStateContract 失败，将使用 v1 fallback: {exc}")
+            context["world_contract"] = None
+
+        # Load StoryBible if it exists
+        sb_path = os.path.join(story_bible_dir, f"{novel_id}.json")
+        if os.path.isfile(sb_path):
+            try:
+                import json as _json
+                with open(sb_path, "r", encoding="utf-8") as f:
+                    sb_data = _json.load(f)
+                story_bible = StoryBible.from_dict(sb_data)
+                context["story_bible"] = story_bible
+                print(f"StoryBible 已加载: {sb_path}")
+            except Exception as exc:
+                print(f"WARNING: 加载 StoryBible 失败: {exc}")
+                context["story_bible"] = None
+        else:
+            print(f"StoryBible 文件不存在（{sb_path}），sandbox 将仅使用 world_contract")
+            context["story_bible"] = None
+    else:
+        # Legacy mode: don't load v2 artifacts; sandbox will use v1 fallback path
+        print("LEGACY MODE: 跳过 v2 数据加载，sandbox 将使用硬编码 default world")
+        context["world_contract"] = None
+        context["story_bible"] = None
+
     modules = create_modules(llm_service, identity_core=identity_core, config=cfg)
 
     # Provide the full module list, a bound snapshot store, and a transaction
@@ -707,8 +848,17 @@ def run_agent(
         module.register(router)
 
     # Initialize every module with the shared context.
+    # Each init is wrapped in a configurable timeout (default 30s per §3.2.3)
+    # so a single misbehaving module cannot block system startup. The
+    # timeout can be overridden via ``core.module_init_timeout`` in the
+    # config; if absent, the default is used. ``<= 0`` skips the wrapper.
+    module_init_timeout = float(
+        getattr(cfg.core, "module_init_timeout", 30.0)
+        if cfg is not None
+        else 30.0
+    )
     for module in modules:
-        module.init(context)
+        module.init_with_timeout(context, timeout_seconds=module_init_timeout)
 
     # Deliver initialization-time messages.
     router.flush()
@@ -1177,6 +1327,14 @@ if __name__ == "__main__":
         default=None,
         help="WebUI 监听端口 (覆盖配置文件)",
     )
+    parser.add_argument(
+        "--legacy-mode",
+        action="store_true",
+        help=(
+            "降级模式：跳过 v2 真源层（WorldStateContract/StoryBible/OCCharacterSystem）"
+            "加载，sandbox 将使用硬编码 default world。用于兼容旧 state 文件或调试。"
+        ),
+    )
     args = parser.parse_args()
 
     tick_interval_seconds = args.tick_interval_seconds
@@ -1197,4 +1355,5 @@ if __name__ == "__main__":
         fast_forward=args.fast_forward,
         llm_service=service,
         config_registry=config_registry,
+        legacy_mode=args.legacy_mode,
     )

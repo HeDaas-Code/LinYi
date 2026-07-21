@@ -10,6 +10,7 @@ This module provides:
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import random
@@ -25,13 +26,159 @@ from src.novelist_brain.fault import AgentError, ErrorType, Severity, classify_e
 from src.novelist_brain.models import BusMessage
 
 
+class LLMPromptCache:
+    """In-memory prompt→response cache with TTL.
+
+    Used by LLMService implementations to skip duplicate calls when the
+    same prompt+context+temperature+max_tokens combination is requested
+    within the TTL window.
+
+    The cache key is a SHA256 hash of (prompt, context_canonical_json,
+    temperature, max_tokens). Context is serialized canonically
+    (sort_keys=True) so dict ordering doesn't cause cache misses.
+    """
+
+    DEFAULT_TTL_SECONDS = 300.0  # 5 minutes per §3.2.1
+
+    def __init__(
+        self,
+        ttl_seconds: float = DEFAULT_TTL_SECONDS,
+        max_entries: int = 256,
+    ) -> None:
+        self._ttl = ttl_seconds
+        self._max_entries = max_entries
+        # key -> (response, expires_at_monotonic)
+        self._store: dict[str, tuple[str, float]] = {}
+        self._hits = 0
+        self._misses = 0
+        self._evictions = 0
+
+    @staticmethod
+    def compute_key(
+        prompt: str,
+        context: dict[str, Any] | None,
+        temperature: float,
+        max_tokens: int,
+    ) -> str:
+        """Compute a stable cache key for the given call signature."""
+        context_blob = (
+            json.dumps(context, sort_keys=True, ensure_ascii=False, default=str)
+            if context is not None
+            else "null"
+        )
+        signature = (
+            f"prompt={prompt}\n"
+            f"context={context_blob}\n"
+            f"temperature={temperature!r}\n"
+            f"max_tokens={max_tokens!r}"
+        )
+        return hashlib.sha256(signature.encode("utf-8")).hexdigest()
+
+    def get(self, key: str) -> str | None:
+        """Return cached response if not expired, else None.
+
+        Expired entries are evicted lazily on access.
+        """
+        entry = self._store.get(key)
+        if entry is None:
+            self._misses += 1
+            return None
+        response, expires_at = entry
+        if time.monotonic() > expires_at:
+            # Stale entry: drop it and count as a miss.
+            self._store.pop(key, None)
+            self._misses += 1
+            return None
+        self._hits += 1
+        return response
+
+    def put(self, key: str, response: str) -> None:
+        """Store a response with current TTL. Evict oldest if over max_entries."""
+        expires_at = time.monotonic() + self._ttl
+        self._store[key] = (response, expires_at)
+        # Evict the oldest-expiring entry when over capacity. We also drop
+        # any already-expired entries opportunistically so the eviction
+        # count reflects genuine pressure, not lazy GC.
+        if len(self._store) > self._max_entries:
+            now = time.monotonic()
+            expired_keys = [k for k, (_, exp) in self._store.items() if exp <= now]
+            for k in expired_keys:
+                self._store.pop(k, None)
+                self._evictions += 1
+            # If still over capacity, evict the entry that expires soonest.
+            while len(self._store) > self._max_entries:
+                oldest_key = min(self._store, key=lambda k: self._store[k][1])
+                self._store.pop(oldest_key, None)
+                self._evictions += 1
+
+    def clear(self) -> None:
+        """Drop all cached responses and reset stats."""
+        self._store.clear()
+        self._hits = 0
+        self._misses = 0
+        self._evictions = 0
+
+    def stats(self) -> dict[str, Any]:
+        """Return ``{hits, misses, entries, evictions}``."""
+        return {
+            "hits": self._hits,
+            "misses": self._misses,
+            "entries": len(self._store),
+            "evictions": self._evictions,
+        }
+
+
 class LLMService(ABC):
     """Pluggable LLM interface used by all brain modules."""
+
+    def __init__(self, *, cache: LLMPromptCache | None = None) -> None:
+        # ``_cache`` may also be lazily initialized by the ``cache`` property
+        # for subclasses that do not call ``super().__init__()`` (backwards
+        # compatibility with existing third-party subclasses).
+        self._cache: LLMPromptCache | None = cache
 
     @property
     def is_mock(self) -> bool:
         """Return True if this service does not call a real external LLM."""
         return False
+
+    @property
+    def cache(self) -> LLMPromptCache:
+        """Return the prompt cache, creating one lazily if needed."""
+        if getattr(self, "_cache", None) is None:
+            self._cache = LLMPromptCache()
+        return self._cache
+
+    def enable_cache(self, cache: LLMPromptCache | None = None) -> None:
+        """Attach (or replace) the prompt cache."""
+        self._cache = cache if cache is not None else LLMPromptCache()
+
+    def disable_cache(self) -> None:
+        """Detach the prompt cache so subsequent calls bypass caching."""
+        self._cache = None
+
+    def complete_cached(
+        self,
+        prompt: str,
+        context: dict[str, Any] | None = None,
+        temperature: float = 0.7,
+        max_tokens: int = 256,
+    ) -> str:
+        """Wrap :meth:`complete` with the prompt cache (TTL=300s by default).
+
+        The cache key is derived from ``(prompt, context, temperature,
+        max_tokens)``. On a hit the cached response is returned without
+        invoking :meth:`complete`; on a miss the response is stored before
+        being returned. Callers that want to bypass the cache (e.g. for
+        non-deterministic sampling) should call :meth:`complete` directly.
+        """
+        key = LLMPromptCache.compute_key(prompt, context, temperature, max_tokens)
+        cached = self.cache.get(key)
+        if cached is not None:
+            return cached
+        response = self.complete(prompt, context, temperature, max_tokens)
+        self.cache.put(key, response)
+        return response
 
     @abstractmethod
     def complete(
@@ -57,7 +204,14 @@ class MockLLMService(LLMService):
     def is_mock(self) -> bool:
         return True
 
-    def __init__(self, seed: int | None = None, dimensions: int = 64) -> None:
+    def __init__(
+        self,
+        seed: int | None = None,
+        dimensions: int = 64,
+        *,
+        cache: LLMPromptCache | None = None,
+    ) -> None:
+        super().__init__(cache=cache)
         self._seed = seed
         self._dimensions = dimensions
         self._rng = random.Random(seed)
@@ -213,7 +367,10 @@ class ResilientLLMService(LLMService):
         fault_publisher: Callable[[AgentError], None] | None = None,
         event_publisher: Callable[[dict[str, Any]], None] | None = None,
         source: str = "llm_service",
+        *,
+        cache: LLMPromptCache | None = None,
     ) -> None:
+        super().__init__(cache=cache)
         self._primary = primary
         self._fallback = fallback if fallback is not None else MockLLMService()
         self._circuit = circuit_breaker or CircuitBreaker(service="llm")
@@ -376,7 +533,9 @@ class OpenAILLMService(LLMService):
         temperature: float = 0.7,
         max_tokens: int = 2048,
         timeout: float = 120.0,
+        cache: LLMPromptCache | None = None,
     ) -> None:
+        super().__init__(cache=cache)
         self._base_url = (base_url or os.getenv("OPENAI_BASE_URL") or "").rstrip("/")
         self._api_key = api_key or os.getenv("OPENAI_API_KEY")
         self._model = model

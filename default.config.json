@@ -424,5 +424,12 @@
     "host": "127.0.0.1",
     "port": 8080,
     "refresh_interval_ms": 2000
+  },
+  "novel_v2": {
+    "novel_id": "linyi_default",
+    "story_bible_dir": "story_bible",
+    "world_state_dir": "world_state",
+    "chapter_dir": "chapters",
+    "oc_registry_dir": "oc_registry"
   }
 }

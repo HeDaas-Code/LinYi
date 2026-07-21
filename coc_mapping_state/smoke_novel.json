@@ -1,0 +1,361 @@
+{
+  "name": "coc_mapping_engine",
+  "state": {
+    "active": true,
+    "energy_cost": 0.15,
+    "last_tick": 0.0,
+    "custom": {
+      "novel_id": "smoke_novel",
+      "genre": "克苏鲁",
+      "rulebook_built": true,
+      "campaign_arc_built": true,
+      "scenario_count": 0
+    }
+  },
+  "subscriptions": [
+    "control.coc.scenario.request",
+    "control.module.init",
+    "data.oc.evolved",
+    "data.sandbox.world.updated"
+  ],
+  "novel_id": "smoke_novel",
+  "state_path": "coc_mapping_state/smoke_novel.json",
+  "story_bible": {
+    "novel_id": "smoke_novel",
+    "title": "阿卡姆之夜",
+    "genre": "克苏鲁",
+    "theme": "",
+    "premise": "调查员追查死灵之书",
+    "world_contract": {
+      "novel_id": "smoke_novel",
+      "genre": "克苏鲁神话",
+      "tone": "压抑",
+      "geography": {
+        "阿卡姆大学": {
+          "activation_level": 0.8
+        }
+      },
+      "factions": {},
+      "rules": [
+        {
+          "rule_id": "r1",
+          "domain": "mystical",
+          "statement": "读禁书会失去理智",
+          "breakable": false,
+          "consequences": [
+            "sanity loss"
+          ],
+          "introduced_in": "",
+          "status": "active"
+        }
+      ],
+      "history": [],
+      "forbidden": [],
+      "mysteries": [],
+      "current_state": {},
+      "version": 0
+    },
+    "character_registry": {},
+    "plot_compass": {
+      "ending_intent": "黑暗悲剧",
+      "active_long_arcs": [],
+      "scale": "short",
+      "current_arc_position": ""
+    },
+    "foreshadowing_ledger": [],
+    "chapter_blueprint": [],
+    "style_fingerprint": {
+      "vocabulary_density": 0.0,
+      "sentence_length_variance": 0.0,
+      "dialogue_ratio": 0.0,
+      "tone_markers": {},
+      "forbidden_phrases": []
+    },
+    "continuity_rules": []
+  },
+  "world_contract": {
+    "novel_id": "smoke_novel",
+    "genre": "克苏鲁神话",
+    "tone": "压抑",
+    "geography": {
+      "阿卡姆大学": {
+        "activation_level": 0.8
+      }
+    },
+    "factions": {},
+    "rules": [
+      {
+        "rule_id": "r1",
+        "domain": "mystical",
+        "statement": "读禁书会失去理智",
+        "breakable": false,
+        "consequences": [
+          "sanity loss"
+        ],
+        "introduced_in": "",
+        "status": "active"
+      }
+    ],
+    "history": [],
+    "forbidden": [],
+    "mysteries": [],
+    "current_state": {},
+    "version": 0
+  },
+  "rulebook": {
+    "name": "克苏鲁神话规则书",
+    "version": "1.0",
+    "skills": [
+      {
+        "name": "克苏鲁神话",
+        "base_value": 0.0,
+        "attributes": [
+          "int",
+          "pow"
+        ],
+        "description": "禁忌神话知识",
+        "tags": [
+          "mythos",
+          "forbidden"
+        ]
+      },
+      {
+        "name": "神秘学",
+        "base_value": 5.0,
+        "attributes": [
+          "int"
+        ],
+        "description": "对神秘传统的了解",
+        "tags": [
+          "mythos"
+        ]
+      },
+      {
+        "name": "图书馆使用",
+        "base_value": 20.0,
+        "attributes": [
+          "int",
+          "edu"
+        ],
+        "description": "查阅典籍与档案",
+        "tags": [
+          "research"
+        ]
+      },
+      {
+        "name": "心理学",
+        "base_value": 10.0,
+        "attributes": [
+          "int",
+          "pow"
+        ],
+        "description": "洞察他人心理",
+        "tags": [
+          "social"
+        ]
+      },
+      {
+        "name": "观察",
+        "base_value": 25.0,
+        "attributes": [
+          "int",
+          "dex"
+        ],
+        "description": "察觉细节",
+        "tags": [
+          "perception"
+        ]
+      },
+      {
+        "name": "潜行",
+        "base_value": 20.0,
+        "attributes": [
+          "dex"
+        ],
+        "description": "悄声移动",
+        "tags": [
+          "stealth"
+        ]
+      },
+      {
+        "name": "说服",
+        "base_value": 10.0,
+        "attributes": [
+          "app",
+          "pow"
+        ],
+        "description": "说服他人",
+        "tags": [
+          "social"
+        ]
+      },
+      {
+        "name": "理智检定",
+        "base_value": 0.0,
+        "attributes": [
+          "pow"
+        ],
+        "description": "对抗 SAN 损失",
+        "tags": [
+          "sanity"
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "name": "翻阅禁书",
+        "skill": "克苏鲁神话",
+        "keywords": [
+          "禁书",
+          "tome",
+          "翻阅",
+          "研究"
+        ],
+        "difficulty": 0.6,
+        "default_modifier": -0.1
+      },
+      {
+        "name": "调查现场",
+        "skill": "观察",
+        "keywords": [
+          "调查",
+          "搜索",
+          "investigate"
+        ],
+        "difficulty": 0.4,
+        "default_modifier": 0.0
+      },
+      {
+        "name": "询问证人",
+        "skill": "说服",
+        "keywords": [
+          "询问",
+          "问",
+          "interrogate"
+        ],
+        "difficulty": 0.4,
+        "default_modifier": 0.0
+      },
+      {
+        "name": "潜入",
+        "skill": "潜行",
+        "keywords": [
+          "潜入",
+          "sneak",
+          "潜行"
+        ],
+        "difficulty": 0.5,
+        "default_modifier": 0.0
+      },
+      {
+        "name": "理智检定",
+        "skill": "理智检定",
+        "keywords": [
+          "恐惧",
+          "san",
+          "sanity",
+          "惊吓"
+        ],
+        "difficulty": 0.5,
+        "default_modifier": 0.0
+      }
+    ],
+    "combat": {
+      "name": "standard",
+      "attack_skill": "格斗",
+      "dodge_skill": "闪避",
+      "damage_formula": "1d6+db",
+      "critical_multiplier": 2.0,
+      "impale_threshold": 0.2,
+      "max_combatants": 6
+    },
+    "sanity": {
+      "enabled": true,
+      "fumble_shock_range": [
+        5.0,
+        10.0
+      ],
+      "fear_shock_threshold": 0.5,
+      "fear_shock_probability": 0.3,
+      "phobia_chance": 0.35,
+      "indefinite_insanity_threshold": 0.0,
+      "permanent_insanity_threshold": 0.0
+    },
+    "improvement": {
+      "enabled": true,
+      "success_improvement_chance": 0.0,
+      "failure_improvement_chance": 0.5,
+      "improvement_die": "1d10",
+      "max_improvement_per_skill": 5
+    },
+    "items": [],
+    "tomes": [
+      {
+        "id": "necronomicon",
+        "name": "死灵之书",
+        "mythos_rating": 8.0,
+        "spells": [
+          "召唤"
+        ],
+        "sanity_cost_first_read": 1.0,
+        "sanity_cost_study": 2.0,
+        "cthulhu_mythos_bonus": 5.0
+      }
+    ],
+    "campaign_arcs": [],
+    "metadata": {
+      "genre": "cthulhu",
+      "forbidden_knowledge": true,
+      "source_genre": "克苏鲁",
+      "canonical_genre": "cthulhu"
+    },
+    "dynamic_skills": {},
+    "dynamic_actions": {},
+    "sanity_rules": {}
+  },
+  "campaign_arc": {
+    "scale": "short",
+    "total_chapters": 5,
+    "ending_intent": "黑暗悲剧",
+    "climax_intensity": 0.95,
+    "active_long_arcs": [],
+    "stages": [
+      {
+        "name": "引入",
+        "phase": "introduction",
+        "target_chapters": 1,
+        "intensity": 0.35,
+        "summary": "建立世界观、主要角色与基本冲突，给读者代入感。"
+      },
+      {
+        "name": "上升",
+        "phase": "rising_action",
+        "target_chapters": 1,
+        "intensity": 0.55,
+        "summary": "推进主线，加深冲突，逐步揭示世界规则与伏笔。"
+      },
+      {
+        "name": "转折",
+        "phase": "turning_point",
+        "target_chapters": 1,
+        "intensity": 0.807,
+        "summary": "重大转折打破原有平衡，主角面临关键抉择。"
+      },
+      {
+        "name": "高潮",
+        "phase": "climax",
+        "target_chapters": 1,
+        "intensity": 0.95,
+        "summary": "核心冲突集中爆发，主题与伏笔在此兑现。"
+      },
+      {
+        "name": "余韵",
+        "phase": "falling_action",
+        "target_chapters": 1,
+        "intensity": 0.475,
+        "summary": "高潮后的余波与情感回落，为结局定调。"
+      }
+    ]
+  },
+  "scenarios": {}
+}

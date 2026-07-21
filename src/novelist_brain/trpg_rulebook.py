@@ -14,7 +14,11 @@ import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    # 仅用于类型注解，避免与 coc_mapping_engine 形成运行时循环导入。
+    from src.novelist_brain.coc_mapping_engine import COCMappingEngine
 
 
 @dataclass
@@ -168,6 +172,19 @@ class Rulebook:
 
         self.metadata: dict[str, Any] = dict(data.get("metadata", {}))
 
+        # === Task 3.2.1: 动态注入层 ===
+        # ``dynamic_skills`` / ``dynamic_actions`` / ``sanity_rules`` 由
+        # :class:`COCMappingEngine` 通过 ``inject_*`` 方法注入，``get_*``
+        # 查询方法优先返回这些动态规则，缺失时回落到上面的默认字段，
+        # 从而保留默认 Rulebook 作为 fallback (SubTask 3.2.2)。
+        self.dynamic_skills: dict[str, dict[str, Any]] = dict(
+            data.get("dynamic_skills", {})
+        )
+        self.dynamic_actions: dict[str, dict[str, Any]] = dict(
+            data.get("dynamic_actions", {})
+        )
+        self.sanity_rules: dict[str, Any] = dict(data.get("sanity_rules", {}))
+
     def skill_for_action(self, action: str) -> ActionDef:
         """Return the best matching action definition for a plain-language action."""
         action_lower = action.lower()
@@ -185,6 +202,261 @@ class Rulebook:
     def base_value_for_skill(self, skill_name: str) -> float:
         """Return the configured base value for a skill, or 0.0 if unknown."""
         return self.skills.get(skill_name, SkillDef(name=skill_name)).base_value
+
+    # ------------------------------------------------------------------
+    # Task 3.2.1: 动态注入接口（COCMappingEngine → Rulebook）
+    # ------------------------------------------------------------------
+
+    def inject_skills(self, skills: dict[str, Any] | list[str]) -> None:
+        """注入动态技能规则。
+
+        ``skills`` 可以是 ``dict[str, dict]``（键为技能名，值为规则 dict，
+        例如 ``{'克苏鲁神话': {'difficulty': 'hard'}}``）或 ``list[str]``
+        （技能名列表，规则为空 dict）。注入后：
+
+        - ``dynamic_skills`` 保留原始 dict 形式，供 :meth:`get_skill` 查询；
+        - ``self.skills`` 同步加入对应的 :class:`SkillDef`，使
+          :class:`GameMaster` 无需修改即可通过 ``base_value_for_skill``
+          等接口使用动态技能。
+
+        重复注入同名技能会覆盖之前的动态规则。
+        """
+        if isinstance(skills, dict):
+            items: list[tuple[str, dict[str, Any]]] = [
+                (str(name), dict(rule) if isinstance(rule, dict) else {"value": rule})
+                for name, rule in skills.items()
+            ]
+        else:
+            items = [(str(name), {}) for name in skills]
+        for name, rule in items:
+            self.dynamic_skills[name] = dict(rule)
+            # 同步到 self.skills，使 GameMaster 能直接查询到 SkillDef。
+            skill_def = SkillDef(
+                name=name,
+                base_value=float(rule.get("base_value", 0.0)) if rule else 0.0,
+                attributes=list(rule.get("attributes", [])) if rule else [],
+                description=str(rule.get("description", "")) if rule else "",
+                tags=list(rule.get("tags", [])) if rule else [],
+            )
+            self.skills[name] = skill_def
+
+    def inject_actions(self, actions: dict[str, Any] | list[str]) -> None:
+        """注入动态动作规则。
+
+        ``actions`` 可以是 ``dict[str, dict]``（键为动作名，值为规则 dict，
+        例如 ``{'阅读禁书': {'sanity_cost': 10}}``）或 ``list[str]``
+        （动作名列表）。注入后：
+
+        - ``dynamic_actions`` 保留原始 dict 形式，供 :meth:`get_action` 查询；
+        - ``self.actions`` 同步加入对应的 :class:`ActionDef`，使
+          :class:`GameMaster.skill_for_action` 能匹配到动态动作。
+
+        重复注入同名动作会覆盖之前的动态规则并追加新的 ActionDef。
+        """
+        if isinstance(actions, dict):
+            items: list[tuple[str, dict[str, Any]]] = [
+                (str(name), dict(rule) if isinstance(rule, dict) else {"value": rule})
+                for name, rule in actions.items()
+            ]
+        else:
+            items = [(str(name), {}) for name in actions]
+        # 移除已存在的同名 ActionDef，避免 skill_for_action 命中陈旧规则。
+        existing_names = {name for name, _ in items}
+        self.actions = [a for a in self.actions if a.name not in existing_names]
+        for name, rule in items:
+            self.dynamic_actions[name] = dict(rule)
+            action_def = ActionDef(
+                name=name,
+                skill=str(rule.get("skill", "")) if rule else "",
+                keywords=list(rule.get("keywords", [name])) if rule else [name],
+                difficulty=float(rule.get("difficulty", 1.0)) if rule else 1.0,
+                default_modifier=float(rule.get("default_modifier", 0.0)) if rule else 0.0,
+            )
+            self.actions.append(action_def)
+
+    def inject_sanity_rules(self, rules: dict[str, Any]) -> None:
+        """注入动态 sanity 规则。
+
+        ``rules`` 是 ``dict[str, Any]``，键为规则名（如 ``enabled``、
+        ``fumble_shock_range``），值为任意 JSON-safe 内容。注入后：
+
+        - ``sanity_rules`` 保留原始 dict，供 :meth:`get_sanity_rule` 查询；
+        - 若规则名匹配 :class:`SanityRule` 字段，则同步更新 ``self.sanity``，
+          使 :class:`GameMaster` 直接通过 ``rulebook.sanity`` 读取最新规则。
+        """
+        for key, value in rules.items():
+            self.sanity_rules[key] = value
+        # 把匹配 SanityRule 字段的部分同步到 self.sanity。
+        sanity_fields = {
+            "enabled",
+            "fumble_shock_range",
+            "fear_shock_threshold",
+            "fear_shock_probability",
+            "phobia_chance",
+            "indefinite_insanity_threshold",
+            "permanent_insanity_threshold",
+        }
+        updates: dict[str, Any] = {}
+        for key in sanity_fields:
+            if key in rules:
+                value = rules[key]
+                if key == "fumble_shock_range" and isinstance(value, (list, tuple)):
+                    value = tuple(float(v) for v in value)
+                elif key == "enabled":
+                    value = bool(value)
+                else:
+                    try:
+                        value = float(value)
+                    except (TypeError, ValueError):
+                        continue
+                updates[key] = value
+        if updates:
+            self.sanity = SanityRule(
+                enabled=updates.get("enabled", self.sanity.enabled),
+                fumble_shock_range=updates.get(
+                    "fumble_shock_range", self.sanity.fumble_shock_range
+                ),
+                fear_shock_threshold=updates.get(
+                    "fear_shock_threshold", self.sanity.fear_shock_threshold
+                ),
+                fear_shock_probability=updates.get(
+                    "fear_shock_probability", self.sanity.fear_shock_probability
+                ),
+                phobia_chance=updates.get("phobia_chance", self.sanity.phobia_chance),
+                indefinite_insanity_threshold=updates.get(
+                    "indefinite_insanity_threshold",
+                    self.sanity.indefinite_insanity_threshold,
+                ),
+                permanent_insanity_threshold=updates.get(
+                    "permanent_insanity_threshold",
+                    self.sanity.permanent_insanity_threshold,
+                ),
+            )
+
+    def load_from_mapping_engine(
+        self,
+        mapping_engine: "COCMappingEngine",
+        genre: str,
+        world_rules: list | None = None,
+    ) -> "Rulebook":
+        """从 :class:`COCMappingEngine` 构造 Rulebook 并注入到 ``self``。
+
+        调用 ``mapping_engine.build_rulebook(genre, world_rules)`` 得到一个
+        完整 Rulebook，再把其中的 skills / actions / sanity / tomes / items /
+        combat / metadata 注入到当前 Rulebook 的动态层与默认层。返回
+        ``self`` 以便链式调用。原有的默认字段作为 fallback 保留。
+        """
+        new_rb = mapping_engine.build_rulebook(genre, world_rules or [])
+
+        # 注入 skills (SkillDef → dict[str, dict])。
+        skills_dict: dict[str, dict[str, Any]] = {}
+        for name, skill in new_rb.skills.items():
+            skills_dict[name] = {
+                "name": skill.name,
+                "base_value": skill.base_value,
+                "attributes": list(skill.attributes),
+                "description": skill.description,
+                "tags": list(skill.tags),
+            }
+        self.inject_skills(skills_dict)
+
+        # 注入 actions (ActionDef → dict[str, dict])。
+        actions_dict: dict[str, dict[str, Any]] = {}
+        for act in new_rb.actions:
+            actions_dict[act.name] = {
+                "name": act.name,
+                "skill": act.skill,
+                "keywords": list(act.keywords),
+                "difficulty": act.difficulty,
+                "default_modifier": act.default_modifier,
+            }
+        self.inject_actions(actions_dict)
+
+        # 注入 sanity 规则 (SanityRule → dict[str, Any])。
+        sanity_dict: dict[str, Any] = {
+            "enabled": new_rb.sanity.enabled,
+            "fumble_shock_range": list(new_rb.sanity.fumble_shock_range),
+            "fear_shock_threshold": new_rb.sanity.fear_shock_threshold,
+            "fear_shock_probability": new_rb.sanity.fear_shock_probability,
+            "phobia_chance": new_rb.sanity.phobia_chance,
+            "indefinite_insanity_threshold": new_rb.sanity.indefinite_insanity_threshold,
+            "permanent_insanity_threshold": new_rb.sanity.permanent_insanity_threshold,
+        }
+        self.inject_sanity_rules(sanity_dict)
+
+        # 合并其它字段，使 GameMaster 通过 rulebook.combat / rulebook.tomes
+        # 等接口也能享受到 mapping engine 注入的内容。
+        self.combat = new_rb.combat
+        self.improvement = new_rb.improvement
+        self.tomes.update(new_rb.tomes)
+        self.items.update(new_rb.items)
+        self.campaign_arcs.update(new_rb.campaign_arcs)
+        if new_rb.metadata:
+            self.metadata.update(new_rb.metadata)
+        self.name = new_rb.name
+        self.version = new_rb.version
+        return self
+
+    # ------------------------------------------------------------------
+    # Task 3.2.2: 查询接口（含 fallback）
+    # ------------------------------------------------------------------
+
+    def get_skill(self, name: str) -> dict[str, Any] | None:
+        """按名称查询技能规则。
+
+        优先返回 :meth:`inject_skills` 注入的 ``dynamic_skills[name]``，
+        缺失时回落到默认 ``self.skills`` 中的 :class:`SkillDef`（转为 dict），
+        都没有时返回 ``None``。
+        """
+        if name in self.dynamic_skills:
+            return dict(self.dynamic_skills[name])
+        skill = self.skills.get(name)
+        if skill is None:
+            return None
+        return {
+            "name": skill.name,
+            "base_value": skill.base_value,
+            "attributes": list(skill.attributes),
+            "description": skill.description,
+            "tags": list(skill.tags),
+        }
+
+    def get_action(self, name: str) -> dict[str, Any] | None:
+        """按名称查询动作规则。
+
+        优先返回 :meth:`inject_actions` 注入的 ``dynamic_actions[name]``，
+        缺失时回落到默认 ``self.actions`` 中第一个匹配名称的
+        :class:`ActionDef`（转为 dict），都没有时返回 ``None``。
+        """
+        if name in self.dynamic_actions:
+            return dict(self.dynamic_actions[name])
+        for act in self.actions:
+            if act.name == name:
+                return {
+                    "name": act.name,
+                    "skill": act.skill,
+                    "keywords": list(act.keywords),
+                    "difficulty": act.difficulty,
+                    "default_modifier": act.default_modifier,
+                }
+        return None
+
+    def get_sanity_rule(self, name: str) -> dict[str, Any] | None:
+        """按名称查询 sanity 规则。
+
+        优先返回 :meth:`inject_sanity_rules` 注入的
+        ``sanity_rules[name]``，缺失时回落到默认 ``self.sanity`` 的对应字段
+        （若字段存在），都没有时返回 ``None``。
+        """
+        if name in self.sanity_rules:
+            return self.sanity_rules[name]
+        # 回落到 SanityRule 字段。
+        if hasattr(self.sanity, name):
+            value = getattr(self.sanity, name)
+            if isinstance(value, tuple):
+                return list(value)
+            return value
+        return None
 
     def __contains__(self, name: str) -> bool:
         """Return True if ``name`` is a known skill or action name."""
@@ -318,6 +590,10 @@ class Rulebook:
                 for arc in self.campaign_arcs.values()
             ],
             "metadata": dict(self.metadata),
+            # Task 3.2: 动态注入层也参与序列化，使 roundtrip 保留注入的规则。
+            "dynamic_skills": {k: dict(v) for k, v in self.dynamic_skills.items()},
+            "dynamic_actions": {k: dict(v) for k, v in self.dynamic_actions.items()},
+            "sanity_rules": dict(self.sanity_rules),
         }
 
 

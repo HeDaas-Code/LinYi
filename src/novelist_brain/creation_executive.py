@@ -2,14 +2,27 @@
 
 from __future__ import annotations
 
+import hashlib
 import random
+import time
 from typing import Any
 
 from src.novelist_brain import prompts
 from src.novelist_brain.llm import LLMCallError, LLMService, MockLLMService
-from src.novelist_brain.models import BusMessage, ModuleState, NarrativeLine, Scene, TickDelta, Trace
+from src.novelist_brain.models import (
+    BusMessage,
+    ChapterIntent,
+    ModuleState,
+    NarrativeLine,
+    Paragraph,
+    Scene,
+    TickDelta,
+    Trace,
+)
 from src.novelist_brain.module import Module
 from src.novelist_brain.persistence import dataclass_to_dict, reconstruct_dataclass
+from src.novelist_brain.trpg import narrate_skill_check
+from src.novelist_brain.trpg_state import SkillCheck, SkillCheckOutcome
 
 
 def _looks_like_prose(text: str) -> bool:
@@ -105,6 +118,32 @@ class CreationExecutive(Module):
         self._attachment_tone: dict[str, Any] | None = None
         self._current_phase: str | None = None
 
+        # Stage-2 chapter pipeline cache (Task 2.3). Populated by
+        # ``data.sandbox.narrative.ready`` and ``data.novel.chapter.intent``;
+        # consumed by ``_generate_paragraphs_for_chapter``. These caches
+        # are deliberately transient — they are NOT round-tripped through
+        # ``to_dict`` / ``from_dict`` because the upstream Planner/Sandbox
+        # will re-emit them on the next simulation cycle.
+        self._latest_chapter_intent: ChapterIntent | None = None
+        self._latest_chapter_intent_metadata: dict[str, Any] = {}
+        self._latest_narrative_lines: list[NarrativeLine] = []
+        self._latest_skill_checks: list[Any] = []
+        self._latest_world_state: Any = None
+        self._latest_source_narrative_id: str = ""
+        # Per-chapter paragraph counter (1-indexed internally; emitted as
+        # 0-indexed ``index`` in the ``data.novel.paragraph`` payload to
+        # match the ChapterManager convention).
+        self._chapter_paragraph_index: int = 0
+        # chapter_id override set by ``control.novel.chapter.write``;
+        # falls back to ``f"ch_{chapter_index}"`` when unset.
+        self._chapter_write_chapter_id: str | None = None
+        # Tracks the ``chapter_index`` of the last chapter we generated
+        # paragraphs for, so a duplicate ``data.novel.chapter.intent`` for
+        # the same chapter doesn't re-emit the same paragraphs. Bypassed
+        # by ``control.novel.chapter.write`` (which forces regeneration).
+        self._last_generated_chapter_index: int = -1
+        self._force_regeneration: bool = False
+
         self.subscribe(
             "data.sandbox.narrative.ready",
             "data.identity.constraint",
@@ -112,6 +151,9 @@ class CreationExecutive(Module):
             "data.memory.trace.query.result",
             "control.creative.tone",
             "control.module.init",
+            # Stage-2 chapter pipeline (Task 2.3)
+            "data.novel.chapter.intent",
+            "control.novel.chapter.write",
         )
 
     def _initial_state(self) -> ModuleState:
@@ -144,12 +186,19 @@ class CreationExecutive(Module):
 
         if message.topic == "data.sandbox.narrative.ready":
             self._handle_narrative_ready(message.payload)
+            # Stage-2: also cache narrative/skill_checks/world_state for
+            # chapter-driven paragraph generation (Task 2.3.1).
+            self._handle_narrative_ready_for_chapter(message.payload)
         elif message.topic in ("data.identity.constraint", "data.identity.updated"):
             self._handle_identity_constraint(message.payload)
         elif message.topic == "control.creative.tone":
             self._handle_creative_tone(message.payload)
         elif message.topic == "data.memory.trace.query.result":
             self._handle_trace_results(message.payload)
+        elif message.topic == "data.novel.chapter.intent":
+            self._handle_chapter_intent(message.payload)
+        elif message.topic == "control.novel.chapter.write":
+            self._handle_write_command(message.payload)
 
     def tick(self, delta: TickDelta) -> None:
         """Advance creation executive bookkeeping."""
@@ -202,6 +251,17 @@ class CreationExecutive(Module):
             "current_narrative_line_id": self._current_narrative_line.id if self._current_narrative_line else None,
             "paragraphs_generated": self._state.custom["paragraphs_generated"],
             "narrative_lines_received": self._state.custom["narrative_lines_received"],
+            # Stage-2 chapter pipeline cache observability (Task 2.3).
+            "has_chapter_intent": self._latest_chapter_intent is not None,
+            "cached_chapter_index": (
+                self._latest_chapter_intent.chapter_index
+                if self._latest_chapter_intent is not None
+                else None
+            ),
+            "cached_narrative_lines": len(self._latest_narrative_lines),
+            "cached_skill_checks": len(self._latest_skill_checks),
+            "has_world_state": self._latest_world_state is not None,
+            "last_generated_chapter_index": self._last_generated_chapter_index,
         }
 
     def to_dict(self) -> dict[str, Any]:
@@ -349,6 +409,720 @@ class CreationExecutive(Module):
             return
 
         self._compose_and_publish()
+
+    # ------------------------------------------------------------------
+    # Stage-2 chapter pipeline (Task 2.3)
+    #
+    # The legacy flow above (``data.sandbox.narrative.ready`` →
+    # ``control.memory.query`` → ``data.memory.trace.query.result`` →
+    # ``_compose_and_publish``) is preserved verbatim. The new flow below
+    # runs in parallel: it consumes ``data.novel.chapter.intent`` (emitted
+    # by Planner) and produces one ``data.novel.paragraph`` per
+    # ``ChapterIntent.narrative_beats`` entry, carrying ``chapter_id`` and
+    # ``audit_metadata`` so the ChapterManager can attribute and audit
+    # each paragraph (per docs/系统重构方案_v1.md §3.5 / Task 2.3).
+    # ------------------------------------------------------------------
+
+    def _handle_narrative_ready_for_chapter(self, payload: Any) -> None:
+        """Cache narrative/skill_checks/world_state for chapter generation.
+
+        This handler runs alongside the legacy ``_handle_narrative_ready``
+        on every ``data.sandbox.narrative.ready`` message. It does NOT
+        trigger paragraph generation on its own — generation is driven by
+        ``data.novel.chapter.intent`` (or ``control.novel.chapter.write``).
+        The Sandbox payload currently omits ``skill_checks`` /
+        ``world_state``; both default to empty/None when absent.
+        """
+        if not isinstance(payload, dict):
+            return
+
+        narrative_lines: list[NarrativeLine] = []
+        if "narrative_lines" in payload:
+            raw_lines = payload["narrative_lines"]
+            if isinstance(raw_lines, list):
+                for item in raw_lines:
+                    line = self._coerce_narrative_line(item)
+                    if line is not None:
+                        narrative_lines.append(line)
+        elif "narrative_line" in payload:
+            line = self._coerce_narrative_line(payload["narrative_line"])
+            if line is not None:
+                narrative_lines.append(line)
+        if narrative_lines:
+            self._latest_narrative_lines = narrative_lines
+
+        skill_checks = payload.get("skill_checks")
+        if isinstance(skill_checks, list):
+            self._latest_skill_checks = list(skill_checks)
+
+        world_state = payload.get("world_state")
+        if world_state is None:
+            world_state = payload.get("world_contract")
+        if world_state is not None:
+            self._latest_world_state = world_state
+
+    def _handle_chapter_intent(self, payload: Any) -> None:
+        """Cache ``ChapterIntent`` + metadata and trigger paragraph generation.
+
+        Per Task 2.3.1: payload destructure includes ``chapter_intent``,
+        ``source_narrative_id``, ``beats``, ``emotional_arc_beats``,
+        ``weave_violations``, ``weave_ratios``. The intent is cached for
+        downstream ``control.novel.chapter.write`` re-generation, and
+        paragraph generation fires immediately using whatever narrative
+        context is currently cached (sent by an earlier
+        ``data.sandbox.narrative.ready``).
+        """
+        if not isinstance(payload, dict):
+            return
+
+        chapter_intent = payload.get("chapter_intent")
+        if isinstance(chapter_intent, dict):
+            try:
+                chapter_intent = ChapterIntent.from_dict(chapter_intent)
+            except Exception:
+                chapter_intent = None
+        if not isinstance(chapter_intent, ChapterIntent):
+            return
+
+        self._latest_chapter_intent = chapter_intent
+        self._latest_chapter_intent_metadata = {
+            "source_narrative_id": str(payload.get("source_narrative_id", "")),
+            "beats": list(payload.get("beats", []) or []),
+            "emotional_arc_beats": list(
+                payload.get("emotional_arc_beats", []) or []
+            ),
+            "weave_violations": list(payload.get("weave_violations", []) or []),
+            "weave_ratios": dict(payload.get("weave_ratios", {}) or {}),
+            "generated_at": payload.get("generated_at"),
+        }
+        self._latest_source_narrative_id = (
+            self._latest_chapter_intent_metadata.get("source_narrative_id", "")
+        )
+
+        # Reset the per-chapter paragraph counter for the new intent.
+        self._chapter_paragraph_index = 0
+
+        # Generate paragraphs immediately using the cached narrative +
+        # skill_checks + world_state. If no narrative has been cached yet
+        # the generation still proceeds with empty context —
+        # ``build_scene_prose_prompt`` degrades gracefully when
+        # ``world_state`` is None and ``skill_checks`` is empty.
+        self._generate_paragraphs_for_chapter(
+            chapter_intent=chapter_intent,
+            narrative_lines=self._latest_narrative_lines,
+            skill_checks=self._latest_skill_checks,
+            world_state=self._latest_world_state,
+        )
+
+    def _handle_write_command(self, payload: Any) -> None:
+        """Force paragraph generation for the cached chapter intent.
+
+        ``control.novel.chapter.write`` is the explicit trigger path
+        (Task 2.3.1). Unlike ``data.novel.chapter.intent``, it always
+        regenerates paragraphs even if the same chapter was already
+        produced, and it lets the caller override ``chapter_id`` for
+        paragraph attribution.
+        """
+        if not isinstance(payload, dict):
+            payload = {}
+        chapter_id = payload.get("chapter_id")
+        if chapter_id and isinstance(chapter_id, str):
+            self._chapter_write_chapter_id = chapter_id
+        if payload.get("reset_index"):
+            self._chapter_paragraph_index = 0
+
+        if self._latest_chapter_intent is None:
+            # Nothing to generate from yet — wait for
+            # ``data.novel.chapter.intent``.
+            return
+
+        # Bypass the duplicate-chapter guard so an explicit write command
+        # always re-emits paragraphs.
+        self._force_regeneration = True
+        self._generate_paragraphs_for_chapter(
+            chapter_intent=self._latest_chapter_intent,
+            narrative_lines=self._latest_narrative_lines,
+            skill_checks=self._latest_skill_checks,
+            world_state=self._latest_world_state,
+        )
+
+    def _generate_paragraphs_for_chapter(
+        self,
+        chapter_intent: ChapterIntent,
+        narrative_lines: list[NarrativeLine],
+        skill_checks: list[Any],
+        world_state: Any,
+    ) -> None:
+        """Generate one paragraph per beat in ``chapter_intent.narrative_beats``.
+
+        For each beat this method:
+
+        1. Resolves the ``scene_type`` (from ``chapter_intent.scene_type``
+           when set, otherwise classified from the beat string).
+        2. Picks a :class:`SkillCheckOutcome` for the beat (round-robin
+           over the cached ``skill_checks``).
+        3. Builds the scene-prose prompt via
+           :func:`prompts.build_scene_prose_prompt`.
+        4. Calls ``self._llm.complete`` to produce the prose.
+        5. Wraps the prose in a :class:`Paragraph` carrying
+           ``audit_metadata`` (``scene_type``, ``source_beat``,
+           ``source_skill_check``, ``prompt_hash``, ``weave_strand``,
+           ``generation_timestamp``).
+        6. Publishes ``data.novel.paragraph`` with ``chapter_id``,
+           ``paragraph``, ``index`` and ``audit_metadata`` fields so the
+           ChapterManager can attribute and version the paragraph.
+        """
+        if chapter_intent is None:
+            return
+
+        # Guard against duplicate generation for the same chapter_index.
+        if (
+            not self._force_regeneration
+            and chapter_intent.chapter_index
+            == self._last_generated_chapter_index
+            and self._last_generated_chapter_index != -1
+        ):
+            return
+        self._last_generated_chapter_index = chapter_intent.chapter_index
+        self._force_regeneration = False
+
+        beats = list(chapter_intent.narrative_beats or [])
+        if not beats:
+            # Always emit at least one paragraph so the chapter doesn't
+            # end up empty.
+            beats = [chapter_intent.scene_type or "默认节拍"]
+
+        chapter_id = self._resolve_chapter_id(chapter_intent)
+        world_state_dict = self._world_state_to_dict(world_state)
+        style_fingerprint = self._style_profile.get("style_fingerprint")
+
+        # Reset the per-chapter paragraph counter at the start of each
+        # generation pass, so re-generation via ``control.novel.chapter.
+        # write`` produces 0-indexed sequences again.
+        self._chapter_paragraph_index = 0
+
+        for beat_index, beat in enumerate(beats):
+            scene_type = self._resolve_scene_type_for_beat(beat, chapter_intent)
+            skill_check_outcome, skill_check_obj = self._pick_skill_check(
+                skill_checks, beat_index
+            )
+            current_beat = self._build_current_beat_dict(
+                beat, beat_index, chapter_intent
+            )
+
+            # Stage 3.5.2: produce a literary, dice-aware narration for
+            # the resolved skill check and stash it on ``current_beat`` so
+            # downstream prompt builders / audit metadata can pick it up.
+            # The narration is the bridge between the COC dice layer and
+            # the prose layer (per docs/系统重构方案_v1.md §3.9 / Task 3.5).
+            narration = self._build_beat_narration(
+                skill_check_outcome, skill_check_obj, beat
+            )
+            if narration:
+                current_beat["narration"] = narration
+
+            try:
+                prompt = prompts.build_scene_prose_prompt(
+                    scene_type=scene_type,
+                    skill_check_outcome=skill_check_outcome,
+                    chapter_intent=chapter_intent,
+                    current_beat=current_beat,
+                    style_fingerprint=style_fingerprint,
+                    world_state=world_state_dict,
+                )
+            except Exception:
+                # Prompt construction should never fail, but if it does
+                # we skip the beat rather than aborting the whole chapter.
+                continue
+
+            prompt_hash = hashlib.sha256(
+                prompt.encode("utf-8")
+            ).hexdigest()[:16]
+
+            try:
+                content = self._llm.complete(
+                    prompt,
+                    context={"system": ""},
+                    temperature=0.85,
+                    max_tokens=2000,
+                ).strip()
+            except LLMCallError:
+                content = ""
+            if not content:
+                continue
+
+            # Stage 3.5.2: de-AI polish pass. Only fires when a real LLM
+            # is wired in — the mock LLM would replace the paragraph with
+            # an unrelated template, which would break determinism for
+            # tests that assert on paragraph content.
+            content = self._refine_with_de_ai(content, style_fingerprint)
+
+            weave_strand = self._infer_weave_strand(
+                beat, scene_type, chapter_intent
+            )
+            self._chapter_paragraph_index += 1
+            paragraph = self._build_paragraph(
+                content=content,
+                chapter_id=chapter_id,
+                scene_type=scene_type,
+                beat=beat,
+                skill_check=skill_check_obj,
+                prompt=prompt,
+                weave_strand=weave_strand,
+                narration=narration,
+            )
+
+            # Legacy bookkeeping: keep the draft buffer / counter in sync
+            # with the new chapter-pipeline emissions so ``get_state``
+            # reports a consistent ``paragraphs_generated`` total.
+            self._draft_buffer.append(content)
+            self._state.custom["paragraphs_generated"] += 1
+
+            # 0-indexed ``index`` to match ChapterManager's emitted event.
+            emitted_index = self._chapter_paragraph_index - 1
+            self.emit(
+                topic="data.novel.paragraph",
+                payload={
+                    "chapter_id": chapter_id,
+                    "paragraph": paragraph.to_dict(),
+                    "index": emitted_index,
+                    "audit_metadata": dict(paragraph.audit_metadata),
+                },
+                channel="data",
+                priority=7,
+                ttl=5,
+            )
+
+    # ------------------------------------------------------------------
+    # Stage-2 helpers (Task 2.3)
+    # ------------------------------------------------------------------
+
+    def _coerce_narrative_line(self, item: Any) -> NarrativeLine | None:
+        """Coerce a payload entry into a :class:`NarrativeLine` (or None)."""
+        if isinstance(item, NarrativeLine):
+            return item
+        if isinstance(item, dict):
+            try:
+                return reconstruct_dataclass(NarrativeLine, item)
+            except Exception:
+                return None
+        return None
+
+    def _resolve_chapter_id(self, chapter_intent: ChapterIntent) -> str:
+        """Resolve the ``chapter_id`` for paragraph attribution.
+
+        Priority: explicit ``control.novel.chapter.write`` override →
+        ``f"ch_{chapter_index}"`` derived from the intent → ``"ch_current"``.
+        """
+        if self._chapter_write_chapter_id:
+            return self._chapter_write_chapter_id
+        if chapter_intent.chapter_index and chapter_intent.chapter_index > 0:
+            return f"ch_{chapter_intent.chapter_index}"
+        return "ch_current"
+
+    def _resolve_scene_type_for_beat(
+        self, beat: str, chapter_intent: ChapterIntent
+    ) -> str:
+        """Resolve the scene_type for a beat.
+
+        Per Task 2.3.2: if ``ChapterIntent.scene_type`` is set (it always
+        is — the dataclass defaults to ``"dialogue"``), use it for all
+        beats in the chapter. Otherwise fall back to per-beat
+        classification via :meth:`_classify_scene_type`.
+        """
+        chapter_scene_type = getattr(chapter_intent, "scene_type", None)
+        if (
+            chapter_scene_type
+            and chapter_scene_type
+            in (
+                "dialogue",
+                "action",
+                "psychological",
+                "environment",
+                "transition",
+            )
+        ):
+            return chapter_scene_type
+        return self._classify_scene_type(beat)
+
+    def _classify_scene_type(self, beat_str: str) -> str:
+        """Infer a scene_type from a beat string.
+
+        Used as a fallback when ``ChapterIntent.scene_type`` is unset.
+        Keyword scoring mirrors the Planner's scene-type inference in
+        ``planner._infer_scene_type``.
+        """
+        if not beat_str:
+            return "dialogue"
+        text = beat_str.lower()
+        scores: dict[str, float] = {
+            "dialogue": 0.0,
+            "action": 0.0,
+            "psychological": 0.0,
+            "environment": 0.0,
+            "transition": 0.0,
+        }
+        keyword_map = {
+            "dialogue": (
+                "对话", "说", "问", "答", "谈", "谈论", "对白", "dialogue",
+            ),
+            "action": (
+                "动作", "战斗", "追", "逃", "打", "attack", "fight", "chase",
+            ),
+            "psychological": (
+                "心理", "想", "内心", "意识", "恐惧", "希望", "psychological",
+            ),
+            "environment": (
+                "环境", "场景", "天气", "光", "雨", "街", "environment",
+            ),
+            "transition": (
+                "过渡", "随后", "之后", "接着", "离开", "前往", "transition",
+            ),
+        }
+        for scene_type, keywords in keyword_map.items():
+            for kw in keywords:
+                if kw in text:
+                    scores[scene_type] += 1.0
+        priority = [
+            "action",
+            "dialogue",
+            "psychological",
+            "environment",
+            "transition",
+        ]
+        best = max(priority, key=lambda k: (scores[k], -priority.index(k)))
+        if scores[best] <= 0.0:
+            return "dialogue"
+        return best
+
+    def _pick_skill_check(
+        self, skill_checks: list[Any], beat_index: int
+    ) -> tuple[SkillCheckOutcome | None, Any]:
+        """Pick a skill check for the beat (round-robin by index).
+
+        Returns ``(outcome_enum, raw_object)``. The outcome enum is fed
+        to :func:`prompts.build_scene_prose_prompt`; the raw object is
+        recorded in ``audit_metadata.source_skill_check`` for traceability.
+        """
+        if not skill_checks:
+            return None, None
+        idx = beat_index % len(skill_checks)
+        sc = skill_checks[idx]
+        outcome: SkillCheckOutcome | None = None
+        if isinstance(sc, SkillCheck):
+            outcome = sc.outcome
+        elif isinstance(sc, dict):
+            outcome_str = sc.get("outcome")
+            if outcome_str:
+                try:
+                    outcome = SkillCheckOutcome(outcome_str)
+                except ValueError:
+                    outcome = None
+        return outcome, sc
+
+    def _build_current_beat_dict(
+        self, beat_name: str, beat_index: int, chapter_intent: ChapterIntent
+    ) -> dict[str, Any]:
+        """Build the ``current_beat`` dict expected by ``build_scene_prose_prompt``.
+
+        The prompt builder reads ``name`` / ``intent`` / ``target_strand``
+        from this dict (see prompts.py). When the cached
+        ``chapter_intent_metadata['beats']`` carries a structured beat
+        (from Planner), we reuse its ``intent``; otherwise we synthesize a
+        short intent string from the beat name.
+        """
+        intent_str = ""
+        beats_meta = self._latest_chapter_intent_metadata.get("beats", []) or []
+        if isinstance(beats_meta, list) and beat_index < len(beats_meta):
+            meta = beats_meta[beat_index]
+            if isinstance(meta, dict):
+                intent_str = str(meta.get("intent", ""))
+        if not intent_str:
+            intent_str = self._beat_intent_fallback(beat_name)
+        target_strand = self._infer_weave_strand(
+            beat_name, chapter_intent.scene_type, chapter_intent
+        )
+        return {
+            "name": beat_name,
+            "intent": intent_str,
+            "target_strand": target_strand,
+        }
+
+    def _beat_intent_fallback(self, beat_name: str) -> str:
+        """Return a short Chinese intent string for a beat name."""
+        name = beat_name or ""
+        if "Hook" in name or "钩子" in name or "章首" in name:
+            return "以悬念或异常细节抓住读者注意。"
+        if "主线" in name or "推进" in name:
+            return "推进核心冲突，让主角在目标上取得关键进展或遭受挫败。"
+        if "情感" in name or "关系" in name:
+            return "放大角色之间的关系张力，暴露信任、爱意或敌意的微妙裂痕。"
+        if "世界观" in name or "揭示" in name:
+            return "揭示一处世界规则或神秘设定，让读者感到世界比想象更大。"
+        if "爽点" in name or "兑现" in name:
+            return "兑现一个此前埋下的微小承诺，给读者一次情绪释放。"
+        if "悬念" in name or "章末" in name:
+            return "留一个钩子，让下一章开头成为读者无法跳过的追问。"
+        return "推进当前节拍意图。"
+
+    def _infer_weave_strand(
+        self, beat: str, scene_type: str, chapter_intent: ChapterIntent
+    ) -> str:
+        """Infer which of the four weave strands this paragraph belongs to.
+
+        Maps the standard six-beat curve (Hook / 主线推进 / 情感冲突 /
+        世界观揭示 / 爽点兑现 / 章末悬念) onto the Quest / Fire /
+        Constellation / Rest strands. Falls back to a scene_type-based
+        mapping when the beat name doesn't match a known pattern.
+        """
+        beat_lower = (beat or "").lower()
+        if "hook" in beat_lower or "章首" in beat or "钩子" in beat:
+            return "quest"
+        if "主线" in beat or "推进" in beat:
+            return "quest"
+        if "情感" in beat or "关系" in beat:
+            return "fire"
+        if "世界观" in beat or "揭示" in beat:
+            return "constellation"
+        if "爽点" in beat or "兑现" in beat:
+            return "quest"
+        if "悬念" in beat or "章末" in beat:
+            return "rest"
+        scene_to_strand = {
+            "action": "quest",
+            "dialogue": "fire",
+            "psychological": "fire",
+            "environment": "constellation",
+            "transition": "rest",
+        }
+        return scene_to_strand.get(scene_type, "quest")
+
+    def _build_beat_narration(
+        self,
+        skill_check_outcome: SkillCheckOutcome | None,
+        skill_check_obj: Any,
+        beat: str,
+    ) -> str | None:
+        """Build a literary narration for a beat's skill check (Task 3.5.2).
+
+        Returns ``None`` when no skill check outcome is available; otherwise
+        delegates to :func:`narrate_skill_check` to produce the
+        dice-aware, emotion-laden Chinese narration that bridges the COC
+        dice layer and the prose layer.
+        """
+        if skill_check_outcome is None:
+            return None
+        character = "主角"
+        challenge = beat or "推进节拍"
+        dice = 0
+        difficulty = 0.0
+        if isinstance(skill_check_obj, SkillCheck):
+            character = skill_check_obj.character_name or "主角"
+            challenge = beat or skill_check_obj.skill or "推进节拍"
+            dice = int(skill_check_obj.roll or 0)
+            difficulty = float(skill_check_obj.target or 0.0)
+        elif isinstance(skill_check_obj, dict):
+            character = str(skill_check_obj.get("character_name") or "主角")
+            challenge = beat or str(skill_check_obj.get("skill") or "推进节拍")
+            try:
+                dice = int(skill_check_obj.get("roll") or 0)
+            except (TypeError, ValueError):
+                dice = 0
+            try:
+                difficulty = float(skill_check_obj.get("target") or 0.0)
+            except (TypeError, ValueError):
+                difficulty = 0.0
+        try:
+            return narrate_skill_check(
+                outcome=skill_check_outcome,
+                character=character,
+                challenge=challenge,
+                dice=dice,
+                difficulty=difficulty,
+            )
+        except Exception:
+            return None
+
+    # ------------------------------------------------------------------
+    # Stage 3.5.2 literary-quality helpers
+    # ------------------------------------------------------------------
+
+    # Chinese cue lexicons for the three literary-element buckets
+    # (per docs/系统重构方案_v1.md §3.9 / §7). Hits are counted by
+    # substring occurrence, so the lists favour distinctive character
+    # bigrams / trigrams that are unlikely to appear by accident.
+    _ACTION_CUES: tuple[str, ...] = (
+        "走", "跑", "抓", "推", "拉", "抬", "挥", "握", "跨", "迈",
+        "转身", "抬头", "低头", "伸手", "缩回", "起身", "坐下", "站起",
+        "推开门", "推开", "踏", "踩", "跳", "停", "凝视", "看向", "望向",
+        "举起", "放下", "抓紧", "松开", "颤抖", "皱眉", "点头", "摇头",
+    )
+    _ENVIRONMENT_CUES: tuple[str, ...] = (
+        "风", "雨", "光", "影", "气味", "声音", "尘", "窗", "墙", "地面",
+        "天", "云", "雾", "湿", "冷", "热", "时钟", "钟表", "脚步",
+        "光线", "尘埃", "街", "路", "树", "灯", "门", "桌", "椅",
+        "雨声", "风声", "灰", "潮", "窗台", "走廊", "楼梯",
+    )
+    _INNER_CUES: tuple[str, ...] = (
+        "心", "想", "记起", "犹豫", "害怕", "颤", "呼吸", "意识到",
+        "感觉", "察觉", "恐惧", "希望", "疑虑", "不安", "预感",
+        "回忆", "念头", "心头", "心中", "内心", "意识", "思绪",
+        "瞬间", "猛然", "忽然", "突然", "不由", "忍不住",
+    )
+
+    def _compute_literary_quality_score(self, content: str) -> float:
+        """Return a 0-1 score for how literary a paragraph is (Task 3.5.2).
+
+        Heuristic: a paragraph is considered literary when it carries all
+        three element types — 人物动作 (action) / 环境反应 (environment) /
+        内心波动 (inner). The score is the count of present buckets
+        divided by 3, so:
+
+        - all three present  → 1.0
+        - two present        → 0.67
+        - one present        → 0.33
+        - none               → 0.0
+
+        Empty / whitespace-only content scores 0.0. The score is meant
+        for audit dashboards and revision triage, not for hard gating.
+        """
+        if not content or not content.strip():
+            return 0.0
+        text = content
+        has_action = any(cue in text for cue in self._ACTION_CUES)
+        has_environment = any(cue in text for cue in self._ENVIRONMENT_CUES)
+        has_inner = any(cue in text for cue in self._INNER_CUES)
+        present = sum(1 for flag in (has_action, has_environment, has_inner) if flag)
+        return round(present / 3.0, 3)
+
+    def _refine_with_de_ai(
+        self,
+        paragraph: str,
+        style_fingerprint: Any,
+    ) -> str:
+        """Run a de-AI polish pass on a generated paragraph (Task 3.5.2).
+
+        Calls :func:`prompts.build_de_ai_prompt` and asks the LLM to
+        rewrite the paragraph according to :data:`prompts.DE_AI_RULES`.
+        Only fires when a real LLM is wired in (``not self._llm.is_mock``)
+        so that tests using :class:`MockLLMService` remain deterministic.
+
+        Returns the polished paragraph on success; on any failure (LLM
+        error, unparseable response, empty content) returns the original
+        paragraph unchanged so the chapter pipeline never produces an
+        empty paragraph due to a polish-step failure.
+        """
+        if not paragraph or not paragraph.strip():
+            return paragraph
+        if self._llm is None or self._llm.is_mock:
+            return paragraph
+        try:
+            prompt = prompts.build_de_ai_prompt(paragraph, style_fingerprint)
+        except Exception:
+            return paragraph
+        try:
+            response = self._llm.complete(
+                prompt,
+                context={"system": ""},
+                temperature=0.7,
+                max_tokens=2000,
+            ).strip()
+        except LLMCallError:
+            return paragraph
+        if not response:
+            return paragraph
+        # The de-AI prompt asks for a single-line JSON with a
+        # ``rewritten`` field. Try to extract it; if anything looks off,
+        # fall back to the original paragraph.
+        try:
+            import json as _json
+
+            payload = _json.loads(response)
+            rewritten = payload.get("rewritten")
+            if isinstance(rewritten, str) and rewritten.strip():
+                return rewritten.strip()
+        except (ValueError, TypeError):
+            pass
+        return paragraph
+
+    def _build_paragraph(
+        self,
+        content: str,
+        chapter_id: str,
+        scene_type: str,
+        beat: str,
+        skill_check: Any,
+        prompt: str,
+        weave_strand: str,
+        narration: str | None = None,
+    ) -> Paragraph:
+        """Build a :class:`Paragraph` with audit_metadata (Task 2.3.3 + 3.5.2).
+
+        Stage 3.5.2 adds two new audit_metadata fields:
+
+        - ``source_narration``: the literary narration produced by
+          :func:`narrate_skill_check` for this beat's skill check (or
+          ``None`` when no skill check was available).
+        - ``literary_quality_score``: a 0-1 heuristic score based on
+          whether the paragraph contains the three element types
+          (action / environment / inner) expected from a literary scene
+          per docs/系统重构方案_v1.md §3.9.
+        """
+        prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()[:16]
+        source_skill_check: dict[str, Any] | None = None
+        if isinstance(skill_check, SkillCheck):
+            source_skill_check = {
+                "skill": skill_check.skill,
+                "outcome": (
+                    skill_check.outcome.value
+                    if isinstance(skill_check.outcome, SkillCheckOutcome)
+                    else str(skill_check.outcome)
+                ),
+                "roll": skill_check.roll,
+                "target": skill_check.target,
+                "character_name": skill_check.character_name,
+            }
+        elif isinstance(skill_check, dict):
+            source_skill_check = {
+                "skill": skill_check.get("skill", ""),
+                "outcome": skill_check.get("outcome", ""),
+                "roll": skill_check.get("roll"),
+                "target": skill_check.get("target"),
+                "character_name": skill_check.get("character_name", ""),
+            }
+        literary_quality_score = self._compute_literary_quality_score(content)
+        audit_metadata: dict[str, Any] = {
+            "scene_type": scene_type,
+            "source_beat": beat,
+            "source_skill_check": source_skill_check,
+            "source_narration": narration,
+            "literary_quality_score": literary_quality_score,
+            "prompt_hash": prompt_hash,
+            "weave_strand": weave_strand,
+            "generation_timestamp": time.time(),
+        }
+        return Paragraph(
+            content=content,
+            chapter_id=chapter_id,
+            audit_metadata=audit_metadata,
+        )
+
+    def _world_state_to_dict(self, world_state: Any) -> dict | None:
+        """Convert a world_state object to a dict for prompt builders."""
+        if world_state is None:
+            return None
+        if isinstance(world_state, dict):
+            return world_state
+        if hasattr(world_state, "to_dict"):
+            try:
+                result = world_state.to_dict()
+                if isinstance(result, dict):
+                    return result
+            except Exception:
+                pass
+        if hasattr(world_state, "__dict__"):
+            return dict(world_state.__dict__)
+        return None
 
     # ------------------------------------------------------------------
     # Paragraph composition

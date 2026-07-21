@@ -51,6 +51,7 @@ const AREAS: NavArea[] = [
     accent: 'world',
     items: [
       { path: '/social', title: '社会空间' },
+      { path: '/world', title: '世界图谱' },
       { path: '/novel', title: '小说手稿' },
     ],
   },
