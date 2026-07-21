@@ -436,6 +436,8 @@ def _start_webui(
     modules: list[Any],
     context: dict[str, Any],
     cfg: NovelistConfig,
+    clock: Any,
+    scheduler: Any,
 ) -> Any | None:
     """Start the FastAPI dashboard in a background thread when enabled."""
     if not cfg.webui.enabled:
@@ -712,7 +714,7 @@ def run_agent(
     router.flush()
 
     # Start the optional web dashboard in a background thread.
-    _start_webui(router, modules, context, cfg)
+    _start_webui(router, modules, context, cfg, clock, scheduler)
 
     # Start the day in DMN so dreaming/incubation can happen.
     router.publish(
