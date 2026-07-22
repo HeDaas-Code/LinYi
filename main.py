@@ -73,6 +73,7 @@ from src.novelist_brain.salience_network import SalienceNetwork
 from src.novelist_brain.sandbox import MentalSandbox
 from src.novelist_brain.sandbox_versioning import SandboxVersionManager
 from src.novelist_brain.scheduler import DailyScheduler
+from src.novelist_brain.segment_detail_enhancer import SegmentDetailEnhancer
 from src.novelist_brain.self_timeline import SelfTimeline
 from src.novelist_brain.social_input import SocialInput
 from src.novelist_brain.transaction import TransactionManager
@@ -413,6 +414,8 @@ def create_modules(
     # Memory.
     registry.register(MemorySystem, factory_options={"name": "memory_system"})
     registry.register(SelfTimeline, factory_options={"name": "self_timeline"})
+    # Schedule / anthropomorphic rhythm.
+    registry.register(SegmentDetailEnhancer, factory_options={"name": "segment_detail_enhancer"})
     # Input.
     registry.register(PersonalInput, factory_options={"name": "personal_input", "seed": 42})
     registry.register(SocialInput, factory_options={"name": "social_input", "seed": 42})
