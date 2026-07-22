@@ -31,3 +31,11 @@ AI Town 是 a16z 与 Convex 合作开源的「生成式智能体」参考实现�
 - 将 LLM 密集型操作（如生成消息、反思）做成异步 Operation，避免阻塞主引擎 tick。
 - 复用 Embedding 缓存机制，避免对相同查询重复计算向量，降低运行成本。
 - 将 AI Town 的社交事件映射到 LinYi 的事件总线，让 OC 的自主行为能被 `SelfTimeline`、`MemorySystem` 与创作引擎共同消费。
+
+## LinYi 已落地的对应实现
+
+- `OCTownEngine`  tick 循环驱动 OC 移动、对话与反思。
+- `OCSocialMemoryEntry` 存储 conversation / reflection 两类记忆，并记录 `importance` 与 `reflected` 状态。
+- `OCTownAgent.memories_about(target_id)` 按 importance × recency 检索关于特定对象的记忆，用于影响后续对话话题。
+- `reflect_on_memories` 在累计重要性超过阈值时生成高层 `reflection`，并通过 `data.oc.town.reflection` 发布。
+- `RelationshipGraph` 订阅 `data.oc.town.event` 与 `data.oc.town.reflection`，维护 OC-OC 之间可演化的 `affinity` / `familiarity` 边。

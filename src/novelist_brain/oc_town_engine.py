@@ -17,6 +17,7 @@ from __future__ import annotations
 import random
 import time
 import uuid
+from collections import Counter
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -36,6 +37,9 @@ TOPIC_TOWN_EVENT = "data.oc.town.event"
 
 #: Topic used to inject an external event (e.g. from the reader or story bible).
 TOPIC_INJECT_EVENT = "control.oc.town.inject_event"
+
+#: Topic emitted when an OC synthesizes a higher-level reflection.
+TOPIC_TOWN_REFLECTION = "data.oc.town.reflection"
 
 #: Default spaces where OCs can hang out.  Callers can override via context.
 DEFAULT_SPACES: tuple[str, ...] = (
@@ -86,6 +90,15 @@ class OCSocialMemoryEntry:
     importance: float = 0.5
     timestamp: float = 0.0
     embedding: list[float] = field(default_factory=list)
+    reflected: bool = False
+    source_entry_ids: list[str] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        # Backward compatibility: old snapshots may omit these fields.
+        if self.reflected is None:
+            self.reflected = False
+        if self.source_entry_ids is None:
+            self.source_entry_ids = []
 
 
 class OCTownAgent:
@@ -134,6 +147,7 @@ class OCTownAgent:
         kind: str,
         content: str,
         importance: float = 0.5,
+        timestamp: float | None = None,
     ) -> OCSocialMemoryEntry:
         """Append a social memory entry for this agent."""
         entry = OCSocialMemoryEntry(
@@ -143,10 +157,42 @@ class OCTownAgent:
             kind=kind,
             content=content,
             importance=max(0.0, min(1.0, float(importance))),
-            timestamp=time.time(),
+            timestamp=timestamp if timestamp is not None else time.time(),
         )
         self.social_memory.append(entry)
         return entry
+
+    def memories_about(
+        self,
+        target_id: str,
+        kind: str | None = None,
+        limit: int = 5,
+        now: float | None = None,
+    ) -> list[OCSocialMemoryEntry]:
+        """Return memories about ``target_id`` sorted by importance * recency.
+
+        This is a lightweight, LLM-free retrieval inspired by ai-town's
+        importance/recency/relevance scoring.  Relevance is omitted in the MVP
+        because embeddings are not yet populated.
+        """
+        now = now if now is not None else time.time()
+        candidates = [
+            m
+            for m in self.social_memory
+            if m.target_id == target_id and (kind is None or m.kind == kind)
+        ]
+        if not candidates:
+            return []
+
+        half_life = 3600.0 * 6  # 6 hours
+
+        def _score(entry: OCSocialMemoryEntry) -> float:
+            age = max(0.0, now - entry.timestamp)
+            recency = 0.5 ** (age / half_life)
+            return entry.importance * recency
+
+        candidates.sort(key=_score, reverse=True)
+        return candidates[:limit]
 
 
 class OCTownEngine(Module):
@@ -159,6 +205,8 @@ class OCTownEngine(Module):
         self._tick_interval_seconds = 60.0
         self._last_tick = 0.0
         self._rng = random.Random()
+        self._reflection_threshold = 1.5
+        self._reflection_window = 24.0 * 3600.0
         self.subscribe(
             "control.oc.town.init",
             TOPIC_INJECT_EVENT,
@@ -183,6 +231,7 @@ class OCTownEngine(Module):
                 "agents_count": 0,
                 "events_published": 0,
                 "conversations_count": 0,
+                "reflections_count": 0,
             },
         )
 
@@ -243,6 +292,14 @@ class OCTownEngine(Module):
             self._rng = random.Random(seed)
         else:
             self._rng = random.Random()
+
+        reflection_threshold = town_cfg.get("reflection_threshold")
+        if isinstance(reflection_threshold, (int, float)) and reflection_threshold > 0:
+            self._reflection_threshold = float(reflection_threshold)
+
+        reflection_window = town_cfg.get("reflection_window")
+        if isinstance(reflection_window, (int, float)) and reflection_window > 0:
+            self._reflection_window = float(reflection_window)
 
         sheets = town_cfg.get("agents", [])
         for sheet_data in sheets:
@@ -350,13 +407,56 @@ class OCTownEngine(Module):
             return candidates[0]
         return None
 
+    def _topic_from_memories(
+        self,
+        agent: OCTownAgent,
+        partner: OCTownAgent,
+        now: float,
+    ) -> tuple[str, str]:
+        """Pick a conversation topic influenced by the agent's memory of partner.
+
+        Returns ``(topic, memory_hint)``.  If no relevant memory exists, the
+        topic is chosen randomly and the hint is empty.
+        """
+        memories = agent.memories_about(
+            partner.runtime.character_id, limit=3, now=now
+        )
+        if not memories:
+            return self._rng.choice(CONVERSATION_TOPICS), ""
+
+        top = memories[0]
+        topic = self._match_topic(top.content)
+        if topic is None:
+            topic = self._rng.choice(CONVERSATION_TOPICS)
+        hint = f"上次{top.content}" if top.content else ""
+        return topic, hint
+
+    @staticmethod
+    def _match_topic(content: str) -> str | None:
+        """Map a memory phrase back to one of the known conversation topics."""
+        if any(k in content for k in ("梦", "梦见")):
+            return "昨晚的梦"
+        if any(k in content for k in ("烦恼", "焦虑", "担心")):
+            return "各自的烦恼"
+        if any(k in content for k in ("计划", "未来", "打算")):
+            return "未来的计划"
+        if any(k in content for k in ("书", "读到", "句子", "话")):
+            return "刚读到的一句话"
+        if any(k in content for k in ("天气", "下雨", "晴天", "雪", "风")):
+            return "天气"
+        if any(k in content for k in ("回忆", "记得", "曾经")):
+            return "一个共同的回忆"
+        if any(k in content for k in ("店", "新开", "街角")):
+            return "街角新开的店"
+        return None
+
     def _run_conversation(
         self,
         agent_a: OCTownAgent,
         agent_b: OCTownAgent,
         now: float,
     ) -> None:
-        topic = self._rng.choice(CONVERSATION_TOPICS)
+        topic, memory_hint = self._topic_from_memories(agent_a, agent_b, now)
         location = agent_a.runtime.location or "某处"
 
         agent_a.runtime.last_conversation_with = agent_b.runtime.character_id
@@ -372,10 +472,16 @@ class OCTownEngine(Module):
         delta = round(self._rng.uniform(0.02, 0.08), 3)
         self._update_relationship(agent_a, agent_b, delta)
 
-        summary = (
-            f"{agent_a.runtime.name} 和 {agent_b.runtime.name} "
-            f"在 {location} 聊起了 {topic}"
-        )
+        if memory_hint:
+            summary = (
+                f"{agent_a.runtime.name} 想起 {memory_hint}，"
+                f"和 {agent_b.runtime.name} 在 {location} 聊起 {topic}"
+            )
+        else:
+            summary = (
+                f"{agent_a.runtime.name} 和 {agent_b.runtime.name} "
+                f"在 {location} 聊起了 {topic}"
+            )
 
         # Record in social memory.
         agent_a.remember(
@@ -383,13 +489,19 @@ class OCTownEngine(Module):
             kind="conversation",
             content=f"与 {agent_b.runtime.name} 聊到 {topic}",
             importance=0.5,
+            timestamp=now,
         )
         agent_b.remember(
             target_id=agent_a.runtime.character_id,
             kind="conversation",
             content=f"与 {agent_a.runtime.name} 聊到 {topic}",
             importance=0.5,
+            timestamp=now,
         )
+
+        # Trigger reflection if recent memories have accumulated enough weight.
+        self.reflect_on_memories(agent_a, now)
+        self.reflect_on_memories(agent_b, now)
 
         self._state.custom["conversations_count"] = (
             int(self._state.custom.get("conversations_count", 0)) + 1
@@ -411,12 +523,19 @@ class OCTownEngine(Module):
     def _reflect(self, agent: OCTownAgent, now: float) -> None:
         agent.runtime.last_action_at = now
         agent.runtime.activity = "沉思"
+        reflection = self.reflect_on_memories(agent, now)
+        if reflection is not None:
+            return
+        # Fallback: if no structured reflection was triggered, record a light
+        # summary of the most recent memory so the agent still "has something
+        # on its mind".
         memory = self._recent_memory_summary(agent)
         agent.remember(
             target_id="",
             kind="reflection",
             content=memory,
             importance=0.4,
+            timestamp=now,
         )
         self._publish_event(
             kind="reflection",
@@ -426,6 +545,124 @@ class OCTownEngine(Module):
                 "agent_name": agent.runtime.name,
                 "memory": memory,
             },
+        )
+
+    def reflect_on_memories(
+        self,
+        agent: OCTownAgent,
+        now: float | None = None,
+    ) -> OCSocialMemoryEntry | None:
+        """Synthesize a higher-level reflection when enough unreflected memories
+        have accumulated.
+
+        Inspired by the Generative Agents reflection loop, this gives OCs a
+        sense of "having something on their mind" rather than just a flat list
+        of observations.
+        """
+        now = now if now is not None else time.time()
+        cutoff = now - self._reflection_window
+        unreflected = [
+            m for m in agent.social_memory
+            if not m.reflected and m.timestamp >= cutoff
+        ]
+        total_importance = sum(m.importance for m in unreflected)
+        if total_importance < self._reflection_threshold:
+            return None
+
+        insights = self._synthesize_reflections(agent, unreflected)
+        content = "；".join(insights)
+        source_ids = [m.entry_id for m in unreflected]
+
+        reflection = agent.remember(
+            target_id="",
+            kind="reflection",
+            content=content,
+            importance=min(0.9, 0.45 + total_importance * 0.1),
+            timestamp=now,
+        )
+        reflection.reflected = True
+        reflection.source_entry_ids = source_ids
+
+        for entry in unreflected:
+            entry.reflected = True
+
+        self._state.custom["reflections_count"] = (
+            int(self._state.custom.get("reflections_count", 0)) + 1
+        )
+        self._publish_reflection_event(agent, reflection, insights, source_ids)
+        return reflection
+
+    def _synthesize_reflections(
+        self,
+        agent: OCTownAgent,
+        entries: list[OCSocialMemoryEntry],
+    ) -> list[str]:
+        """Build a small list of insight phrases from unreflected memories."""
+        insights: list[str] = []
+        by_target: dict[str, list[OCSocialMemoryEntry]] = {}
+        for entry in entries:
+            if entry.target_id:
+                by_target.setdefault(entry.target_id, []).append(entry)
+
+        if by_target:
+            sorted_targets = sorted(
+                by_target.items(),
+                key=lambda item: (sum(e.importance for e in item[1]), len(item[1])),
+                reverse=True,
+            )
+            top_target, target_entries = sorted_targets[0]
+            total_imp = sum(e.importance for e in target_entries)
+            count = len(target_entries)
+            other = self._agents.get(top_target)
+            target_name = other.runtime.name if other is not None else top_target
+            if count >= 2 and total_imp >= 1.0:
+                insights.append(f"最近和 {target_name} 的互动很多，关系似乎在变化")
+            else:
+                insights.append(f"和 {target_name} 的那次交流让我印象深刻")
+
+        kind_counts = Counter(e.kind for e in entries)
+        if kind_counts.get("conversation", 0) >= 2:
+            insights.append("最近聊了不少，也许该留一些时间独处")
+        if kind_counts.get("reflection", 0) >= 2:
+            insights.append("我一直在反复想同一些事情")
+
+        if not insights:
+            insights.append("最近发生了一些值得记住的事")
+
+        return insights
+
+    def _publish_reflection_event(
+        self,
+        agent: OCTownAgent,
+        reflection: OCSocialMemoryEntry,
+        insights: list[str],
+        source_entry_ids: list[str],
+    ) -> None:
+        mentioned_targets = sorted(
+            {m.target_id for m in agent.social_memory
+             if m.entry_id in source_entry_ids and m.target_id}
+        )
+        self.emit(
+            topic=TOPIC_TOWN_REFLECTION,
+            payload={
+                "kind": "reflection",
+                "summary": f"{agent.runtime.name} 反思到：{reflection.content}",
+                "timestamp": time.time(),
+                "extra": {
+                    "agent_id": agent.runtime.character_id,
+                    "agent_name": agent.runtime.name,
+                    "insights": insights,
+                    "source_entry_ids": source_entry_ids,
+                    "mentioned_targets": mentioned_targets,
+                    "importance": reflection.importance,
+                },
+            },
+            channel="data",
+            priority=5,
+            ttl=3,
+        )
+        self._state.custom["events_published"] = (
+            int(self._state.custom.get("events_published", 0)) + 1
         )
 
     def _recent_memory_summary(self, agent: OCTownAgent) -> str:
@@ -495,6 +732,8 @@ class OCTownEngine(Module):
                 "spaces": sorted(self._spaces),
                 "tick_interval_seconds": self._tick_interval_seconds,
                 "last_tick": self._last_tick,
+                "reflection_threshold": self._reflection_threshold,
+                "reflection_window": self._reflection_window,
             }
         )
         return base
@@ -506,6 +745,12 @@ class OCTownEngine(Module):
             data.get("tick_interval_seconds", 60.0)
         )
         self._last_tick = float(data.get("last_tick", 0.0))
+        self._reflection_threshold = float(
+            data.get("reflection_threshold", 1.5)
+        )
+        self._reflection_window = float(
+            data.get("reflection_window", 24.0 * 3600.0)
+        )
         self._agents = {
             agent.sheet.character_id: agent
             for agent in (
@@ -522,4 +767,5 @@ __all__ = [
     "OCSocialMemoryEntry",
     "TOPIC_TOWN_EVENT",
     "TOPIC_INJECT_EVENT",
+    "TOPIC_TOWN_REFLECTION",
 ]

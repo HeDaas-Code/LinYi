@@ -64,6 +64,7 @@ from src.novelist_brain.memory import MemorySystem
 from src.novelist_brain.memory_stream import MemoryStream
 from src.novelist_brain.recovery import FaultManager, RecoveryManager
 from src.novelist_brain.metabolism import Metabolism
+from src.novelist_brain.social_vital_bridge import SocialVitalBridge
 from src.novelist_brain.models import BusMessage, StoryBible, TickDelta, WorldStateContract
 from src.novelist_brain.module_registry import ModuleRegistry
 from src.novelist_brain.novel_output import NovelOutput
@@ -269,6 +270,8 @@ def build_context(
             "tick_interval_seconds": 60,
             "seed": 42,
             "agents": [],
+            "reflection_threshold": 1.5,
+            "reflection_window": 24 * 3600,
         },
         "memory_stream": {
             "recency_half_life": 24.0 * 3600,
@@ -294,6 +297,9 @@ def build_context(
             "arousal": 0.5,
             "reader_temperature": 0.5,
             "creative_drive": 0.5,
+        },
+        "social_vital_bridge": {
+            "decay_per_hour": 0.05,
         },
     }
 
@@ -499,6 +505,9 @@ def create_modules(
     # OC autonomous social simulation (ai-town inspired).
     registry.register(OCTownEngine, factory_options={"name": "oc_town_engine"})
     registry.register(RelationshipGraph, factory_options={"name": "relationship_graph"})
+    # Emotional continuity: social events feed back into vital state
+    # (Project AIRI inspired).
+    registry.register(SocialVitalBridge, factory_options={"name": "social_vital_bridge"})
     # v2 chapter structure & planning layer (Task 2.6)
     registry.register_agent(
         "chapter_manager",

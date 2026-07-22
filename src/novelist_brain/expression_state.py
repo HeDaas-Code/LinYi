@@ -77,6 +77,18 @@ class ExpressionState(Module):
     def intensity(self) -> float:
         return self._intensity
 
+    @property
+    def mood_bias(self) -> str:
+        return self._mood_bias
+
+    @property
+    def arousal(self) -> float:
+        return self._arousal
+
+    @property
+    def reader_temperature(self) -> float:
+        return self._reader_temperature
+
     # ------------------------------------------------------------------
     # Module lifecycle
     # ------------------------------------------------------------------

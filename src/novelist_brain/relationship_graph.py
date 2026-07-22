@@ -53,6 +53,7 @@ class RelationshipGraph(Module):
         self._reader_id: str = "default_reader"
         self.subscribe(
             "data.oc.town.event",
+            "data.oc.town.reflection",
             "event.reader.interaction",
             "data.reader.profile.updated",
             TOPIC_RELATIONSHIP_CONTROL,
@@ -303,6 +304,23 @@ class RelationshipGraph(Module):
                     evidence=payload.get("summary", ""),
                     timestamp=timestamp,
                 )
+            return
+
+        if kind == "reflection":
+            # Reflections that mention other agents deepen the thinker's
+            # relationship with those agents.
+            agent_id = extra.get("agent_id")
+            mentioned = extra.get("mentioned_targets", [])
+            if agent_id and mentioned:
+                for target_id in mentioned:
+                    self.update(
+                        agent_id,
+                        target_id,
+                        "familiarity",
+                        0.02,
+                        evidence=payload.get("summary", ""),
+                        timestamp=timestamp,
+                    )
 
     def _handle_reader_interaction(self, payload: dict[str, Any]) -> None:
         target = payload.get("oc_id") or payload.get("character_id") or "linyi"

@@ -41,11 +41,25 @@ def test_enhancer_generates_detail_on_network_activation() -> None:
     assert detail.state_variables[0].name == "phase_type"
 
 
-def test_enhancer_emits_bus_event() -> None:
+def test_enhancer_emits_bus_event(monkeypatch: Any) -> None:
     router = BusRouter()
     enhancer = SegmentDetailEnhancer(name="segment_detail_enhancer")
     enhancer.register(router)
     enhancer.init({})
+
+    # Pin the enhancer's idea of "now" so this test is independent of the
+    # wall-clock time at which it runs.
+    fixed_now = datetime.datetime(2026, 7, 22, 15, 0)
+
+    class _FixedDateTime(type(datetime.datetime)):  # type: ignore[misc]
+        @classmethod
+        def now(cls, tz: Any = None) -> datetime.datetime:
+            return fixed_now
+
+    monkeypatch.setattr(
+        "src.novelist_brain.segment_detail_enhancer.datetime.datetime",
+        _FixedDateTime,
+    )
 
     plan = DailyPlan(
         date=datetime.date(2026, 7, 22),
