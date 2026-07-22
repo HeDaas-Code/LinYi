@@ -21,13 +21,31 @@ from src.novelist_brain.persistence import dataclass_to_dict, reconstruct_datacl
 #: Topic emitted when a relationship edge changes.
 TOPIC_RELATIONSHIP_UPDATED = "data.relationship.updated"
 
+#: Topic emitted when a relationship crosses a stage threshold.
+TOPIC_RELATIONSHIP_STAGE_CHANGED = "data.relationship.stage.changed"
+
 #: Topic used to update relationships directly from other modules.
 TOPIC_RELATIONSHIP_CONTROL = "control.relationship.update"
 
 
 @dataclass
+class RelationshipHistoryEntry:
+    """One snapshot in the evolution of a relationship edge."""
+
+    timestamp: float = 0.0
+    weight: float = 0.0
+    stage: str = ""
+    evidence: str = ""
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
 class RelationshipEdge:
-    """A single directed, typed relationship between two entities."""
+    """A single directed, typed relationship between two entities.
+
+    The edge keeps a lightweight history of weight/stage changes so that
+    callers can narrate how the relationship evolved over time.
+    """
 
     source: str
     target: str
@@ -36,9 +54,40 @@ class RelationshipEdge:
     timestamp: float = 0.0
     evidence: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
+    created_at: float = 0.0
+    stage: str = ""
+    history: list[RelationshipHistoryEntry] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         self.weight = max(-1.0, min(1.0, float(self.weight)))
+
+
+#: Default stage thresholds.  For each kind, list ordered pairs of
+#: ``(minimum_weight, stage_label)``.  The highest threshold that is still
+#: <= the current weight determines the stage.
+DEFAULT_STAGE_THRESHOLDS: dict[str, list[tuple[float, str]]] = {
+    "affinity": [
+        (-1.0, "hostile"),
+        (-0.6, "cold"),
+        (-0.2, "neutral"),
+        (0.2, "warm"),
+        (0.6, "close"),
+    ],
+    "trust": [
+        (-1.0, "distrust"),
+        (-0.6, "cautious"),
+        (-0.2, "neutral"),
+        (0.2, "reliable"),
+        (0.6, "intimate"),
+    ],
+    "familiarity": [
+        (-1.0, "unknown"),
+        (-0.2, "unfamiliar"),
+        (0.2, "recognized"),
+        (0.5, "familiar"),
+        (0.8, "well_known"),
+    ],
+}
 
 
 class RelationshipGraph(Module):
@@ -51,6 +100,13 @@ class RelationshipGraph(Module):
         self._edges: dict[tuple[str, str, str], RelationshipEdge] = {}
         self._nodes: dict[str, dict[str, Any]] = {}
         self._reader_id: str = "default_reader"
+        self._stage_thresholds: dict[str, list[tuple[float, str]]] = dict(
+            DEFAULT_STAGE_THRESHOLDS
+        )
+        self._decay_enabled: bool = False
+        self._decay_rate_per_hour: float = 0.02
+        self._decay_min_weight: float = 0.0
+        self._last_decay_time: float = 0.0
         self.subscribe(
             "data.oc.town.event",
             "data.oc.town.reflection",
@@ -107,14 +163,18 @@ class RelationshipGraph(Module):
                 timestamp=now,
                 evidence=evidence,
                 metadata=dict(metadata or {}),
+                created_at=now,
+                stage=self._stage_for(kind, 0.0),
             )
             self._edges[key] = edge
-        edge.weight = max(-1.0, min(1.0, edge.weight + delta))
+        new_weight = max(-1.0, min(1.0, edge.weight + delta))
+        edge.weight = new_weight
         edge.timestamp = now
         if evidence:
             edge.evidence = evidence
         if metadata:
             edge.metadata.update(metadata)
+        self._record_history(edge, now)
         self._ensure_node(source)
         self._ensure_node(target)
         self._state.custom["edge_count"] = len(self._edges)
@@ -143,12 +203,15 @@ class RelationshipGraph(Module):
                 weight=0.0,
                 timestamp=now,
                 evidence=evidence,
+                created_at=now,
+                stage=self._stage_for(kind, 0.0),
             )
             self._edges[key] = edge
         edge.weight = max(-1.0, min(1.0, float(weight)))
         edge.timestamp = now
         if evidence:
             edge.evidence = evidence
+        self._record_history(edge, now)
         self._ensure_node(source)
         self._ensure_node(target)
         self._state.custom["edge_count"] = len(self._edges)
@@ -206,6 +269,180 @@ class RelationshipGraph(Module):
             if (e.source == source and e.target == target)
         }
 
+    def relationship_summary(
+        self, source: str, target: str
+    ) -> dict[str, Any]:
+        """Return a narrative-ready summary of the relationship over time.
+
+        Includes current weights, stages, trend direction, peak/low values,
+        and the most recent evidence.
+        """
+        edges = [
+            e for e in self._edges.values()
+            if e.source == source and e.target == target
+        ]
+        if not edges:
+            return {}
+
+        kinds: dict[str, Any] = {}
+        for edge in edges:
+            history = sorted(edge.history, key=lambda h: h.timestamp)
+            weights = [h.weight for h in history] or [edge.weight]
+            kinds[edge.kind] = {
+                "weight": edge.weight,
+                "stage": edge.stage,
+                "peak": max(weights),
+                "low": min(weights),
+                "history_count": len(history),
+                "created_at": edge.created_at,
+                "last_updated": edge.timestamp,
+                "recent_evidence": edge.evidence,
+            }
+
+        return {
+            "source": source,
+            "target": target,
+            "kinds": kinds,
+        }
+
+    def trend(
+        self,
+        source: str,
+        target: str,
+        kind: str,
+        window_seconds: float = 24 * 3600,
+    ) -> dict[str, Any]:
+        """Return the recent trend for a specific edge.
+
+        ``delta`` is the weight change within ``window_seconds``;
+        ``direction`` is one of "rising", "falling", or "stable".
+        """
+        edge = self.get_edge(source, target, kind)
+        if edge is None:
+            return {"delta": 0.0, "direction": "stable", "window_seconds": window_seconds}
+
+        now = time.time()
+        cutoff = now - window_seconds
+        recent = [h for h in edge.history if h.timestamp >= cutoff]
+        if len(recent) < 2:
+            return {"delta": 0.0, "direction": "stable", "window_seconds": window_seconds}
+
+        delta = recent[-1].weight - recent[0].weight
+        if delta > 0.1:
+            direction = "rising"
+        elif delta < -0.1:
+            direction = "falling"
+        else:
+            direction = "stable"
+        return {
+            "delta": round(delta, 4),
+            "direction": direction,
+            "window_seconds": window_seconds,
+            "samples": len(recent),
+        }
+
+    def decay(
+        self,
+        now: float | None = None,
+        rate_per_hour: float | None = None,
+        min_weight: float | None = None,
+    ) -> int:
+        """Apply time-based decay to all edges.
+
+        Positive weights drift toward ``min_weight`` and negative weights drift
+        toward ``-min_weight`` so that inactive relationships gradually cool.
+        Returns the number of edges that changed.
+        """
+        now = now if now is not None else time.time()
+        rate = rate_per_hour if rate_per_hour is not None else self._decay_rate_per_hour
+        floor = min_weight if min_weight is not None else self._decay_min_weight
+        changed = 0
+        for edge in list(self._edges.values()):
+            hours = max(0.0, (now - edge.timestamp) / 3600.0)
+            if hours <= 0 or edge.weight == 0.0:
+                continue
+            sign = 1.0 if edge.weight > 0 else -1.0
+            decay_amount = rate * hours
+            new_weight = edge.weight - sign * decay_amount
+            # Stop at the floor (or at zero if below it).
+            if sign > 0 and new_weight < floor:
+                new_weight = floor
+            if sign < 0 and new_weight > -floor:
+                new_weight = -floor
+            if abs(new_weight) < 0.001:
+                new_weight = 0.0
+            if new_weight != edge.weight:
+                edge.weight = max(-1.0, min(1.0, new_weight))
+                edge.timestamp = now
+                self._record_history(edge, now)
+                self._publish_update(edge)
+                changed += 1
+        return changed
+
+    # ------------------------------------------------------------------
+    # Stage / history helpers
+    # ------------------------------------------------------------------
+
+    def _stage_for(self, kind: str, weight: float) -> str:
+        """Map a weight to a relationship stage for ``kind``."""
+        thresholds = self._stage_thresholds.get(kind)
+        if not thresholds:
+            thresholds = DEFAULT_STAGE_THRESHOLDS.get(kind) or [(-1.0, "neutral")]
+        stage = thresholds[0][1]
+        for threshold, label in thresholds:
+            if weight >= threshold:
+                stage = label
+        return stage
+
+    def _record_history(self, edge: RelationshipEdge, timestamp: float) -> None:
+        """Append a history snapshot when weight or stage changes."""
+        previous_stage = edge.stage
+        new_stage = self._stage_for(edge.kind, edge.weight)
+        edge.stage = new_stage
+
+        # Always record a snapshot on update so the trajectory is available.
+        entry = RelationshipHistoryEntry(
+            timestamp=timestamp,
+            weight=edge.weight,
+            stage=new_stage,
+            evidence=edge.evidence,
+            metadata=dict(edge.metadata),
+        )
+        edge.history.append(entry)
+        # Keep history bounded to avoid unbounded growth.
+        max_history = int(edge.metadata.get("max_history", 100))
+        if len(edge.history) > max_history:
+            edge.history = edge.history[-max_history:]
+
+        if new_stage != previous_stage and previous_stage:
+            self._publish_stage_change(edge, previous_stage, new_stage, timestamp)
+
+    def _publish_stage_change(
+        self,
+        edge: RelationshipEdge,
+        previous_stage: str,
+        new_stage: str,
+        timestamp: float,
+    ) -> None:
+        if self._router is None:
+            return
+        self.emit(
+            topic=TOPIC_RELATIONSHIP_STAGE_CHANGED,
+            payload={
+                "source": edge.source,
+                "target": edge.target,
+                "kind": edge.kind,
+                "previous_stage": previous_stage,
+                "new_stage": new_stage,
+                "weight": edge.weight,
+                "evidence": edge.evidence,
+                "timestamp": timestamp,
+            },
+            channel="data",
+            priority=5,
+            ttl=3,
+        )
+
     # ------------------------------------------------------------------
     # Module lifecycle
     # ------------------------------------------------------------------
@@ -215,7 +452,25 @@ class RelationshipGraph(Module):
         reader_id = reader_cfg.get("reader_id") if isinstance(reader_cfg, dict) else None
         if isinstance(reader_id, str):
             self._reader_id = reader_id
+
+        cfg = context.get("relationship_graph", {})
+        if isinstance(cfg, dict):
+            thresholds = cfg.get("stage_thresholds")
+            if isinstance(thresholds, dict):
+                self._stage_thresholds = {
+                    str(k): [(float(w), str(s)) for w, s in v]
+                    for k, v in thresholds.items()
+                    if isinstance(v, list)
+                }
+            if isinstance(cfg.get("decay_enabled"), bool):
+                self._decay_enabled = cfg["decay_enabled"]
+            if isinstance(cfg.get("decay_rate_per_hour"), (int, float)):
+                self._decay_rate_per_hour = float(cfg["decay_rate_per_hour"])
+            if isinstance(cfg.get("decay_min_weight"), (int, float)):
+                self._decay_min_weight = float(cfg["decay_min_weight"])
+
         self._ensure_node(self._reader_node_id(), {"type": "reader"})
+        self._last_decay_time = time.time()
 
     def on_bus_message(self, message: BusMessage) -> None:
         if not self._state.active:
@@ -239,7 +494,12 @@ class RelationshipGraph(Module):
             return
 
     def tick(self, delta: TickDelta) -> None:
-        return None
+        if not self._decay_enabled:
+            return
+        now = delta.absolute_time
+        if now - self._last_decay_time >= 3600.0:
+            self.decay(now, self._decay_rate_per_hour, self._decay_min_weight)
+            self._last_decay_time = now
 
     # ------------------------------------------------------------------
     # Event handlers
@@ -436,6 +696,9 @@ class RelationshipGraph(Module):
 __all__ = [
     "RelationshipGraph",
     "RelationshipEdge",
+    "RelationshipHistoryEntry",
     "TOPIC_RELATIONSHIP_UPDATED",
+    "TOPIC_RELATIONSHIP_STAGE_CHANGED",
     "TOPIC_RELATIONSHIP_CONTROL",
+    "DEFAULT_STAGE_THRESHOLDS",
 ]

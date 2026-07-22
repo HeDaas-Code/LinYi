@@ -35,9 +35,14 @@ from src.novelist_brain.config import (
     build_llm_config_dict,
     load_config,
 )
+from src.novelist_brain.character_card_module import CharacterCardModule
 from src.novelist_brain.continuity_auditor import ContinuityAuditor
+from src.novelist_brain.world_book_trigger import WorldBookTrigger
 from src.novelist_brain.persistence import PersistenceManager, SnapshotStore, dataclass_to_dict
 from src.novelist_brain.cen import CentralExecutiveNetwork
+from src.novelist_brain.prompt_surface import PromptSurface
+from src.novelist_brain.persona_injector import PersonaInjector
+from src.novelist_brain.mid_term_memory import MidTermMemory
 from src.novelist_brain.clock import Clock, RealTimeClock
 from src.novelist_brain.creation_executive import CreationExecutive
 from src.novelist_brain.dmn import DefaultModeNetwork
@@ -61,6 +66,7 @@ from src.novelist_brain.llm import (
     create_llm_service,
 )
 from src.novelist_brain.expression_state import ExpressionState
+from src.novelist_brain.llm_fact_extractor import LLMFactExtractor
 from src.novelist_brain.memory import MemorySystem
 from src.novelist_brain.memory_stream import MemoryStream
 from src.novelist_brain.recovery import FaultManager, RecoveryManager
@@ -289,9 +295,96 @@ def build_context(
         "conversation_queue": {
             "max_turns": 20,
         },
+        "character_cards": {
+            "cards_dir": "character_cards",
+            "enabled": True,
+            "emit_events": True,
+        },
+        "world_book_trigger": {
+            "enabled": True,
+            "case_sensitive": False,
+            "max_entries_per_trigger": 10,
+        },
         "reflection_engine": {
             "reflection_threshold": 5,
             "reflection_window": 24.0 * 3600,
+        },
+        "relationship_graph": {
+            "stage_thresholds": {
+                "affinity": [
+                    (-1.0, "hostile"),
+                    (-0.6, "cold"),
+                    (-0.2, "neutral"),
+                    (0.2, "warm"),
+                    (0.6, "close"),
+                ],
+                "trust": [
+                    (-1.0, "distrust"),
+                    (-0.6, "cautious"),
+                    (-0.2, "neutral"),
+                    (0.2, "reliable"),
+                    (0.6, "intimate"),
+                ],
+                "familiarity": [
+                    (-1.0, "unknown"),
+                    (-0.2, "unfamiliar"),
+                    (0.2, "recognized"),
+                    (0.5, "familiar"),
+                    (0.8, "well_known"),
+                ],
+            },
+            "decay_enabled": False,
+            "decay_rate_per_hour": 0.02,
+            "decay_min_weight": 0.0,
+        },
+        "prompt_surface": {
+            "system_rules": (
+                "You are 林逸 (LinYi), a novelist who lives inside the computer. "
+                "You have your own personality, daily rhythm, and relationships. "
+                "Respond in character, keep continuity with the provided context, "
+                "and respect the reader's preferred tone and any known facts."
+            ),
+            "instruction_footer": (
+                "Stay in character as 林逸. Use the context above but do not "
+                "repeat it verbatim. If you lack information, infer from your "
+                "personality rather than asking the reader for clarification."
+            ),
+            "max_surface_chars": 8_000,
+            "auto_assemble_on": [
+                "data.world_book.triggered",
+                "data.reader.profile.updated",
+                "data.expression.changed",
+                "data.conversation.queue.update",
+                "data.persona.injected",
+            ],
+        },
+        "persona_injector": {
+            "max_reader_profiles": 1,
+            "max_oc_profiles": 3,
+            "oc_name_aliases": {},
+            "auto_inject_on": [
+                "event.reader.interaction",
+                "data.reader.message",
+                "data.conversation.queue.update",
+                "data.oc.town.event",
+            ],
+        },
+        "mid_term_memory": {
+            "summary_threshold": 5,
+            "min_turns_for_summary": 2,
+            "max_summary_chars": 1_000,
+            "enable_llm_summary": True,
+        },
+        "llm_fact_extractor": {
+            "reader_enabled": True,
+            "oc_enabled": True,
+            "llm_enabled": True,
+            "min_chars": 30,
+            "max_buffer_turns": 5,
+            "cooldown_seconds": 60.0,
+            "max_facts_per_run": 3,
+            "llm_temperature": 0.2,
+            "llm_max_tokens": 400,
         },
         "reader_profile": {
             "reader_id": "default_reader",
@@ -300,6 +393,7 @@ def build_context(
             "preferred_tone": "gentle",
             "taboo_topics": [],
             "known_facts": {},
+            "persona_summary": "",
             "reader_temperature": 0.5,
         },
         "vital_state": {
@@ -491,6 +585,7 @@ def create_modules(
     # from shared context for hybrid retrieval.
     registry.register(ConversationQueue, factory_options={"name": "conversation_queue"})
     registry.register(MemoryStream, factory_options={"name": "memory_stream"})
+    registry.register(MidTermMemory, factory_options={"name": "mid_term_memory"})
     registry.register(SelfTimeline, factory_options={"name": "self_timeline"})
     registry.register(ReflectionEngine, factory_options={"name": "reflection_engine"})
     # Schedule / anthropomorphic rhythm.
@@ -523,6 +618,21 @@ def create_modules(
         category="novel_source",
         description="OC character registry with COC sheet generation",
     )
+    # SillyTavern-compatible character card loader.
+    registry.register(CharacterCardModule, factory_options={"name": "character_cards"})
+    # SillyTavern-style world book / character book trigger injection.
+    registry.register(WorldBookTrigger, factory_options={"name": "world_book_trigger"})
+    # Persona injector: detects who is involved in the current turn and emits
+    # compact reader/OC persona snippets for PromptSurface (MaiBot inspired).
+    registry.register(PersonaInjector, factory_options={"name": "persona_injector"})
+    # LLM fact extractor: automatically learns reader/OC facts from dialogue
+    # and persists them to ReaderProfile / OCCharacterSheet (MemGPT / MaiBot
+    # inspired memory learning loop).
+    registry.register(LLMFactExtractor, factory_options={"name": "llm_fact_extractor"})
+    # Prompt surface: assembles a structured, renderer-agnostic prompt from
+    # character definition, world info, memory, reader context, expression hint
+    # and recent conversation (inspired by SillyTavern / a16z / AIRI).
+    registry.register(PromptSurface, factory_options={"name": "prompt_surface"})
     # OC autonomous social simulation (ai-town inspired).
     registry.register(OCTownEngine, factory_options={"name": "oc_town_engine"})
     registry.register(RelationshipGraph, factory_options={"name": "relationship_graph"})
@@ -947,11 +1057,41 @@ def run_agent(
     if memory_stream_module is not None:
         context["memory_stream_instance"] = memory_stream_module
 
+    self_timeline_module = next(
+        (m for m in modules if isinstance(m, SelfTimeline)), None
+    )
+    if self_timeline_module is not None:
+        context["self_timeline_instance"] = self_timeline_module
+
     reader_profile_module = next(
         (m for m in modules if isinstance(m, ReaderProfile)), None
     )
     if reader_profile_module is not None:
         context["reader_profile_instance"] = reader_profile_module
+
+    prompt_surface_module = next(
+        (m for m in modules if isinstance(m, PromptSurface)), None
+    )
+    if prompt_surface_module is not None:
+        context["prompt_surface_instance"] = prompt_surface_module
+
+    persona_injector_module = next(
+        (m for m in modules if isinstance(m, PersonaInjector)), None
+    )
+    if persona_injector_module is not None:
+        context["persona_injector_instance"] = persona_injector_module
+
+    llm_fact_extractor_module = next(
+        (m for m in modules if isinstance(m, LLMFactExtractor)), None
+    )
+    if llm_fact_extractor_module is not None:
+        context["llm_fact_extractor_instance"] = llm_fact_extractor_module
+
+    oc_character_system_module = next(
+        (m for m in modules if isinstance(m, OCCharacterSystem)), None
+    )
+    if oc_character_system_module is not None:
+        context["oc_character_system_instance"] = oc_character_system_module
 
     if saved_state is not None:
         for module in modules:

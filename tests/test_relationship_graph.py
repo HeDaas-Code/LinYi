@@ -2,13 +2,17 @@
 """Tests for RelationshipGraph."""
 from __future__ import annotations
 
+import time
 from typing import Any
+
+import pytest
 
 from src.novelist_brain.bus import BusRouter
 from src.novelist_brain.models import BusMessage
 from src.novelist_brain.module import Module
 from src.novelist_brain.relationship_graph import (
     TOPIC_RELATIONSHIP_CONTROL,
+    TOPIC_RELATIONSHIP_STAGE_CHANGED,
     TOPIC_RELATIONSHIP_UPDATED,
     RelationshipGraph,
 )
@@ -190,3 +194,115 @@ def test_serialization_roundtrip() -> None:
     assert edge is not None
     assert edge.weight == 0.5
     assert edge.evidence == "测试"
+
+
+def test_history_records_each_update() -> None:
+    router = BusRouter()
+    graph = RelationshipGraph(name="relationship_graph")
+    graph.register(router)
+    graph.init({})
+    graph.update("oc_a", "oc_b", "affinity", 0.2, timestamp=1000.0)
+    graph.update("oc_a", "oc_b", "affinity", 0.3, timestamp=1100.0)
+    graph.update("oc_a", "oc_b", "affinity", -0.1, timestamp=1200.0)
+
+    edge = graph.get_edge("oc_a", "oc_b", "affinity")
+    assert edge is not None
+    assert len(edge.history) == 3
+    assert [h.weight for h in edge.history] == [0.2, 0.5, 0.4]
+
+
+def test_stage_change_emits_event() -> None:
+    router = BusRouter()
+    graph = RelationshipGraph(name="relationship_graph")
+    graph.register(router)
+    graph.init({})
+
+    class _SpyModule(Module):
+        def __init__(self) -> None:
+            super().__init__("spy")
+            self.stage_events: list[BusMessage] = []
+            self.subscribe(TOPIC_RELATIONSHIP_STAGE_CHANGED)
+
+        def init(self, context: dict[str, Any]) -> None:
+            return None
+
+        def on_bus_message(self, message: BusMessage) -> None:
+            self.stage_events.append(message)
+
+        def tick(self, delta: Any) -> None:
+            return None
+
+    spy = _SpyModule()
+    router.subscribe(spy)
+
+    # Move from neutral -> warm -> close should emit stage events.
+    graph.update("oc_a", "oc_b", "affinity", 0.3, timestamp=1000.0)
+    graph.update("oc_a", "oc_b", "affinity", 0.5, timestamp=1100.0)
+    router.flush()
+    router.flush()
+
+    assert len(spy.stage_events) == 2
+    assert spy.stage_events[0].payload["new_stage"] == "warm"
+    assert spy.stage_events[1].payload["new_stage"] == "close"
+
+
+def test_relationship_summary_includes_peak_and_low() -> None:
+    router = BusRouter()
+    graph = RelationshipGraph(name="relationship_graph")
+    graph.register(router)
+    graph.init({})
+    graph.update("reader:r", "oc_a", "affinity", 0.1, timestamp=1000.0)
+    graph.update("reader:r", "oc_a", "affinity", 0.8, timestamp=1100.0)
+    graph.set_weight("reader:r", "oc_a", "affinity", -0.2, timestamp=1200.0)
+
+    summary = graph.relationship_summary("reader:r", "oc_a")
+    affinity = summary["kinds"]["affinity"]
+    assert affinity["peak"] == 0.9
+    assert affinity["low"] == -0.2
+    assert affinity["stage"] == "neutral"
+
+
+def test_trend_detects_rising_and_falling() -> None:
+    router = BusRouter()
+    graph = RelationshipGraph(name="relationship_graph")
+    graph.register(router)
+    graph.init({})
+    graph.update("oc_a", "oc_b", "trust", 0.1, timestamp=time.time())
+    graph.update("oc_a", "oc_b", "trust", 0.5, timestamp=time.time() + 10)
+    trend = graph.trend("oc_a", "oc_b", "trust", window_seconds=3600)
+    assert trend["direction"] == "rising"
+    assert trend["delta"] > 0
+
+
+def test_decay_reduces_weights_over_time() -> None:
+    router = BusRouter()
+    graph = RelationshipGraph(name="relationship_graph")
+    graph.register(router)
+    graph.init({})
+    graph.update("oc_a", "oc_b", "affinity", 0.8, timestamp=0.0)
+    changed = graph.decay(now=7200.0, rate_per_hour=0.1, min_weight=0.0)
+    assert changed == 1
+    edge = graph.get_edge("oc_a", "oc_b", "affinity")
+    assert edge.weight == pytest.approx(0.6, abs=0.01)
+
+
+def test_custom_stage_thresholds_via_context() -> None:
+    router = BusRouter()
+    graph = RelationshipGraph(name="relationship_graph")
+    graph.register(router)
+    graph.init(
+        {
+            "relationship_graph": {
+                "stage_thresholds": {
+                    "affinity": [
+                        (-1.0, "enemy"),
+                        (0.0, "neutral"),
+                        (0.5, "ally"),
+                    ]
+                }
+            }
+        }
+    )
+    graph.update("oc_a", "oc_b", "affinity", 0.6, timestamp=1000.0)
+    edge = graph.get_edge("oc_a", "oc_b", "affinity")
+    assert edge.stage == "ally"

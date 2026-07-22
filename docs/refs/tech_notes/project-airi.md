@@ -35,8 +35,23 @@ Project AIRI 是一个受 Neuro-sama 启发的**自托管数字生命 / AI VTube
 - **本地优先的状态存储**：AIRI 用 DuckDB WASM / pglite 把状态留在客户端；LinYi 继续沿用本地 JSON/Valkey/PostgreSQL，避免上云。
 - **情绪衰减与回归基线**：真实情绪会自然回落，不应让一次事件永远锁定表情；设计随时间衰减的生命状态桥接器。
 
-## LinYi 可落地的对应实现
+## LinYi 已落地的对应实现
 
 - `SocialVitalBridge`：监听 `data.oc.town.event`、`event.reader.interaction`、`data.relationship.updated`，把社交事件映射为 `mood_bias / arousal / reader_temperature / creative_drive` 的微调和衰减。
-- `ExpressionState` 已能把 vital state 映射为 `expression` 标签；未来可扩展为输出更细粒度的 avatar 参数。
+- `ExpressionState` 已把 vital state 映射为 `expression` 标签，并进一步输出 Project AIRI 风格的结构化身体参数：
+  - `emotion`：统一情绪词（`happy` / `sad` / `angry` / `surprised` / `think` / `awkward` / `question` / `curious` / `neutral` / `relaxed`），与 AIRI 的 `Emotion` enum 对齐，并新增 `relaxed` 覆盖低唤醒平静状态。
+  - `intensity`：由 arousal 与 reader_temperature 混合计算，已按强度缩放。
+  - `blend_duration`：表情过渡时长（秒），避免表情切换时“硬切”。
+  - `expression_targets`：渲染器可识别的 expression / morph 名称及其目标权重，可直接驱动 VRM / Live2D / MMD。
+  - `action`：可选动作/姿态提示（如 `happy` / `idle` / `think`）。
+  - `body_state`：自主躯体参数（`blink_rate`、`gaze_target`、`breath_speed`、`pose`），让前端表现“生命体征”。
+  - `reset_at`：AIRI 风格的表情自动回退时间戳，避免一次事件永久锁定表情。
+- 实现参考：
+  - `packages/stage-ui-three/src/composables/vrm/expression.ts`：VRM 表情插值与 `setEmotionWithResetAfter`。
+  - `packages/stage-ui-mmd/src/composables/mmd/expression.ts`：MMD 表情 morph 插值。
+  - `packages/stage-ui-mmd/src/constants/emotions.ts`：统一情绪枚举。
+  - `packages/stage-ui-mmd/src/constants/morphs.ts`：逻辑 morph slot 到多语言候选名称的映射。
+  - `packages/stage-ui-live2d/src/composables/live2d/expression-controller.ts`：Live2D exp3 解析与 blend mode 应用。
+  - `packages/stage-ui-live2d/src/tools/expression-tools.ts`：把表情控制暴露为 LLM 工具。
 - `RelationshipGraph` 已提供关系权重；可作为情绪微调的信号源之一。
+- 新增交叉分析文档：`docs/ProjectAIRI表情与躯体表达交叉分析.md`。

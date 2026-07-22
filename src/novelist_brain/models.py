@@ -589,6 +589,7 @@ class OCCharacterSheet:
     current_emotional_state: dict[str, float] = field(default_factory=dict)
     narrative_arc: list[str] = field(default_factory=list)
     immutable_facts: list[str] = field(default_factory=list)
+    known_facts: dict[str, str] = field(default_factory=dict)
 
     projection_ratio: float = 0.0
 
@@ -646,6 +647,11 @@ class OCCharacterSheet:
             current_emotional_state=dict(data.get("current_emotional_state", {})),
             narrative_arc=list(data.get("narrative_arc", [])),
             immutable_facts=list(data.get("immutable_facts", [])),
+            known_facts={
+                str(k): str(v)
+                for k, v in data.get("known_facts", {}).items()
+                if isinstance(k, (str, int, float))
+            },
             projection_ratio=data.get("projection_ratio", 0.0),
         )
 

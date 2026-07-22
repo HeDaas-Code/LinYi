@@ -31,6 +31,7 @@ class ReaderProfileData:
     preferred_tone: str = "gentle"  # gentle | teasing | formal | playful
     taboo_topics: list[str] = field(default_factory=list)
     known_facts: dict[str, str] = field(default_factory=dict)
+    persona_summary: str = ""  # MaiBot-style impression summary
     last_seen_at: float = 0.0
     total_interactions: int = 0
     reader_temperature: float = 0.5
@@ -79,6 +80,11 @@ class ReaderProfile(Module):
         self._profile.relationship_stage = stage
         self._broadcast_update()
 
+    def update_persona_summary(self, summary: str) -> None:
+        """Update the impression summary of the reader (MaiBot-style profile)."""
+        self._profile.persona_summary = str(summary).strip()
+        self._broadcast_update()
+
     def record_interaction(self, timestamp: float | None = None) -> None:
         """Bump interaction counters and temperature."""
         now = timestamp if timestamp is not None else time.time()
@@ -110,6 +116,9 @@ class ReaderProfile(Module):
         facts = cfg.get("known_facts")
         if isinstance(facts, dict):
             self._profile.known_facts = {str(k): str(v) for k, v in facts.items()}
+        persona_summary = cfg.get("persona_summary")
+        if isinstance(persona_summary, str):
+            self._profile.persona_summary = persona_summary
         temp = cfg.get("reader_temperature")
         if isinstance(temp, (int, float)):
             self._profile.reader_temperature = float(temp)
@@ -151,6 +160,7 @@ class ReaderProfile(Module):
                 "preferred_tone": self._profile.preferred_tone,
                 "reader_temperature": self._profile.reader_temperature,
                 "known_facts": dict(self._profile.known_facts),
+                "persona_summary": self._profile.persona_summary,
             },
             channel="data",
             priority=5,

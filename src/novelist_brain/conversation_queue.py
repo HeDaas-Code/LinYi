@@ -22,6 +22,9 @@ from src.novelist_brain.module import Module
 #: Topic emitted when the conversation queue changes.
 TOPIC_CONVERSATION_QUEUE_UPDATE = "data.conversation.queue.update"
 
+#: Topic emitted when older turns are evicted from the bounded queue.
+TOPIC_CONVERSATION_QUEUE_EVICTED = "data.conversation.queue.evicted"
+
 
 @dataclass
 class ConversationTurn:
@@ -223,8 +226,20 @@ class ConversationQueue(Module):
     # ------------------------------------------------------------------
 
     def _ensure_capacity(self) -> None:
+        evicted: list[ConversationTurn] = []
         while len(self._turns) > self._max_turns:
-            self._turns.pop(0)
+            evicted.append(self._turns.pop(0))
+        if evicted and self._router is not None:
+            self.emit(
+                topic=TOPIC_CONVERSATION_QUEUE_EVICTED,
+                payload={
+                    "turns": [self._turn_to_dict(t) for t in evicted],
+                    "evicted_count": len(evicted),
+                },
+                channel="data",
+                priority=5,
+                ttl=3,
+            )
 
     def _publish_update(self, action: str, turn: ConversationTurn | None) -> None:
         self.emit(
@@ -285,4 +300,5 @@ __all__ = [
     "ConversationQueue",
     "ConversationTurn",
     "TOPIC_CONVERSATION_QUEUE_UPDATE",
+    "TOPIC_CONVERSATION_QUEUE_EVICTED",
 ]

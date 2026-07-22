@@ -848,6 +848,54 @@ class OCCharacterSystem(Module):
                 result.append(sheet)
         return result
 
+    def set_fact(self, character_id: str, key: str, value: str) -> bool:
+        """Record a known fact about an OC and persist the registry.
+
+        ``immutable_facts`` are protected: a key that matches an immutable
+        fact (case-insensitive substring) cannot be overwritten.
+        """
+        sheet = self._sheets.get(character_id)
+        if sheet is None:
+            return False
+        key = str(key).strip()
+        value = str(value).strip()
+        if not key or not value:
+            return False
+
+        lowered_key = key.lower()
+        for immutable in sheet.immutable_facts or []:
+            if not immutable:
+                continue
+            lowered_immutable = str(immutable).lower()
+            if lowered_immutable in lowered_key or lowered_key in lowered_immutable:
+                self._emit_reject(
+                    character_id,
+                    operation="set_fact",
+                    reason="key conflicts with immutable_fact",
+                    violations=[immutable],
+                )
+                return False
+
+        sheet.known_facts[key] = value
+        self._save_registry()
+        self._emit(
+            topic="data.oc.updated",
+            payload={
+                "character_id": character_id,
+                "updates": {"known_facts": dict(sheet.known_facts)},
+                "sheet": sheet.to_dict(),
+            },
+            channel="data",
+        )
+        return True
+
+    def get_fact(self, character_id: str, key: str) -> str | None:
+        """Return a known fact for an OC, or ``None`` if missing."""
+        sheet = self._sheets.get(character_id)
+        if sheet is None:
+            return None
+        return sheet.known_facts.get(str(key).strip())
+
     # ------------------------------------------------------------------
     # SubTask 1.3.6: Persistence
     # ------------------------------------------------------------------

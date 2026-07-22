@@ -66,6 +66,9 @@ DEFAULT_QUERY_LIMIT = 8
 #: Maximum length of a normalised text used for keyword extraction.
 _MAX_KEYWORD_CHARS = 200
 
+#: Topic emitted when the timeline content changes.
+TOPIC_SELF_TIMELINE_UPDATED = "data.self.timeline.updated"
+
 #: Stopwords we drop before building the keyword bag (small but useful
 #: in both Chinese and English for this domain).
 _STOPWORDS: frozenset[str] = frozenset({
@@ -276,6 +279,8 @@ class SelfTimeline(Module):
         self._trim()
         self._state.custom["entry_count"] = len(self._entries)
         self._state.custom["append_calls"] = int(self._state.custom.get("append_calls", 0)) + 1
+        if self._router is not None:
+            self._publish_update(entry)
         return entry
 
     def collect_entries(
@@ -456,6 +461,19 @@ class SelfTimeline(Module):
         overflow = len(self._entries) - self._max_entries
         del self._entries[:overflow]
 
+    def _publish_update(self, entry: TimelineEntry) -> None:
+        self.emit(
+            topic=TOPIC_SELF_TIMELINE_UPDATED,
+            payload={
+                "action": "append",
+                "events": [entry.to_dict()],
+                "entry_count": len(self._entries),
+            },
+            channel="data",
+            priority=5,
+            ttl=3,
+        )
+
 
 __all__ = [
     "SelfTimeline",
@@ -464,4 +482,5 @@ __all__ = [
     "RECENCY_HALF_LIFE_SECONDS",
     "DEFAULT_MAX_ENTRIES",
     "DEFAULT_QUERY_LIMIT",
+    "TOPIC_SELF_TIMELINE_UPDATED",
 ]
