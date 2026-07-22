@@ -573,3 +573,167 @@ export interface CharacterSpriteState {
   isSpeaking?: boolean
   emoji?: string
 }
+
+// ---------------------------------------------------------------------------
+// Stage 5 Task 5.2: 世界图谱调试视图类型
+//
+// 对应后端 WorldVisualDebugger（src/novelist_brain/world_visual_debugger.py）
+// 发布的 3 个调试 topic，以及 web/app.py Task 5.3 暴露的 3 个 HTTP 接口：
+//   GET /debug/world/snapshot      → WorldSnapshotResponse
+//   GET /debug/world/diff          → WorldDiffResponse
+//   GET /debug/narrative/replay    → NarrativeReplayResponse
+// ---------------------------------------------------------------------------
+
+/** 世界快照中的地点条目（WorldStateContract.geography 的扁平化形式） */
+export interface WorldGeographyEntry {
+  key: string
+  name?: string
+  type?: string
+  description?: string
+  atmosphere?: string
+  parent_location?: string
+  [k: string]: unknown
+}
+
+/** 世界快照中的势力条目（WorldStateContract.factions 的扁平化形式） */
+export interface WorldFactionEntry {
+  key: string
+  faction_id?: string
+  name?: string
+  type?: string
+  goals?: string[]
+  territory?: string | string[]
+  leader?: string
+  [k: string]: unknown
+}
+
+/** 世界快照中的规则条目（WorldStateContract.rules 中 WorldRule.to_dict()） */
+export interface WorldRuleEntry {
+  rule_id?: string
+  id?: string
+  description?: string
+  category?: string
+  introduced_in?: string
+  violated_count?: number
+  [k: string]: unknown
+}
+
+/** 世界快照中的角色关系（OCCharacterSheet.relationships[] 的扁平化形式） */
+export interface WorldCharacterRelationship {
+  target_id: string
+  target_name: string
+  type: string
+  intensity: number
+  trust: number
+  history?: string[]
+  [k: string]: unknown
+}
+
+/** 世界快照中的角色条目（OCCharacterSheet 的精简投影） */
+export interface WorldCharacterEntry {
+  character_id: string
+  name: string
+  archetype: string
+  relationships: WorldCharacterRelationship[]
+  [k: string]: unknown
+}
+
+/** GET /debug/world/snapshot 响应体 */
+export interface WorldSnapshotResponse {
+  novel_id: string
+  snapshot_id: string
+  timestamp: string
+  geography: WorldGeographyEntry[]
+  factions: WorldFactionEntry[]
+  characters: WorldCharacterEntry[]
+  rules: WorldRuleEntry[]
+  version: string
+}
+
+/** 修改条目（包含 from / to 两个版本的对比） */
+export interface WorldDiffModifiedEntry {
+  id: string
+  from: Record<string, unknown>
+  to: Record<string, unknown>
+}
+
+/** GET /debug/world/diff 响应体（added/removed/modified 按四个分组） */
+export interface WorldDiffResponse {
+  novel_id: string
+  from_version: string
+  to_version: string
+  from_snapshot_id: string | null
+  to_snapshot_id: string | null
+  timestamp: string
+  added: {
+    geography: WorldGeographyEntry[]
+    factions: WorldFactionEntry[]
+    rules: WorldRuleEntry[]
+    characters: WorldCharacterEntry[]
+  }
+  removed: {
+    geography: WorldGeographyEntry[]
+    factions: WorldFactionEntry[]
+    rules: WorldRuleEntry[]
+    characters: WorldCharacterEntry[]
+  }
+  modified: {
+    geography: WorldDiffModifiedEntry[]
+    factions: WorldDiffModifiedEntry[]
+    rules: WorldDiffModifiedEntry[]
+    characters: WorldDiffModifiedEntry[]
+  }
+}
+
+/** 单轮 COC 推演中的技能检定（来自 data.sandbox.skill_check.result） */
+export interface NarrativeReplaySkillCheck {
+  character_id?: string
+  character_name?: string
+  skill?: string
+  dice?: number | string
+  roll?: number
+  difficulty?: number
+  success_rate?: number
+  success?: boolean
+  outcome?: string
+  [k: string]: unknown
+}
+
+/** 推演回放中的单轮（一个 simulation round） */
+export interface NarrativeReplayRound {
+  round: number
+  skill_checks: NarrativeReplaySkillCheck[]
+  narrative_impact: string
+}
+
+/** GET /debug/narrative/replay 响应体 */
+export interface NarrativeReplayResponse {
+  novel_id: string
+  replay_id: string
+  timestamp: string
+  chapter_index: number | null
+  scenario_id: string | null
+  rounds: NarrativeReplayRound[]
+  final_narrative: string | null
+  simulation_round: number
+}
+
+/** 时间线组件用到的统一事件类型（前端聚合多种来源后产生） */
+export type WorldTimelineEventType =
+  | 'historical'      // 历史事件
+  | 'rule_introduced' // 规则引入
+  | 'rule_broken'     // 规则被打破
+  | 'foreshadow_in'   // 伏笔引入
+  | 'foreshadow_out'  // 伏笔回收
+  | 'snapshot'        // 快照发布
+  | 'other'
+
+export interface WorldTimelineEvent {
+  id: string
+  type: WorldTimelineEventType
+  timestamp: number | string | null
+  title: string
+  description?: string
+  source?: string
+  severity?: 'info' | 'warn' | 'error'
+}

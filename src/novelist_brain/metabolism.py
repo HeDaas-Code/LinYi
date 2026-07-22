@@ -12,7 +12,13 @@ from src.novelist_brain.persistence import dataclass_to_dict, reconstruct_datacl
 
 @dataclass
 class MetabolismState:
-    """Snapshot of the novelist agent's metabolic resources."""
+    """Snapshot of the novelist agent's metabolic resources.
+
+    The classic resource dimensions (energy, compute, time, social) are
+    augmented with anthropomorphic state variables (mood, arousal,
+    reader_temperature, creative_drive) so that downstream modules can
+    generate rhythm- and state-aware behaviour.
+    """
 
     energy: float = 80.0
     compute_budget: float = 80.0
@@ -20,6 +26,11 @@ class MetabolismState:
     social_capital: float = 50.0
     exhausted: bool = False
     max_energy: float = 100.0
+    # Anthropomorphic extensions.
+    mood_bias: str = "平静"
+    arousal: float = 0.5
+    reader_temperature: float = 0.5
+    creative_drive: float = 0.5
 
     def __post_init__(self) -> None:
         self.max_energy = self._clamp(self.max_energy, 1.0, 1000.0)
@@ -27,6 +38,9 @@ class MetabolismState:
         self.compute_budget = self._clamp(self.compute_budget, 0.0, self.max_energy)
         self.time_currency = self._clamp(self.time_currency, 0.0, self.max_energy)
         self.social_capital = self._clamp(self.social_capital, 0.0, 100.0)
+        self.arousal = self._clamp(self.arousal, 0.0, 1.0)
+        self.reader_temperature = self._clamp(self.reader_temperature, 0.0, 1.0)
+        self.creative_drive = self._clamp(self.creative_drive, 0.0, 1.0)
 
     @staticmethod
     def _clamp(value: float, low: float, high: float) -> float:

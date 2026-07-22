@@ -48,6 +48,14 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '社会空间', area: 'world' },
   },
   {
+    // Stage 5 Task 5.2 — 世界图谱调试视图（地点 / 势力 / 角色关系图、
+    // 时间线、版本对比、COC 推演回放）。独立于 SocialView，避免其继续膨胀。
+    path: '/world',
+    name: 'world',
+    component: () => import('@/views/WorldView.vue'),
+    meta: { title: '世界图谱', area: 'world' },
+  },
+  {
     path: '/novel',
     name: 'novel',
     component: () => import('@/views/NovelView.vue'),

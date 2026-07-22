@@ -20,6 +20,36 @@ from src.novelist_brain.module import Module
 ModuleType = TypeVar("ModuleType", bound=Module)
 
 
+class _AgentFactoryWrapper(Module):
+    """Internal placeholder used by :meth:`ModuleRegistry.register_agent`.
+
+    It is never instantiated directly: descriptors registered via
+    :meth:`register_agent` store their factory callable in the
+    ``factory`` field, and :meth:`ModuleRegistry.instantiate` invokes that
+    callable instead of ``cls(**kwargs)``. The wrapper only exists so that
+    the ``cls`` field of :class:`ModuleDescriptor` — which is typed as
+    ``type[Module]`` — has a valid Module subclass to point at.
+    """
+
+    def init(self, context: dict[str, Any]) -> None:  # pragma: no cover
+        raise RuntimeError(
+            "_AgentFactoryWrapper must not be instantiated directly; "
+            "ModuleRegistry.instantiate() should invoke the factory."
+        )
+
+    def on_bus_message(self, message: Any) -> None:  # pragma: no cover
+        raise RuntimeError(
+            "_AgentFactoryWrapper must not be instantiated directly; "
+            "ModuleRegistry.instantiate() should invoke the factory."
+        )
+
+    def tick(self, delta: Any) -> None:  # pragma: no cover
+        raise RuntimeError(
+            "_AgentFactoryWrapper must not be instantiated directly; "
+            "ModuleRegistry.instantiate() should invoke the factory."
+        )
+
+
 @dataclass
 class ModuleDescriptor:
     """A registered module class plus its metadata and factory options."""
@@ -31,6 +61,11 @@ class ModuleDescriptor:
     dependencies: list[str] = field(default_factory=list)
     category: str = ""
     factory_options: dict[str, Any] = field(default_factory=dict)
+    # Optional factory callable for plugin-style registration via
+    # ``ModuleRegistry.register_agent``. When set, ``instantiate()`` calls
+    # ``factory(**kwargs)`` instead of ``cls(**kwargs)``, so ``cls`` is only
+    # kept for introspection/serialization and is never instantiated.
+    factory: Callable[..., Module] | None = field(default=None)
 
     @classmethod
     def from_class(
@@ -69,6 +104,44 @@ class ModuleRegistry:
         """Register a module class explicitly."""
         descriptor = ModuleDescriptor.from_class(module_cls, factory_options)
         self._descriptors[descriptor.name] = descriptor
+        return descriptor
+
+    def register_agent(
+        self,
+        name: str,
+        factory: Callable[..., Module],
+        *,
+        dependencies: list[str] | None = None,
+        category: str = "",
+        description: str = "",
+        version: str = "0.1.0",
+        factory_options: dict[str, Any] | None = None,
+    ) -> ModuleDescriptor:
+        """Register a module via a factory callable (plugin-style).
+
+        Unlike :meth:`register`, which requires a ``Module`` subclass, this
+        method accepts any zero-arg (or ``factory_options``-arg) callable
+        that returns a ``Module`` instance. This lets new agents
+        (``ContinuityAuditor``, ``QualityEngine``, etc.) be registered
+        without being declared as top-level classes in a discoverable
+        module file.
+
+        The factory is **not** called at registration time; it is invoked
+        by :meth:`instantiate` with ``name`` and ``factory_options`` as
+        keyword arguments. The returned descriptor participates in the same
+        dependency-ordered instantiation as class-registered modules.
+        """
+        descriptor = ModuleDescriptor(
+            cls=_AgentFactoryWrapper,
+            name=name,
+            version=version,
+            description=description,
+            dependencies=list(dependencies or []),
+            category=category,
+            factory_options=dict(factory_options or {}),
+            factory=factory,
+        )
+        self._descriptors[name] = descriptor
         return descriptor
 
     def discover(self, directory: str | os.PathLike[str]) -> list[ModuleDescriptor]:
@@ -147,7 +220,10 @@ class ModuleRegistry:
             kwargs = {"name": descriptor.name}
             kwargs.update(descriptor.factory_options)
             kwargs.update(overrides.get(descriptor.name, {}))
-            instance = descriptor.cls(**kwargs)
+            if descriptor.factory is not None:
+                instance = descriptor.factory(**kwargs)
+            else:
+                instance = descriptor.cls(**kwargs)
             instances.append(instance)
         return instances
 
@@ -183,7 +259,11 @@ class ModuleRegistry:
                     "description": d.description,
                     "dependencies": d.dependencies,
                     "category": d.category,
-                    "class": f"{d.cls.__module__}.{d.cls.__name__}",
+                    "class": (
+                        f"<factory:{d.name}>"
+                        if d.factory is not None
+                        else f"{d.cls.__module__}.{d.cls.__name__}"
+                    ),
                 }
                 for d in self.list_modules()
             ]

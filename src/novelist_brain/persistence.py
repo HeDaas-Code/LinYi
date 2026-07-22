@@ -178,11 +178,18 @@ class PersistenceManager:
 
     @staticmethod
     def save(agent_state: dict[str, Any], path: str) -> None:
-        """Serialize ``agent_state`` to ``path`` as a standalone JSON snapshot."""
+        """Serialize ``agent_state`` to ``path`` as a standalone JSON snapshot.
+
+        Writes to ``{path}.tmp`` first, then atomically renames to ``path``
+        so readers never see a half-written file (§3.2.2). On POSIX this is
+        a true atomic rename via :func:`os.replace`; on Windows
+        :func:`os.replace` also atomically overwrites an existing file.
+        """
         directory = os.path.dirname(path)
         if directory:
             os.makedirs(directory, exist_ok=True)
-        with open(path, "w", encoding="utf-8") as f:
+        tmp_path = f"{path}.tmp"
+        with open(tmp_path, "w", encoding="utf-8") as f:
             json.dump(
                 agent_state,
                 f,
@@ -190,6 +197,23 @@ class PersistenceManager:
                 indent=2,
                 cls=AgentStateEncoder,
             )
+        os.replace(tmp_path, path)
+
+    @staticmethod
+    def save_atomic(data: dict[str, Any], path: str) -> None:
+        """Atomically write JSON ``data`` to ``path``.
+
+        Generic helper for modules that need atomic writes outside the
+        snapshot pipeline. Same ``.tmp`` + :func:`os.replace` strategy as
+        :meth:`save`.
+        """
+        directory = os.path.dirname(path)
+        if directory:
+            os.makedirs(directory, exist_ok=True)
+        tmp_path = f"{path}.tmp"
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2, cls=AgentStateEncoder)
+        os.replace(tmp_path, path)
 
     @staticmethod
     def _snapshot_dir(path: str) -> str:
@@ -208,6 +232,10 @@ class PersistenceManager:
         """Write a timestamped snapshot and update the latest-snapshot pointer.
 
         Returns the absolute path of the written snapshot file.
+
+        The snapshot file and the ``.latest`` pointer are both written
+        via ``.tmp`` + :func:`os.replace` so a crash mid-write cannot leave
+        a stale pointer referencing a missing snapshot (§3.2.2).
         """
         snapshot_dir = PersistenceManager._snapshot_dir(path)
         os.makedirs(snapshot_dir, exist_ok=True)
@@ -220,8 +248,10 @@ class PersistenceManager:
         PersistenceManager.save(agent_state, snapshot_path)
 
         latest_pointer = PersistenceManager._latest_pointer(path)
-        with open(latest_pointer, "w", encoding="utf-8") as f:
+        tmp_pointer = f"{latest_pointer}.tmp"
+        with open(tmp_pointer, "w", encoding="utf-8") as f:
             f.write(os.path.abspath(snapshot_path))
+        os.replace(tmp_pointer, latest_pointer)
 
         return snapshot_path
 
@@ -328,6 +358,12 @@ class PersistenceManager:
         If ``path`` exists as a legacy standalone snapshot, load it directly.
         Otherwise load the snapshot referenced by ``<path>.latest`` and replay
         any deltas in ``<path>.deltas.jsonl``.
+
+        If ``<path>.latest`` is missing or points to a snapshot file that no
+        longer exists (e.g. the file was lost in a crash mid-write, or the
+        pointer is stale after a manual cleanup), fall back to the newest
+        snapshot in ``<path>.snapshots/``. Only when no snapshot and no delta
+        log exist at all is :class:`FileNotFoundError` raised.
         """
         if os.path.isfile(path):
             # Legacy standalone snapshot.
@@ -338,7 +374,21 @@ class PersistenceManager:
         snapshot_path: str | None = None
         if os.path.isfile(latest_pointer):
             with open(latest_pointer, "r", encoding="utf-8") as f:
-                snapshot_path = f.read().strip()
+                candidate = f.read().strip()
+            if candidate and os.path.isfile(candidate):
+                snapshot_path = candidate
+            # else: latest pointer is stale/empty -> fall through to fallback.
+
+        # Fallback: if the latest pointer is missing or points to a
+        # non-existent file, use the newest snapshot available. This makes
+        # crash recovery robust against half-written pointer files.
+        if snapshot_path is None:
+            snapshots = PersistenceManager.list_snapshots(path)
+            if snapshots:
+                # ``list_snapshots`` returns sorted ascending by file name,
+                # which corresponds to chronological order because the
+                # snapshot filename is a UTC timestamp.
+                snapshot_path = snapshots[-1]
 
         state: dict[str, Any] | None = None
         if snapshot_path and os.path.isfile(snapshot_path):

@@ -13,7 +13,9 @@ from src.novelist_brain.models import Fragment
 def test_memory_system_uses_store_for_fragments_and_traces() -> None:
     router = BusRouter()
     store = HybridMemoryStore(":memory:")
-    memory = MemorySystem(name="memory_system", store=store)
+    memory = MemorySystem(
+        name="memory_system", store=store, enable_fragment_gate=False
+    )
     memory.register(router)
     memory.init({})
 

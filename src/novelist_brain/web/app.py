@@ -8,6 +8,7 @@ intended to be started in a background thread by ``main.py``.
 from __future__ import annotations
 
 import asyncio
+import datetime
 import json
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -44,6 +45,14 @@ def _json_response(data: Any) -> JSONResponse:
 
 
 api_router = APIRouter(prefix="/api")
+
+
+# Debug data router (Stage 5 Task 5.3): exposes the WorldVisualDebugger's
+# buffered world snapshots / diffs and the most recent COC replay published
+# on ``data.debug.narrative.replay``. Lives under ``/debug`` so it is
+# distinct from the regular ``/api`` surface and easy to gate / disable in
+# production deployments.
+debug_router = APIRouter(prefix="/debug")
 
 
 @api_router.get("/snapshot")
@@ -765,6 +774,260 @@ def api_sandbox_state() -> JSONResponse:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
+# ---------------------------------------------------------------------------
+# Debug data endpoints (Stage 5 Task 5.3).
+#
+# These back the visual-debugging front-end (Web SocialView extension, CLI
+# tools) by surfacing the three topics published by ``WorldVisualDebugger``
+# (Task 5.1): ``data.debug.world.snapshot``, ``data.debug.world.diff``,
+# ``data.debug.narrative.replay``. They live under ``/debug`` rather than
+# ``/api`` so they can be independently gated / disabled in production.
+#
+# Notes:
+# - WorldVisualDebugger buffers snapshots in-memory (ring buffer of
+#   ``max_snapshots``, default 10) and persists them to
+#   ``debug_state/{novel_id}.json``. We read the buffer directly via
+#   ``getattr`` to match the pattern used by ``/api/dmn/reflections`` etc.
+# - The debugger does NOT buffer replay payloads — they are fire-and-forget
+#   on the bus. We recover the latest one from the BusSpy attached by
+#   ``main._start_webui`` (same pattern as ``/api/bus/events``).
+# - Diff computation mirrors ``WorldVisualDebugger._emit_diff`` but returns
+#   the payload to the caller instead of publishing it on the bus; we
+#   cannot call ``_emit_diff`` directly because it has no return value and
+#   is a no-op when the router is not attached.
+# ---------------------------------------------------------------------------
+
+
+def _get_world_debugger() -> Any | None:
+    """Return the registered ``WorldVisualDebugger`` module, or ``None``."""
+    return get_provider().module("world_visual_debugger")
+
+
+# Diff section id-keys (mirrors ``WorldVisualDebugger._emit_diff``).
+_DEBUG_DIFF_SECTIONS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("geography", ("key",)),
+    ("factions", ("key", "faction_id")),
+    ("rules", ("rule_id",)),
+    ("characters", ("character_id",)),
+)
+
+
+def _debug_entry_id(entry: Any, *, fallback_keys: tuple[str, ...]) -> str:
+    """Return a stable identifier for a snapshot entry (mirrors _entry_id)."""
+    if isinstance(entry, dict):
+        for k in fallback_keys:
+            v = entry.get(k)
+            if v is not None and isinstance(v, str):
+                return v
+            if v is not None:
+                return str(v)
+    return str(entry)
+
+
+def _select_debug_snapshot(
+    snapshots: list[dict[str, Any]],
+    version: str | None,
+    *,
+    offset_from_newest: int,
+) -> dict[str, Any] | None:
+    """Pick a snapshot by version, falling back to an offset from newest.
+
+    Mirrors ``WorldVisualDebugger._select_snapshot`` (without the
+    ``snapshot_id`` resolution path, which is not exposed over HTTP).
+    """
+    if not snapshots:
+        return None
+    if version is not None:
+        v_str = str(version)
+        for snap in snapshots:
+            if str(snap.get("version", "")) == v_str:
+                return snap
+    idx = len(snapshots) - 1 - offset_from_newest
+    if idx < 0 or idx >= len(snapshots):
+        return None
+    return snapshots[idx]
+
+
+def _compute_world_diff(
+    from_snap: dict[str, Any],
+    to_snap: dict[str, Any],
+    novel_id: str,
+) -> dict[str, Any]:
+    """Compute a set-difference + field-level diff between two snapshots.
+
+    Mirrors ``WorldVisualDebugger._emit_diff`` but returns the payload
+    instead of publishing it on the bus.
+    """
+    added: dict[str, list[Any]] = {}
+    removed: dict[str, list[Any]] = {}
+    modified: dict[str, list[Any]] = {}
+
+    for section, id_keys in _DEBUG_DIFF_SECTIONS:
+        from_entries = from_snap.get(section, []) or []
+        to_entries = to_snap.get(section, []) or []
+        from_map = {
+            _debug_entry_id(e, fallback_keys=id_keys): e
+            for e in from_entries
+            if isinstance(e, dict)
+        }
+        to_map = {
+            _debug_entry_id(e, fallback_keys=id_keys): e
+            for e in to_entries
+            if isinstance(e, dict)
+        }
+        from_ids = set(from_map.keys())
+        to_ids = set(to_map.keys())
+
+        added[section] = [to_map[i] for i in sorted(to_ids - from_ids)]
+        removed[section] = [
+            from_map[i] for i in sorted(from_ids - to_ids)
+        ]
+        modified[section] = []
+        for mid in sorted(from_ids & to_ids):
+            f_json = json.dumps(
+                from_map[mid], ensure_ascii=False, sort_keys=True
+            )
+            t_json = json.dumps(
+                to_map[mid], ensure_ascii=False, sort_keys=True
+            )
+            if f_json != t_json:
+                modified[section].append(
+                    {
+                        "id": mid,
+                        "from": from_map[mid],
+                        "to": to_map[mid],
+                    }
+                )
+
+    return {
+        "novel_id": novel_id,
+        "from_version": str(from_snap.get("version", "")),
+        "to_version": str(to_snap.get("version", "")),
+        "from_snapshot_id": from_snap.get("snapshot_id"),
+        "to_snapshot_id": to_snap.get("snapshot_id"),
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "added": added,
+        "removed": removed,
+        "modified": modified,
+    }
+
+
+@debug_router.get("/world/snapshot")
+def api_debug_world_snapshot(novel_id: str | None = None) -> JSONResponse:
+    """Return the latest buffered world snapshot (Stage 5 Task 5.3).
+
+    Query params:
+      - ``novel_id``: optional; falls back to the debugger's configured
+        ``_novel_id`` (set by ``init()`` from ``context['novel_v2']``).
+    """
+    debugger = _get_world_debugger()
+    if debugger is None:
+        raise HTTPException(
+            status_code=503, detail="world_visual_debugger not registered"
+        )
+    effective_novel_id = novel_id or getattr(debugger, "_novel_id", "linyi_default")
+    snapshots = getattr(debugger, "_snapshots", []) or []
+    if not snapshots:
+        return _json_response(
+            {
+                "novel_id": effective_novel_id,
+                "snapshot": None,
+                "message": "no snapshot available",
+            }
+        )
+    latest = snapshots[-1] if isinstance(snapshots[-1], dict) else {}
+    available_versions = [
+        str(s.get("version", ""))
+        for s in snapshots
+        if isinstance(s, dict)
+    ]
+    return _json_response(
+        {
+            "novel_id": effective_novel_id,
+            "snapshot": latest,
+            "available_versions": available_versions,
+            "timestamp": latest.get("timestamp"),
+        }
+    )
+
+
+@debug_router.get("/world/diff")
+def api_debug_world_diff(
+    novel_id: str | None = None,
+    from_version: str | None = None,
+    to_version: str | None = None,
+) -> JSONResponse:
+    """Return a diff between two buffered snapshots (Stage 5 Task 5.3).
+
+    Query params:
+      - ``novel_id``    : optional; falls back to the debugger's ``_novel_id``.
+      - ``from_version``: optional; defaults to second-newest snapshot.
+      - ``to_version``  : optional; defaults to newest snapshot.
+
+    Returns the diff payload (same shape as ``data.debug.world.diff``),
+    or ``{"message": "insufficient snapshots for diff"}`` when fewer than
+    two snapshots are buffered.
+    """
+    debugger = _get_world_debugger()
+    if debugger is None:
+        raise HTTPException(
+            status_code=503, detail="world_visual_debugger not registered"
+        )
+    effective_novel_id = novel_id or getattr(debugger, "_novel_id", "linyi_default")
+    snapshots = getattr(debugger, "_snapshots", []) or []
+    if len(snapshots) < 2:
+        return _json_response({"message": "insufficient snapshots for diff"})
+    from_snap = _select_debug_snapshot(
+        snapshots, from_version, offset_from_newest=1
+    )
+    to_snap = _select_debug_snapshot(
+        snapshots, to_version, offset_from_newest=0
+    )
+    if from_snap is None or to_snap is None:
+        return _json_response({"message": "insufficient snapshots for diff"})
+    diff_payload = _compute_world_diff(from_snap, to_snap, effective_novel_id)
+    return _json_response(diff_payload)
+
+
+@debug_router.get("/narrative/replay")
+def api_debug_narrative_replay(novel_id: str | None = None) -> JSONResponse:
+    """Return the most recent COC replay payload (Stage 5 Task 5.3).
+
+    WorldVisualDebugger does not buffer replay payloads in memory — they
+    are fire-and-forget on the bus. We recover the latest
+    ``data.debug.narrative.replay`` event from the BusSpy attached by
+    ``main._start_webui`` (same pattern as ``/api/bus/events``).
+    """
+    debugger = _get_world_debugger()
+    if debugger is None:
+        raise HTTPException(
+            status_code=503, detail="world_visual_debugger not registered"
+        )
+    effective_novel_id = novel_id or getattr(debugger, "_novel_id", "linyi_default")
+    replay_payload: dict[str, Any] | None = None
+    router = get_provider().router
+    if router is not None:
+        spy = getattr(router, "_web_ui_spy", None)
+        if spy is not None:
+            # ``recent()`` returns newest last; iterate in reverse to find
+            # the latest replay event first.
+            for record in reversed(spy.recent(limit=500)):
+                if record.get("topic") == "data.debug.narrative.replay":
+                    payload = record.get("payload")
+                    if isinstance(payload, dict):
+                        replay_payload = payload
+                        break
+    if replay_payload is None:
+        return _json_response(
+            {
+                "novel_id": effective_novel_id,
+                "replay": None,
+                "message": "no replay available",
+            }
+        )
+    return _json_response(replay_payload)
+
+
 def create_app() -> FastAPI:
     @asynccontextmanager
     async def _lifespan(app: FastAPI) -> Any:
@@ -803,6 +1066,7 @@ def create_app() -> FastAPI:
         )
 
     app.include_router(api_router)
+    app.include_router(debug_router)
     app.include_router(ws_router)
 
     @app.get("/")

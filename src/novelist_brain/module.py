@@ -151,6 +151,62 @@ class Module(ABC):
         """Initialize the module with the given agent context."""
         ...
 
+    def init_with_timeout(
+        self,
+        context: dict[str, Any],
+        timeout_seconds: float = 30.0,
+    ) -> None:
+        """Wrap :meth:`init` with a configurable timeout.
+
+        If ``init`` does not complete within ``timeout_seconds``, raises
+        :class:`TimeoutError`. The default timeout is 30s per §3.2.3.
+
+        Implementation uses a daemon thread + ``join(timeout)`` because
+        Python's GIL makes it unsafe to hard-cancel a running ``init``.
+        When the timeout fires, the worker thread continues running in the
+        background (it is a daemon, so it will not block process exit) but
+        the caller gets a :class:`TimeoutError` immediately. This is a
+        pragmatic trade-off: hard cancellation would require cooperative
+        cancellation checks inside every ``init`` implementation, which is
+        too invasive.
+
+        ``timeout_seconds <= 0`` skips the timeout wrapper entirely and
+        calls :meth:`init` directly, preserving the legacy blocking
+        behaviour for callers that explicitly want to wait forever.
+        """
+        import threading
+
+        if timeout_seconds <= 0:
+            self.init(context)
+            return
+
+        # Holder for any exception raised inside the worker. ``dict`` is
+        # used instead of ``nonlocal`` so the closure works without
+        # ``nonlocal`` declarations (which would still work, but the dict
+        # form is friendlier for static analysis).
+        result: dict[str, Any] = {"error": None}
+
+        def worker() -> None:
+            try:
+                self.init(context)
+            except BaseException as exc:  # noqa: BLE001 - re-raised below
+                result["error"] = exc
+
+        thread = threading.Thread(
+            target=worker,
+            daemon=True,
+            name=f"init-{self.name}",
+        )
+        thread.start()
+        thread.join(timeout=timeout_seconds)
+
+        if thread.is_alive():
+            raise TimeoutError(
+                f"Module {self.name} init timed out after {timeout_seconds}s"
+            )
+        if result["error"] is not None:
+            raise result["error"]
+
     @abstractmethod
     def on_bus_message(self, message: BusMessage) -> None:
         """Handle a bus message addressed to this module."""
