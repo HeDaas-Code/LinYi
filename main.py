@@ -73,6 +73,7 @@ from src.novelist_brain.personal_input import PersonalInput
 from src.novelist_brain.reader_profile import ReaderProfile
 from src.novelist_brain.reader_rest_gate import ReaderRestGate
 from src.novelist_brain.reflection_engine import ReflectionEngine
+from src.novelist_brain.relationship_graph import RelationshipGraph
 from src.novelist_brain.planner import Planner
 from src.novelist_brain.quality_engine import QualityEngine
 from src.novelist_brain.salience_network import SalienceNetwork
@@ -497,6 +498,7 @@ def create_modules(
     )
     # OC autonomous social simulation (ai-town inspired).
     registry.register(OCTownEngine, factory_options={"name": "oc_town_engine"})
+    registry.register(RelationshipGraph, factory_options={"name": "relationship_graph"})
     # v2 chapter structure & planning layer (Task 2.6)
     registry.register_agent(
         "chapter_manager",
