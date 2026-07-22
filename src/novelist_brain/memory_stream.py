@@ -18,6 +18,7 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any
 
+from src.novelist_brain.conversation_queue import ConversationQueue
 from src.novelist_brain.models import BusMessage, ModuleState, TickDelta
 from src.novelist_brain.module import Module
 from src.novelist_brain.persistence import dataclass_to_dict, reconstruct_dataclass
@@ -85,6 +86,10 @@ class MemoryStream(Module):
         retrieval_weights: dict[str, float] | None = None,
         working_capacity: int = DEFAULT_WORKING_CAPACITY,
         stream_capacity: int = DEFAULT_STREAM_CAPACITY,
+        conversation_queue: ConversationQueue | None = None,
+        hybrid_enabled: bool = False,
+        hybrid_recent_limit: int = 10,
+        hybrid_recent_boost: float = 0.2,
     ) -> None:
         super().__init__(name)
         self._recency_half_life = max(1.0, float(recency_half_life))
@@ -98,6 +103,10 @@ class MemoryStream(Module):
         self._stream_capacity = max(1, int(stream_capacity))
         self._entries: dict[str, MemoryStreamEntry] = {}
         self._working_ids: list[str] = []
+        self._conversation_queue = conversation_queue
+        self._hybrid_enabled = bool(hybrid_enabled)
+        self._hybrid_recent_limit = max(1, int(hybrid_recent_limit))
+        self._hybrid_recent_boost = max(0.0, float(hybrid_recent_boost))
         self.subscribe(
             "data.memory.trace.created",
             "data.oc.town.event",
@@ -179,18 +188,50 @@ class MemoryStream(Module):
         kinds: set[str] | None = None,
         now: float | None = None,
     ) -> list[MemoryStreamEntry]:
-        """Retrieve the most relevant entries using recency + importance + relevance."""
+        """Retrieve the most relevant entries using recency + importance + relevance.
+
+        When hybrid retrieval is enabled and a :class:`ConversationQueue` is
+        available, recent conversational turns are folded into the candidate
+        set so the agent keeps immediate continuity alongside deep memory.
+        """
         now = now if now is not None else time.time()
+        candidates = list(self._entries.values())
+
+        if self._hybrid_enabled and self._conversation_queue is not None:
+            candidates.extend(
+                self._turn_to_entry(t)
+                for t in self._conversation_queue.recent_turns(
+                    self._hybrid_recent_limit
+                )
+            )
+
         scored: list[tuple[float, MemoryStreamEntry]] = []
-        for entry in self._entries.values():
+        for entry in candidates:
             if kinds and entry.kind not in kinds:
                 continue
             score = self._score(entry, query, query_embedding, now)
+            if entry.kind == "conversation_turn":
+                score += self._hybrid_recent_boost
             scored.append((score, entry))
         scored.sort(key=lambda item: item[0], reverse=True)
         for _, entry in scored[:limit]:
             entry.touch(now)
         return [entry for _, entry in scored[:limit]]
+
+    @staticmethod
+    def _turn_to_entry(turn: Any) -> MemoryStreamEntry:
+        """Convert a ConversationTurn into a MemoryStreamEntry for scoring."""
+        return MemoryStreamEntry(
+            entry_id=getattr(turn, "turn_id", ""),
+            kind="conversation_turn",
+            content=getattr(turn, "content", ""),
+            source=getattr(turn, "source", ""),
+            timestamp=float(getattr(turn, "timestamp", 0.0)),
+            last_accessed=float(getattr(turn, "timestamp", 0.0)),
+            importance=0.5,
+            tags=[getattr(turn, "role", "unknown")],
+            metadata=getattr(turn, "metadata", {}) or {},
+        )
 
     def page_in(self, query: str, limit: int = 5) -> list[MemoryStreamEntry]:
         """Move relevant entries into working memory and return them."""
@@ -249,6 +290,20 @@ class MemoryStream(Module):
         stream_capacity = cfg.get("stream_capacity")
         if isinstance(stream_capacity, int) and stream_capacity > 0:
             self._stream_capacity = stream_capacity
+
+        # a16z companion-app inspired hybrid retrieval: combine deep stream
+        # retrieval with a bounded recent conversation queue.
+        if self._conversation_queue is None:
+            self._conversation_queue = context.get("conversation_queue_instance")
+        hybrid = cfg.get("hybrid", {}) if isinstance(cfg.get("hybrid"), dict) else {}
+        if hybrid.get("enabled", self._hybrid_enabled):
+            self._hybrid_enabled = True
+        self._hybrid_recent_limit = int(
+            hybrid.get("recent_limit", self._hybrid_recent_limit)
+        )
+        self._hybrid_recent_boost = float(
+            hybrid.get("recent_boost", self._hybrid_recent_boost)
+        )
 
     def on_bus_message(self, message: BusMessage) -> None:
         if not self._state.active:
@@ -415,6 +470,9 @@ class MemoryStream(Module):
                 "retrieval_weights": self._weights,
                 "working_capacity": self._working_capacity,
                 "stream_capacity": self._stream_capacity,
+                "hybrid_enabled": self._hybrid_enabled,
+                "hybrid_recent_limit": self._hybrid_recent_limit,
+                "hybrid_recent_boost": self._hybrid_recent_boost,
                 "entries": [
                     dataclass_to_dict(e) for e in self._entries.values()
                 ],
@@ -436,6 +494,13 @@ class MemoryStream(Module):
         )
         self._stream_capacity = int(
             data.get("stream_capacity", DEFAULT_STREAM_CAPACITY)
+        )
+        self._hybrid_enabled = bool(data.get("hybrid_enabled", False))
+        self._hybrid_recent_limit = int(
+            data.get("hybrid_recent_limit", 10)
+        )
+        self._hybrid_recent_boost = float(
+            data.get("hybrid_recent_boost", 0.2)
         )
         self._entries = {
             e.entry_id: e

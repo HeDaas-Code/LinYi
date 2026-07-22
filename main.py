@@ -25,6 +25,7 @@ from dataclasses import asdict
 
 from src.novelist_brain.bus import BusRouter
 from src.novelist_brain.attachment import AttachmentModule
+from src.novelist_brain.conversation_queue import ConversationQueue
 from src.novelist_brain.chapter_manager import ChapterManager
 from src.novelist_brain.circuit_breaker import CircuitBreaker
 from src.novelist_brain.config import (
@@ -279,6 +280,14 @@ def build_context(
             "retrieval_weights": {"recency": 0.3, "importance": 0.4, "relevance": 0.3},
             "working_capacity": 20,
             "stream_capacity": 2_000,
+            "hybrid": {
+                "enabled": True,
+                "recent_limit": 10,
+                "recent_boost": 0.2,
+            },
+        },
+        "conversation_queue": {
+            "max_turns": 20,
         },
         "reflection_engine": {
             "reflection_threshold": 5,
@@ -477,6 +486,10 @@ def create_modules(
     registry.register(Dynamics, factory_options={"name": "dynamics"})
     # Memory.
     registry.register(MemorySystem, factory_options={"name": "memory_system"})
+    # Conversation queue: short-term FIFO of recent turns (a16z companion-app
+    # inspired). Instantiated before MemoryStream so the latter can pick it up
+    # from shared context for hybrid retrieval.
+    registry.register(ConversationQueue, factory_options={"name": "conversation_queue"})
     registry.register(MemoryStream, factory_options={"name": "memory_stream"})
     registry.register(SelfTimeline, factory_options={"name": "self_timeline"})
     registry.register(ReflectionEngine, factory_options={"name": "reflection_engine"})
@@ -921,6 +934,12 @@ def run_agent(
     context["persistence"] = SnapshotStore(save_path)
     transaction_manager = TransactionManager(modules, context)
     context["transaction_manager"] = transaction_manager
+
+    conversation_queue_module = next(
+        (m for m in modules if isinstance(m, ConversationQueue)), None
+    )
+    if conversation_queue_module is not None:
+        context["conversation_queue_instance"] = conversation_queue_module
 
     memory_stream_module = next(
         (m for m in modules if isinstance(m, MemoryStream)), None
