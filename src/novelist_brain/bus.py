@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 from collections import deque
 from typing import TYPE_CHECKING, Any
 
@@ -63,6 +64,11 @@ class BusRouter:
         self._data_bus = DataBus()
         self._control_bus = ControlBus()
         self._counter: int = 0
+        # Reentrant lock guards _modules, _subscriptions, _inbox and _counter
+        # so the WebUI thread (which calls publish/flush) and the agent loop
+        # can safely share the router. RLock allows route() to be invoked
+        # from within flush() without self-deadlock.
+        self._lock = threading.RLock()
 
     @property
     def event_bus(self) -> EventBus:
@@ -78,18 +84,20 @@ class BusRouter:
 
     def subscribe(self, module: Module) -> None:
         """Register a module and its topic subscriptions."""
-        self._modules[module.name] = module
-        for topic in module.subscriptions:
-            self._subscriptions.setdefault(topic, set()).add(module.name)
+        with self._lock:
+            self._modules[module.name] = module
+            for topic in module.subscriptions:
+                self._subscriptions.setdefault(topic, set()).add(module.name)
 
     def unsubscribe(self, module: Module) -> None:
         """Remove a module from the router."""
-        self._modules.pop(module.name, None)
-        for topic in list(self._subscriptions):
-            subscribers = self._subscriptions[topic]
-            subscribers.discard(module.name)
-            if not subscribers:
-                del self._subscriptions[topic]
+        with self._lock:
+            self._modules.pop(module.name, None)
+            for topic in list(self._subscriptions):
+                subscribers = self._subscriptions[topic]
+                subscribers.discard(module.name)
+                if not subscribers:
+                    del self._subscriptions[topic]
 
     def publish(
         self,
@@ -113,7 +121,8 @@ class BusRouter:
             ttl=ttl,
             timestamp=timestamp,
         )
-        self._inbox.append(message)
+        with self._lock:
+            self._inbox.append(message)
 
     def route(self, message: BusMessage) -> list[BusMessage]:
         """Deliver a single message to subscribers and return responses.
@@ -125,19 +134,28 @@ class BusRouter:
         if message.is_expired():
             return responses
 
-        candidates: set[str] = set()
-        if message.target is not None:
-            if message.target in self._modules:
-                candidates.add(message.target)
-        else:
-            candidates.update(self._subscriptions.get(message.topic, set()))
+        # Snapshot candidate module names under the lock so the actual
+        # on_bus_message dispatch (which may emit/publish again) happens
+        # outside the critical section. This keeps the lock short while
+        # still protecting the subscription registry.
+        with self._lock:
+            if message.target is not None:
+                candidates: set[str] = (
+                    {message.target} if message.target in self._modules else set()
+                )
+            else:
+                candidates = set(self._subscriptions.get(message.topic, set()))
 
-        # Control messages broadcast to every module for override awareness.
-        if message.channel == "control":
-            candidates.update(self._modules.keys())
+            # Control messages broadcast to every module for override awareness.
+            if message.channel == "control":
+                candidates.update(self._modules.keys())
 
-        for name in candidates:
-            module = self._modules.get(name)
+            snapshot = [
+                (name, self._modules.get(name))
+                for name in candidates
+            ]
+
+        for name, module in snapshot:
             if module is None:
                 continue
             # Control messages can wake up or override inactive modules.
@@ -152,12 +170,16 @@ class BusRouter:
 
         Returns a list of messages that were actually delivered (post-decay).
         """
-        if not self._inbox:
-            return []
+        # Drain the inbox atomically so concurrent publishers cannot observe
+        # a partially-flushed queue.
+        with self._lock:
+            if not self._inbox:
+                return []
+            snapshot = list(self._inbox)
+            self._inbox.clear()
 
-        # Snapshot and sort by priority descending, then FIFO order.
-        snapshot = list(self._inbox)
-        self._inbox.clear()
+        # Sort by priority descending, then FIFO order. Done outside the lock
+        # so a slow route() doesn't block publishers.
         snapshot.sort(key=lambda m: (-m.priority, m.timestamp))
 
         delivered: list[BusMessage] = []
@@ -174,11 +196,13 @@ class BusRouter:
 
     def get_subscribers(self, topic: str) -> list[str]:
         """Return the names of modules subscribed to ``topic``."""
-        return sorted(self._subscriptions.get(topic, set()))
+        with self._lock:
+            return sorted(self._subscriptions.get(topic, set()))
 
     def reset(self) -> None:
         """Clear all modules, subscriptions and queued messages."""
-        self._modules.clear()
-        self._subscriptions.clear()
-        self._inbox.clear()
-        self._counter = 0
+        with self._lock:
+            self._modules.clear()
+            self._subscriptions.clear()
+            self._inbox.clear()
+            self._counter = 0

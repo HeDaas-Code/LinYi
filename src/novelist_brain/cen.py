@@ -11,6 +11,11 @@ from src.novelist_brain.models import BusMessage, Fragment, ModuleState, TickDel
 from src.novelist_brain.module import Module
 from src.novelist_brain.persistence import dataclass_to_dict, reconstruct_dataclass
 from src.novelist_brain.sandbox_versioning import SandboxVersionManager
+from src.novelist_brain.trpg import (
+    _DEFAULT_MAX_ROUNDS,
+    _DEFAULT_MIN_ROUNDS,
+    _DEPTH_THRESHOLDS,
+)
 
 
 @dataclass
@@ -72,6 +77,23 @@ class CentralExecutiveNetwork(Module):
         self._narrative_triggered_phases: set[str] = set()
         self._build_phase: str | None = None
 
+        # SubTask 3.3.1 / 3.3.2 — scenario-driven simulation state.
+        # Populated when ``data.novel.chapter.intent`` arrives from Planner
+        # and consumed by the COC scenario.request → scenario.load →
+        # simulate → skill_check.result → narrative.ready loop.  These
+        # fields are independent of the legacy ``_sandbox_built`` /
+        # ``_awaiting_ready`` flags so the two paths can coexist.
+        self._latest_chapter_intent: dict[str, Any] | None = None
+        self._latest_chapter_index: int | None = None
+        self._current_scenario: dict[str, Any] | None = None
+        self._scenario_id: str | None = None
+        self._scenario_chapter_index: int | None = None
+        self._scenario_round_counter: int = 0
+        self._scenario_skill_checks: list[dict[str, Any]] = []
+        self._scenario_request_pending: bool = False
+        self._scenario_simulate_index: int = 0
+        self._scenario_narrative_ready: bool = False
+
         self.subscribe(
             "control.network.cen.active",
             "control.network.dmn.active",
@@ -84,6 +106,10 @@ class CentralExecutiveNetwork(Module):
             "data.identity.constraint",
             "data.identity.updated",
             "control.module.init",
+            # SubTask 3.3.1 — scenario-driven simulation subscriptions.
+            "data.novel.chapter.intent",
+            "control.sandbox.scenario.load",
+            "data.sandbox.skill_check.result",
         )
 
     def _setup_default_goals(self) -> None:
@@ -115,6 +141,10 @@ class CentralExecutiveNetwork(Module):
                 "enable_ab_fork": self._enable_ab_fork,
                 "ab_in_progress": self._ab_in_progress,
                 "ab_rounds_remaining": self._ab_rounds_remaining,
+                # SubTask 3.3.1 / 3.3.2 — scenario-driven flow projection.
+                "scenario_round_counter": 0,
+                "scenario_request_pending": False,
+                "scenario_narrative_ready": False,
             },
         )
 
@@ -137,7 +167,12 @@ class CentralExecutiveNetwork(Module):
                 "enable_ab_fork": self._enable_ab_fork,
                 "ab_in_progress": self._ab_in_progress,
                 "ab_rounds_remaining": self._ab_rounds_remaining,
-            }
+                # SubTask 3.3.1 / 3.3.2 — scenario-driven flow projection.
+                "scenario_round_counter": self._scenario_round_counter,
+                "scenario_request_pending": self._scenario_request_pending,
+                "scenario_narrative_ready": self._scenario_narrative_ready,
+                "scenario_skill_check_count": len(self._scenario_skill_checks),
+            },
         )
         return self._state
 
@@ -171,6 +206,17 @@ class CentralExecutiveNetwork(Module):
                 "ab_in_progress": self._ab_in_progress,
                 "ab_versions": list(self._ab_versions),
                 "ab_rounds_remaining": self._ab_rounds_remaining,
+                # SubTask 3.3.1 / 3.3.2 — scenario-driven flow snapshot.
+                "latest_chapter_intent": self._latest_chapter_intent,
+                "latest_chapter_index": self._latest_chapter_index,
+                "current_scenario": self._current_scenario,
+                "scenario_id": self._scenario_id,
+                "scenario_chapter_index": self._scenario_chapter_index,
+                "scenario_round_counter": self._scenario_round_counter,
+                "scenario_skill_checks": list(self._scenario_skill_checks),
+                "scenario_request_pending": self._scenario_request_pending,
+                "scenario_simulate_index": self._scenario_simulate_index,
+                "scenario_narrative_ready": self._scenario_narrative_ready,
             }
         )
         return base
@@ -217,6 +263,42 @@ class CentralExecutiveNetwork(Module):
         self._ab_in_progress = False
         self._ab_versions = ()
         self._ab_rounds_remaining = 0
+
+        # SubTask 3.3.1 / 3.3.2 — restore scenario-driven flow snapshot.
+        # ``current_scenario`` is restored best-effort; an in-flight scenario
+        # at save time will be re-requested by the next ``data.novel.chapter.intent``.
+        intent_data = data.get("latest_chapter_intent")
+        self._latest_chapter_intent = (
+            dict(intent_data) if isinstance(intent_data, dict) else None
+        )
+        idx = data.get("latest_chapter_index")
+        try:
+            self._latest_chapter_index = int(idx) if idx is not None else None
+        except (TypeError, ValueError):
+            self._latest_chapter_index = None
+        scenario_data = data.get("current_scenario")
+        self._current_scenario = (
+            dict(scenario_data) if isinstance(scenario_data, dict) else None
+        )
+        self._scenario_id = data.get("scenario_id")
+        scenario_chapter = data.get("scenario_chapter_index")
+        try:
+            self._scenario_chapter_index = (
+                int(scenario_chapter) if scenario_chapter is not None else None
+            )
+        except (TypeError, ValueError):
+            self._scenario_chapter_index = None
+        self._scenario_round_counter = int(data.get("scenario_round_counter", 0))
+        checks_data = data.get("scenario_skill_checks", [])
+        self._scenario_skill_checks = [
+            c for c in checks_data if isinstance(c, dict)
+        ] if isinstance(checks_data, list) else []
+        self._scenario_request_pending = False
+        self._scenario_simulate_index = int(data.get("scenario_simulate_index", 0))
+        # A restored run always re-evaluates the N-round contract from the
+        # current counter rather than reusing a stale "ready" flag, so we
+        # reset the ready flag and let ``_advance_scenario_round`` decide.
+        self._scenario_narrative_ready = False
 
     def init(self, context: dict[str, Any]) -> None:
         """Initialize CEN from agent context."""
@@ -274,6 +356,12 @@ class CentralExecutiveNetwork(Module):
             constraints = payload.get("constraints")
             if isinstance(constraints, dict):
                 self._identity_constraints = constraints
+        elif topic == "data.novel.chapter.intent":
+            self._handle_chapter_intent_for_scenario(message.payload or {})
+        elif topic == "control.sandbox.scenario.load":
+            self._handle_scenario_load(message.payload or {})
+        elif topic == "data.sandbox.skill_check.result":
+            self._handle_skill_check_result(message.payload or {})
 
     def tick(self, delta: TickDelta) -> None:
         """Advance CEN: drive sandbox simulation until the narrative is ready."""
@@ -356,6 +444,17 @@ class CentralExecutiveNetwork(Module):
                     priority=7,
                     ttl=3,
                 )
+
+        # SubTask 3.3.1 / 3.3.2 — scenario-driven simulation loop.
+        # Drives the Planner → CEN → COCMappingEngine → MentalSandbox loop
+        # independently of the legacy ``control.sandbox.simulate`` path
+        # above.  See ``_advance_scenario_round`` for the N-round contract.
+        if self._latest_chapter_intent is not None and not self._scenario_narrative_ready:
+            if self._current_scenario is None:
+                if not self._scenario_request_pending:
+                    self._request_chapter_scenario()
+            else:
+                self._drive_scenario_simulate()
 
         self._broadcast_plan()
 
@@ -542,6 +641,332 @@ class CentralExecutiveNetwork(Module):
         self._push_task(task)
         self._current_task = task.name
         self._broadcast_plan()
+
+    # ------------------------------------------------------------------
+    # SubTask 3.3.1 / 3.3.2 — scenario-driven simulation handlers
+    # ------------------------------------------------------------------
+
+    def _handle_chapter_intent_for_scenario(self, payload: dict[str, Any]) -> None:
+        """Cache the latest ``data.novel.chapter.intent`` for scenario driving.
+
+        Resets any in-flight scenario state so the next tick re-issues a fresh
+        ``control.coc.scenario.request``.  The ChapterIntent payload emitted
+        by Planner carries the structured intent plus auxiliary metadata
+        (``beats``, ``weave_ratios`` …) which we forward verbatim to the
+        COC mapping engine.
+        """
+        if not isinstance(payload, dict):
+            return
+        chapter_intent = payload.get("chapter_intent")
+        if chapter_intent is None:
+            return
+        # Accept either a ChapterIntent dataclass or its dict form.
+        if hasattr(chapter_intent, "to_dict"):
+            intent_dict = chapter_intent.to_dict()
+        elif isinstance(chapter_intent, dict):
+            intent_dict = dict(chapter_intent)
+        else:
+            return
+        chapter_index_raw = (
+            getattr(chapter_intent, "chapter_index", None)
+            or intent_dict.get("chapter_index")
+            or payload.get("chapter_index")
+        )
+        try:
+            chapter_index = (
+                int(chapter_index_raw) if chapter_index_raw is not None else None
+            )
+        except (TypeError, ValueError):
+            chapter_index = None
+
+        self._latest_chapter_intent = {
+            "chapter_intent": intent_dict,
+            "chapter_index": chapter_index,
+            "source_narrative_id": payload.get("source_narrative_id"),
+            "generated_at": payload.get("generated_at"),
+            "beats": payload.get("beats"),
+            "emotional_arc_beats": payload.get("emotional_arc_beats"),
+            "weave_violations": payload.get("weave_violations"),
+            "weave_ratios": payload.get("weave_ratios"),
+        }
+        self._latest_chapter_index = chapter_index
+        # Reset scenario bookkeeping so the new intent drives a fresh round.
+        self._current_scenario = None
+        self._scenario_id = None
+        self._scenario_chapter_index = chapter_index
+        self._scenario_round_counter = 0
+        self._scenario_skill_checks = []
+        self._scenario_request_pending = False
+        self._scenario_simulate_index = 0
+        self._scenario_narrative_ready = False
+
+        task = Goal("驱动 COC 场景化推演", "task", 0.7)
+        self._push_task(task)
+        self._current_task = task.name
+
+    def _handle_scenario_load(self, payload: dict[str, Any]) -> None:
+        """Cache the scenario returned by COCMappingEngine and prime the loop.
+
+        Only scenarios whose ``chapter_index`` matches the latest cached
+        intent are accepted, so a stale ``scenario.load`` from a previous
+        chapter cannot corrupt the current run.
+        """
+        if not isinstance(payload, dict):
+            return
+        if self._latest_chapter_intent is None:
+            return
+        scenario_chapter = payload.get("chapter_index")
+        try:
+            scenario_chapter_int = (
+                int(scenario_chapter) if scenario_chapter is not None else None
+            )
+        except (TypeError, ValueError):
+            scenario_chapter_int = None
+        expected = self._latest_chapter_index
+        if expected is not None and scenario_chapter_int is not None:
+            if scenario_chapter_int != expected:
+                return
+        self._current_scenario = dict(payload)
+        self._scenario_id = payload.get("scenario_id") or self._scenario_id
+        if scenario_chapter_int is not None:
+            self._scenario_chapter_index = scenario_chapter_int
+        self._scenario_request_pending = False
+        self._scenario_simulate_index = 0
+
+    def _handle_skill_check_result(self, payload: dict[str, Any]) -> None:
+        """Collect ``data.sandbox.skill_check.result`` events for the round.
+
+        Defensive: if no scenario is in flight (e.g. legacy simulate also
+        happens to emit such events one day), the result is ignored.
+        """
+        if not isinstance(payload, dict):
+            return
+        if self._current_scenario is None:
+            return
+        if self._scenario_narrative_ready:
+            return
+        self._scenario_skill_checks.append(payload)
+
+    def _request_chapter_scenario(self) -> None:
+        """Emit ``control.coc.scenario.request`` for the cached chapter intent."""
+        if self._latest_chapter_intent is None:
+            return
+        chapter_index = self._latest_chapter_index
+        if chapter_index is None:
+            return
+        self._scenario_request_pending = True
+        self._current_task = f"请求第 {chapter_index} 章 COC 场景"
+        self.emit(
+            topic="control.coc.scenario.request",
+            payload={
+                "chapter_index": chapter_index,
+                "chapter_intent": self._latest_chapter_intent.get(
+                    "chapter_intent"
+                ),
+                "requester": self.name,
+            },
+            channel="control",
+            priority=7,
+            ttl=3,
+        )
+
+    def _drive_scenario_simulate(self) -> None:
+        """Emit the next ``control.sandbox.simulate`` for the current round.
+
+        One ``possible_check`` is dispatched per tick.  When all checks in a
+        round have been dispatched, the round counter is advanced and the
+        N-round contract is re-evaluated.
+        """
+        assert self._current_scenario is not None
+        possible_checks = self._current_scenario.get("possible_checks") or []
+        if not isinstance(possible_checks, list):
+            possible_checks = []
+
+        if self._scenario_simulate_index < len(possible_checks):
+            check = possible_checks[self._scenario_simulate_index]
+            if not isinstance(check, dict):
+                check = {}
+            character_id = self._pick_scenario_character_id()
+            skill = check.get("skill")
+            difficulty = check.get("difficulty")
+            action = check.get("purpose") or check.get("action") or skill or "act"
+            idempotency_key = (
+                f"{self._scenario_id}:"
+                f"r{self._scenario_round_counter}:"
+                f"i{self._scenario_simulate_index}"
+            )
+            self._current_task = (
+                f"运行场景推演 第 {self._scenario_round_counter + 1} 轮 "
+                f"检定 {self._scenario_simulate_index + 1}/{len(possible_checks)}"
+            )
+            self.emit(
+                topic="control.sandbox.simulate",
+                payload={
+                    "action": action,
+                    "character_id": character_id,
+                    "skill": skill,
+                    "difficulty": difficulty,
+                    "scenario_id": self._scenario_id,
+                    "chapter_index": self._scenario_chapter_index,
+                    "round": self._scenario_round_counter + 1,
+                    "check_index": self._scenario_simulate_index,
+                    "idempotency_key": idempotency_key,
+                    "current_goal": (
+                        self._current_goal.to_dict()
+                        if self._current_goal
+                        else None
+                    ),
+                    "current_task": self._current_task,
+                },
+                channel="control",
+                priority=7,
+                ttl=3,
+            )
+            self._scenario_simulate_index += 1
+        else:
+            # Round complete: roll over to the next round and re-evaluate
+            # the N-round contract.
+            self._advance_scenario_round()
+
+    def _advance_scenario_round(self) -> None:
+        """Increment the round counter and emit narrative.ready if contracted.
+
+        The contract mirrors ``trpg._DEFAULT_MIN_ROUNDS`` (3) and
+        ``_DEFAULT_MAX_ROUNDS`` (7): once ``_scenario_round_counter`` reaches
+        the minimum and any depth metric clears its threshold, or once the
+        maximum is hit, CEN emits ``data.sandbox.narrative.ready`` with the
+        aggregated skill-check results and resets the scenario bookkeeping
+        so the next ``data.novel.chapter.intent`` starts fresh.
+        """
+        self._scenario_round_counter += 1
+        self._scenario_simulate_index = 0
+
+        depth_metrics = self._compute_scenario_depth_metrics()
+        min_met = self._scenario_round_counter >= _DEFAULT_MIN_ROUNDS
+        max_met = self._scenario_round_counter >= _DEFAULT_MAX_ROUNDS
+        any_metric_passes = any(
+            depth_metrics.get(key, 0.0) >= threshold
+            for key, threshold in _DEPTH_THRESHOLDS.items()
+        )
+        ready = max_met or (min_met and any_metric_passes)
+        if not ready:
+            self._current_task = (
+                f"COC 场景推演第 {self._scenario_round_counter} 轮完成，"
+                f"未达 N-round 契约（min={_DEFAULT_MIN_ROUNDS}）"
+            )
+            return
+
+        narrative_line = {
+            "scenario_id": self._scenario_id,
+            "chapter_index": self._scenario_chapter_index,
+            "round": self._scenario_round_counter,
+            "skill_checks": list(self._scenario_skill_checks),
+            "depth_metrics": depth_metrics,
+            "source": "cen_scenario_driven",
+        }
+        world_state = self._extract_scenario_world_state()
+        payload = {
+            "narrative_line": narrative_line,
+            "narrative_lines": [narrative_line],
+            "skill_checks": list(self._scenario_skill_checks),
+            "depth_metrics": depth_metrics,
+            "simulation_round": self._scenario_round_counter,
+            "scenario_id": self._scenario_id,
+            "chapter_index": self._scenario_chapter_index,
+            "world_state": world_state,
+            "source": self.name,
+            "origin": "scenario_driven",
+        }
+        self._scenario_narrative_ready = True
+        self._current_task = (
+            f"COC 场景推演就绪，第 {self._scenario_round_counter} 轮触发叙事就绪"
+        )
+        self.emit(
+            topic="data.sandbox.narrative.ready",
+            payload=payload,
+            channel="data",
+            priority=7,
+            ttl=5,
+        )
+
+    def _pick_scenario_character_id(self) -> str | None:
+        """Pick the first key NPC's ``character_id`` for the simulate payload."""
+        scenario = self._current_scenario or {}
+        npcs = scenario.get("key_npcs") or []
+        if not isinstance(npcs, list) or not npcs:
+            return None
+        first = npcs[0]
+        if isinstance(first, dict):
+            return first.get("character_id") or first.get("name")
+        return getattr(first, "character_id", None) or getattr(first, "name", None)
+
+    def _compute_scenario_depth_metrics(self) -> dict[str, float]:
+        """Compute a coarse depth-metrics snapshot from collected skill checks.
+
+        Mirrors the keys defined in ``trpg._DEPTH_THRESHOLDS`` so the
+        N-round contract evaluation can reuse the same thresholds.  Values
+        are intentionally coarse because CEN only sees the skill-check
+        results published on the bus; the authoritative metrics still live
+        in MentalSandbox.  This is a best-effort signal that lets CEN
+        trigger ``narrative.ready`` early when the round clearly produced
+        enough conflict / character development.
+        """
+        checks = self._scenario_skill_checks
+        check_count = len(checks)
+        successes = sum(
+            1
+            for c in checks
+            if isinstance(c, dict)
+            and str(c.get("outcome", "")).lower() in {"success", "hard_success", "extreme_success"}
+        )
+        conflicts_count = sum(
+            1
+            for c in checks
+            if isinstance(c, dict)
+            and str(c.get("outcome", "")).lower() in {"failure", "fumble"}
+        )
+        # Map coarse signals onto the threshold keys; each metric is in [0, 1].
+        conflict_depth = min(1.0, conflicts_count * 0.25)
+        character_development = min(1.0, check_count * 0.2)
+        emotional_shift = min(1.0, successes * 0.2)
+        coherence_score = (
+            min(1.0, check_count * 0.25) if check_count > 0 else 0.0
+        )
+        hook_strength = (
+            min(1.0, conflicts_count * 0.35)
+            if self._scenario_round_counter >= 1
+            else 0.0
+        )
+        foreshadowing_progress = min(
+            1.0, self._scenario_round_counter * 0.25
+        )
+        scene_variety = min(1.0, check_count * 0.2)
+        return {
+            "conflict_depth": round(conflict_depth, 3),
+            "character_development": round(character_development, 3),
+            "emotional_shift": round(emotional_shift, 3),
+            "coherence_score": round(coherence_score, 3),
+            "hook_strength": round(hook_strength, 3),
+            "foreshadowing_progress": round(foreshadowing_progress, 3),
+            "scene_variety": round(scene_variety, 3),
+        }
+
+    def _extract_scenario_world_state(self) -> dict[str, Any]:
+        """Project the cached scenario into a world-state snapshot for the payload."""
+        scenario = self._current_scenario or {}
+        return {
+            "scenario_id": self._scenario_id,
+            "chapter_index": self._scenario_chapter_index,
+            "campaign_phase": scenario.get("campaign_phase"),
+            "location": scenario.get("location"),
+            "conflict": scenario.get("conflict"),
+            "objective": scenario.get("objective"),
+            "key_npcs": [
+                npc if isinstance(npc, dict) else getattr(npc, "to_dict", lambda: {})()
+                for npc in (scenario.get("key_npcs") or [])
+                if npc is not None
+            ],
+        }
 
     def _compute_executive_load(self) -> float:
         load = 0.0

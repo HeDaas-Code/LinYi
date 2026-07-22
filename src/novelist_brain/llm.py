@@ -10,6 +10,7 @@ This module provides:
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import random
@@ -25,13 +26,159 @@ from src.novelist_brain.fault import AgentError, ErrorType, Severity, classify_e
 from src.novelist_brain.models import BusMessage
 
 
+class LLMPromptCache:
+    """In-memory prompt→response cache with TTL.
+
+    Used by LLMService implementations to skip duplicate calls when the
+    same prompt+context+temperature+max_tokens combination is requested
+    within the TTL window.
+
+    The cache key is a SHA256 hash of (prompt, context_canonical_json,
+    temperature, max_tokens). Context is serialized canonically
+    (sort_keys=True) so dict ordering doesn't cause cache misses.
+    """
+
+    DEFAULT_TTL_SECONDS = 300.0  # 5 minutes per §3.2.1
+
+    def __init__(
+        self,
+        ttl_seconds: float = DEFAULT_TTL_SECONDS,
+        max_entries: int = 256,
+    ) -> None:
+        self._ttl = ttl_seconds
+        self._max_entries = max_entries
+        # key -> (response, expires_at_monotonic)
+        self._store: dict[str, tuple[str, float]] = {}
+        self._hits = 0
+        self._misses = 0
+        self._evictions = 0
+
+    @staticmethod
+    def compute_key(
+        prompt: str,
+        context: dict[str, Any] | None,
+        temperature: float,
+        max_tokens: int,
+    ) -> str:
+        """Compute a stable cache key for the given call signature."""
+        context_blob = (
+            json.dumps(context, sort_keys=True, ensure_ascii=False, default=str)
+            if context is not None
+            else "null"
+        )
+        signature = (
+            f"prompt={prompt}\n"
+            f"context={context_blob}\n"
+            f"temperature={temperature!r}\n"
+            f"max_tokens={max_tokens!r}"
+        )
+        return hashlib.sha256(signature.encode("utf-8")).hexdigest()
+
+    def get(self, key: str) -> str | None:
+        """Return cached response if not expired, else None.
+
+        Expired entries are evicted lazily on access.
+        """
+        entry = self._store.get(key)
+        if entry is None:
+            self._misses += 1
+            return None
+        response, expires_at = entry
+        if time.monotonic() > expires_at:
+            # Stale entry: drop it and count as a miss.
+            self._store.pop(key, None)
+            self._misses += 1
+            return None
+        self._hits += 1
+        return response
+
+    def put(self, key: str, response: str) -> None:
+        """Store a response with current TTL. Evict oldest if over max_entries."""
+        expires_at = time.monotonic() + self._ttl
+        self._store[key] = (response, expires_at)
+        # Evict the oldest-expiring entry when over capacity. We also drop
+        # any already-expired entries opportunistically so the eviction
+        # count reflects genuine pressure, not lazy GC.
+        if len(self._store) > self._max_entries:
+            now = time.monotonic()
+            expired_keys = [k for k, (_, exp) in self._store.items() if exp <= now]
+            for k in expired_keys:
+                self._store.pop(k, None)
+                self._evictions += 1
+            # If still over capacity, evict the entry that expires soonest.
+            while len(self._store) > self._max_entries:
+                oldest_key = min(self._store, key=lambda k: self._store[k][1])
+                self._store.pop(oldest_key, None)
+                self._evictions += 1
+
+    def clear(self) -> None:
+        """Drop all cached responses and reset stats."""
+        self._store.clear()
+        self._hits = 0
+        self._misses = 0
+        self._evictions = 0
+
+    def stats(self) -> dict[str, Any]:
+        """Return ``{hits, misses, entries, evictions}``."""
+        return {
+            "hits": self._hits,
+            "misses": self._misses,
+            "entries": len(self._store),
+            "evictions": self._evictions,
+        }
+
+
 class LLMService(ABC):
     """Pluggable LLM interface used by all brain modules."""
+
+    def __init__(self, *, cache: LLMPromptCache | None = None) -> None:
+        # ``_cache`` may also be lazily initialized by the ``cache`` property
+        # for subclasses that do not call ``super().__init__()`` (backwards
+        # compatibility with existing third-party subclasses).
+        self._cache: LLMPromptCache | None = cache
 
     @property
     def is_mock(self) -> bool:
         """Return True if this service does not call a real external LLM."""
         return False
+
+    @property
+    def cache(self) -> LLMPromptCache:
+        """Return the prompt cache, creating one lazily if needed."""
+        if getattr(self, "_cache", None) is None:
+            self._cache = LLMPromptCache()
+        return self._cache
+
+    def enable_cache(self, cache: LLMPromptCache | None = None) -> None:
+        """Attach (or replace) the prompt cache."""
+        self._cache = cache if cache is not None else LLMPromptCache()
+
+    def disable_cache(self) -> None:
+        """Detach the prompt cache so subsequent calls bypass caching."""
+        self._cache = None
+
+    def complete_cached(
+        self,
+        prompt: str,
+        context: dict[str, Any] | None = None,
+        temperature: float = 0.7,
+        max_tokens: int = 256,
+    ) -> str:
+        """Wrap :meth:`complete` with the prompt cache (TTL=300s by default).
+
+        The cache key is derived from ``(prompt, context, temperature,
+        max_tokens)``. On a hit the cached response is returned without
+        invoking :meth:`complete`; on a miss the response is stored before
+        being returned. Callers that want to bypass the cache (e.g. for
+        non-deterministic sampling) should call :meth:`complete` directly.
+        """
+        key = LLMPromptCache.compute_key(prompt, context, temperature, max_tokens)
+        cached = self.cache.get(key)
+        if cached is not None:
+            return cached
+        response = self.complete(prompt, context, temperature, max_tokens)
+        self.cache.put(key, response)
+        return response
 
     @abstractmethod
     def complete(
@@ -57,7 +204,14 @@ class MockLLMService(LLMService):
     def is_mock(self) -> bool:
         return True
 
-    def __init__(self, seed: int | None = None, dimensions: int = 64) -> None:
+    def __init__(
+        self,
+        seed: int | None = None,
+        dimensions: int = 64,
+        *,
+        cache: LLMPromptCache | None = None,
+    ) -> None:
+        super().__init__(cache=cache)
         self._seed = seed
         self._dimensions = dimensions
         self._rng = random.Random(seed)
@@ -213,7 +367,10 @@ class ResilientLLMService(LLMService):
         fault_publisher: Callable[[AgentError], None] | None = None,
         event_publisher: Callable[[dict[str, Any]], None] | None = None,
         source: str = "llm_service",
+        *,
+        cache: LLMPromptCache | None = None,
     ) -> None:
+        super().__init__(cache=cache)
         self._primary = primary
         self._fallback = fallback if fallback is not None else MockLLMService()
         self._circuit = circuit_breaker or CircuitBreaker(service="llm")
@@ -376,7 +533,9 @@ class OpenAILLMService(LLMService):
         temperature: float = 0.7,
         max_tokens: int = 2048,
         timeout: float = 120.0,
+        cache: LLMPromptCache | None = None,
     ) -> None:
+        super().__init__(cache=cache)
         self._base_url = (base_url or os.getenv("OPENAI_BASE_URL") or "").rstrip("/")
         self._api_key = api_key or os.getenv("OPENAI_API_KEY")
         self._model = model
@@ -523,38 +682,58 @@ class OpenAILLMService(LLMService):
           / "Wait, let me reconsider..."
         - Embedded counting: "(57) text (20) text"
 
-        Strategy:
-        1. Find the FIRST contiguous prose block (Chinese-heavy, no
-           English reasoning markers) of length >= 30.
+        Strategy
+        --------
+        1. Find the FIRST contiguous prose block — defined as a run of
+           **at least 20 Chinese characters** (no longer matching pure
+           whitespace, which was the previous bug) optionally interleaved
+           with Chinese punctuation.
         2. Cut it off at the first reasoning marker that appears AFTER
-           the start of the prose block.
+           the start of the prose block. Markers are matched on a word
+           boundary so common prose words like ``good`` or ``actually``
+           inside a Chinese sentence are not flagged.
         3. If the prose block ends with an incomplete sentence (no
-           Chinese sentence-ending punctuation), look ahead for the
-           next sentence ending.
+           Chinese sentence-ending punctuation), look ahead for the next
+           sentence ending.
+
+        Limitations
+        -----------
+        The long-term fix is to use structured outputs / tool calling so
+        reasoning models return clean prose directly. This regex-based
+        stripper is a best-effort patch and may still misfire on edge
+        cases; it errs on the side of preserving text rather than
+        discarding legitimate prose.
         """
         if not text:
             return text
         import re as _re
 
-        # Reasoning markers (case-insensitive English).
+        # Reasoning markers (case-insensitive English). Each alternative is
+        # anchored at a word boundary on both sides so that common prose
+        # substrings (e.g. "good" inside "goodbye", "actually" inside a
+        # quoted English snippet) are not false positives. The previous
+        # version matched bare substrings and swallowed legitimate prose.
         reasoning_markers_en = _re.compile(
-            r"(let me|i need|i should|i think|i want|the user|user wants|"
-            r"count:|let me count|let me think|let me draft|let me revise|"
-            r"wait,|actually,?|however,? i|now let me|i'll|i will|i should write|"
+            r"\b(?:"
+            r"let me|i need to|i should|i think|i want to|the user|user wants|"
+            r"let me count|let me think|let me draft|let me revise|"
+            r"wait|however,? i|now let me|i'll|i will|i should write|"
             r"let me reconsider|let me refine|let me check|i should make|"
-            r"good,?|i can|so the|i think the|let me write|total:|"
-            r"approximately|that fits|let me count more|good, within|"
-            r"draft \d|draft:|i should be|i want to|i need to|i'll write|"
+            r"i can|so the|i think the|let me write|"
+            r"approximately|that fits|let me count more|"
+            r"draft \d|draft:|i should be|i'll write|"
             r"let me polish|i want to make|previous text|"
-            r"i should avoid|i should not|i'll use|hmm,|"
+            r"i should avoid|i should not|i'll use|"
             r"check for|forbidden|reuse|refine|"
             r"character count|count: roughly|count: approximately|"
             r"let me read|let me consider|i interpret|"
             r"the instruction|instructions say|context mentions|"
-            r"so i should|i also|within range|on ties)",
+            r"so i should|i also|within range|on ties"
+            r")\b",
             _re.IGNORECASE,
         )
-        # Chinese reasoning markers.
+        # Chinese reasoning markers. These are distinctive enough to be
+        # safe as plain substring matches.
         reasoning_markers_zh = _re.compile(
             r"(我需要|让我想|让我数|让我重新|让我考虑|我应该|我来写|"
             r"我重新|用户想要|让我修改|让我检查|让我再|我先|"
@@ -563,12 +742,26 @@ class OpenAILLMService(LLMService):
             r"接下来我来|让我先)"
         )
 
-        # Find the first substantial Chinese run (>= 20 Chinese chars).
+        # Find the first substantial Chinese run. The previous regex
+        # ``[\u4e00-\u9fff...]{20,}`` allowed a run of pure whitespace
+        # (because ``\s`` was included) to satisfy the length requirement,
+        # which meant a 20-space indent could be mis-detected as prose.
+        # The new pattern requires at least 20 ACTUAL Chinese characters,
+        # optionally interleaved with Chinese punctuation or whitespace.
+        chinese_char_re = _re.compile(r"[\u4e00-\u9fff]")
         chinese_run_re = _re.compile(
-            r"[\u4e00-\u9fff，。、；：！？\u201c\u201d\u2018\u2019（）…—\s]{20,}"
+            r"[\u4e00-\u9fff，。、；：！？\u201c\u201d\u2018\u2019（）…—\s]+"
         )
-        match = chinese_run_re.search(text)
-        if not match:
+        # Scan candidate runs and accept the first one that has >= 20
+        # Chinese characters (counted explicitly, ignoring whitespace).
+        match = None
+        for candidate in chinese_run_re.finditer(text):
+            segment = candidate.group(0)
+            chinese_count = len(chinese_char_re.findall(segment))
+            if chinese_count >= 20:
+                match = candidate
+                break
+        if match is None:
             # No Chinese prose found — fall back to original.
             return text
 

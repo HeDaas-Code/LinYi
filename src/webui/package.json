@@ -1,0 +1,30 @@
+{
+  "name": "linyi-webui",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Vue 3 dashboard for the LinYi novelist brain agent (WebUI refactor Phase 1+).",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "build:only": "vite build",
+    "preview": "vite preview",
+    "type-check": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "chart.js": "^4.4.1",
+    "d3": "^7.9.0",
+    "pinia": "^2.2.6",
+    "pixi-viewport": "^6.0.3",
+    "pixi.js": "^8.19.0",
+    "vue": "^3.5.13",
+    "vue-router": "^4.4.5"
+  },
+  "devDependencies": {
+    "@types/d3": "^7.4.3",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "typescript": "~5.6.3",
+    "vite": "^5.4.11",
+    "vue-tsc": "^2.1.10"
+  }
+}

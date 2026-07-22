@@ -34,6 +34,23 @@ _CONSOLIDATION_THRESHOLD = 0.35
 # Working-memory capacity for recently received fragments.
 _WORKING_MEMORY_CAPACITY = 20
 
+# Long-term memory capacity caps. When the in-memory indexes grow beyond
+# these caps a forgetting pass prunes the lowest-importance entries so the
+# agent can run 7x24 without unbounded memory growth (Design.md §12).
+_FRAGMENT_CAPACITY = 5_000
+_TRACE_CAPACITY = 2_000
+_SOCIAL_PROVENANCE_CAPACITY = 2_000
+
+# Below this importance score a trace is eligible for forgetting once the
+# trace index is over capacity. Recency also factors in: a low-importance
+# but recent trace survives longer than a low-importance old one.
+_FORGET_IMPORTANCE_THRESHOLD = 0.2
+
+# After how many fragment receptions we run a forgetting sweep. Running on
+# every fragment would be wasteful; running rarely would let the indexes
+# overshoot the cap between sweeps.
+_FORGET_CHECK_INTERVAL = 100
+
 # Person names are heuristically detected as capitalized tokens that are not
 # common English location words. This is intentionally lightweight.
 _COMMON_LOCATION_WORDS = {
@@ -180,6 +197,11 @@ class MemorySystem(Module):
         consolidation_threshold: float = _CONSOLIDATION_THRESHOLD,
         min_tag_overlap: int = _MIN_TAG_OVERLAP,
         store: Any = None,
+        fragment_capacity: int = _FRAGMENT_CAPACITY,
+        trace_capacity: int = _TRACE_CAPACITY,
+        social_provenance_capacity: int = _SOCIAL_PROVENANCE_CAPACITY,
+        forget_importance_threshold: float = _FORGET_IMPORTANCE_THRESHOLD,
+        forget_check_interval: int = _FORGET_CHECK_INTERVAL,
     ) -> None:
         super().__init__(name)
         self._fragments: dict[str, Fragment] = {}
@@ -190,6 +212,17 @@ class MemorySystem(Module):
         self._consolidation_threshold = consolidation_threshold
         self._min_tag_overlap = min_tag_overlap
         self._last_time_ms = 0.0
+
+        # Long-term-memory caps and forgetting policy (Design.md §12).
+        self._fragment_capacity = int(fragment_capacity)
+        self._trace_capacity = int(trace_capacity)
+        self._social_provenance_capacity = int(social_provenance_capacity)
+        self._forget_importance_threshold = float(forget_importance_threshold)
+        self._forget_check_interval = max(1, int(forget_check_interval))
+        self._fragments_since_forget_check = 0
+        # Tracks how many fragments/traces we have pruned for observability.
+        self._forgotten_fragments = 0
+        self._forgotten_traces = 0
 
         # Maps fragment_id -> social provenance captured from data.social.fragment.
         self._social_provenance: dict[str, dict[str, Any]] = {}
@@ -237,6 +270,23 @@ class MemorySystem(Module):
         self._min_tag_overlap = memory_context.get(
             "min_tag_overlap", self._min_tag_overlap
         )
+        # Forgetting policy can be tuned from configuration; falls back to
+        # the constructor defaults when absent.
+        self._fragment_capacity = int(memory_context.get(
+            "fragment_capacity", self._fragment_capacity
+        ))
+        self._trace_capacity = int(memory_context.get(
+            "trace_capacity", self._trace_capacity
+        ))
+        self._social_provenance_capacity = int(memory_context.get(
+            "social_provenance_capacity", self._social_provenance_capacity
+        ))
+        self._forget_importance_threshold = float(memory_context.get(
+            "forget_importance_threshold", self._forget_importance_threshold
+        ))
+        self._forget_check_interval = max(1, int(memory_context.get(
+            "forget_check_interval", self._forget_check_interval
+        )))
 
         backend = memory_context.get("backend", "memory")
         if backend == "sqlite" and self._store is None:
@@ -279,6 +329,12 @@ class MemorySystem(Module):
             self._run_consolidation(
                 {"current_time_ms": delta.absolute_time, "reason": "tick"}
             )
+        # Periodically prune low-importance memories so the agent can run
+        # indefinitely without unbounded growth. The check is cheap (a few
+        # len() calls) and only an actual sweep happens when a cap is hit.
+        if self._fragments_since_forget_check >= self._forget_check_interval:
+            self._fragments_since_forget_check = 0
+            self._run_forgetting(current_time_ms=delta.absolute_time)
 
     # ------------------------------------------------------------------
     # Public accessors (useful for tests and introspection)
@@ -311,6 +367,10 @@ class MemorySystem(Module):
             "working_memory_count": len(self._working_memory),
             "consolidation_queue_count": len(self._consolidation_queue),
             "consolidation_runs": self._state.custom["consolidation_runs"],
+            "forgotten_fragments": self._forgotten_fragments,
+            "forgotten_traces": self._forgotten_traces,
+            "fragment_capacity": self._fragment_capacity,
+            "trace_capacity": self._trace_capacity,
         }
 
     def export_graph(self) -> dict[str, Any]:
@@ -387,6 +447,15 @@ class MemorySystem(Module):
                 "consolidation_threshold": self._consolidation_threshold,
                 "min_tag_overlap": self._min_tag_overlap,
                 "last_time_ms": self._last_time_ms,
+                # Persist forgetting policy + counters so a restored agent
+                # keeps the same memory budget and observability state.
+                "fragment_capacity": self._fragment_capacity,
+                "trace_capacity": self._trace_capacity,
+                "social_provenance_capacity": self._social_provenance_capacity,
+                "forget_importance_threshold": self._forget_importance_threshold,
+                "forget_check_interval": self._forget_check_interval,
+                "forgotten_fragments": self._forgotten_fragments,
+                "forgotten_traces": self._forgotten_traces,
             }
         )
         return base
@@ -403,6 +472,22 @@ class MemorySystem(Module):
         self._min_tag_overlap = data.get("min_tag_overlap", self._min_tag_overlap)
         self._last_time_ms = data.get("last_time_ms", self._last_time_ms)
         self._social_provenance = dict(data.get("social_provenance", {}))
+
+        # Restore forgetting policy; fall back to constructor defaults.
+        self._fragment_capacity = int(data.get("fragment_capacity", self._fragment_capacity))
+        self._trace_capacity = int(data.get("trace_capacity", self._trace_capacity))
+        self._social_provenance_capacity = int(
+            data.get("social_provenance_capacity", self._social_provenance_capacity)
+        )
+        self._forget_importance_threshold = float(
+            data.get("forget_importance_threshold", self._forget_importance_threshold)
+        )
+        self._forget_check_interval = max(1, int(
+            data.get("forget_check_interval", self._forget_check_interval)
+        ))
+        self._forgotten_fragments = int(data.get("forgotten_fragments", 0))
+        self._forgotten_traces = int(data.get("forgotten_traces", 0))
+        self._fragments_since_forget_check = 0
 
         self._fragments = {
             fid: reconstruct_dataclass(Fragment, f)
@@ -461,6 +546,10 @@ class MemorySystem(Module):
         self._consolidation_queue.append(fragment)
         self._trim_working_memory()
         self._state.custom["fragment_count"] = len(self._fragments)
+
+        # Bump the forget-check counter; the actual sweep is throttled in
+        # ``tick`` so we do not pay the cost on every fragment.
+        self._fragments_since_forget_check += 1
 
         if self._store is not None:
             self._store.save_fragment(fragment)
@@ -562,6 +651,128 @@ class MemorySystem(Module):
                 priority=3,
                 ttl=2,
             )
+
+    # ------------------------------------------------------------------
+    # Forgetting (Design.md §12: recency decay + importance threshold)
+    # ------------------------------------------------------------------
+
+    def _run_forgetting(self, current_time_ms: float) -> None:
+        """Prune low-importance fragments/traces once capacity caps are hit.
+
+        Forgetting only kicks in when an index exceeds its configured cap, so
+        normal operation (well below the caps) pays no cost. When a cap is
+        exceeded we evict entries with the lowest ``importance * recency``
+        score first, never touching entries that are referenced by surviving
+        traces (so consolidated memories remain reconstructable).
+        """
+        forgotten_fragments = 0
+        forgotten_traces = 0
+
+        if len(self._fragments) > self._fragment_capacity:
+            forgotten_fragments = self._forget_fragments(current_time_ms)
+
+        if len(self._traces) > self._trace_capacity:
+            forgotten_traces = self._forget_traces(current_time_ms)
+
+        # Trim social provenance to match the surviving fragment set, plus a
+        # hard cap so a long-running agent cannot accumulate stale context.
+        if len(self._social_provenance) > self._social_provenance_capacity:
+            self._forget_social_provenance()
+
+        if forgotten_fragments or forgotten_traces:
+            self._forgotten_fragments += forgotten_fragments
+            self._forgotten_traces += forgotten_traces
+            self._state.custom["fragment_count"] = len(self._fragments)
+            self._state.custom["trace_count"] = len(self._traces)
+            self.emit(
+                topic="data.memory.forgotten",
+                payload={
+                    "forgotten_fragments": forgotten_fragments,
+                    "forgotten_traces": forgotten_traces,
+                    "remaining_fragments": len(self._fragments),
+                    "remaining_traces": len(self._traces),
+                    "reason": "capacity_pressure",
+                },
+                channel="data",
+                priority=3,
+                ttl=2,
+            )
+
+    def _forget_fragments(self, current_time_ms: float) -> int:
+        """Evict low-importance fragments until the index is back under cap.
+
+        Returns the number of fragments pruned. Fragments that are still
+        referenced by a surviving trace are never evicted — the consolidated
+        memory must remain reconstructable from its source fragments.
+        """
+        referenced: set[str] = set()
+        for trace in self._traces.values():
+            referenced.update(trace.fragment_ids)
+
+        # Score every unreferenced fragment; lower score = evict first.
+        scored: list[tuple[float, str]] = []
+        for fid, fragment in self._fragments.items():
+            if fid in referenced:
+                continue
+            recency = _compute_recency_score(fragment, current_time_ms)
+            importance = float(fragment.salience) * abs(float(fragment.valence))
+            score = importance * 0.6 + recency * 0.4
+            scored.append((score, fid))
+
+        if not scored:
+            return 0
+
+        scored.sort()
+        target = len(self._fragments) - self._fragment_capacity
+        evicted = 0
+        for _, fid in scored:
+            if evicted >= target:
+                break
+            self._fragments.pop(fid, None)
+            self._social_provenance.pop(fid, None)
+            evicted += 1
+        return evicted
+
+    def _forget_traces(self, current_time_ms: float) -> int:
+        """Evict low-importance traces until the index is back under cap.
+
+        Returns the number of traces pruned. We never evict a trace whose
+        importance is above ``_forget_importance_threshold`` — those are
+        considered durable long-term memories.
+        """
+        scored: list[tuple[float, str]] = []
+        for tid, trace in self._traces.items():
+            if trace.importance >= self._forget_importance_threshold:
+                continue
+            # Recency is stored on the trace itself (computed during
+            # consolidation), so we use it directly. Lower score = evict first.
+            score = float(trace.importance) * 0.6 + float(trace.recency) * 0.4
+            scored.append((score, tid))
+
+        if not scored:
+            return 0
+
+        scored.sort()
+        target = len(self._traces) - self._trace_capacity
+        evicted = 0
+        for _, tid in scored:
+            if evicted >= target:
+                break
+            self._traces.pop(tid, None)
+            evicted += 1
+        return evicted
+
+    def _forget_social_provenance(self) -> None:
+        """Drop the oldest social-provenance entries to stay under cap."""
+        # ``_social_provenance`` is keyed by fragment id and filled in
+        # insertion order (Python dicts preserve order), so trimming the
+        # front slices off the oldest entries.
+        overflow = len(self._social_provenance) - self._social_provenance_capacity
+        if overflow <= 0:
+            return
+        keys = list(self._social_provenance.keys())[:overflow]
+        for key in keys:
+            self._social_provenance.pop(key, None)
 
     def _cluster_fragments(self, fragments: list[Fragment]) -> list[list[Fragment]]:
         """Group fragments by pairwise tag overlap >= min_tag_overlap.
