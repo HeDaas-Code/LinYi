@@ -1,0 +1,350 @@
+{
+  "start_node": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState._recalculate",
+  "mode": "bfs",
+  "max_depth": 3,
+  "nodes_visited": 47,
+  "traversal": [
+    {
+      "name": "_recalculate",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState._recalculate",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 0
+    },
+    {
+      "name": "_map_legacy_expression_to_emotion",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState._map_legacy_expression_to_emotion",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 1
+    },
+    {
+      "name": "_compute_body_state",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState._compute_body_state",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 1
+    },
+    {
+      "name": "_compute_reset_at",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState._compute_reset_at",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 1
+    },
+    {
+      "name": "init",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState.init",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 1
+    },
+    {
+      "name": "on_bus_message",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState.on_bus_message",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 1
+    },
+    {
+      "name": "ExpressionState",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState",
+      "kind": "Class",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 1
+    },
+    {
+      "name": "_compute_pose",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState._compute_pose",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "BodyState",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::BodyState",
+      "kind": "Class",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "__init__",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState.__init__",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "metadata",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState.metadata",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "_initial_state",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState._initial_state",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "expression",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState.expression",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "intensity",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState.intensity",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "emotion",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState.emotion",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "blend_duration",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState.blend_duration",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "expression_targets",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState.expression_targets",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "action",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState.action",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "mood_bias",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState.mood_bias",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "arousal",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState.arousal",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "reader_temperature",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState.reader_temperature",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "body_state",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState.body_state",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "reset_at",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState.reset_at",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "tick",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState.tick",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "to_dict",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState.to_dict",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "from_dict",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::ExpressionState.from_dict",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "test_default_expression_is_neutral",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py::test_default_expression_is_neutral",
+      "kind": "Test",
+      "file": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "test_mood_bias_changes_expression",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py::test_mood_bias_changes_expression",
+      "kind": "Test",
+      "file": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "test_low_arousal_calm_maps_to_relaxed",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py::test_low_arousal_calm_maps_to_relaxed",
+      "kind": "Test",
+      "file": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "test_relaxed_mood_bias_maps_to_relaxed",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py::test_relaxed_mood_bias_maps_to_relaxed",
+      "kind": "Test",
+      "file": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "test_expression_change_emits_event",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py::test_expression_change_emits_event",
+      "kind": "Test",
+      "file": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "test_serialization_roundtrip",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py::test_serialization_roundtrip",
+      "kind": "Test",
+      "file": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "test_emotion_profile_includes_airi_params",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py::test_emotion_profile_includes_airi_params",
+      "kind": "Test",
+      "file": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "test_expression_changed_payload_has_airi_fields",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py::test_expression_changed_payload_has_airi_fields",
+      "kind": "Test",
+      "file": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "test_worried_maps_to_think_or_question",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py::test_worried_maps_to_think_or_question",
+      "kind": "Test",
+      "file": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "test_body_state_reflects_arousal",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py::test_body_state_reflects_arousal",
+      "kind": "Test",
+      "file": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "test_transient_emotion_has_reset_at",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py::test_transient_emotion_has_reset_at",
+      "kind": "Test",
+      "file": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "test_neutral_has_no_reset_at",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py::test_neutral_has_no_reset_at",
+      "kind": "Test",
+      "file": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "test_body_state_pose_by_emotion",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py::test_body_state_pose_by_emotion",
+      "kind": "Test",
+      "file": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "create_modules",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/main.py::create_modules",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/main.py",
+      "depth": 2
+    },
+    {
+      "name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "kind": "File",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 2
+    },
+    {
+      "name": "_setup",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/tests/test_social_to_expression.py::_setup",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/tests/test_social_to_expression.py",
+      "depth": 2
+    },
+    {
+      "name": "to_dict",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py::BodyState.to_dict",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/expression_state.py",
+      "depth": 3
+    },
+    {
+      "name": "ModuleState",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/models.py::ModuleState",
+      "kind": "Class",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/models.py",
+      "depth": 3
+    },
+    {
+      "name": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py",
+      "kind": "File",
+      "file": "/home/hedaas/文档/project/LinYi/tests/test_expression_state.py",
+      "depth": 3
+    },
+    {
+      "name": "BusRouter",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/bus.py::BusRouter",
+      "kind": "Class",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/bus.py",
+      "depth": 3
+    },
+    {
+      "name": "register",
+      "qualified_name": "/home/hedaas/文档/project/LinYi/src/novelist_brain/module.py::Module.register",
+      "kind": "Function",
+      "file": "/home/hedaas/文档/project/LinYi/src/novelist_brain/module.py",
+      "depth": 3
+    }
+  ],
+  "truncated": true,
+  "next_tool_suggestions": [
+    "query_graph callers_of -- focused relationship query",
+    "get_impact_radius -- blast radius analysis"
+  ],
+  "_graph": {
+    "updated_at": "2026-07-22T22:03:27",
+    "age_seconds": 203,
+    "built_on_branch": "trae/agent-QAJNBB",
+    "built_at_sha": "defd1bd26adb616916aee4ae035b98288d04b70e",
+    "head_sha": "defd1bd26adb616916aee4ae035b98288d04b70e",
+    "head_matches_build": true
+  }
+}
