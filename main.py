@@ -80,6 +80,7 @@ from src.novelist_brain.quality_engine import QualityEngine
 from src.novelist_brain.salience_network import SalienceNetwork
 from src.novelist_brain.sandbox import MentalSandbox
 from src.novelist_brain.token_budget import TokenBudget
+from src.novelist_brain.tool_use_module import ToolUseModule
 from src.novelist_brain.sandbox_versioning import SandboxVersionManager
 from src.novelist_brain.scheduler import DailyScheduler
 from src.novelist_brain.segment_detail_enhancer import SegmentDetailEnhancer
@@ -301,6 +302,13 @@ def build_context(
         "social_vital_bridge": {
             "decay_per_hour": 0.05,
         },
+        "tools": {
+            "allowed_paths": ["."],
+            "enable_scripts": False,
+            "script_timeout": 10.0,
+            "max_output_length": 8_000,
+            "search_max_results": 20,
+        },
     }
 
     # v2 novel source layer (Task 1.5.2 / 1.6.2)
@@ -508,6 +516,9 @@ def create_modules(
     # Emotional continuity: social events feed back into vital state
     # (Project AIRI inspired).
     registry.register(SocialVitalBridge, factory_options={"name": "social_vital_bridge"})
+    # Local tool layer: read-only interaction with the digital environment
+    # (Agent Zero inspired, but bounded to the closed system).
+    registry.register(ToolUseModule, factory_options={"name": "tool_use"})
     # v2 chapter structure & planning layer (Task 2.6)
     registry.register_agent(
         "chapter_manager",
