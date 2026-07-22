@@ -59,7 +59,9 @@ from src.novelist_brain.llm import (
     ResilientLLMService,
     create_llm_service,
 )
+from src.novelist_brain.expression_state import ExpressionState
 from src.novelist_brain.memory import MemorySystem
+from src.novelist_brain.memory_stream import MemoryStream
 from src.novelist_brain.recovery import FaultManager, RecoveryManager
 from src.novelist_brain.metabolism import Metabolism
 from src.novelist_brain.models import BusMessage, StoryBible, TickDelta, WorldStateContract
@@ -68,7 +70,9 @@ from src.novelist_brain.novel_output import NovelOutput
 from src.novelist_brain.oc_character_system import OCCharacterSystem
 from src.novelist_brain.oc_town_engine import OCTownEngine
 from src.novelist_brain.personal_input import PersonalInput
+from src.novelist_brain.reader_profile import ReaderProfile
 from src.novelist_brain.reader_rest_gate import ReaderRestGate
+from src.novelist_brain.reflection_engine import ReflectionEngine
 from src.novelist_brain.planner import Planner
 from src.novelist_brain.quality_engine import QualityEngine
 from src.novelist_brain.salience_network import SalienceNetwork
@@ -265,6 +269,31 @@ def build_context(
             "seed": 42,
             "agents": [],
         },
+        "memory_stream": {
+            "recency_half_life": 24.0 * 3600,
+            "retrieval_weights": {"recency": 0.3, "importance": 0.4, "relevance": 0.3},
+            "working_capacity": 20,
+            "stream_capacity": 2_000,
+        },
+        "reflection_engine": {
+            "reflection_threshold": 5,
+            "reflection_window": 24.0 * 3600,
+        },
+        "reader_profile": {
+            "reader_id": "default_reader",
+            "display_name": "",
+            "relationship_stage": "stranger",
+            "preferred_tone": "gentle",
+            "taboo_topics": [],
+            "known_facts": {},
+            "reader_temperature": 0.5,
+        },
+        "vital_state": {
+            "mood_bias": "平静",
+            "arousal": 0.5,
+            "reader_temperature": 0.5,
+            "creative_drive": 0.5,
+        },
     }
 
     # v2 novel source layer (Task 1.5.2 / 1.6.2)
@@ -433,14 +462,19 @@ def create_modules(
     registry.register(Dynamics, factory_options={"name": "dynamics"})
     # Memory.
     registry.register(MemorySystem, factory_options={"name": "memory_system"})
+    registry.register(MemoryStream, factory_options={"name": "memory_stream"})
     registry.register(SelfTimeline, factory_options={"name": "self_timeline"})
+    registry.register(ReflectionEngine, factory_options={"name": "reflection_engine"})
     # Schedule / anthropomorphic rhythm.
     registry.register(SegmentDetailEnhancer, factory_options={"name": "segment_detail_enhancer"})
     # Input & guardrails.
+    registry.register(ReaderProfile, factory_options={"name": "reader_profile"})
     registry.register(ReaderRestGate, factory_options={"name": "reader_rest_gate"})
     registry.register(TokenBudget, factory_options={"name": "token_budget"})
     registry.register(PersonalInput, factory_options={"name": "personal_input", "seed": 42})
     registry.register(SocialInput, factory_options={"name": "social_input", "seed": 42})
+    # Presentation / emotional state.
+    registry.register(ExpressionState, factory_options={"name": "expression_state"})
     # Psychological extension modules (demonstrate §10 extensibility).
     registry.register(AttachmentModule, factory_options={"name": "attachment"})
     # Cognitive networks.
@@ -865,6 +899,18 @@ def run_agent(
     context["persistence"] = SnapshotStore(save_path)
     transaction_manager = TransactionManager(modules, context)
     context["transaction_manager"] = transaction_manager
+
+    memory_stream_module = next(
+        (m for m in modules if isinstance(m, MemoryStream)), None
+    )
+    if memory_stream_module is not None:
+        context["memory_stream_instance"] = memory_stream_module
+
+    reader_profile_module = next(
+        (m for m in modules if isinstance(m, ReaderProfile)), None
+    )
+    if reader_profile_module is not None:
+        context["reader_profile_instance"] = reader_profile_module
 
     if saved_state is not None:
         for module in modules:
