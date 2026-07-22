@@ -1,11 +1,14 @@
 """SegmentDetailEnhancer: turn macro plan items into micro lived events.
 
 The enhancer listens for phase/network activation events and emits a
-:data.schedule.segment.detail` payload for the current segment.  In this
-skeleton implementation the micro events are generated deterministically
-from the phase type so the module can be wired and tested without an LLM.
-A future version can replace the deterministic templates with an LLM call
-that consults VitalState, SelfTimeline and WorldStateContract.
+``data.schedule.segment.detail`` payload for the current segment.  In this
+skeleton implementation the micro events are generated deterministically from
+the phase type so the module can be wired and tested without an LLM.
+
+VitalState (mood, arousal, creative drive, reader temperature) from
+``data.metabolism.state`` is folded into the generated detail so that the same
+phase can produce different micro-events depending on the agent's current
+anthropomorphic state.
 """
 
 from __future__ import annotations
@@ -68,6 +71,27 @@ _EVENT_BANK: dict[str, list[dict[str, str]]] = {
     ],
 }
 
+#: Extra sensory/thought modifiers applied when arousal is high or low.
+_AROUSAL_MODIFIERS: dict[str, dict[str, str]] = {
+    "low": {
+        "sensory_prefix": " faintly ",
+        "thought_suffix": "——但注意力像浸了水，迟迟聚不拢。",
+    },
+    "high": {
+        "sensory_prefix": " sharply ",
+        "thought_suffix": "——念头来得太快，几乎要撞在一起。",
+    },
+}
+
+#: Mood palette chosen from VitalState mood_bias + arousal.
+_MOOD_PALETTE: dict[str, list[str]] = {
+    "平静": ["平静", "安静", "舒缓"],
+    "愉悦": ["轻松", "轻快", "柔和地愉悦"],
+    "忧郁": ["忧郁", "低沉", "淡淡的沮丧"],
+    "焦虑": ["紧绷", "不安", "焦躁"],
+    "兴奋": ["兴奋", "高昂", "跃跃欲试"],
+}
+
 #: Network -> preferred phase_type mapping for events that arrive as network
 #: activation rather than schedule phase change.
 _NETWORK_PHASE_MAP: dict[str, str] = {
@@ -78,18 +102,25 @@ _NETWORK_PHASE_MAP: dict[str, str] = {
 
 
 class SegmentDetailEnhancer(Module):
-    """Generate micro-layer segment details from macro plan items."""
+    """Generate micro-layer, VitalState-aware segment details."""
 
     def __init__(self, name: str = "segment_detail_enhancer") -> None:
         super().__init__(name)
         self._current_plan: DailyPlan | None = None
         self._last_segment_key: str = ""
+        self._vital_state: dict[str, Any] = {
+            "mood_bias": "平静",
+            "arousal": 0.5,
+            "reader_temperature": 0.5,
+            "creative_drive": 0.5,
+        }
         self.subscribe(
             "control.schedule.daily_plan",
-            "control.schedule.enhance_segment",
+            TOPIC_ENHANCE_SEGMENT,
             "control.network.dmn.active",
             "control.network.cen.active",
             "control.network.sn.active",
+            "data.metabolism.state",
         )
 
     def _initial_state(self) -> ModuleState:
@@ -108,11 +139,66 @@ class SegmentDetailEnhancer(Module):
         self._current_plan = plan
 
     # ------------------------------------------------------------------
+    # VitalState helpers
+    # ------------------------------------------------------------------
+
+    def _current_mood(self, item_mood: str) -> str:
+        """Blend schedule mood with live VitalState mood bias."""
+        bias = str(self._vital_state.get("mood_bias", "平静")).strip() or "平静"
+        arousal = float(self._vital_state.get("arousal", 0.5))
+        palette = _MOOD_PALETTE.get(bias, _MOOD_PALETTE["平静"])
+        if arousal > 0.7:
+            palette = _MOOD_PALETTE.get("兴奋", palette)
+        elif arousal < 0.3:
+            palette = _MOOD_PALETTE.get("忧郁", palette)
+        # Stable per item by combining item mood length with bias.
+        idx = (len(item_mood or "") + len(bias)) % len(palette)
+        return palette[idx]
+
+    def _apply_arousal(self, events: list[StoryEvent]) -> list[StoryEvent]:
+        """Tweak event thoughts/sensory text based on arousal level."""
+        arousal = float(self._vital_state.get("arousal", 0.5))
+        if 0.35 <= arousal <= 0.65:
+            return events
+        key = "high" if arousal > 0.65 else "low"
+        modifiers = _AROUSAL_MODIFIERS[key]
+        out: list[StoryEvent] = []
+        for event in events:
+            thought = event.thought
+            if thought and not thought.endswith(")") and not thought.endswith("。"):
+                thought = thought + modifiers["thought_suffix"]
+            sensory = event.sensory
+            if sensory and arousal > 0.65:
+                sensory = f"{sensory}，鲜明得近乎刺痛"
+            elif sensory and arousal < 0.35:
+                sensory = f"{sensory}，像隔着一层雾"
+            out.append(
+                StoryEvent(
+                    what=event.what,
+                    when=event.when,
+                    where=event.where,
+                    sensory=sensory,
+                    body=event.body,
+                    thought=thought,
+                    source=event.source,
+                )
+            )
+        return out
+
+    def _should_proactively_reach(self, phase_type: str) -> bool:
+        """Decide whether the agent feels like initiating contact."""
+        if phase_type not in ("creation", "social", "reflection"):
+            return False
+        reader_temperature = float(self._vital_state.get("reader_temperature", 0.5))
+        creative_drive = float(self._vital_state.get("creative_drive", 0.5))
+        # Higher reader warmth + creative itch -> more likely to reach out.
+        return (reader_temperature + creative_drive) > 1.0
+
+    # ------------------------------------------------------------------
     # Deterministic generation (LLM-free skeleton)
     # ------------------------------------------------------------------
 
-    @staticmethod
-    def _deterministic_detail(item: PlanItem) -> SegmentDetail:
+    def _deterministic_detail(self, item: PlanItem) -> SegmentDetail:
         phase_type = item.phase_type or "incubation"
         bank = _EVENT_BANK.get(phase_type, _EVENT_BANK["incubation"])
         # Use the item start time as a stable seed for deterministic selection.
@@ -134,16 +220,20 @@ class SegmentDetailEnhancer(Module):
             )
             for t in event_templates
         ]
+        today_events = self._apply_arousal(today_events)
 
         proactive_events: list[ProactiveEvent] = []
-        if phase_type == "creation" and item.message_seed:
-            proactive_events.append(
-                ProactiveEvent(
-                    impulse=item.message_seed,
-                    decision="pending",
+        if self._should_proactively_reach(phase_type):
+            seed = item.message_seed or self._default_impulse(phase_type)
+            if seed:
+                proactive_events.append(
+                    ProactiveEvent(
+                        impulse=seed,
+                        decision="pending",
+                    )
                 )
-            )
 
+        mood = self._current_mood(item.mood)
         state_variables = [
             StateVariable(
                 name="phase_type",
@@ -157,16 +247,36 @@ class SegmentDetailEnhancer(Module):
                 basis="schedule",
                 confidence=0.8,
             ),
+            StateVariable(
+                name="mood_bias",
+                value=mood,
+                basis="vital_state",
+                confidence=0.7,
+            ),
+            StateVariable(
+                name="arousal",
+                value=self._vital_state.get("arousal", 0.5),
+                basis="vital_state",
+                confidence=0.7,
+            ),
         ]
 
         return SegmentDetail(
-            summary=f"{item.activity}，{item.mood or '状态如常'}",
-            summary_basis=item.basis or ["schedule", "deterministic_fallback"],
+            summary=f"{item.activity}，{mood}",
+            summary_basis=item.basis or ["schedule", "vital_state", "deterministic_fallback"],
             summary_confidence=item.confidence,
             today_events=[e for e in today_events if e.what],
             proactive_events=proactive_events,
             state_variables=state_variables,
         )
+
+    def _default_impulse(self, phase_type: str) -> str:
+        impulses = {
+            "creation": "想分享刚写下的一句",
+            "social": "想问问你今天过得怎么样",
+            "reflection": "想把今天的一件事说给你听",
+        }
+        return impulses.get(phase_type, "")
 
     def _enhance_current_segment(self, phase_type: str) -> None:
         if self._current_plan is None:
@@ -237,10 +347,13 @@ class SegmentDetailEnhancer(Module):
     # ------------------------------------------------------------------
 
     def init(self, context: dict[str, Any]) -> None:  # noqa: D401 - inherited
-        """Pick up an existing daily plan from context if present."""
+        """Pick up an existing daily plan and optional VitalState overrides."""
         plan = context.get("daily_plan")
         if isinstance(plan, DailyPlan):
             self.set_plan(plan)
+        vital = context.get("vital_state")
+        if isinstance(vital, dict):
+            self._vital_state.update(vital)
 
     def on_bus_message(self, message: BusMessage) -> None:
         if not self._state.active:
@@ -251,6 +364,12 @@ class SegmentDetailEnhancer(Module):
             plan = payload.get("plan")
             if isinstance(plan, DailyPlan):
                 self.set_plan(plan)
+            return
+        if topic == "data.metabolism.state":
+            payload = message.payload or {}
+            for key in ("mood_bias", "arousal", "reader_temperature", "creative_drive"):
+                if key in payload:
+                    self._vital_state[key] = payload[key]
             return
         if topic == TOPIC_ENHANCE_SEGMENT:
             payload = message.payload or {}

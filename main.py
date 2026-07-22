@@ -66,11 +66,14 @@ from src.novelist_brain.models import BusMessage, StoryBible, TickDelta, WorldSt
 from src.novelist_brain.module_registry import ModuleRegistry
 from src.novelist_brain.novel_output import NovelOutput
 from src.novelist_brain.oc_character_system import OCCharacterSystem
+from src.novelist_brain.oc_town_engine import OCTownEngine
 from src.novelist_brain.personal_input import PersonalInput
+from src.novelist_brain.reader_rest_gate import ReaderRestGate
 from src.novelist_brain.planner import Planner
 from src.novelist_brain.quality_engine import QualityEngine
 from src.novelist_brain.salience_network import SalienceNetwork
 from src.novelist_brain.sandbox import MentalSandbox
+from src.novelist_brain.token_budget import TokenBudget
 from src.novelist_brain.sandbox_versioning import SandboxVersionManager
 from src.novelist_brain.scheduler import DailyScheduler
 from src.novelist_brain.segment_detail_enhancer import SegmentDetailEnhancer
@@ -245,6 +248,23 @@ def build_context(
         "fault": cfg.fault.to_dict(),
         "modules": [],
         "persistence": None,
+        "reader_rest_gate": {
+            "rest_threshold_seconds": 10 * 60,
+            "cooldown_seconds": 60,
+        },
+        "token_budget": {
+            "limits": {
+                "daily_total": 0,  # 0 means unlimited by default
+                "hourly_total": 0,
+            },
+            "warning_ratio": 0.80,
+        },
+        "oc_town": {
+            "spaces": ["公寓客厅", "街角咖啡馆", "旧书店", "河边步道", "深夜便利店"],
+            "tick_interval_seconds": 60,
+            "seed": 42,
+            "agents": [],
+        },
     }
 
     # v2 novel source layer (Task 1.5.2 / 1.6.2)
@@ -416,7 +436,9 @@ def create_modules(
     registry.register(SelfTimeline, factory_options={"name": "self_timeline"})
     # Schedule / anthropomorphic rhythm.
     registry.register(SegmentDetailEnhancer, factory_options={"name": "segment_detail_enhancer"})
-    # Input.
+    # Input & guardrails.
+    registry.register(ReaderRestGate, factory_options={"name": "reader_rest_gate"})
+    registry.register(TokenBudget, factory_options={"name": "token_budget"})
     registry.register(PersonalInput, factory_options={"name": "personal_input", "seed": 42})
     registry.register(SocialInput, factory_options={"name": "social_input", "seed": 42})
     # Psychological extension modules (demonstrate §10 extensibility).
@@ -439,6 +461,8 @@ def create_modules(
         category="novel_source",
         description="OC character registry with COC sheet generation",
     )
+    # OC autonomous social simulation (ai-town inspired).
+    registry.register(OCTownEngine, factory_options={"name": "oc_town_engine"})
     # v2 chapter structure & planning layer (Task 2.6)
     registry.register_agent(
         "chapter_manager",
