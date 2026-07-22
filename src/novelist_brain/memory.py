@@ -16,6 +16,8 @@ from src.novelist_brain.models import (
 )
 from src.novelist_brain.module import Module
 from src.novelist_brain.persistence import dataclass_to_dict, reconstruct_dataclass
+from src.novelist_brain.anthropomorphic_gate import FragmentQualityGate
+from src.novelist_brain.importance_scorer import suggest_salience
 
 # Imported lazily to avoid a hard dependency at import time.
 _HybridMemoryStore: Any = None
@@ -202,6 +204,9 @@ class MemorySystem(Module):
         social_provenance_capacity: int = _SOCIAL_PROVENANCE_CAPACITY,
         forget_importance_threshold: float = _FORGET_IMPORTANCE_THRESHOLD,
         forget_check_interval: int = _FORGET_CHECK_INTERVAL,
+        fragment_gate: FragmentQualityGate | None = None,
+        enable_fragment_gate: bool = True,
+        enable_importance_scorer: bool = True,
     ) -> None:
         super().__init__(name)
         self._fragments: dict[str, Fragment] = {}
@@ -230,6 +235,11 @@ class MemorySystem(Module):
         # Optional local-database hybrid store.  When present, fragments and
         # traces are persisted there in addition to the in-memory indexes.
         self._store: Any = store
+
+        # Anthropomorphic quality gate and importance scorer.
+        self._fragment_gate = fragment_gate or FragmentQualityGate()
+        self._enable_fragment_gate = enable_fragment_gate
+        self._enable_importance_scorer = enable_importance_scorer
 
         self.subscribe(
             "fragment.personal.new",
@@ -540,6 +550,27 @@ class MemorySystem(Module):
 
         if fragment.timestamp <= 0.0:
             fragment.timestamp = self._last_time_ms or 0.0
+
+        # --- Anthropomorphic quality gate ----------------------------------
+        # Filter out empty, overly abstract, or duplicate fragments before
+        # they pollute working memory and downstream consolidation.
+        if self._enable_fragment_gate and fragment.content:
+            recent_texts = [f.content for f in self._working_memory]
+            decision = self._fragment_gate.evaluate(
+                fragment.content,
+                recent_texts=recent_texts,
+            )
+            if not decision.passed:
+                self._state.custom["gated_fragments"] = (
+                    int(self._state.custom.get("gated_fragments", 0)) + 1
+                )
+                return
+
+        # --- Importance scoring --------------------------------------------
+        # Use the heuristic scorer to suggest a salience when the fragment
+        # does not already carry an explicit value.
+        if self._enable_importance_scorer:
+            fragment.salience = suggest_salience(fragment)
 
         self._fragments[fragment.id] = fragment
         self._working_memory.append(fragment)

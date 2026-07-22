@@ -73,6 +73,7 @@ from src.novelist_brain.salience_network import SalienceNetwork
 from src.novelist_brain.sandbox import MentalSandbox
 from src.novelist_brain.sandbox_versioning import SandboxVersionManager
 from src.novelist_brain.scheduler import DailyScheduler
+from src.novelist_brain.self_timeline import SelfTimeline
 from src.novelist_brain.social_input import SocialInput
 from src.novelist_brain.transaction import TransactionManager
 from src.novelist_brain.trpg_rulebook import Rulebook
@@ -411,6 +412,7 @@ def create_modules(
     registry.register(Dynamics, factory_options={"name": "dynamics"})
     # Memory.
     registry.register(MemorySystem, factory_options={"name": "memory_system"})
+    registry.register(SelfTimeline, factory_options={"name": "self_timeline"})
     # Input.
     registry.register(PersonalInput, factory_options={"name": "personal_input", "seed": 42})
     registry.register(SocialInput, factory_options={"name": "social_input", "seed": 42})
