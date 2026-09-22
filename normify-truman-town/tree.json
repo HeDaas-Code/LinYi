@@ -8,12 +8,12 @@
         "root_uid": "d440391b"
       }
     ],
-    "compiled_at": "2026-09-22T16:40:07.761Z",
+    "compiled_at": "2026-09-22T16:53:42.793Z",
     "stats": {
       "tree_count": 1,
       "module_count": 227,
       "leaf_count": 158,
-      "api_count": 341,
+      "api_count": 345,
       "dep_count": 336,
       "cross_tree_dep_count": 0,
       "max_depth": 5,
@@ -48,7 +48,7 @@
       "aggregate": {
         "descendant_count": 226,
         "own_api_count": 0,
-        "inherited_api_count": 341,
+        "inherited_api_count": 345,
         "dep_out": 0,
         "dep_in": 0
       }
@@ -6031,7 +6031,7 @@
       "aggregate": {
         "descendant_count": 10,
         "own_api_count": 0,
-        "inherited_api_count": 15,
+        "inherited_api_count": 19,
         "dep_out": 0,
         "dep_in": 0
       }
@@ -6047,17 +6047,17 @@
         "en": "Config"
       },
       "description": {
-        "zh": "读取与更新沙盘运行参数。\n",
-        "en": "Reads and updates sandbox runtime parameters.\n"
+        "zh": "统一读写沙盘运行参数（点分 key，持久化到图存储），并提供外提参数的默认值快照（defaults）、校验（validate）与合并（resolve）。\n",
+        "en": "Reads and writes sandbox runtime parameters (dotted keys, persisted into the graph store), and exposes a defaults snapshot, validation and merge for externalized parameters.\n"
       },
       "source": [
         {
           "path": "src/infra/config.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T05:45:38.725Z",
-      "fingerprint": "8c922863ec310c082b62aa0b913abd57a24dacd36e0b46e331d6f52f031300df",
+      "revision": "8f46bbe36535fe49a2418c2f4d3f1c829c12ce06",
+      "updated_at": "2026-09-22T16:53:11.998Z",
+      "fingerprint": "3111564f008971f5818e29771248be45c7d0dc87fdf0a2d3d54f31c257203a6e",
       "apis": [
         {
           "protocol": "rpc",
@@ -6076,6 +6076,42 @@
             "en": "Writes a single runtime parameter (key/value), persisted into the graph store.\n"
           },
           "key": "rpc:infra.config.set"
+        },
+        {
+          "protocol": "rpc",
+          "path": "infra.config.setMany",
+          "description": {
+            "zh": "批量合并运行参数（对象形式）。\n",
+            "en": "Bulk-merges runtime parameters (object form).\n"
+          },
+          "key": "rpc:infra.config.setMany"
+        },
+        {
+          "protocol": "rpc",
+          "path": "infra.config.defaults",
+          "description": {
+            "zh": "返回全部外提参数的默认值快照（深拷贝）。\n",
+            "en": "Returns a deep-copied snapshot of all externalized parameter defaults.\n"
+          },
+          "key": "rpc:infra.config.defaults"
+        },
+        {
+          "protocol": "rpc",
+          "path": "infra.config.validate",
+          "description": {
+            "zh": "校验一组参数覆盖（只校验已知键，忽略未知键）。\n",
+            "en": "Validates a set of parameter overrides (known keys only, unknown keys ignored).\n"
+          },
+          "key": "rpc:infra.config.validate"
+        },
+        {
+          "protocol": "rpc",
+          "path": "infra.config.resolve",
+          "description": {
+            "zh": "把参数覆盖深度合并到默认值并校验，返回生效配置。\n",
+            "en": "Deep-merges overrides onto defaults and validates, returning the effective config.\n"
+          },
+          "key": "rpc:infra.config.resolve"
         }
       ],
       "deps": [
@@ -6087,7 +6123,7 @@
       ],
       "aggregate": {
         "descendant_count": 0,
-        "own_api_count": 2,
+        "own_api_count": 6,
         "inherited_api_count": 0,
         "dep_out": 1,
         "dep_in": 0
@@ -7507,9 +7543,9 @@
           "path": "src/runtime/orchestrator/loop.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T15:27:58.974Z",
-      "fingerprint": "d34d80bf784f6d1f7f7b244e0201681e14df79a38cb3ffafb631926f23f1517e",
+      "revision": "8f46bbe36535fe49a2418c2f4d3f1c829c12ce06",
+      "updated_at": "2026-09-22T16:53:11.998Z",
+      "fingerprint": "c4672713804f5ffc6a66a375bd01b27f84ce46badfebf3f85e463650214036f4",
       "apis": [
         {
           "protocol": "rpc",
@@ -12130,8 +12166,12 @@
     "rpc:genesis.renewal.replace": "truman-town.genesis.renewal",
     "rpc:genesis.world_factory.create_agents": "truman-town.genesis.world-factory",
     "rpc:genesis.world_factory.create_town": "truman-town.genesis.world-factory",
+    "rpc:infra.config.defaults": "truman-town.infra.config",
     "rpc:infra.config.get": "truman-town.infra.config",
+    "rpc:infra.config.resolve": "truman-town.infra.config",
     "rpc:infra.config.set": "truman-town.infra.config",
+    "rpc:infra.config.setMany": "truman-town.infra.config",
+    "rpc:infra.config.validate": "truman-town.infra.config",
     "rpc:infra.events.pubsub.publish": "truman-town.infra.events.pubsub",
     "rpc:infra.events.pubsub.subscribe": "truman-town.infra.events.pubsub",
     "rpc:infra.events.retry.enqueue": "truman-town.infra.events.retry",

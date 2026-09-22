@@ -10,9 +10,9 @@ description:
   en: >
       Wires clock → survival events → perception → agent decision → ai.thought → dispatch → world-state into a minimal closed main loop, recording observer logs at every decision/action/event node; with phase2 enabled it also drives procreation, market trading, crafting, residence allocation and health checks each tick; with phase3 enabled it also drives politics, culture (norms/ritual/meme), psyche (trauma/coping/breakdown), tech (research/loss) and civilization (legacy/collapse/restart) each tick.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T15:27:58.974Z"
-fingerprint: d34d80bf784f6d1f7f7b244e0201681e14df79a38cb3ffafb631926f23f1517e
+revision: 8f46bbe36535fe49a2418c2f4d3f1c829c12ce06
+updated_at: "2026-09-22T16:53:11.998Z"
+fingerprint: c4672713804f5ffc6a66a375bd01b27f84ce46badfebf3f85e463650214036f4
 source:
   - path: "src/runtime/orchestrator/loop.js"
 apis:

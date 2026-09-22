@@ -21,6 +21,7 @@ import * as perception from './perception.js';
 import * as dispatch from './dispatch.js';
 
 import * as graph from '../../infra/store/graph.js';
+import * as configStore from '../../infra/config.js';
 import * as identity from '../../infra/identity.js';
 import * as rng from '../../infra/rng.js';
 
@@ -51,9 +52,7 @@ const DEFAULT_ACTIONS = Object.freeze([
 const DEFAULT_TAGS = Object.freeze({ resilient: 1.0, cautious: 0.8, sociable: 0.6, curious: 0.7, hardworking: 0.9 });
 
 const DEFAULT_CONFIG = Object.freeze({
-  decay: { food: 0.01, water: 0.01 },
-  needGrowth: { food: 0.08, water: 0.08 },
-  eventProbability: 0.3,
+  ...configStore.defaults(),
   events: DEFAULT_EVENTS,
   phase2: false,
   phase3: false,
@@ -377,13 +376,13 @@ export async function run(options = {}) {
   if (agents.length > 0) {
     for (let i = 0; i < agents.length; i += 1) {
       const a = agents[i];
-      spawned.push(phase2 && a.tags === undefined ? spawnAgent({ ...a, tags: stage2.makeTags(i) }) : spawnAgent(a));
+      spawned.push(phase2 && a.tags === undefined ? spawnAgent({ ...a, tags: stage2.makeTags(i, options) }) : spawnAgent(a));
     }
   } else {
     const count = Number.isInteger(options.agentCount) && options.agentCount > 0 ? options.agentCount : 3;
     for (let i = 0; i < count; i += 1) {
       const name = `居民${i + 1}`;
-      spawned.push(spawnAgent(phase2 ? { name, tags: stage2.makeTags(i) } : { name }));
+      spawned.push(spawnAgent(phase2 ? { name, tags: stage2.makeTags(i, options) } : { name }));
     }
   }
 

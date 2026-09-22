@@ -9,7 +9,8 @@
     "start": "node bin/server.js",
     "smoke": "node bin/smoke.js",
     "smoke:p2": "node bin/smoke.p2.js",
-    "smoke:p3": "node bin/smoke.p3.js"
+    "smoke:p3": "node bin/smoke.p3.js",
+    "bench": "node bin/bench.js"
   },
   "engines": {
     "node": ">=18"

@@ -4,7 +4,7 @@
 
 ## truman-town
 
-- truman-town [计划] — 楚门小镇智能体沙盘 / Truman Town Agent Sandbox — 核战争后 LinYi 号避难所的自治沙盘：居民在资源与生存压力下自行发展，拥有背包与制作能力，智能体决策受心理状态影响，社会涌现治理与文化，文明通过技术与遗物积… — [模块 227 · API 341]
+- truman-town [计划] — 楚门小镇智能体沙盘 / Truman Town Agent Sandbox — 核战争后 LinYi 号避难所的自治沙盘：居民在资源与生存压力下自行发展，拥有背包与制作能力，智能体决策受心理状态影响，社会涌现治理与文化，文明通过技术与遗物积… — [模块 227 · API 345]
   - truman-town.agent [计划] — 智能体核心 / Agent Core — 智能体的完整心智与行为模型：人设、50 标签特质、心理、日程、行动预想池、背包与制作、决策、记忆、生命周期与社会角色。 — [模块 51 · API 75]
     - truman-town.agent.anticipation [计划] — 行动预想池 / Anticipation Pool — 为智能体维护候选行动集合，并通过模拟评分选择下一步。 — [模块 6 · API 8]
       - truman-town.agent.anticipation.pool [计划] — 预想池实现 / Anticipation Pool Implementation — 增删与修剪候选行动，保持预想池新鲜且可执行。 — [模块 4 · API 6]
@@ -123,8 +123,8 @@
       - truman-town.genesis.heredity.tags [计划] — 标签遗传 / Tag Heredity — 随机从父母双方 100 个 tag 中抽取 50 个组成子代特质串。 — [模块 1 · API 2]
     - truman-town.genesis.renewal [计划] — 小镇更新 / Town Renewal — 评估人口、产业与空间结构并替换消亡个体，保持小镇自主更新。 — [模块 1 · API 2]
     - truman-town.genesis.world-factory [计划] — 世界工厂 / World Factory — 创建初始小镇空间、设施与首批智能体。 — [模块 1 · API 2]
-  - truman-town.infra [计划] — 基础设施 / Infrastructure — 事件总线、持久化存储、ID、随机数、配置与日志等底层支撑。 — [模块 11 · API 15]
-    - truman-town.infra.config — 配置管理 / Config — 读取与更新沙盘运行参数。 — [模块 1 · API 2]
+  - truman-town.infra [计划] — 基础设施 / Infrastructure — 事件总线、持久化存储、ID、随机数、配置与日志等底层支撑。 — [模块 11 · API 19]
+    - truman-town.infra.config — 配置管理 / Config — 统一读写沙盘运行参数（点分 key，持久化到图存储），并提供外提参数的默认值快照（defaults）、校验（validate）与合并（resolve）。 — [模块 1 · API 6]
     - truman-town.infra.events [计划] — 事件总线 / Event Bus — 在小镇各模块间发布与订阅事件，并支持重试。 — [模块 3 · API 4]
       - truman-town.infra.events.pubsub — 发布订阅 / Pub/Sub — 发布与订阅沙盘事件。 — [模块 1 · API 2]
       - truman-town.infra.events.retry [计划] — 事件重试 / Event Retry — 对失败事件入队重试与死信处理。 — [模块 1 · API 2]

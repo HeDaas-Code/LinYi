@@ -83,7 +83,8 @@ export function seed(agents, config = {}) {
   // 2) culture：规范 + 仪式 + 模因
   social.culture.norms.update({ id: 'no_stealing', valence: 'forbidden', strength: 0.5 });
   social.culture.norms.update({ id: 'sharing', valence: 'accepted', strength: 0.5 });
-  social.culture.ritual.schedule({ name: 'harvest', interval: 2, purpose: '丰收祭' });
+  const ritualInterval = (Number.isInteger(config.ritualInterval) && config.ritualInterval > 0) ? config.ritualInterval : 2;
+  social.culture.ritual.schedule({ name: 'harvest', interval: ritualInterval, purpose: '丰收祭' });
   social.culture.meme.spread({ memeId: 'freedom', fromAgent: ids[0], toAgent: ids[1], tick: 0 });
 
   // 3) psyche：给首位居民播种接近阈值的创伤（触发崩溃链路）
@@ -191,13 +192,15 @@ function runCulture(tick, agents) {
 }
 
 /** 心理：创伤累积 → 崩溃/恢复判定 → 应对疗愈。 */
-function runPsyche(tick, agents) {
+function runPsyche(tick, agents, config = {}) {
   const result = { accumulated: 0, breakdown: 0, recovery: 0, coping: 0 };
+  const traumaRate = (typeof config.traumaRate === 'number' && Number.isFinite(config.traumaRate) && config.traumaRate >= 0) ? config.traumaRate : 0.2;
+  const breakThreshold = (typeof config.breakThreshold === 'number' && config.breakThreshold >= 0 && config.breakThreshold <= 1) ? config.breakThreshold : 0.7;
   for (const a of agents) {
-    const acc = agent.psyche.trauma.accumulate({ agentId: a.id, rate: 0.2 });
+    const acc = agent.psyche.trauma.accumulate({ agentId: a.id, rate: traumaRate });
     if (acc.added > 0) result.accumulated += 1;
 
-    const chk = agent.psyche.break.check({ agentId: a.id, threshold: 0.7, tick });
+    const chk = agent.psyche.break.check({ agentId: a.id, threshold: breakThreshold, tick });
     if (chk.transition === 'breakdown') { breakdowns += 1; result.breakdown += 1; }
     if (chk.transition === 'recovery') { recoveries += 1; result.recovery += 1; }
 
@@ -316,7 +319,7 @@ export async function tick({ tick, agents, config = {} }) {
   return {
     politics: runPolitics(tick, agents),
     culture: runCulture(tick, agents),
-    psyche: runPsyche(tick, agents),
+    psyche: runPsyche(tick, agents, config),
     tech: runTech(tick, agents, config),
     civilization: await runCivilization(tick, agents, config),
   };

@@ -17,10 +17,6 @@ import * as town from '../../town/index.js';
 import * as survival from '../../survival/index.js';
 import * as observer from '../../observer/index.js';
 
-/** 每个居民的标签数（与 agent.traits.tagset 的 50 标签设定一致）。 */
-const TAG_COUNT = 50;
-/** 共有标签数（保证任意两居民有较高相似度，便于繁衍配对）。 */
-const SHARED_TAG_COUNT = 45;
 
 const RESIDENCE_ID = 'dorm_a';
 const SYMBOL = 'food';
@@ -50,10 +46,12 @@ function sortedPairKey(a, b) {
  * @param {number} agentIndex 居民序号（用于生成唯一后缀）
  * @returns {Array<{ key: string, weight: number }>}
  */
-export function makeTags(agentIndex = 0) {
+export function makeTags(agentIndex = 0, config = {}) {
+  const tagCount = (Number.isInteger(config.tagCount) && config.tagCount > 0) ? config.tagCount : 50;
+  const shared = (Number.isInteger(config.sharedTagCount) && config.sharedTagCount >= 0 && config.sharedTagCount <= tagCount) ? config.sharedTagCount : 45;
   const tags = [];
-  for (let i = 0; i < SHARED_TAG_COUNT; i += 1) tags.push({ key: 'base' + i, weight: 1.0 });
-  for (let i = 0; i < TAG_COUNT - SHARED_TAG_COUNT; i += 1) tags.push({ key: 'u' + agentIndex + '_' + i, weight: 1.0 });
+  for (let i = 0; i < shared; i += 1) tags.push({ key: 'base' + i, weight: 1.0 });
+  for (let i = 0; i < tagCount - shared; i += 1) tags.push({ key: 'u' + agentIndex + '_' + i, weight: 1.0 });
   return tags;
 }
 
@@ -128,13 +126,15 @@ export function seed(agents, config = {}) {
 }
 
 /** 生育：找最契合的一对 → 恋爱 → 子代 → 谱系 → 注册进主循环。 */
-function runProcreation(tick, agents, spawnChild) {
+function runProcreation(tick, agents, spawnChild, config = {}) {
   const maxChildren = 2;
   const result = { childId: null, parents: null, familyId: null };
   if (childrenBorn >= maxChildren || agents.length < 2) return result;
 
   const ids = agents.map((a) => a.id);
-  const pairs = social.procreation.match.pair({ agentIds: ids, k: Math.max(4, ids.length), threshold: 0.3 });
+  const matchThreshold = (typeof config.procreationMatchThreshold === 'number' && config.procreationMatchThreshold >= 0 && config.procreationMatchThreshold <= 1)
+    ? config.procreationMatchThreshold : 0.3;
+  const pairs = social.procreation.match.pair({ agentIds: ids, k: Math.max(4, ids.length), threshold: matchThreshold });
   if (pairs.length === 0) return result;
 
   // 跳过已生育过的配对，取下一个未生育的兼容对（防同一对反复繁殖）
@@ -309,7 +309,7 @@ function runHealth(tick, agents, config) {
  */
 export function tick({ tick, agents, config = {}, spawnChild }) {
   return {
-    procreation: runProcreation(tick, agents, spawnChild),
+    procreation: runProcreation(tick, agents, spawnChild, config),
     market: runMarket(tick, agents),
     crafting: runCrafting(tick, agents),
     residence: runResidence(tick, agents),
