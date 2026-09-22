@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * AI 模型基准脚本（真实 A6API 适配器）：
- *   node --env-file=.env bin/bench.js --n 3
+ * AI 模型基准脚本（真实 A6API 适配器）——t26 交付；因 bin/bench.js 已改为沙盘基准脚本而改名为 bin/bench.ai.js。
+ *   node --env-file=.env bin/bench.ai.js --n 3
  *
  * 依次调用 gateway.complete 若干次，打印每次墙钟耗时与 usage 统计
  *（prompt/completion/reasoning tokens、cost_in_usd_ticks）。绝不打印 A6API_KEY。
