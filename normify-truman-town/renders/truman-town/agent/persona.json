@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.agent.persona",
+  "updated_at": "2026-09-22T05:09:08.839Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "查看 人设与性格 的内部组成，箭头表示模块间依赖。",
+    "en": "Inspect the internals of Persona; arrows show dependencies."
+  },
+  "order": [
+    "truman-town.agent.persona.identity",
+    "truman-town.agent.persona.motivation",
+    "truman-town.agent.persona.personality"
+  ]
+}

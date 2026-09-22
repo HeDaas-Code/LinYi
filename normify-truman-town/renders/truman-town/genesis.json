@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.genesis",
+  "updated_at": "2026-09-22T05:09:08.593Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "从世界与智能体工厂出发，经遗传系统产生新提示词与新智能体，再驱动小镇更新。",
+    "en": "From world/agent factories through heredity to new prompts and agents, then town renewal."
+  },
+  "order": [
+    "truman-town.genesis.world-factory",
+    "truman-town.genesis.agent-factory",
+    "truman-town.genesis.heredity",
+    "truman-town.genesis.renewal"
+  ]
+}

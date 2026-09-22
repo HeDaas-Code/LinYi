@@ -1,0 +1,50 @@
+---
+uid: e8552b3c
+id: truman-town.agent.crafting.writing
+parent: truman-town.agent.crafting
+name: {zh: "撰写书籍", en: "Book Writing"}
+description:
+  zh: >
+      消耗 tick，把记忆、知识与文化写进书籍并放入背包或图书馆。
+      
+  en: >
+      Consumes ticks to write memory, knowledge and culture into books for the backpack or library.
+      
+revision: "0000000000000000000000000000000000000000"
+updated_at: "2026-09-22T08:02:32.265Z"
+fingerprint: 79ce183c71f5b44e5e9da6c2550879fd45f79097269412ee4e296f759f4d5816
+source:
+  - path: "src/agent/crafting/writing.js"
+apis:
+  - protocol: rpc
+    path: "agent.crafting.writing.write_book"
+    description:
+      zh: >
+          发起著书：校验 + 扣材料 + 登记耗时任务。
+          
+      en: >
+          Starts writing a book: validates, deducts materials and enqueues a timed job.
+          
+  - protocol: rpc
+    path: "agent.crafting.writing.tick"
+    description:
+      zh: >
+          推进著书任务，归零后书籍入背包并记录观察日志。
+          
+      en: >
+          Advances writing jobs; on completion, stores the book and observer log.
+          
+deps:
+  - kind: call
+    to: truman-town.agent.crafting.recipe
+  - kind: call
+    to: truman-town.agent.memory.semantic
+  - kind: call
+    to: truman-town.civilization.tech.tree
+  - kind: call
+    to: truman-town.agent.inventory.backpack
+  - kind: call
+    to: truman-town.runtime.clock
+  - kind: call
+    to: truman-town.observer.recorder
+---

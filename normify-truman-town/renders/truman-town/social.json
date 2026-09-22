@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.social",
+  "updated_at": "2026-09-22T05:09:08.428Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "从社交图、平台、关系与繁衍出发，经家族、治理与文化，到声誉，构成完整的公共生活。",
+    "en": "From graph, platform, relationships and procreation through family, politics and culture to reputation."
+  },
+  "order": [
+    "truman-town.social.graph",
+    "truman-town.social.platform",
+    "truman-town.social.relationship",
+    "truman-town.social.procreation",
+    "truman-town.social.family",
+    "truman-town.social.politics",
+    "truman-town.social.culture",
+    "truman-town.social.reputation"
+  ]
+}

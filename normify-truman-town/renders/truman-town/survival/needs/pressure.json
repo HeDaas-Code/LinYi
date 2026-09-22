@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.survival.needs.pressure",
+  "updated_at": "2026-09-22T05:28:31.566Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "查看 生存压力实现 的实现组成，箭头表示模块间依赖。",
+    "en": "Inspect the implementation of Pressure Implementation; arrows show dependencies."
+  },
+  "order": [
+    "truman-town.survival.needs.pressure.ranker",
+    "truman-town.survival.needs.pressure.scorer"
+  ]
+}

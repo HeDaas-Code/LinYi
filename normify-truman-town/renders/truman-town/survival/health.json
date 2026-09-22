@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.survival.health",
+  "updated_at": "2026-09-22T05:09:10.208Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "查看 疾病与医疗 的内部组成，箭头表示模块间依赖。",
+    "en": "Inspect the internals of Health & Disease; arrows show dependencies."
+  },
+  "order": [
+    "truman-town.survival.health.disease",
+    "truman-town.survival.health.epidemic",
+    "truman-town.survival.health.treatment"
+  ]
+}

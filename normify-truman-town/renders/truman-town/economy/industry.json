@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.economy.industry",
+  "updated_at": "2026-09-22T05:09:09.326Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "查看 产业系统 的内部组成，箭头表示模块间依赖。",
+    "en": "Inspect the internals of Industry; arrows show dependencies."
+  },
+  "order": [
+    "truman-town.economy.industry.business",
+    "truman-town.economy.industry.labour",
+    "truman-town.economy.industry.production"
+  ]
+}

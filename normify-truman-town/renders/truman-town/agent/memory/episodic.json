@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.agent.memory.episodic",
+  "updated_at": "2026-09-22T05:28:31.413Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "查看 情景记忆实现 的实现组成，箭头表示模块间依赖。",
+    "en": "Inspect the implementation of Episodic Memory Implementation; arrows show dependencies."
+  },
+  "order": [
+    "truman-town.agent.memory.episodic.recaller",
+    "truman-town.agent.memory.episodic.store"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.civilization.relic",
+  "updated_at": "2026-09-22T05:09:10.333Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "查看 文明遗物 的内部组成，箭头表示模块间依赖。",
+    "en": "Inspect the internals of Civilization Relics; arrows show dependencies."
+  },
+  "order": [
+    "truman-town.civilization.relic.artifact",
+    "truman-town.civilization.relic.discover"
+  ]
+}

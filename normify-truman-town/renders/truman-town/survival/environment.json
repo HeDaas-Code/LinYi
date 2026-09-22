@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.survival.environment",
+  "updated_at": "2026-09-22T05:21:14.509Z",
+  "mode": "grid",
+  "max_columns": 3,
+  "reading": {
+    "zh": "辐射与天气提供风险因子，探索结算把因子、物资、装备、特质与随机数综合成日志和资源/状态变化。",
+    "en": "Radiation and weather provide risk factors; expedition resolution combines them with supplies, gear, traits and randomness into a log plus resource/state changes."
+  },
+  "order": [
+    "truman-town.survival.environment.radiation",
+    "truman-town.survival.environment.weather",
+    "truman-town.survival.environment.expedition"
+  ]
+}

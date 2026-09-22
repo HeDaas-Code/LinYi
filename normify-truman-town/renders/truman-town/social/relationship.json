@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.social.relationship",
+  "updated_at": "2026-09-22T05:09:09.166Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "查看 关系管理 的内部组成，箭头表示模块间依赖。",
+    "en": "Inspect the internals of Relationships; arrows show dependencies."
+  },
+  "order": [
+    "truman-town.social.relationship.family",
+    "truman-town.social.relationship.friendship",
+    "truman-town.social.relationship.romance"
+  ]
+}

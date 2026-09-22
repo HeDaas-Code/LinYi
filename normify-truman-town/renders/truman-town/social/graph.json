@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.social.graph",
+  "updated_at": "2026-09-22T05:09:09.089Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "查看 社交网络 的内部组成，箭头表示模块间依赖。",
+    "en": "Inspect the internals of Social Graph; arrows show dependencies."
+  },
+  "order": [
+    "truman-town.social.graph.community",
+    "truman-town.social.graph.edges"
+  ]
+}

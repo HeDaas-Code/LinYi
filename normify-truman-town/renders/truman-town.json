@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "id": "truman-town",
+  "updated_at": "2026-09-22T05:09:08.262Z",
+  "mode": "groups",
+  "reading": {
+    "zh": "从十二个领域进入：运行时与生存系统驱动避难所日常，智能体带着心理、背包与制作能力参与社会、治理、经济与空间互动；观察者记录并实验，文明通过技术与遗物积累并重启。箭头表示依赖方向。",
+    "en": "Enter through twelve domains: runtime and survival drive shelter life; agents with psyche, backpacks and crafting join social, political, economic and spatial life; the observer records and experiments; civilization accumulates and restarts through tech and relics. Arrows show dependency direction."
+  },
+  "order": [
+    "truman-town.runtime",
+    "truman-town.survival",
+    "truman-town.agent",
+    "truman-town.social",
+    "truman-town.economy",
+    "truman-town.town",
+    "truman-town.observer",
+    "truman-town.genesis",
+    "truman-town.ai",
+    "truman-town.civilization",
+    "truman-town.api",
+    "truman-town.infra"
+  ],
+  "groups": [
+    {
+      "id": "g-runtime",
+      "title": {
+        "zh": "运行时",
+        "en": "Runtime"
+      },
+      "children": [
+        "truman-town.runtime"
+      ]
+    },
+    {
+      "id": "g-survival",
+      "title": {
+        "zh": "生存",
+        "en": "Survival"
+      },
+      "children": [
+        "truman-town.survival"
+      ]
+    },
+    {
+      "id": "g-agent",
+      "title": {
+        "zh": "智能体",
+        "en": "Agent"
+      },
+      "children": [
+        "truman-town.agent"
+      ]
+    },
+    {
+      "id": "g-social",
+      "title": {
+        "zh": "社交·家族·治理",
+        "en": "Social·Family·Politics"
+      },
+      "children": [
+        "truman-town.social"
+      ]
+    },
+    {
+      "id": "g-economy",
+      "title": {
+        "zh": "经济",
+        "en": "Economy"
+      },
+      "children": [
+        "truman-town.economy"
+      ]
+    },
+    {
+      "id": "g-town",
+      "title": {
+        "zh": "避难所空间",
+        "en": "Shelter Space"
+      },
+      "children": [
+        "truman-town.town"
+      ]
+    },
+    {
+      "id": "g-observer",
+      "title": {
+        "zh": "观察者与实验",
+        "en": "Observer & Experiment"
+      },
+      "children": [
+        "truman-town.observer"
+      ]
+    },
+    {
+      "id": "g-genesis",
+      "title": {
+        "zh": "创世与更新",
+        "en": "Genesis"
+      },
+      "children": [
+        "truman-town.genesis"
+      ]
+    },
+    {
+      "id": "g-ai",
+      "title": {
+        "zh": "AI 引擎",
+        "en": "AI Engine"
+      },
+      "children": [
+        "truman-town.ai"
+      ]
+    },
+    {
+      "id": "g-civilization",
+      "title": {
+        "zh": "文明·技术·遗物",
+        "en": "Civilization·Tech·Relics"
+      },
+      "children": [
+        "truman-town.civilization"
+      ]
+    },
+    {
+      "id": "g-api",
+      "title": {
+        "zh": "对外接口",
+        "en": "External API"
+      },
+      "children": [
+        "truman-town.api"
+      ]
+    },
+    {
+      "id": "g-infra",
+      "title": {
+        "zh": "基础设施",
+        "en": "Infrastructure"
+      },
+      "children": [
+        "truman-town.infra"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.agent.psyche",
+  "updated_at": "2026-09-22T05:09:10.124Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "查看 心理与精神 的内部组成，箭头表示模块间依赖。",
+    "en": "Inspect the internals of Psyche; arrows show dependencies."
+  },
+  "order": [
+    "truman-town.agent.psyche.break",
+    "truman-town.agent.psyche.coping",
+    "truman-town.agent.psyche.trauma"
+  ]
+}

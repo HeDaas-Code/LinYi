@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.agent.anticipation",
+  "updated_at": "2026-09-22T05:09:08.963Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "查看 行动预想池 的内部组成，箭头表示模块间依赖。",
+    "en": "Inspect the internals of Anticipation Pool; arrows show dependencies."
+  },
+  "order": [
+    "truman-town.agent.anticipation.pool",
+    "truman-town.agent.anticipation.simulator"
+  ]
+}

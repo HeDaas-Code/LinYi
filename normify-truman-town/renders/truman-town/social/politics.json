@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.social.politics",
+  "updated_at": "2026-09-22T05:09:10.039Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "查看 治理与冲突 的内部组成，箭头表示模块间依赖。",
+    "en": "Inspect the internals of Politics & Conflict; arrows show dependencies."
+  },
+  "order": [
+    "truman-town.social.politics.conflict",
+    "truman-town.social.politics.faction",
+    "truman-town.social.politics.law",
+    "truman-town.social.politics.leader"
+  ]
+}

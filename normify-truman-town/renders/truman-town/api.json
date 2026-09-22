@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.api",
+  "updated_at": "2026-09-22T05:09:08.717Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "从控制、观测到可视化与存档，覆盖外部操作沙盘的全部入口。",
+    "en": "Control, observe, visualize and archive cover all external entries to the sandbox."
+  },
+  "order": [
+    "truman-town.api.control",
+    "truman-town.api.observer",
+    "truman-town.api.viewer",
+    "truman-town.api.archive"
+  ]
+}

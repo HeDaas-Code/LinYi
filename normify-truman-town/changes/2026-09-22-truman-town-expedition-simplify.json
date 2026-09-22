@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "id": "2026-09-22-truman-town-expedition-simplify",
+  "title": {
+    "zh": "楚门小镇沙盘：探索结算简化",
+    "en": "Truman Town Sandbox: Simplify Expedition to Computed Resolution"
+  },
+  "status": "verified",
+  "intent": {
+    "zh": "把外出探索从开放世界改为由各方因素与随机数综合计算出的结果，结果仅为日志加资源和 Agent 状态变化。",
+    "en": "Change expeditions from an open world into a computed resolution of factors and randomness, producing only a log plus resource and agent-state changes."
+  },
+  "modules": {
+    "modify": [
+      "truman-town.survival.environment",
+      "truman-town.survival.environment.radiation",
+      "truman-town.survival.environment.weather",
+      "truman-town.survival.environment.expedition"
+    ]
+  },
+  "acceptance": [
+    "探索模块改为 plan/execute/settle 三接口的结算模型",
+    "探索结果只写日志、资源与 Agent 状态，不创建开放世界",
+    "探索依赖辐射、天气、物资、装备、特质、生存状态与随机数因子",
+    "normify_validate 达到 0 error",
+    "normify_build 产出 tree.json 与回执",
+    "normify_render 产出更新后的 HTML 图"
+  ],
+  "revision": {
+    "before": null,
+    "after": null
+  },
+  "created_at": "2026-09-22T05:21:14.454Z",
+  "updated_at": "2026-09-22T05:21:14.752Z",
+  "closed_at": "2026-09-22T05:21:14.752Z"
+}

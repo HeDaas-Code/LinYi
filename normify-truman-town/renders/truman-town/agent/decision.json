@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.agent.decision",
+  "updated_at": "2026-09-22T05:28:31.207Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "查看 决策器实现 的实现组成，箭头表示模块间依赖。",
+    "en": "Inspect the implementation of Decision Implementation; arrows show dependencies."
+  },
+  "order": [
+    "truman-town.agent.decision.context",
+    "truman-town.agent.decision.explainer",
+    "truman-town.agent.decision.selector"
+  ]
+}

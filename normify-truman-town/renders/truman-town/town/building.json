@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.town.building",
+  "updated_at": "2026-09-22T05:09:09.452Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "查看 建筑系统 的内部组成，箭头表示模块间依赖。",
+    "en": "Inspect the internals of Building; arrows show dependencies."
+  },
+  "order": [
+    "truman-town.town.building.space",
+    "truman-town.town.building.structure"
+  ]
+}

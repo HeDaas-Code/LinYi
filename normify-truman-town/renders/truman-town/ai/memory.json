@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.ai.memory",
+  "updated_at": "2026-09-22T05:09:09.703Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "查看 记忆向量 的内部组成，箭头表示模块间依赖。",
+    "en": "Inspect the internals of Memory Vectors; arrows show dependencies."
+  },
+  "order": [
+    "truman-town.ai.memory.embedding",
+    "truman-town.ai.memory.summary"
+  ]
+}

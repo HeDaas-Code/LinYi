@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.observer",
+  "updated_at": "2026-09-22T05:09:08.550Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "从行为记录器出发，经编年志、时间线、审计与实验，到导出，供我们回看和研究沙盘。",
+    "en": "From the recorder through chronicle, timeline, audit and experiment to export for review and research."
+  },
+  "order": [
+    "truman-town.observer.recorder",
+    "truman-town.observer.chronicle",
+    "truman-town.observer.timeline",
+    "truman-town.observer.audit",
+    "truman-town.observer.experiment",
+    "truman-town.observer.export"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.economy.ledger",
+  "updated_at": "2026-09-22T05:09:09.245Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "查看 账本 的内部组成，箭头表示模块间依赖。",
+    "en": "Inspect the internals of Ledger; arrows show dependencies."
+  },
+  "order": [
+    "truman-town.economy.ledger.account",
+    "truman-town.economy.ledger.transaction"
+  ]
+}

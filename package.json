@@ -1,0 +1,17 @@
+{
+  "name": "truman-town",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "LinYi 号避难所自治沙盘（楚门小镇）最小闭环 MVP",
+  "scripts": {
+    "test": "node --test",
+    "start": "node bin/server.js",
+    "smoke": "node bin/smoke.js",
+    "smoke:p2": "node bin/smoke.p2.js",
+    "smoke:p3": "node bin/smoke.p3.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
