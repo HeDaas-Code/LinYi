@@ -10,9 +10,9 @@ description:
   en: >
       Executes completion and embedding requests with rate limiting and retries.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T06:18:02.555Z"
-fingerprint: eca8474394e74ccd94bd089dee39c573451e27c35c6b26ffb345a0320dc97a0e
+revision: a1edc2a7eec3f0270b9a7a43660b27a6da30bcf3
+updated_at: "2026-09-22T16:39:26.229Z"
+fingerprint: 0e8e2939cb4e27f420eff8cfc2b6f406fe5ad735a08854165f7394d23c537136
 source:
   - path: "src/ai/llm/gateway.js"
 apis:

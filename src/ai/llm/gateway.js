@@ -9,6 +9,8 @@
  * 校验错误立即抛出、不重试；provider 执行错误才进入退避重试。
  */
 
+import { createProvider } from './provider.a6api.js';
+
 const STUB_DIM = 16;
 const DEFAULT_MODEL = 'stub-0';
 const EMBED_MODEL = 'stub-embed';
@@ -114,6 +116,30 @@ export function registerProvider(provider) {
   providersByName.set(provider.name, provider);
   activeProvider = provider;
   return provider;
+}
+
+/**
+ * 从环境变量创建并登记 A6API 真实模型 provider（不切换默认 provider）。
+ * 返回该 provider，供 complete({ provider }) / registerProvider() 使用。
+ * 缺 A6API_KEY 时抛出明确错误。
+ * @param {Record<string, string>} [env] 可选注入环境变量（测试用）；缺省读 process.env
+ */
+export function registerFromEnv(env) {
+  const p = createProvider(env);
+  assertProvider(p);
+  providersByName.set(p.name, p);
+  return p;
+}
+
+/**
+ * 从环境变量创建 A6API provider 并切换为当前默认 provider。
+ * 等价于 registerFromEnv() + 设为 active。缺 A6API_KEY 时抛出明确错误。
+ * @param {Record<string, string>} [env] 可选注入环境变量（测试用）；缺省读 process.env
+ */
+export function useA6Api(env) {
+  const p = registerFromEnv(env);
+  activeProvider = p;
+  return p;
 }
 
 /** 按名称取已注册 provider；缺省返回当前默认 provider。 */
@@ -233,6 +259,15 @@ function normalizeCompletion(p, model, raw, latencyMs, attempts, promptTokens) {
   }
   const completionTokens = usage?.completionTokens ?? estimateTokens(text);
   const prompt = usage?.promptTokens ?? promptTokens;
+  // 透传 provider 声明的其余 usage 字段（如 reasoningTokens / costInUsdTicks），
+  // 不改动既有 stub 的 usage 形状。
+  const KNOWN = new Set(['promptTokens', 'completionTokens', 'totalTokens']);
+  const extra = {};
+  if (usage && typeof usage === 'object') {
+    for (const [k, v] of Object.entries(usage)) {
+      if (!KNOWN.has(k)) extra[k] = v;
+    }
+  }
   return {
     text,
     model: model || p.model || DEFAULT_MODEL,
@@ -241,6 +276,7 @@ function normalizeCompletion(p, model, raw, latencyMs, attempts, promptTokens) {
       promptTokens: prompt,
       completionTokens,
       totalTokens: usage?.totalTokens ?? (prompt + completionTokens),
+      ...extra,
     },
     latencyMs,
     attempts,
