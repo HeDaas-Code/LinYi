@@ -2,9 +2,11 @@
 /**
  * truman-town 基准脚本（t25）：用可配置参数跑多种子沙盘，输出 JSON 与 markdown 汇总。
  *
- *   node bin/bench.js --ticks 20 --agents 3 --seeds 3 --phase3 --out bench-out --param traumaRate=0.5
+ *   node bin/bench.js --ticks 20 --agents 3 --seeds 3 --phase3 --difficulty harsh --out bench-out --param traumaRate=0.5
  *
  * 约束：真实 provider 通过环境变量注入（A6API_KEY 等）；本脚本绝不读取或打印 .env 内容。
+ * 难度档位：用 --difficulty <id>（peaceful|standard|harsh|apocalyptic）切换；
+ *           不要用 --param difficulty=x（该键无人读取，会被静默忽略并给出警告）。
  */
 import { pathToFileURL } from 'node:url';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -16,7 +18,7 @@ import * as ai from '../src/ai/index.js';
 import * as economy from '../src/economy/index.js';
 import * as a6api from '../src/ai/llm/provider.a6api.js';
 
-const USAGE = '用法: node bin/bench.js [--ticks N --agents N --seeds N|a,b,c --phase2 --phase3 --provider stub|real --real-every N --real-cap N --out DIR --report baseline|real --param k=v]';
+const USAGE = '用法: node bin/bench.js [--ticks N --agents N --seeds N|a,b,c --phase2 --phase3 --difficulty peaceful|standard|harsh|apocalyptic --provider stub|real --real-every N --real-cap N --out DIR --report baseline|real --param k=v]';
 
 function intArg(v, fb) {
   const n = Number(v);
@@ -54,7 +56,7 @@ function setPath(obj, path, value) {
 }
 
 export function parseArgs(argv = process.argv.slice(2)) {
-  const opts = { ticks: 20, agents: 3, seeds: [1], phase2: false, phase3: false, provider: 'stub', realEvery: 1, realCap: 150, out: 'bench-out', params: {}, report: null, help: false };
+  const opts = { ticks: 20, agents: 3, seeds: [1], phase2: false, phase3: false, provider: 'stub', realEvery: 1, realCap: 150, out: 'bench-out', params: {}, report: null, difficulty: null, warnings: [], help: false };
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
     if (a === '--phase2') { opts.phase2 = true; continue; }
@@ -70,7 +72,25 @@ export function parseArgs(argv = process.argv.slice(2)) {
     if (a === '--real-cap') { if (has) { opts.realCap = Math.max(1, intArg(next, 150)); i += 1; } continue; }
     if (a === '--report') { if (has) { opts.report = String(next); i += 1; } continue; }
     if (a === '--out') { if (has) { opts.out = String(next); i += 1; } continue; }
-    if (a === '--param') { if (has) { const eq = String(next).indexOf('='); if (eq > 0) { setPath(opts.params, String(next).slice(0, eq), parseValue(String(next).slice(eq + 1))); } i += 1; } continue; }
+    if (a === '--difficulty') { if (has) { opts.difficulty = String(next); i += 1; } continue; }
+    if (a === '--param') {
+      if (has) {
+        const eq = String(next).indexOf('=');
+        if (eq > 0) {
+          const key = String(next).slice(0, eq);
+          setPath(opts.params, key, parseValue(String(next).slice(eq + 1)));
+          // 陷阱键检测：difficulty 无人读取；其它未知键也可能静默失效
+          const topKey = key.split('.')[0];
+          if (topKey === 'difficulty') {
+            opts.warnings.push('--param ' + key + ' 不会改变难度档位（该键无人读取），请改用 --difficulty <id>');
+          } else if (!Object.prototype.hasOwnProperty.call(infra.config.defaults(), topKey)) {
+            opts.warnings.push('--param 键「' + key + '」不是已知配置键，可能无人读取而静默失效，请确认参数名');
+          }
+        }
+        i += 1;
+      }
+      continue;
+    }
   }
   return opts;
 }
@@ -258,14 +278,22 @@ export async function runBench(options = {}) {
     provider: options.provider === 'real' ? 'real' : 'stub',
     realEvery: Math.max(1, Number.isInteger(options.realEvery) ? options.realEvery : 1),
     realCap: Math.max(1, Number.isInteger(options.realCap) ? options.realCap : 150),
+    difficulty: (options.difficulty == null || options.difficulty === '') ? 'standard' : String(options.difficulty),
     params: (options.params && typeof options.params === 'object' && !Array.isArray(options.params)) ? options.params : {},
   };
+
+  // 应用难度档位（未知档位 setDifficulty 抛 RangeError → CLI 非零退出）
+  const diffSnap = infra.config.setDifficulty(opts.difficulty);
 
   ai.gateway.__reset();
   const prov = selectProvider(opts.provider, opts.realEvery, opts.realCap);
   if (prov.provider) ai.gateway.registerProvider(prov.provider);
-  const paramSnapshot = deepMerge(infra.config.defaults(), opts.params);
-  const fullConfig = deepMerge(infra.config.defaults(), opts.params);
+  // 有效配置 = 默认值 + 难度档位参数 + 用户覆盖（paramSnapshot 与 fullConfig 一致）。
+  // 关键：不能只用 deepMerge(defaults, params) —— 那会携带默认 needGrowth 等键，
+  // 在 loop.step 的 {...DEFAULT_CONFIG, ...currentDifficultyParams(), ...config} 里
+  // 把难度档位参数又覆盖回标准档，造成 --difficulty 静默失效。
+  const fullConfig = deepMerge(deepMerge(infra.config.defaults(), diffSnap.params), opts.params);
+  const paramSnapshot = fullConfig;
 
   const runs = [];
   let capped = false;
@@ -301,6 +329,7 @@ export async function runBench(options = {}) {
   return {
     runs,
     paramSnapshot,
+    difficulty: diffSnap.id,
     provider: prov.effective,
     realUsage: prov.realUsage ?? null,
     gatewayStats,
@@ -318,7 +347,7 @@ export function writeRunJson(outDir, result) {
     files.push(p);
   }
   const meta = join(outDir, 'bench-summary.json');
-  writeFileSync(meta, JSON.stringify({ provider: result.provider, paramSnapshot: result.paramSnapshot, summary: result.summary }, null, 2));
+  writeFileSync(meta, JSON.stringify({ provider: result.provider, difficulty: result.difficulty, paramSnapshot: result.paramSnapshot, summary: result.summary }, null, 2));
   files.push(meta);
   return files;
 }
@@ -329,6 +358,7 @@ export function writeMarkdown(result, outPath = 'reports/bench.md') {
   lines.push('');
   lines.push('- 生成时间：' + new Date().toISOString());
   lines.push('- provider：' + result.provider);
+  lines.push('- 难度档位：' + (result.difficulty ?? 'standard'));
   lines.push('- 参数快照：' + JSON.stringify(result.paramSnapshot));
   lines.push('');
   lines.push('## 汇总');
@@ -424,6 +454,7 @@ export function writeBaselineMarkdown(result, outPath = 'reports/bench-baseline.
   lines.push('');
   lines.push('- 生成时间：' + new Date().toISOString());
   lines.push('- provider：' + result.provider);
+  lines.push('- 难度档位：' + (result.difficulty ?? 'standard'));
   lines.push('- 参数快照：' + JSON.stringify(result.paramSnapshot));
   const r0 = result.runs[0];
   lines.push('- 复跑命令：`node bin/bench.js --ticks ' + (r0 ? r0.ticks : 0) + ' --agents ' + (r0 ? r0.agentCount : 0) + ' --seeds ' + result.runs.length + ' --phase2 --phase3 --out bench-out/baseline --report baseline`');
@@ -500,6 +531,7 @@ export function writeRealBaselineMarkdown(result, outPath = 'reports/bench-basel
   lines.push('');
   lines.push('- 生成时间：' + new Date().toISOString());
   lines.push('- provider：' + result.provider + (result.provider === 'stub' ? '（注意：实际回退 stub，未走真实模型）' : ''));
+  lines.push('- 难度档位：' + (result.difficulty ?? 'standard'));
   lines.push('- 参数快照：' + JSON.stringify(result.paramSnapshot));
   lines.push('- 硬上限：' + (u ? (u.capped ? '已触发上限（停止运行）' : '未触发（实际 ' + u.calls + ' 次 < 上限）') : '-'));
   lines.push('- 抽样方式：realEvery 抽样（每 N 次 complete 调用中 1 次走真实模型、其余走 stub）');
@@ -574,13 +606,20 @@ export async function main(argv = process.argv.slice(2)) {
     console.log(USAGE);
     return null;
   }
+  for (const w of opts.warnings) console.error('警告：' + w);
+  // 未知难度档位必须报错退出（非零退出码），不得静默忽略
+  if (opts.difficulty != null && !infra.config.difficultyIds().includes(opts.difficulty)) {
+    console.error('错误：未知难度档位「' + opts.difficulty + '」（可用：' + infra.config.difficultyIds().join(' / ') + '）');
+    process.exitCode = 1;
+    return null;
+  }
   const v = infra.config.validate(opts.params);
   if (!v.ok) {
     for (const e of v.errors) console.error('参数非法：' + e.key + ' ' + e.message);
     process.exitCode = 1;
     return null;
   }
-  const result = await runBench({ ticks: opts.ticks, agents: opts.agents, seeds: opts.seeds, phase2: opts.phase2, phase3: opts.phase3, provider: opts.provider, realEvery: opts.realEvery, realCap: opts.realCap, params: opts.params });
+  const result = await runBench({ ticks: opts.ticks, agents: opts.agents, seeds: opts.seeds, phase2: opts.phase2, phase3: opts.phase3, provider: opts.provider, realEvery: opts.realEvery, realCap: opts.realCap, difficulty: opts.difficulty, params: opts.params });
   const files = writeRunJson(opts.out, result);
   let mdPath;
   if (opts.report === 'baseline') {
@@ -591,6 +630,7 @@ export async function main(argv = process.argv.slice(2)) {
     mdPath = writeMarkdown(result, join('reports', 'bench.md'));
   }
   console.log('provider=' + result.provider);
+  console.log('difficulty=' + result.difficulty);
   console.log('seeds=' + result.runs.length + ' avgSurvivalRate=' + result.summary.avgSurvivalRate.toFixed(3) + ' collapseRate=' + result.summary.collapseRate.toFixed(3));
   console.log('logTotals=' + JSON.stringify(result.summary.logTotals));
   if (result.realUsage) console.log('realCalls=' + result.realUsage.calls + ' costInUsdTicks=' + result.realUsage.costInUsdTicks + (result.capped ? ' capped=true' : ''));
