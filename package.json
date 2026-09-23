@@ -14,5 +14,8 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "optionalDependencies": {
+    "onnxruntime-node": "1.20.1"
   }
 }

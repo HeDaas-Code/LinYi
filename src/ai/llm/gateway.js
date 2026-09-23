@@ -9,7 +9,8 @@
  * 校验错误立即抛出、不重试；provider 执行错误才进入退避重试。
  */
 
-import { createProvider } from './provider.a6api.js';
+import { createProvider as createA6Provider } from './provider.a6api.js';
+import { createProvider as createLocalProvider } from './provider.local.js';
 
 const STUB_DIM = 16;
 const DEFAULT_MODEL = 'stub-0';
@@ -67,6 +68,7 @@ const stubProvider = {
 };
 
 let activeProvider = stubProvider;
+let activeEmbedProvider = stubProvider;
 /** @type {Map<string, object>} */
 const providersByName = new Map([[stubProvider.name, stubProvider]]);
 
@@ -115,6 +117,7 @@ export function registerProvider(provider) {
   assertProvider(provider);
   providersByName.set(provider.name, provider);
   activeProvider = provider;
+  activeEmbedProvider = provider;
   return provider;
 }
 
@@ -125,9 +128,18 @@ export function registerProvider(provider) {
  * @param {Record<string, string>} [env] 可选注入环境变量（测试用）；缺省读 process.env
  */
 export function registerFromEnv(env) {
-  const p = createProvider(env);
+  const e = env ?? process.env;
+  const p = createA6Provider(e);
   assertProvider(p);
   providersByName.set(p.name, p);
+  // 可选本地嵌入（默认 stub）：TRUMAN_EMBED_PROVIDER=local 时切换为本地嵌入。
+  if (e.TRUMAN_EMBED_PROVIDER === 'local') {
+    try {
+      useLocalEmbed({ modelDir: e.TRUMAN_EMBED_MODEL_DIR });
+    } catch {
+      // 本地嵌入初始化失败不抛出，保持 stub；embed 侧首次调用时也会回退。
+    }
+  }
   return p;
 }
 
@@ -139,6 +151,29 @@ export function registerFromEnv(env) {
 export function useA6Api(env) {
   const p = registerFromEnv(env);
   activeProvider = p;
+  return p;
+}
+
+/**
+ * 从本地模型创建并登记本地嵌入 provider（不切换默认嵌入 provider）。
+ * 返回该 provider，供 embed({ provider }) / useLocalEmbed() 使用；不会因依赖/模型缺失而抛错。
+ * @param {{ modelDir?: string, dim?: number }} [opts]
+ */
+export function registerLocalEmbed(opts) {
+  const p = createLocalProvider(opts);
+  assertProvider(p);
+  providersByName.set(p.name, p);
+  return p;
+}
+
+/**
+ * 创建本地嵌入 provider 并切换为当前默认嵌入 provider（不影响 complete 的默认 provider）。
+ * 依赖/模型缺失时会在首次 embed 调用时自动回退 stub，并在返回值 fallback 字段标注原因。
+ * @param {{ modelDir?: string, dim?: number }} [opts]
+ */
+export function useLocalEmbed(opts) {
+  const p = registerLocalEmbed(opts);
+  activeEmbedProvider = p;
   return p;
 }
 
@@ -336,22 +371,28 @@ export async function embed(opts = {}) {
     throw typeError('gateway.embed: opts 必须为对象');
   }
   const texts = assertTexts(opts.texts);
-  const p = resolveProvider(opts.provider);
+  const p = (opts.provider === undefined || opts.provider === null)
+    ? activeEmbedProvider
+    : resolveProvider(opts.provider);
   const model = opts.model || p.embedModel || p.model || EMBED_MODEL;
   stats.requests += 1;
 
   const { value, attempts } = await withRetry(async () => {
     const start = Date.now();
-    const vectors = await p.embed({ texts });
-    return { vectors, latencyMs: Date.now() - start };
+    const raw = await p.embed({ texts });
+    return { raw, latencyMs: Date.now() - start };
   });
 
-  const vectors = normalizeVectors(value.vectors);
+  // provider 可返回 number[][]（stub/a6api）或 { vectors, fallback }（local）。
+  const vectorsRaw = Array.isArray(value.raw) ? value.raw : value.raw?.vectors;
+  const fallback = Array.isArray(value.raw) ? undefined : value.raw?.fallback;
+  const vectors = normalizeVectors(vectorsRaw);
   return {
     vectors,
     dim: vectors[0].length,
     model,
     provider: p.name,
+    fallback: fallback ?? undefined,
     latencyMs: value.latencyMs,
     attempts,
   };
@@ -362,6 +403,7 @@ export function __reset() {
   providersByName.clear();
   providersByName.set(stubProvider.name, stubProvider);
   activeProvider = stubProvider;
+  activeEmbedProvider = stubProvider;
   config = { ...DEFAULT_CONFIG };
   lastCallAt = 0;
   for (const k of Object.keys(stats)) stats[k] = 0;
