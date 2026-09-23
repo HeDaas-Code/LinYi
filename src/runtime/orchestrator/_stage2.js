@@ -534,13 +534,29 @@ function runCrafting(tick, agents) {
 }
 
 /** 居住分配：确保每个居民（含新生子代）都有住所；避难所满员时为软约束（不驱逐不处死）。 */
-function runResidence(tick, agents) {
+/** 避难所修复：完整度不足时以劳动力修复，使容量回升（t43：危机信号可随修复下降）。 */
+function runShelterRepair(config = {}) {
+  const rate = typeof config.shelterRepairRate === 'number' && Number.isFinite(config.shelterRepairRate)
+    ? config.shelterRepairRate
+    : configStore.defaults().shelterRepairRate;
+  return survival.shelter.repair(rate);
+}
+
+/** 居住分配：入住 → 容量拒绝（超员逐出）→ 暴露惩罚（无处可住者额外需求增长）。 */
+function runResidence(tick, agents, config = {}) {
   const assigned = [];
   const skipped = [];
+  const evicted = [];
+  const exposed = [];
+  const exposureGrowth = typeof config.exposureNeedGrowth === 'number' && Number.isFinite(config.exposureNeedGrowth)
+    ? config.exposureNeedGrowth
+    : configStore.defaults().exposureNeedGrowth;
+
+  // 1) 入住：无住所且容量未满者入住。
   for (const a of agents) {
     if (town.residence.residenceOf(a.id) === null) {
       const sh = survival.shelter.status();
-      if (sh.capacity > 0 && sh.occupants >= sh.capacity) {
+      if (sh.capacity <= 0 || sh.occupants >= sh.capacity) {
         skipped.push(a.id);
         continue;
       }
@@ -554,7 +570,35 @@ function runResidence(tick, agents) {
       });
     }
   }
-  return { assigned, skipped };
+
+  // 2) 容量拒绝：完整度下降使容量 < 居住人数时，超出者不得继续居住（从末尾逐出）。
+  const dorm = town.residence.query(RESIDENCE_ID);
+  const cap = survival.shelter.capacity();
+  if (dorm && Array.isArray(dorm.residents)) {
+    while (dorm.residents.length > cap) {
+      const last = dorm.residents[dorm.residents.length - 1];
+      town.residence.move_out({ agentId: last, residenceId: RESIDENCE_ID });
+      evicted.push(last);
+      dorm.residents.pop();
+      observer.recorder.eventLog.record({
+        tick,
+        topic: 'town.residence.evict',
+        payload: { agentId: last, residenceId: RESIDENCE_ID, reason: 'over_capacity' },
+        agentId: last,
+      });
+    }
+  }
+
+  // 3) 暴露：无处可住者暴露于环境 → 额外需求增长（生存压力上升，可观测后果）。
+  for (const a of agents) {
+    if (town.residence.residenceOf(a.id) === null) {
+      exposed.push(a.id);
+      survival.needs.meter.update({ agentId: a.id, need: 'food', delta: exposureGrowth });
+      survival.needs.meter.update({ agentId: a.id, need: 'water', delta: exposureGrowth });
+    }
+  }
+
+  return { assigned, skipped, evicted, exposed };
 }
 
 /** 健康检查：症状推进 → 疾病传播（与人口规模相关）→ 医疗物资增产（与人口相关）→ 疫情检测 → 隔离 → 分诊治疗。 */
@@ -635,7 +679,8 @@ export function tick({ tick, agents, config = {}, spawnChild }) {
     industry: runIndustry(tick, agents, config),
     fiscal: runFiscal(tick, agents, config),
     crafting: runCrafting(tick, agents),
-    residence: runResidence(tick, agents),
+    shelter: runShelterRepair(config),
+    residence: runResidence(tick, agents, config),
     health: runHealth(tick, agents, config),
   };
 }

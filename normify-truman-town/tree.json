@@ -8,12 +8,12 @@
         "root_uid": "d440391b"
       }
     ],
-    "compiled_at": "2026-09-23T18:03:41.725Z",
+    "compiled_at": "2026-09-23T19:04:45.109Z",
     "stats": {
       "tree_count": 1,
       "module_count": 227,
       "leaf_count": 158,
-      "api_count": 358,
+      "api_count": 359,
       "dep_count": 338,
       "cross_tree_dep_count": 0,
       "max_depth": 5,
@@ -48,7 +48,7 @@
       "aggregate": {
         "descendant_count": 226,
         "own_api_count": 0,
-        "inherited_api_count": 358,
+        "inherited_api_count": 359,
         "dep_out": 0,
         "dep_in": 0
       }
@@ -6141,9 +6141,9 @@
           "path": "src/infra/config.js"
         }
       ],
-      "revision": "6b38498fdd1486b9bde9ab17553cc89337c951fd",
-      "updated_at": "2026-09-23T18:02:19.900Z",
-      "fingerprint": "35153a0562eb9b6a42848612760495467045e9239411193313508d6d83e60b39",
+      "revision": "b79c517f68ea4ab47f3b657b9a2bf591b2b21aa4",
+      "updated_at": "2026-09-23T19:04:06.115Z",
+      "fingerprint": "df4c7d9d44993fb184ffec9dcd5a07564e92afc9bc9cdd30f5ff6c5b5706c349",
       "apis": [
         {
           "protocol": "rpc",
@@ -10172,7 +10172,7 @@
       "aggregate": {
         "descendant_count": 26,
         "own_api_count": 0,
-        "inherited_api_count": 45,
+        "inherited_api_count": 46,
         "dep_out": 0,
         "dep_in": 0
       }
@@ -11542,9 +11542,9 @@
           "path": "src/survival/shelter.js"
         }
       ],
-      "revision": "da6092c786d6c0615331ed8d297d5c0d6a2fa45a",
-      "updated_at": "2026-09-23T12:12:22.377Z",
-      "fingerprint": "455c8fcfbfbb234043d6374227d71f9d9ec8974d8deab08f81a14f85fd8c9365",
+      "revision": "b79c517f68ea4ab47f3b657b9a2bf591b2b21aa4",
+      "updated_at": "2026-09-23T19:04:06.115Z",
+      "fingerprint": "303ed7b0dac9492de72ddb895241c66c374aa789f94f3a9bb5c43b8804ca7481",
       "apis": [
         {
           "protocol": "rpc",
@@ -11572,6 +11572,15 @@
             "en": "Calls survival.shelter.damage.\n"
           },
           "key": "rpc:survival.shelter.damage"
+        },
+        {
+          "protocol": "rpc",
+          "path": "survival.shelter.repair",
+          "description": {
+            "zh": "调用 survival.shelter.repair（以劳动力修复完整度、使容量回升）。\n",
+            "en": "Calls survival.shelter.repair (repairs integrity and raises capacity).\n"
+          },
+          "key": "rpc:survival.shelter.repair"
         }
       ],
       "deps": [
@@ -11588,7 +11597,7 @@
       ],
       "aggregate": {
         "descendant_count": 0,
-        "own_api_count": 3,
+        "own_api_count": 4,
         "inherited_api_count": 0,
         "dep_out": 2,
         "dep_in": 3
@@ -12502,6 +12511,7 @@
     "rpc:survival.resources.water.query": "truman-town.survival.resources.water",
     "rpc:survival.shelter.capacity": "truman-town.survival.shelter",
     "rpc:survival.shelter.damage": "truman-town.survival.shelter",
+    "rpc:survival.shelter.repair": "truman-town.survival.shelter",
     "rpc:survival.shelter.status": "truman-town.survival.shelter",
     "rpc:town.building.space.allocate": "truman-town.town.building.space",
     "rpc:town.building.space.release": "truman-town.town.building.space",

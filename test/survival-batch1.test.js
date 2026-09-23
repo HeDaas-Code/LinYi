@@ -69,15 +69,15 @@ test('medical: 薄门面复用 health/_medical 的同一库存节点', () => {
 test('shelter: status/capacity/damage 完整度下降导致容量下降', () => {
   const st = survival.shelter.status();
   assert.equal(st.integrity, 100);
-  assert.equal(st.capacity, 60);
+  assert.equal(st.capacity, 54);
   assert.equal(st.damaged, false);
 
   const d = survival.shelter.damage(20);
   assert.equal(d.integrity, 80);
-  assert.equal(d.capacity, 48);
+  assert.equal(d.capacity, 43);
   assert.equal(d.damaged, true);
   assert.equal(d.damage, 20);
-  assert.equal(survival.shelter.capacity(), 48);
+  assert.equal(survival.shelter.capacity(), 43);
 
   const d2 = survival.shelter.damage(999);
   assert.equal(d2.integrity, 0);

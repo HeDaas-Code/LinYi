@@ -10,9 +10,9 @@ description:
   en: >
       Maintains LinYi Shelter integrity, capacity and damage state.
       
-revision: da6092c786d6c0615331ed8d297d5c0d6a2fa45a
-updated_at: "2026-09-23T12:12:22.377Z"
-fingerprint: 455c8fcfbfbb234043d6374227d71f9d9ec8974d8deab08f81a14f85fd8c9365
+revision: b79c517f68ea4ab47f3b657b9a2bf591b2b21aa4
+updated_at: "2026-09-23T19:04:06.115Z"
+fingerprint: 303ed7b0dac9492de72ddb895241c66c374aa789f94f3a9bb5c43b8804ca7481
 source:
   - path: "src/survival/shelter.js"
 apis:
@@ -42,6 +42,15 @@ apis:
           
       en: >
           Calls survival.shelter.damage.
+          
+  - protocol: rpc
+    path: "survival.shelter.repair"
+    description:
+      zh: >
+          调用 survival.shelter.repair（以劳动力修复完整度、使容量回升）。
+          
+      en: >
+          Calls survival.shelter.repair (repairs integrity and raises capacity).
           
 deps:
   - kind: call

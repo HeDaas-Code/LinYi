@@ -338,6 +338,7 @@
   "rpc:survival.resources.water.query": "truman-town.survival.resources.water",
   "rpc:survival.shelter.capacity": "truman-town.survival.shelter",
   "rpc:survival.shelter.damage": "truman-town.survival.shelter",
+  "rpc:survival.shelter.repair": "truman-town.survival.shelter",
   "rpc:survival.shelter.status": "truman-town.survival.shelter",
   "rpc:town.building.space.allocate": "truman-town.town.building.space",
   "rpc:town.building.space.release": "truman-town.town.building.space",

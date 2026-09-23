@@ -2,12 +2,12 @@
   "schema_version": 1,
   "ok": true,
   "project": "normify-truman-town",
-  "compiled_at": "2026-09-23T18:03:41.725Z",
+  "compiled_at": "2026-09-23T19:04:45.109Z",
   "stats": {
     "tree_count": 1,
     "module_count": 227,
     "leaf_count": 158,
-    "api_count": 358,
+    "api_count": 359,
     "dep_count": 338,
     "cross_tree_dep_count": 0,
     "max_depth": 5,
@@ -23,19 +23,19 @@
   },
   "artifacts": {
     "tree.json": {
-      "sha256": "16992bbbe88867676b33333a730d7f1483645f318b62745e227f589510e774d2",
-      "bytes": 522565
+      "sha256": "033b1f11be8db294bf8f9a1ac6d61e1b968e5afc444080ed5a7e5a648c63269d",
+      "bytes": 523015
     },
     "outline.md": {
-      "sha256": "939b38c0e301f8db41e14356af4eec88021e9ab3197f17ea9ae673defde2ea68",
+      "sha256": "dae68b776721e5d662dc3dc486e1a9072f8c287fb3c04203be3bdfa847b36190",
       "bytes": 40212
     },
     "api-index.json": {
-      "sha256": "4d1530c8397cfd4fcda61299749591e772d8fab86a729c0fb921e7583b2ff1e7",
-      "bytes": 27833
+      "sha256": "05b962983b03a633f67d50b9f4b6030dee44446c512e21f6e0e98faf552f2759",
+      "bytes": 27898
     },
     "receipt.json": {
-      "sha256": "ba770830c867e8f32ca7b2f0ad18509baf5d003910f56d0764f4333fac92d278",
+      "sha256": "effa4aedc055526666668f2358472155b3d9f3466cfb5ffb904c6f6678a97e21",
       "bytes": 924
     }
   }

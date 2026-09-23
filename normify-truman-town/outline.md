@@ -4,7 +4,7 @@
 
 ## truman-town
 
-- truman-town [计划] — 楚门小镇智能体沙盘 / Truman Town Agent Sandbox — 核战争后 LinYi 号避难所的自治沙盘：居民在资源与生存压力下自行发展，拥有背包与制作能力，智能体决策受心理状态影响，社会涌现治理与文化，文明通过技术与遗物积… — [模块 227 · API 358]
+- truman-town [计划] — 楚门小镇智能体沙盘 / Truman Town Agent Sandbox — 核战争后 LinYi 号避难所的自治沙盘：居民在资源与生存压力下自行发展，拥有背包与制作能力，智能体决策受心理状态影响，社会涌现治理与文化，文明通过技术与遗物积… — [模块 227 · API 359]
   - truman-town.agent [计划] — 智能体核心 / Agent Core — 智能体的完整心智与行为模型：人设、50 标签特质、心理、日程、行动预想池、背包与制作、决策、记忆、生命周期与社会角色。 — [模块 51 · API 75]
     - truman-town.agent.anticipation [计划] — 行动预想池 / Anticipation Pool — 为智能体维护候选行动集合，并通过模拟评分选择下一步。 — [模块 6 · API 8]
       - truman-town.agent.anticipation.pool [计划] — 预想池实现 / Anticipation Pool Implementation — 增删与修剪候选行动，保持预想池新鲜且可执行。 — [模块 4 · API 6]
@@ -192,7 +192,7 @@
       - truman-town.social.relationship.friendship — 友谊关系 / Friendship — 更新友谊强度与互动历史。 — [模块 1 · API 2]
       - truman-town.social.relationship.romance — 恋爱关系 / Romance — 处理表白、接受、拒绝与分手，支持配对与亲密升级。 — [模块 1 · API 3]
     - truman-town.social.reputation [计划] — 声誉系统 / Reputation — 根据社交与交易行为更新声誉并供查询。 — [模块 1 · API 2]
-  - truman-town.survival [计划] — 生存系统 / Survival System — 核战争后 LinYi 号避难所居民的生存层：资源、需求、疾病、环境与突发事件，目标只有一个——继续活下去，并记录存活时长。 — [模块 27 · API 45]
+  - truman-town.survival [计划] — 生存系统 / Survival System — 核战争后 LinYi 号避难所居民的生存层：资源、需求、疾病、环境与突发事件，目标只有一个——继续活下去，并记录存活时长。 — [模块 27 · API 46]
     - truman-town.survival.crisis — 危机检测 / Crisis Detection — 检测群体性生存危机并发出警报，为文明崩溃判定提供输入。 — [模块 1 · API 2]
     - truman-town.survival.environment [计划] — 环境与探险 / Environment & Expedition — 避难所外的世界不做开放世界：辐射与天气作为探索计算的风险因子，探索被简化为一次结算，产出日志、资源变化与 Agent 状态变化。 — [模块 4 · API 7]
       - truman-town.survival.environment.expedition [计划] — 探索结算 / Expedition Resolution — 把外出探索简化为一次计算：综合辐射、天气、物资、装备、Agent 特质、生存状态与随机数，得出探索结果；结果仅体现为一段日志、资源变化和 Agent 状态变化，… — [模块 1 · API 3]
@@ -218,7 +218,7 @@
       - truman-town.survival.resources.food — 食物 / Food — 追踪食物的生产、消耗与库存。 — [模块 1 · API 3]
       - truman-town.survival.resources.medical — 医疗物资 / Medical Supplies — 追踪药品与医疗物资的生产、消耗与库存。 — [模块 1 · API 3]
       - truman-town.survival.resources.water — 水源 / Water — 追踪水源的生产、消耗与库存。 — [模块 1 · API 3]
-    - truman-town.survival.shelter — 避难所状态 / Shelter Status — 维护 LinYi 号避难所的结构完整度、人口容量与损伤状态。 — [模块 1 · API 3]
+    - truman-town.survival.shelter — 避难所状态 / Shelter Status — 维护 LinYi 号避难所的结构完整度、人口容量与损伤状态。 — [模块 1 · API 4]
   - truman-town.town [计划] — 小镇空间 / Town Space — LinYi 号避难所的结构化空间与建筑系统：地图、分区、建筑、住宅、公共设施与土地，不依赖美术资产。 — [模块 12 · API 18]
     - truman-town.town.building — 建筑系统 / Building — 创建结构化建筑与可分配空间。 — [模块 3 · API 5]
       - truman-town.town.building.space — 空间分配 / Space Allocation — 在建筑内分配与释放房间、工位与铺面。 — [模块 1 · API 2]

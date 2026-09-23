@@ -58,6 +58,10 @@ export const DEFAULTS = Object.freeze({
   infectionRate: 0.03,
   treatPerCapita: 0.04,
   medicalRegenPerCapita: 0.5,
+  // 避难所容量与修复（t43：容量约束真实生效 + 危机信号可恢复）
+  shelterBaseCapacity: 54,
+  shelterRepairRate: 1,
+  exposureNeedGrowth: 0.01,
   supplyRedistributeInterval: 20,
 });
 
@@ -249,6 +253,9 @@ const RULES = {
   interestMode: (v) => ((v === 'simple' || v === 'compound') ? true : "必须是 'simple' 或 'compound'"),
   taxRate: (v) => (isUnit(v) ? true : '必须是 [0,1] 区间数值'),
   taxInterval: (v) => (isPosInt(v) ? true : '必须是正整数'),
+  shelterBaseCapacity: (v) => (isPosInt(v) ? true : '必须是正整数'),
+  shelterRepairRate: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
+  exposureNeedGrowth: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
 };
 
 /**

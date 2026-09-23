@@ -4,14 +4,20 @@
  * 维护 LinYi 号避难所的结构完整度、人口容量与损伤状态。持久化在 graph store
  *（type=survival.shelter，id=shelter:main，与 survival.events.impact 的 shelterDamage
  * 共用同一节点）。capacity 随完整度下降而下降；occupants 取全部住宅的入住人数；
- * damage 降低完整度并累积损伤。
+ * damage 降低完整度并累积损伤；repair 以劳动力修复完整度、使容量回升（t43：
+ * 让危机信号可随修复下降，而不是退化为常量 critical）。
  */
 
 import * as graph from '../infra/store/graph.js';
+import * as configStore from '../infra/config.js';
 
 const SHELTER_ID = 'shelter:main';
 const TYPE = 'survival.shelter';
-const DEFAULT = Object.freeze({ integrity: 100, baseCapacity: 60, damage: 0 });
+const DEFAULT = Object.freeze({
+  integrity: 100,
+  baseCapacity: configStore.defaults().shelterBaseCapacity,
+  damage: 0,
+});
 
 function load() {
   const node = graph.read(SHELTER_ID);
@@ -70,6 +76,25 @@ export function damage(amount = 0) {
     occupants: occupants(),
     damaged: s.integrity < 100,
     damage: s.damage,
+  };
+}
+
+/** 修复：调用 survival.shelter.repair（以劳动力提升完整度、使容量回升，返回最新快照）。 */
+export function repair(amount = 0) {
+  if (typeof amount !== 'number' || !Number.isFinite(amount) || amount < 0) {
+    throw new TypeError('shelter.repair: amount 必须为非负有限数值');
+  }
+  const s = load();
+  const before = s.integrity;
+  s.integrity = Math.min(100, before + amount);
+  save(s);
+  return {
+    integrity: s.integrity,
+    capacity: computeCapacity(s),
+    occupants: occupants(),
+    damaged: s.integrity < 100,
+    damage: s.damage,
+    repaired: s.integrity - before,
   };
 }
 
