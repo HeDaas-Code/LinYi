@@ -16,7 +16,7 @@ const CONFIG_PREFIX = 'config:';
 
 /** 沙盘参数默认值。 */
 export const DEFAULTS = Object.freeze({
-  decay: Object.freeze({ food: 0.01, water: 0.01 }),
+  decay: Object.freeze({ food: 0.01, water: 0.01, energy: 0.01, medical: 0.005 }),
   needGrowth: Object.freeze({ food: 0.08, water: 0.08 }),
   eventProbability: 0.3,
   epidemicThreshold: 0.5,
@@ -177,14 +177,19 @@ function isNonNegInt(v) {
 
 function rateObject(v, hi) {
   if (v === null || typeof v !== 'object' || Array.isArray(v)) return false;
-  const foodOk = v.food === undefined || (isNum(v.food) && v.food >= 0 && v.food <= hi);
-  const waterOk = v.water === undefined || (isNum(v.water) && v.water >= 0 && v.water <= hi);
-  return foodOk && waterOk && (v.food !== undefined || v.water !== undefined);
+  const keys = ['food', 'water', 'energy', 'medical'];
+  let any = false;
+  for (const k of keys) {
+    if (v[k] === undefined) continue;
+    any = true;
+    if (!(isNum(v[k]) && v[k] >= 0 && v[k] <= hi)) return false;
+  }
+  return any;
 }
 
 /** 校验规则：返回 true（通过）或错误消息字符串。 */
 const RULES = {
-  decay: (v) => (rateObject(v, 1) ? true : 'decay.food/water 必须是 [0,1] 区间数值'),
+  decay: (v) => (rateObject(v, 1) ? true : 'decay.food/water/energy/medical 必须是 [0,1] 区间数值'),
   needGrowth: (v) => (rateObject(v, Infinity) ? true : 'needGrowth.food/water 必须是非负有限数值'),
   eventProbability: (v) => (isUnit(v) ? true : '必须是 [0,1] 区间数值'),
   epidemicThreshold: (v) => (isUnit(v) ? true : '必须是 [0,1] 区间数值'),

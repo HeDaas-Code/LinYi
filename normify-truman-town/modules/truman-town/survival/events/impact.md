@@ -10,9 +10,9 @@ description:
   en: >
       Applies events to shelter, resources and residents, and resolves event chains.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T06:36:55.532Z"
-fingerprint: d7e7fddc842f3627908ec29b0620d6abc754feaec2ecf4ed463cf57161fa0b6a
+revision: da6092c786d6c0615331ed8d297d5c0d6a2fa45a
+updated_at: "2026-09-23T12:13:27.593Z"
+fingerprint: 1a7d089c20b1cb320b529173ea88bf49a730dfdbf79638f01938fc782d75d677
 source:
   - path: "src/survival/events/impact.js"
 apis:

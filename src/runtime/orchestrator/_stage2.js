@@ -37,6 +37,11 @@ let craftCount = 0;
 let buildCount = 0;
 let treatCount = 0;
 let quarantineCount = 0;
+/** @type {string[]} 已创办企业 ID */
+let businessIds = [];
+let goodsProduced = 0;
+let wagesPaid = 0;
+let bankruptcies = 0;
 
 function sortedPairKey(a, b) {
   return a < b ? a + ':' + b : b + ':' + a;
@@ -84,6 +89,10 @@ export function seed(agents, config = {}) {
   buildCount = 0;
   treatCount = 0;
   quarantineCount = 0;
+  businessIds = [];
+  goodsProduced = 0;
+  wagesPaid = 0;
+  bankruptcies = 0;
 
   // 1) town：初始避难所 + 居住分配
   const shelter = town.building.structure.spawnShelter();
@@ -127,11 +136,35 @@ export function seed(agents, config = {}) {
     survival.health.disease.infect({ agentId: agents[1].id, diseaseId: 'flu', severity: 0.6, tick: 0 });
   }
 
+  // 5) industry：能源库存 + 商品价 + 创办企业 + 雇佣（产业经济闭环）
+  survival.resources.energy.__reset();
+  const goodsPrice = (typeof config.goodsPrice === 'number' && config.goodsPrice > 0) ? config.goodsPrice : 8;
+  economy.market.price.update({ symbol: 'goods', price: goodsPrice });
+  const businessCount = (Number.isInteger(config.businessCount) && config.businessCount >= 0) ? config.businessCount : 2;
+  const businessCapital = (typeof config.businessCapital === 'number' && config.businessCapital >= 0) ? config.businessCapital : 200;
+  const wage = (typeof config.wage === 'number' && config.wage >= 0) ? config.wage : 3;
+  for (let i = 0; i < businessCount && agents.length > 0; i += 1) {
+    const founder = agents[i % agents.length];
+    const biz = economy.industry.business.found({
+      founderId: founder.id,
+      name: '企业' + (i + 1),
+      industry: i % 2 === 0 ? 'food' : 'tools',
+      capital: businessCapital,
+    });
+    businessIds.push(biz.businessId);
+  }
+  for (let i = 0; i < businessIds.length && agents.length > 2; i += 1) {
+    const emp = agents[(i + 2) % agents.length];
+    economy.industry.labour.hire({ businessId: businessIds[i], agentId: emp.id, wage, role: 'worker' });
+  }
+
   return {
     shelter: shelter.length,
     residences: agents.length,
     accounts: agents.length,
     price: priceValue,
+    goodsPrice,
+    businesses: businessIds.length,
     itemIds: { ...itemIds },
   };
 }
@@ -222,6 +255,79 @@ function runMarket(tick, agents, config = {}) {
   return result;
 }
 
+/**
+ * 产业经济每 tick：生产 → 交易 → 发薪 → 结算（运营偿债）→ 破产检查。
+ * 生产消耗能源（能源每 tick 再生），产出商品按 goodsPrice 卖出计收入，
+ * 发薪经 ledger.transaction 真实转账，余额不足累计欠薪（不产生负余额），
+ * 资不抵债或余额低于阈值则启动破产清算。
+ */
+function runIndustry(tick, agents, config = {}) {
+  const result = { produced: 0, revenue: 0, wages: 0, bankruptcies: 0 };
+  if (businessIds.length === 0) return result;
+
+  const goodsPrice = (typeof config.goodsPrice === 'number' && config.goodsPrice > 0) ? config.goodsPrice : 8;
+  const productionOutput = (Number.isInteger(config.productionOutput) && config.productionOutput >= 0) ? config.productionOutput : 2;
+  const energyInput = (typeof config.energyInput === 'number' && config.energyInput >= 0) ? config.energyInput : 1;
+  const energyRegen = (typeof config.energyRegen === 'number' && config.energyRegen >= 0) ? config.energyRegen : 2;
+  const bankruptcyThreshold = (typeof config.bankruptcyThreshold === 'number' && config.bankruptcyThreshold >= 0) ? config.bankruptcyThreshold : 10;
+
+  // 能源再生
+  survival.resources.energy.produce(energyRegen);
+
+  const activeIds = businessIds.filter((id) => {
+    const biz = economy.industry.business.list().find((b) => b.businessId === id);
+    return biz !== undefined && biz.status === 'active';
+  });
+
+  for (const businessId of activeIds) {
+    // 1) 生产
+    try {
+      const plan = economy.industry.production.plan({ businessId, output: productionOutput, energyInput, foodInput: 0 });
+      const out = economy.industry.production.output({ planId: plan.planId });
+      result.produced += out.goods;
+      goodsProduced += out.goods;
+      if (out.goods > 0) {
+        observer.recorder.eventLog.record({ tick, topic: 'economy.industry.production', payload: { businessId, goods: out.goods } });
+      }
+    } catch { /* 企业不可用则跳过 */ }
+
+    // 2) 交易（卖出库存商品）
+    try {
+      const op = economy.industry.business.operate({ businessId, goodsPrice });
+      result.revenue += op.revenue;
+    } catch { /* 跳过 */ }
+
+    // 3) 发薪（真实转账，余额不足欠薪）
+    try {
+      const paid = economy.industry.labour.pay({ businessId });
+      const amount = paid.paid.reduce((s, p) => s + p.amount, 0);
+      result.wages += amount;
+      wagesPaid += amount;
+      if (amount > 0) {
+        observer.recorder.eventLog.record({ tick, topic: 'economy.industry.labour.pay', payload: { businessId, amount } });
+      }
+    } catch { /* 跳过 */ }
+  }
+
+  // 4) 结算 + 破产检查
+  for (const businessId of activeIds) {
+    const biz = economy.industry.business.list().find((b) => b.businessId === businessId);
+    if (biz === undefined) continue;
+    const balance = economy.ledger.account.balance(biz.accountId);
+    if (biz.status === 'insolvent' || (balance !== undefined && balance <= bankruptcyThreshold)) {
+      const filed = economy.bankruptcy.file({ subjectId: businessId, subjectType: 'business', threshold: bankruptcyThreshold });
+      if (filed.filed) {
+        economy.bankruptcy.liquidate({ caseId: filed.caseId, goodsPrice });
+        bankruptcies += 1;
+        result.bankruptcies += 1;
+        observer.recorder.eventLog.record({ tick, topic: 'economy.bankruptcy', payload: { businessId, balance } });
+      }
+    }
+  }
+
+  return result;
+}
+
 function pendingFor(queue, agentId) {
   return queue.pending().some((j) => j.agentId === agentId);
 }
@@ -257,11 +363,17 @@ function runCrafting(tick, agents) {
   return result;
 }
 
-/** 居住分配：确保每个居民（含新生子代）都有住所。 */
+/** 居住分配：确保每个居民（含新生子代）都有住所；避难所满员时为软约束（不驱逐不处死）。 */
 function runResidence(tick, agents) {
   const assigned = [];
+  const skipped = [];
   for (const a of agents) {
     if (town.residence.residenceOf(a.id) === null) {
+      const sh = survival.shelter.status();
+      if (sh.capacity > 0 && sh.occupants >= sh.capacity) {
+        skipped.push(a.id);
+        continue;
+      }
       town.residence.move_in({ agentId: a.id, residenceId: RESIDENCE_ID });
       assigned.push(a.id);
       observer.recorder.eventLog.record({
@@ -272,7 +384,7 @@ function runResidence(tick, agents) {
       });
     }
   }
-  return { assigned };
+  return { assigned, skipped };
 }
 
 /** 健康检查：症状推进 → 疫情检测 → 隔离 → 分诊治疗，并写 observer 日志。 */
@@ -327,6 +439,7 @@ export function tick({ tick, agents, config = {}, spawnChild }) {
   return {
     procreation: runProcreation(tick, agents, spawnChild, config),
     market: runMarket(tick, agents, config),
+    industry: runIndustry(tick, agents, config),
     crafting: runCrafting(tick, agents),
     residence: runResidence(tick, agents),
     health: runHealth(tick, agents, config),
@@ -343,6 +456,10 @@ export function summary() {
     built: buildCount,
     treated: treatCount,
     quarantined: quarantineCount,
+    businesses: businessIds.length,
+    goodsProduced,
+    wagesPaid,
+    bankruptcies,
   };
 }
 
@@ -359,6 +476,10 @@ export function __reset() {
   buildCount = 0;
   treatCount = 0;
   quarantineCount = 0;
+  businessIds = [];
+  goodsProduced = 0;
+  wagesPaid = 0;
+  bankruptcies = 0;
 
   economy.__reset();
   agent.inventory.item.__reset();

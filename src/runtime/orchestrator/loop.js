@@ -102,6 +102,13 @@ function clampUnit(value, fallback = 0) {
   return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : fallback;
 }
 
+/** 读取衰减率：优先 cfg.decay.<key>，缺失时回退默认值（兼容只传部分 decay 的调用方）。 */
+function decayRate(cfg, key) {
+  const d = cfg && typeof cfg.decay === 'object' && cfg.decay !== null ? cfg.decay : null;
+  if (d && typeof d[key] === 'number' && Number.isFinite(d[key])) return d[key];
+  return configStore.defaults().decay[key];
+}
+
 /**
  * 登记一个智能体到注册表，并初始化其特质、预想池与初始需求。
  * @param {{
@@ -269,6 +276,8 @@ function agentContextOf(record) {
 function runSurvival(tick, config) {
   survival.resources.food.decay(config.decay.food);
   survival.resources.water.decay(config.decay.water);
+  survival.resources.energy.decay(decayRate(config, 'energy'));
+  survival.resources.medical.decay(decayRate(config, 'medical'));
 
   for (const record of registry.lookup({ type: 'agent' })) {
     survival.needs.meter.update({ agentId: record.id, need: 'food', delta: config.needGrowth.food });
@@ -291,7 +300,10 @@ function syncWorldState(tick, cfg) {
   worldState.set('tick', tick);
   worldState.set('resources.food', survival.resources.food.query());
   worldState.set('resources.water', survival.resources.water.query());
+  worldState.set('resources.energy', survival.resources.energy.query());
+  worldState.set('resources.medical', survival.resources.medical.query());
   worldState.set('resources.foragePool', { pool: foragePoolRemaining(), capacity: foragePoolCapacityOf(cfg), regen: forageRegenOf(cfg) });
+  worldState.set('shelter', survival.shelter.status());
   const needs = {};
   for (const record of registry.lookup({ type: 'agent' })) {
     needs[record.id] = survival.needs.meter.query({ agentId: record.id }).needs;
@@ -432,6 +444,12 @@ export async function step(config = {}) {
     phase3Summary = await stage3.tick({ tick, agents: agentRecords, config: cfg });
   }
 
+  // 8) 生存危机检测 + 生存目标更新（每 tick 末尾，snapshot 可读）
+  const crisisState = survival.crisis.alert({ tick });
+  const goalState = survival.goal.elapsed({ tick });
+  worldState.set('survival.crisis', crisisState);
+  worldState.set('survival.goal', goalState);
+
   return {
     tick,
     eventCount: eventPercepts.length,
@@ -441,7 +459,7 @@ export async function step(config = {}) {
       confidence: d.decision.confidence,
       thought: d.thought.thought,
     })),
-    resources: { food: survival.resources.food.query(), water: survival.resources.water.query() },
+    resources: { food: survival.resources.food.query(), water: survival.resources.water.query(), energy: survival.resources.energy.query(), medical: survival.resources.medical.query() },
     ...(phase2Summary === null ? {} : { phase2: phase2Summary }),
     ...(phase3Summary === null ? {} : { phase3: phase3Summary }),
   };
@@ -512,6 +530,9 @@ export async function run(options = {}) {
     phase3Seed = stage3.seed(spawned, options);
   }
 
+  // 生存目标：记录起始 tick（elapsed 与主循环 tick 一致）
+  survival.goal.survive({ tick: 0 });
+
   const ticks = Number.isInteger(options.ticks) && options.ticks > 0 ? options.ticks : 1;
   const steps = [];
   for (let i = 0; i < ticks; i += 1) {
@@ -525,7 +546,7 @@ export async function run(options = {}) {
     finalTick: clock.now().tick,
     steps,
     world: worldState.snapshot(),
-    resources: { food: survival.resources.food.query(), water: survival.resources.water.query() },
+    resources: { food: survival.resources.food.query(), water: survival.resources.water.query(), energy: survival.resources.energy.query(), medical: survival.resources.medical.query() },
     chronicle: observer.chronicle.compiler.compile().counts,
     ...(phase2 ? { phase2: { seed: phase2Seed, summary: stage2.summary() } } : {}),
     ...(phase3 ? { phase3: { seed: phase3Seed, summary: stage3.summary() } } : {}),
@@ -538,7 +559,7 @@ export function snapshot() {
     tick: clock.now().tick,
     agents: registry.lookup({ type: 'agent' }),
     world: worldState.snapshot(),
-    resources: { food: survival.resources.food.query(), water: survival.resources.water.query() },
+    resources: { food: survival.resources.food.query(), water: survival.resources.water.query(), energy: survival.resources.energy.query(), medical: survival.resources.medical.query() },
     chronicle: observer.chronicle.compiler.compile().counts,
   };
 }

@@ -5,28 +5,13 @@
  * effects（foodDelta/waterDelta/shelterDamage）落到 food/water 库存与避难所
  * 完整度，并写入 observer.recorder 事件日志；resolve 按队列顺序解决事件及其
  * chain，返回完整影响结果，供 runtime 主循环在 survival 阶段调用。
+ * 避难所损伤统一经 survival.shelter.damage 施加，与避难所状态模块共用同一节点。
  */
 
-import * as graph from '../../infra/store/graph.js';
 import * as food from '../resources/food.js';
 import * as water from '../resources/water.js';
+import * as shelter from '../shelter.js';
 import * as recorder from '../../observer/recorder/index.js';
-
-const SHELTER_ID = 'shelter:main';
-const SHELTER_TYPE = 'survival.shelter';
-const SHELTER_DEFAULT = Object.freeze({ integrity: 100, capacity: 50, damage: 0 });
-
-function loadShelter() {
-  const node = graph.read(SHELTER_ID);
-  if (node && node.data && typeof node.data.integrity === 'number') {
-    return { ...SHELTER_DEFAULT, ...node.data };
-  }
-  return { ...SHELTER_DEFAULT };
-}
-
-function saveShelter(state) {
-  return graph.write({ id: SHELTER_ID, type: SHELTER_TYPE, data: state }).data;
-}
 
 function normalizeEvent(event, i) {
   if (event === null || typeof event !== 'object' || Array.isArray(event)) {
@@ -51,11 +36,7 @@ function applyEffects(event) {
     changes.water = fx.waterDelta > 0 ? water.produce(fx.waterDelta) : water.consume(-fx.waterDelta);
   }
   if (typeof fx.shelterDamage === 'number' && fx.shelterDamage !== 0) {
-    const shelter = loadShelter();
-    const damage = Math.max(0, fx.shelterDamage);
-    shelter.damage += damage;
-    shelter.integrity = Math.max(0, shelter.integrity - damage);
-    changes.shelter = saveShelter(shelter);
+    changes.shelter = shelter.damage(Math.max(0, fx.shelterDamage));
   }
   return changes;
 }
@@ -124,5 +105,6 @@ export function resolve(events, ctx = {}) {
 
 /** 复位避难所状态到默认（测试用）。 */
 export function __reset() {
-  saveShelter({ ...SHELTER_DEFAULT });
+  shelter.__reset();
 }
+
