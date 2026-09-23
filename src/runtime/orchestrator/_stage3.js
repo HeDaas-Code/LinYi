@@ -26,6 +26,7 @@ let conflictResolved = false;
 let normViolated = false;
 let memeMutated = false;
 let collapseHandled = false;
+let firstCollapse = null;
 
 // ---- 累计计数 ----
 let lawsEnacted = 0;
@@ -62,7 +63,7 @@ export function seed(agents, config = {}) {
   factionA = null; factionB = null; allied = false;
   lawId = null; lawEnforced = false;
   conflictId = null; conflictResolved = false;
-  normViolated = false; memeMutated = false; collapseHandled = false;
+  normViolated = false; memeMutated = false; collapseHandled = false; firstCollapse = null;
   lawsEnacted = 0; conflictsResolved = 0; ritualsHeld = 0; normsViolated = 0; memesMutated = 0;
   breakdowns = 0; recoveries = 0; copings = 0;
   researchesStarted = 0; researchesCompleted = 0; techsLost = 0; collapses = 0; restarts = 0;
@@ -278,6 +279,7 @@ async function runCivilization(tick, agents, config) {
   if (det.collapsed && !collapseHandled) {
     collapseHandled = true;
     collapses += 1;
+    firstCollapse = { tick, reasons: det.reasons, score: det.score, population, resourceRatio, crisisLevel };
 
     civilization.collapse.confirmer.confirm({
       population: force ? 0 : population,
@@ -340,6 +342,7 @@ export function summary() {
     researchesStarted,
     researchesCompleted,
     techsLost,
+    firstCollapse,
     collapses,
     restarts,
   };
@@ -351,7 +354,7 @@ export function __reset() {
   factionA = null; factionB = null; allied = false;
   lawId = null; lawEnforced = false;
   conflictId = null; conflictResolved = false;
-  normViolated = false; memeMutated = false; collapseHandled = false;
+  normViolated = false; memeMutated = false; collapseHandled = false; firstCollapse = null;
   lawsEnacted = 0; conflictsResolved = 0; ritualsHeld = 0; normsViolated = 0; memesMutated = 0;
   breakdowns = 0; recoveries = 0; copings = 0;
   researchesStarted = 0; researchesCompleted = 0; techsLost = 0; collapses = 0; restarts = 0;
