@@ -10,9 +10,9 @@ description:
   en: >
       Starts, pauses and steps the simulation.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T07:20:13.532Z"
-fingerprint: 0caf9a346bd32ae0139e7317adb805f83720b45a95b04f35a5de1e439c57f4d5
+revision: 2f8d4802decfe249e375f794ab44026c45dcdded
+updated_at: "2026-09-23T09:49:40.814Z"
+fingerprint: b4378fb7fc7a26c33177c4f400fa5c54850ebdb03530be06b60c759e22aa9dba
 source:
   - path: "src/api/control.js"
 apis:
@@ -45,6 +45,36 @@ apis:
           
       en: >
           Advances one full tick of the loop and returns its summary.
+          
+  - protocol: http
+    method: GET
+    path: "/api/v1/sim/difficulties"
+    description:
+      zh: >
+          列出全部难度档位（含参数与预期表现 + current 标记）。
+          
+      en: >
+          Lists all difficulty presets (params + expected survival + current flag).
+          
+  - protocol: http
+    method: GET
+    path: "/api/v1/sim/difficulty"
+    description:
+      zh: >
+          查询当前难度档位。
+          
+      en: >
+          Queries the current difficulty preset.
+          
+  - protocol: http
+    method: POST
+    path: "/api/v1/sim/difficulty"
+    description:
+      zh: >
+          切换难度档位（切换后新建的 run 生效）。
+          
+      en: >
+          Switches the difficulty preset (applies to the next run).
           
 deps:
   - kind: call

@@ -10,9 +10,9 @@ description:
   en: >
       Reads and writes sandbox runtime parameters (dotted keys, persisted into the graph store), and exposes a defaults snapshot, validation and merge for externalized parameters.
       
-revision: c153893ac2349a3e3a99e6331904bebe7274b479
-updated_at: "2026-09-23T05:05:51.518Z"
-fingerprint: 00ca6792d9edeb02f648326335c450e49ed1fc92bb84206c703948b617ce108d
+revision: 2f8d4802decfe249e375f794ab44026c45dcdded
+updated_at: "2026-09-23T09:49:40.815Z"
+fingerprint: f65dbae910674a0991632c9359804933c274f7d3095161232a908dea8090cbbe
 source:
   - path: "src/infra/config.js"
 apis:
@@ -69,6 +69,60 @@ apis:
           
       en: >
           Deep-merges overrides onto defaults and validates, returning the effective config.
+          
+  - protocol: rpc
+    path: "infra.config.difficultyIds"
+    description:
+      zh: >
+          返回全部可用难度档位 id。
+          
+      en: >
+          Returns all available difficulty preset ids.
+          
+  - protocol: rpc
+    path: "infra.config.difficultyPresets"
+    description:
+      zh: >
+          返回全部难度档位深拷贝（含参数与预期表现）。
+          
+      en: >
+          Returns a deep copy of all difficulty presets (params + expected survival).
+          
+  - protocol: rpc
+    path: "infra.config.difficultyParams"
+    description:
+      zh: >
+          返回指定档位的运行参数（未知档位返回 null）。
+          
+      en: >
+          Returns a preset's run parameters (null for unknown id).
+          
+  - protocol: rpc
+    path: "infra.config.getDifficulty"
+    description:
+      zh: >
+          返回当前难度档位快照（id/label/expected/params）。
+          
+      en: >
+          Returns the current difficulty snapshot (id/label/expected/params).
+          
+  - protocol: rpc
+    path: "infra.config.setDifficulty"
+    description:
+      zh: >
+          切换当前难度档位（未知档位抛 RangeError）。
+          
+      en: >
+          Switches the current difficulty preset (RangeError on unknown id).
+          
+  - protocol: rpc
+    path: "infra.config.currentDifficultyParams"
+    description:
+      zh: >
+          返回当前档位运行参数（供 loop 叠加为基础参数）。
+          
+      en: >
+          Returns the current preset run params (used as base params by the loop).
           
 deps:
   - kind: call

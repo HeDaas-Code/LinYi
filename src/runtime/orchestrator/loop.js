@@ -343,7 +343,7 @@ function runMortality(tick, cfg) {
  * @returns {Promise<object>} 本 tick 摘要
  */
 export async function step(config = {}) {
-  const cfg = { ...DEFAULT_CONFIG, ...(config ?? {}) };
+  const cfg = { ...DEFAULT_CONFIG, ...configStore.currentDifficultyParams(), ...(config ?? {}) };
   const tick = clock.tick().tick;
 
   // 0) 世界采集池再生（每 tick 补充可采集总量）

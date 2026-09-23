@@ -6,12 +6,19 @@
  *   POST /api/v1/sim/pause  → 置为 paused
  *   POST /api/v1/sim/step   → 推进一个完整 tick（复用 loop.step 闭环）
  *
+ * 难度档位（needGrowth / 采集池的产品化控制面）：
+ *   GET  /api/v1/sim/difficulties → 列出可用档位（含参数与预期存活表现）
+ *   GET  /api/v1/sim/difficulty    → 查询当前档位
+ *   POST /api/v1/sim/difficulty    → 切换档位（切换后新建的 run 生效）
+ *
  * 启动/暂停相位复用 runtime.orchestrator.cycle 的状态机（run/pause/resume），
  * 步进复用 runtime.orchestrator.loop 的 step 闭环。
  */
 
 import * as cycle from '../runtime/orchestrator/cycle.js';
 import * as loop from '../runtime/orchestrator/loop.js';
+import * as config from '../infra/config.js';
+import { HttpError } from './http.js';
 
 /** 控制侧相位镜像（cycle 不导出 status，这里自行维护）。 */
 let phase = 'idle';
@@ -71,10 +78,44 @@ export async function step(input = {}) {
   return { ...status(), summary };
 }
 
+/** 列出全部难度档位（含参数与预期存活表现 + 当前档位标记）。 */
+export function listDifficulties() {
+  const presets = config.difficultyPresets();
+  const current = config.getDifficulty().id;
+  return Object.keys(presets).map((id) => ({
+    id,
+    label: presets[id].label,
+    expected: presets[id].expected,
+    params: presets[id].params,
+    current: id === current,
+  }));
+}
+
+/** 查询当前难度档位。 */
+export function getDifficulty() {
+  return { ...config.getDifficulty(), current: true };
+}
+
+/**
+ * 切换难度档位（切换后新建的 run 生效；不热改运行中的模拟）。
+ * @param {string} id 档位 id（peaceful / standard / harsh / apocalyptic）
+ * @returns {object} 切换后的档位快照
+ */
+export function setDifficulty(id) {
+  if (typeof id !== 'string' || id.trim() === '') {
+    throw new HttpError(400, 'difficulty id 必须为非空字符串');
+  }
+  if (config.difficultyParams(id) === null) {
+    throw new HttpError(404, 'unknown difficulty: ' + id + '（可用：' + config.difficultyIds().join(' / ') + '）');
+  }
+  return { ...config.setDifficulty(id), current: true };
+}
+
 /** 复位控制相位与循环控制状态（测试用）。 */
 export function __reset() {
   phase = 'idle';
   cycle.__reset();
+  config.setDifficulty('standard');
 }
 
 /** 本模块 HTTP 路由表。 */
@@ -82,4 +123,7 @@ export const routes = [
   { method: 'POST', path: '/api/v1/sim/start', handler: ({ body }) => start(body ?? {}) },
   { method: 'POST', path: '/api/v1/sim/pause', handler: () => pause() },
   { method: 'POST', path: '/api/v1/sim/step', handler: ({ body }) => step(body ?? {}) },
+  { method: 'GET', path: '/api/v1/sim/difficulties', handler: () => listDifficulties() },
+  { method: 'GET', path: '/api/v1/sim/difficulty', handler: () => getDifficulty() },
+  { method: 'POST', path: '/api/v1/sim/difficulty', handler: ({ body }) => setDifficulty((body ?? {}).id ?? (body ?? {}).difficulty) },
 ];

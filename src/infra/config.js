@@ -41,6 +41,117 @@ export const DEFAULTS = Object.freeze({
 export function defaults() {
   return structuredClone(DEFAULTS);
 }
+// ---- 难度档位预设（产品化：把 needGrowth 与采集池暴露为可切换档位） ----
+
+/**
+ * 四档难度预设。standard 档参数严格等于 DEFAULTS 对应字段，保证既有行为不变；
+ * 其余各档给出实测预期存活表现（引用 reports/bench-tuned.md 与 t33 验收数据）。
+ */
+export const DIFFICULTY_PRESETS = Object.freeze({
+  peaceful: Object.freeze({
+    label: '和平 / Peaceful',
+    expected: '50 居民默认局稳定存活 200 tick 且资源富余（needGrowth 0.04 < 生存阈值约 0.06）',
+    params: Object.freeze({
+      needGrowth: Object.freeze({ food: 0.04, water: 0.04 }),
+      eventProbability: 0.15,
+      foragePoolCapacity: 40,
+      forageRegen: 12,
+      foragePoolPerCapita: 1.5,
+      forageRegenPerCapita: 0.2,
+    }),
+  }),
+  standard: Object.freeze({
+    label: '标准 / Standard',
+    expected: '50 居民默认局存活 200 tick（t33：needGrowth 0.08 死亡 tick 中位 200）；当前默认档',
+    params: Object.freeze({
+      needGrowth: Object.freeze({ food: DEFAULTS.needGrowth.food, water: DEFAULTS.needGrowth.water }),
+      eventProbability: DEFAULTS.eventProbability,
+      foragePoolCapacity: DEFAULTS.foragePoolCapacity,
+      forageRegen: DEFAULTS.forageRegen,
+      foragePoolPerCapita: DEFAULTS.foragePoolPerCapita,
+      forageRegenPerCapita: DEFAULTS.forageRegenPerCapita,
+    }),
+  }),
+  harsh: Object.freeze({
+    label: '严酷 / Harsh',
+    expected: '50 居民约 33~46 tick 全灭（t33：needGrowth 0.12 死亡 tick 中位 33~46）',
+    params: Object.freeze({
+      needGrowth: Object.freeze({ food: 0.12, water: 0.12 }),
+      eventProbability: 0.3,
+      foragePoolCapacity: 30,
+      forageRegen: 8,
+      foragePoolPerCapita: 1.0,
+      forageRegenPerCapita: 0.15,
+    }),
+  }),
+  apocalyptic: Object.freeze({
+    label: '末日 / Apocalyptic',
+    expected: '50 居民约 17~19 tick 全灭（t33：needGrowth 0.16 死亡 tick 中位 19）',
+    params: Object.freeze({
+      needGrowth: Object.freeze({ food: 0.16, water: 0.16 }),
+      eventProbability: 0.3,
+      foragePoolCapacity: 30,
+      forageRegen: 8,
+      foragePoolPerCapita: 1.0,
+      forageRegenPerCapita: 0.15,
+    }),
+  }),
+});
+
+/** 全部可用档位 id（按定义顺序）。 */
+export function difficultyIds() {
+  return Object.keys(DIFFICULTY_PRESETS);
+}
+
+/** 返回全部档位深拷贝（含 label/expected/params）。 */
+export function difficultyPresets() {
+  return structuredClone(DIFFICULTY_PRESETS);
+}
+
+/**
+ * 返回指定档位的运行参数深拷贝（仅 params），未知档位返回 null。
+ * @param {string} id
+ * @returns {object|null}
+ */
+export function difficultyParams(id) {
+  const preset = DIFFICULTY_PRESETS[id];
+  return preset ? structuredClone(preset.params) : null;
+}
+
+/** 当前档位 id（默认 standard，保证既有行为不变）。 */
+let currentDifficultyId = 'standard';
+
+/** 当前档位快照 { id, label, expected, params }。 */
+export function getDifficulty() {
+  const preset = DIFFICULTY_PRESETS[currentDifficultyId];
+  return {
+    id: currentDifficultyId,
+    label: preset.label,
+    expected: preset.expected,
+    params: structuredClone(preset.params),
+  };
+}
+
+/**
+ * 切换当前档位（校验 id，未知档位抛 RangeError）。
+ * @param {string} id
+ * @returns {object} 切换后的档位快照
+ */
+export function setDifficulty(id) {
+  if (!DIFFICULTY_PRESETS[id]) {
+    throw new RangeError(
+      'config: 未知难度档位「' + String(id) + '」（可用：' + difficultyIds().join(' / ') + '）',
+    );
+  }
+  currentDifficultyId = id;
+  return getDifficulty();
+}
+
+/** 当前档位的运行参数（供 loop 作为基础参数叠加，深拷贝）。 */
+export function currentDifficultyParams() {
+  return structuredClone(DIFFICULTY_PRESETS[currentDifficultyId].params);
+}
+
 
 // ---- 校验 ----
 
@@ -218,4 +329,5 @@ export function get(key) {
 /** 复位底层 graph store（测试 / 复位用，会清空图内全部节点）。 */
 export function __reset() {
   graph.__reset();
+  currentDifficultyId = 'standard';
 }
