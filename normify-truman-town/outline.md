@@ -4,7 +4,7 @@
 
 ## truman-town
 
-- truman-town [计划] — 楚门小镇智能体沙盘 / Truman Town Agent Sandbox — 核战争后 LinYi 号避难所的自治沙盘：居民在资源与生存压力下自行发展，拥有背包与制作能力，智能体决策受心理状态影响，社会涌现治理与文化，文明通过技术与遗物积… — [模块 227 · API 355]
+- truman-town [计划] — 楚门小镇智能体沙盘 / Truman Town Agent Sandbox — 核战争后 LinYi 号避难所的自治沙盘：居民在资源与生存压力下自行发展，拥有背包与制作能力，智能体决策受心理状态影响，社会涌现治理与文化，文明通过技术与遗物积… — [模块 227 · API 358]
   - truman-town.agent [计划] — 智能体核心 / Agent Core — 智能体的完整心智与行为模型：人设、50 标签特质、心理、日程、行动预想池、背包与制作、决策、记忆、生命周期与社会角色。 — [模块 51 · API 75]
     - truman-town.agent.anticipation [计划] — 行动预想池 / Anticipation Pool — 为智能体维护候选行动集合，并通过模拟评分选择下一步。 — [模块 6 · API 8]
       - truman-town.agent.anticipation.pool [计划] — 预想池实现 / Anticipation Pool Implementation — 增删与修剪候选行动，保持预想池新鲜且可执行。 — [模块 4 · API 6]
@@ -93,10 +93,10 @@
       - truman-town.civilization.tech.lock — 技术遗忘 / Tech Loss — 当掌握者死亡且无人继承时，技术节点被锁定甚至遗忘。 — [模块 1 · API 2]
       - truman-town.civilization.tech.research — 研究 / Research — 由工程师、医生等职业角色推进研究进度并完成技术突破。 — [模块 1 · API 3]
       - truman-town.civilization.tech.tree — 技术树 / Tech Tree — 查询、解锁与锁定净水、温室、发电、医疗、通信等技术节点。 — [模块 1 · API 3]
-  - truman-town.economy [计划] — 经济系统 / Economy — 小镇内循环经济：账户、交易、市场、产业、银行、破产与税收。 — [模块 21 · API 29]
-    - truman-town.economy.bank [计划] — 银行 / Bank — 提供信贷与利息，形成资金跨期配置。 — [模块 3 · API 3]
-      - truman-town.economy.bank.credit [计划] — 信贷 / Credit — 申请与偿还贷款，支持创业与消费。 — [模块 1 · API 2]
-      - truman-town.economy.bank.interest [计划] — 利息 / Interest — 按账户余额与贷款计息并结算。 — [模块 1 · API 1]
+  - truman-town.economy — 经济系统 / Economy — 小镇内循环经济：账户、交易、市场、产业、银行、破产与税收。 — [模块 21 · API 32]
+    - truman-town.economy.bank — 银行 / Bank — 提供信贷与利息，形成资金跨期配置。 — [模块 3 · API 5]
+      - truman-town.economy.bank.credit — 信贷 / Credit — 申请与偿还贷款，支持创业与消费。 — [模块 1 · API 3]
+      - truman-town.economy.bank.interest — 利息 / Interest — 按账户余额与贷款计息并结算。 — [模块 1 · API 2]
     - truman-town.economy.bankruptcy — 破产清算 / Bankruptcy — 对资不抵债的智能体或企业启动破产与清算。 — [模块 1 · API 2]
     - truman-town.economy.industry [计划] — 产业系统 / Industry — 智能体可创办和经营企业，雇佣劳动并组织生产。 — [模块 4 · API 7]
       - truman-town.economy.industry.business — 企业 / Business — 创办、运营与关闭企业，构成小镇产业组成。 — [模块 1 · API 3]
@@ -113,7 +113,7 @@
         - truman-town.economy.market.orderbook.matching — 撮合引擎 / Matching Engine — 撮合买卖订单并调用账本结算。 — [模块 1 · API 2]
         - truman-town.economy.market.orderbook.orders — 订单管理 / Order Manager — 挂单与撤单，维护买卖订单集合。 — [模块 1 · API 2]
       - truman-town.economy.market.price — 价格发现 / Price Discovery — 报价并依据供需更新价格。 — [模块 1 · API 2]
-    - truman-town.economy.tax [计划] — 税收与再分配 / Taxation — 征收税款并再分配以维持公共设施与福利。 — [模块 1 · API 2]
+    - truman-town.economy.tax — 税收与再分配 / Taxation — 征收税款并再分配以维持公共设施与福利。 — [模块 1 · API 3]
   - truman-town.genesis [计划] — 创世与更新 / Genesis & Renewal — 生成初始小镇与智能体，并通过遗传与提示词组装实现代际更新。 — [模块 9 · API 11]
     - truman-town.genesis.agent-factory [计划] — 智能体工厂 / Agent Factory — 从模板与组装流程创建可运行的新智能体。 — [模块 3 · API 4]
       - truman-town.genesis.agent-factory.assemble [计划] — 智能体组装 / Agent Assembly — 组装并注册新智能体到沙盘运行时。 — [模块 1 · API 2]

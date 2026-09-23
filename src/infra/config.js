@@ -35,6 +35,11 @@ export const DEFAULTS = Object.freeze({
   forageRegen: 8,
   foragePoolPerCapita: 1.0,
   forageRegenPerCapita: 0.15,
+  bankCapital: 500,
+  creditRate: 0.01,
+  interestMode: 'simple',
+  taxRate: 0.002,
+  taxInterval: 20,
 });
 
 /** 返回默认值深拷贝快照。 */
@@ -208,6 +213,11 @@ const RULES = {
   forageRegen: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
   foragePoolPerCapita: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
   forageRegenPerCapita: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
+  bankCapital: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
+  creditRate: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
+  interestMode: (v) => ((v === 'simple' || v === 'compound') ? true : "必须是 'simple' 或 'compound'"),
+  taxRate: (v) => (isUnit(v) ? true : '必须是 [0,1] 区间数值'),
+  taxInterval: (v) => (isPosInt(v) ? true : '必须是正整数'),
 };
 
 /**

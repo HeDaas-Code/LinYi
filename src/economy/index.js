@@ -9,6 +9,8 @@ export * as ledger from './ledger/index.js';
 export * as market from './market/index.js';
 export * as industry from './industry/index.js';
 export * as bankruptcy from './bankruptcy.js';
+export * as bank from './bank/index.js';
+export * as tax from './tax.js';
 
 import * as graph from '../infra/store/graph.js';
 import * as identity from '../infra/identity.js';
@@ -16,6 +18,9 @@ import * as pubsub from '../infra/events/pubsub.js';
 import { __reset as resetValidator } from './ledger/transaction/validator.js';
 import { __reset as resetRecorder } from './ledger/transaction/recorder.js';
 import { __reset as resetPrice } from './market/price.js';
+import { __reset as resetCredit } from './bank/credit.js';
+import { __reset as resetInterest } from './bank/interest.js';
+import { __reset as resetTax } from './tax.js';
 
 /** 复位经济状态（测试用）。 */
 export function __reset() {
@@ -25,4 +30,7 @@ export function __reset() {
   resetValidator();
   resetRecorder();
   resetPrice();
+  resetCredit();
+  resetInterest();
+  resetTax();
 }

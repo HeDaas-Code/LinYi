@@ -15,6 +15,7 @@ import * as identity from '../infra/identity.js';
 import * as store from './_store.js';
 import * as ledger from './ledger/index.js';
 import * as pubsub from '../infra/events/pubsub.js';
+import * as bank from './bank/index.js';
 
 function assertId(id, what) {
   if (typeof id !== 'string' || id.trim() === '') throw new TypeError('bankruptcy: ' + what + ' 必须为非空字符串');
@@ -119,7 +120,22 @@ export function liquidate(input = {}) {
         } catch { /* 账户不可用则跳过 */ }
       }
     }
-    // 3) 剩余归还创始人
+    // 3) 清偿银行贷款（债权人优先于创始人权益，保持 t39 工资优先规则）
+    for (const loan of bank.credit.listByBorrower(biz.data.businessId)) {
+      const amount = Math.min(loan.outstanding, proceeds);
+      if (amount > 0) {
+        try {
+          const paid = bank.credit.repay({ loanId: loan.loanId, amount, tick: input?.tick });
+          distribution.push({ to: 'bank', kind: 'loan', amount: paid.paid });
+          proceeds -= paid.paid;
+        } catch { /* 余额不足则跳过 */ }
+      }
+      const after = bank.credit.get(loan.loanId);
+      if (after !== null && after.status === 'active' && after.outstanding > 0) {
+        bank.credit.markDefault({ loanId: loan.loanId });
+      }
+    }
+    // 4) 剩余归还创始人
     const founder = biz.data.founderId;
     const founderAcct = founder ? resolveAgentAccount(founder) : null;
     const remaining = Math.min(proceeds, ledger.account.balance(biz.data.accountId) ?? 0);

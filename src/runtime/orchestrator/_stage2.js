@@ -42,6 +42,10 @@ let businessIds = [];
 let goodsProduced = 0;
 let wagesPaid = 0;
 let bankruptcies = 0;
+let creditIssued = 0;
+let interestAccrued = 0;
+let taxCollected = 0;
+let taxRedistributed = 0;
 
 function sortedPairKey(a, b) {
   return a < b ? a + ':' + b : b + ':' + a;
@@ -93,6 +97,10 @@ export function seed(agents, config = {}) {
   goodsProduced = 0;
   wagesPaid = 0;
   bankruptcies = 0;
+  creditIssued = 0;
+  interestAccrued = 0;
+  taxCollected = 0;
+  taxRedistributed = 0;
 
   // 1) town：初始避难所 + 居住分配
   const shelter = town.building.structure.spawnShelter();
@@ -156,6 +164,19 @@ export function seed(agents, config = {}) {
   for (let i = 0; i < businessIds.length && agents.length > 2; i += 1) {
     const emp = agents[(i + 2) % agents.length];
     economy.industry.labour.hire({ businessId: businessIds[i], agentId: emp.id, wage, role: 'worker' });
+  }
+
+  // 6) bank + tax：开设金库/税收池，向首家企业发放示范贷款（真实转账，不造钱）
+  const bankCapital = (typeof config.bankCapital === 'number' && config.bankCapital >= 0) ? config.bankCapital : 500;
+  const creditRate = (typeof config.creditRate === 'number' && config.creditRate >= 0) ? config.creditRate : 0.01;
+  const loanPrincipal = (typeof config.loanPrincipal === 'number' && config.loanPrincipal >= 0) ? config.loanPrincipal : 100;
+  economy.bank.credit.open({ capital: bankCapital });
+  economy.tax.open({});
+  if (businessIds.length > 0 && loanPrincipal > 0) {
+    try {
+      const loan = economy.bank.credit.apply({ borrowerId: businessIds[0], borrowerType: 'business', principal: loanPrincipal, rate: creditRate, term: 0, tick: 0 });
+      creditIssued += loan.principal;
+    } catch { /* 金库未开或账户不可用则跳过 */ }
   }
 
   return {
@@ -328,6 +349,38 @@ function runIndustry(tick, agents, config = {}) {
   return result;
 }
 
+/**
+ * 财政经济每 tick：对全部在途贷款计息（债务增长，不触碰账户余额），
+ * 并按周期征税（余额税率）与再分配（按人头），均经 ledger 真实转账。
+ */
+function runFiscal(tick, agents, config = {}) {
+  const result = { creditIssued: 0, interestAccrued: 0, taxCollected: 0, taxRedistributed: 0 };
+  const interestMode = config.interestMode === 'compound' ? 'compound' : 'simple';
+  const creditRate = (typeof config.creditRate === 'number' && config.creditRate >= 0) ? config.creditRate : 0.01;
+  const taxRate = (typeof config.taxRate === 'number' && config.taxRate >= 0 && config.taxRate <= 1) ? config.taxRate : 0.002;
+  const taxInterval = (Number.isInteger(config.taxInterval) && config.taxInterval > 0) ? config.taxInterval : 20;
+
+  // 1) 每 tick 计息
+  const accruals = economy.bank.interest.accrueAll({ mode: interestMode, rate: creditRate, tick });
+  result.interestAccrued = accruals.reduce((s, a) => s + a.interest, 0);
+  interestAccrued += result.interestAccrued;
+
+  // 2) 按周期征税与再分配
+  if (tick > 0 && tick % taxInterval === 0) {
+    try {
+      const collected = economy.tax.collect({ rate: taxRate, base: 'balance', tick });
+      result.taxCollected = collected.collected;
+      taxCollected += collected.collected;
+    } catch { /* 池未开则跳过 */ }
+    try {
+      const redistributed = economy.tax.redistribute({ mode: 'per_capita', tick });
+      result.taxRedistributed = redistributed.redistributed;
+      taxRedistributed += redistributed.redistributed;
+    } catch { /* 池未开则跳过 */ }
+  }
+  return result;
+}
+
 function pendingFor(queue, agentId) {
   return queue.pending().some((j) => j.agentId === agentId);
 }
@@ -440,6 +493,7 @@ export function tick({ tick, agents, config = {}, spawnChild }) {
     procreation: runProcreation(tick, agents, spawnChild, config),
     market: runMarket(tick, agents, config),
     industry: runIndustry(tick, agents, config),
+    fiscal: runFiscal(tick, agents, config),
     crafting: runCrafting(tick, agents),
     residence: runResidence(tick, agents),
     health: runHealth(tick, agents, config),
@@ -460,6 +514,10 @@ export function summary() {
     goodsProduced,
     wagesPaid,
     bankruptcies,
+    creditIssued,
+    interestAccrued,
+    taxCollected,
+    taxRedistributed,
   };
 }
 
@@ -480,6 +538,10 @@ export function __reset() {
   goodsProduced = 0;
   wagesPaid = 0;
   bankruptcies = 0;
+  creditIssued = 0;
+  interestAccrued = 0;
+  taxCollected = 0;
+  taxRedistributed = 0;
 
   economy.__reset();
   agent.inventory.item.__reset();

@@ -2,33 +2,50 @@
 uid: c1181620
 id: truman-town.economy.tax
 parent: truman-town.economy
-state: planned
 name: {zh: "税收与再分配", en: "Taxation"}
 description:
   zh: >
       征收税款并再分配以维持公共设施与福利。
+      
   en: >
       Collects and redistributes taxes for public goods and welfare.
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T04:32:53Z"
-fingerprint: pending
-source: []
+      
+revision: 291c1bea8967e3110e48250864e71452d803a9bf
+updated_at: "2026-09-23T13:07:29.470Z"
+fingerprint: dac5aa0127d28839bcf24bb5a6c3f0c68206201754e33d0479622dcb31e1cd0f
+source:
+  - path: "src/economy/tax.js"
 apis:
   - protocol: rpc
     path: "economy.tax.collect"
     description:
       zh: >
-          调用 economy.tax.collect。
+          按余额/交易征税并转入税收池（真实转账）。
+          
       en: >
-          Calls economy.tax.collect.
+          Collects tax on balances/transactions into the pool.
+          
   - protocol: rpc
     path: "economy.tax.redistribute"
     description:
       zh: >
-          调用 economy.tax.redistribute。
+          把税收池余额按人头或公共支出再分配（守恒）。
+          
       en: >
-          Calls economy.tax.redistribute.
+          Redistributes the tax pool per capita or to public spending.
+          
+  - protocol: rpc
+    path: "economy.tax.open"
+    description:
+      zh: >
+          开设税收池账户（余额 0）。
+          
+      en: >
+          Opens the tax pool account (balance 0).
+          
 deps:
   - kind: call
     to: truman-town.economy.ledger.account
+  - kind: call
+    to: truman-town.economy.ledger.transaction.recorder
 ---

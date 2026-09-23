@@ -163,17 +163,17 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "root_uid": "d440391b"
       }
     ],
-    "compiled_at": "2026-09-23T12:17:32.540Z",
+    "compiled_at": "2026-09-23T13:09:15.349Z",
     "stats": {
       "tree_count": 1,
       "module_count": 227,
       "leaf_count": 158,
-      "api_count": 355,
-      "dep_count": 336,
+      "api_count": 358,
+      "dep_count": 338,
       "cross_tree_dep_count": 0,
       "max_depth": 5,
       "layout_count": 69,
-      "planned_count": 111,
+      "planned_count": 106,
       "deprecated_count": 0,
       "policy_rule_count": 2,
       "change_count": 5,
@@ -203,7 +203,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "aggregate": {
         "descendant_count": 226,
         "own_api_count": 0,
-        "inherited_api_count": 355,
+        "inherited_api_count": 358,
         "dep_out": 0,
         "dep_in": 0
       }
@@ -4764,7 +4764,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town",
       "tree": "truman-town",
       "depth": 2,
-      "state": "planned",
       "name": {
         "zh": "经济系统",
         "en": "Economy"
@@ -4775,12 +4774,12 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
+      "updated_at": "2026-09-23T13:07:29.470Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 20,
         "own_api_count": 0,
-        "inherited_api_count": 29,
+        "inherited_api_count": 32,
         "dep_out": 0,
         "dep_in": 0
       }
@@ -4791,7 +4790,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.economy",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "银行",
         "en": "Bank"
@@ -4802,12 +4800,12 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
+      "updated_at": "2026-09-23T13:07:29.470Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 2,
         "own_api_count": 0,
-        "inherited_api_count": 3,
+        "inherited_api_count": 5,
         "dep_out": 0,
         "dep_in": 0
       }
@@ -4818,7 +4816,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.economy.bank",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "信贷",
         "en": "Credit"
@@ -4827,17 +4824,21 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "申请与偿还贷款，支持创业与消费。\n",
         "en": "Applies for and repays loans for business and consumption.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/economy/bank/credit.js"
+        }
+      ],
+      "revision": "291c1bea8967e3110e48250864e71452d803a9bf",
+      "updated_at": "2026-09-23T13:07:29.469Z",
+      "fingerprint": "12b300e4b8008f79a80957c37f633c3ce5a1f936e3da09ad1d9fab51e4668a4b",
       "apis": [
         {
           "protocol": "rpc",
           "path": "economy.bank.credit.apply",
           "description": {
-            "zh": "调用 economy.bank.credit.apply。\n",
-            "en": "Calls economy.bank.credit.apply.\n"
+            "zh": "申请贷款（银行金库→借款人真实转账，记录额度/期限/状态）。\n",
+            "en": "Applies for a loan (bank-treasury-to-borrower transfer, records principal/term/status).\n"
           },
           "key": "rpc:economy.bank.credit.apply"
         },
@@ -4845,10 +4846,19 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "protocol": "rpc",
           "path": "economy.bank.credit.repay",
           "description": {
-            "zh": "调用 economy.bank.credit.repay。\n",
-            "en": "Calls economy.bank.credit.repay.\n"
+            "zh": "偿还贷款（借款人→银行金库真实转账）。\n",
+            "en": "Repays a loan (borrower-to-bank-treasury transfer).\n"
           },
           "key": "rpc:economy.bank.credit.repay"
+        },
+        {
+          "protocol": "rpc",
+          "path": "economy.bank.credit.open",
+          "description": {
+            "zh": "开设银行金库账户并注入初始资本。\n",
+            "en": "Opens the bank treasury account with initial capital.\n"
+          },
+          "key": "rpc:economy.bank.credit.open"
         }
       ],
       "deps": [
@@ -4856,14 +4866,19 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "kind": "call",
           "to": "truman-town.economy.ledger.account",
           "cross_tree": false
+        },
+        {
+          "kind": "call",
+          "to": "truman-town.economy.ledger.transaction.recorder",
+          "cross_tree": false
         }
       ],
       "aggregate": {
         "descendant_count": 0,
-        "own_api_count": 2,
+        "own_api_count": 3,
         "inherited_api_count": 0,
-        "dep_out": 1,
-        "dep_in": 0
+        "dep_out": 2,
+        "dep_in": 1
       }
     },
     "truman-town.economy.bank.interest": {
@@ -4872,7 +4887,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.economy.bank",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "利息",
         "en": "Interest"
@@ -4881,31 +4895,44 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "按账户余额与贷款计息并结算。\n",
         "en": "Accrues and settles interest on deposits and loans.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/economy/bank/interest.js"
+        }
+      ],
+      "revision": "291c1bea8967e3110e48250864e71452d803a9bf",
+      "updated_at": "2026-09-23T13:07:29.470Z",
+      "fingerprint": "585af047197f7eae9e6dca380c3fdd92a67cc86d43a91e1a3337c97dadca1ccc",
       "apis": [
         {
           "protocol": "rpc",
           "path": "economy.bank.interest.accrue",
           "description": {
-            "zh": "调用 economy.bank.interest.accrue。\n",
-            "en": "Calls economy.bank.interest.accrue.\n"
+            "zh": "对单笔贷款计息一次（单利/复利，仅增债务不造钱）。\n",
+            "en": "Accrues interest once on a loan (simple/compound, debt-only).\n"
           },
           "key": "rpc:economy.bank.interest.accrue"
+        },
+        {
+          "protocol": "rpc",
+          "path": "economy.bank.interest.accrueAll",
+          "description": {
+            "zh": "对全部在途贷款各计息一次。\n",
+            "en": "Accrues interest on all active loans.\n"
+          },
+          "key": "rpc:economy.bank.interest.accrueAll"
         }
       ],
       "deps": [
         {
-          "kind": "call",
-          "to": "truman-town.economy.ledger.account",
+          "kind": "reference",
+          "to": "truman-town.economy.bank.credit",
           "cross_tree": false
         }
       ],
       "aggregate": {
         "descendant_count": 0,
-        "own_api_count": 1,
+        "own_api_count": 2,
         "inherited_api_count": 0,
         "dep_out": 1,
         "dep_in": 0
@@ -4930,9 +4957,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/economy/bankruptcy.js"
         }
       ],
-      "revision": "f4968a009dccf5f3735a3f0d7a362ed5f05ff7bf",
-      "updated_at": "2026-09-23T12:16:51.980Z",
-      "fingerprint": "7fd7e67b04f6755055265817577d6638f0b606b3d4381f1e8c90dd50ed4e4b5e",
+      "revision": "291c1bea8967e3110e48250864e71452d803a9bf",
+      "updated_at": "2026-09-23T13:07:29.470Z",
+      "fingerprint": "2853258afa24c7951a72f965b565b413c5cb6986ecfa26ec6ba09ca47b984a30",
       "apis": [
         {
           "protocol": "rpc",
@@ -5284,7 +5311,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "own_api_count": 3,
         "inherited_api_count": 0,
         "dep_out": 1,
-        "dep_in": 7
+        "dep_in": 6
       }
     },
     "truman-town.economy.ledger.transaction": {
@@ -5441,7 +5468,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "own_api_count": 2,
         "inherited_api_count": 0,
         "dep_out": 2,
-        "dep_in": 1
+        "dep_in": 3
       }
     },
     "truman-town.economy.ledger.transaction.validator": {
@@ -5747,7 +5774,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.economy",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "税收与再分配",
         "en": "Taxation"
@@ -5756,17 +5782,21 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "征收税款并再分配以维持公共设施与福利。\n",
         "en": "Collects and redistributes taxes for public goods and welfare.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/economy/tax.js"
+        }
+      ],
+      "revision": "291c1bea8967e3110e48250864e71452d803a9bf",
+      "updated_at": "2026-09-23T13:07:29.470Z",
+      "fingerprint": "dac5aa0127d28839bcf24bb5a6c3f0c68206201754e33d0479622dcb31e1cd0f",
       "apis": [
         {
           "protocol": "rpc",
           "path": "economy.tax.collect",
           "description": {
-            "zh": "调用 economy.tax.collect。\n",
-            "en": "Calls economy.tax.collect.\n"
+            "zh": "按余额/交易征税并转入税收池（真实转账）。\n",
+            "en": "Collects tax on balances/transactions into the pool.\n"
           },
           "key": "rpc:economy.tax.collect"
         },
@@ -5774,10 +5804,19 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "protocol": "rpc",
           "path": "economy.tax.redistribute",
           "description": {
-            "zh": "调用 economy.tax.redistribute。\n",
-            "en": "Calls economy.tax.redistribute.\n"
+            "zh": "把税收池余额按人头或公共支出再分配（守恒）。\n",
+            "en": "Redistributes the tax pool per capita or to public spending.\n"
           },
           "key": "rpc:economy.tax.redistribute"
+        },
+        {
+          "protocol": "rpc",
+          "path": "economy.tax.open",
+          "description": {
+            "zh": "开设税收池账户（余额 0）。\n",
+            "en": "Opens the tax pool account (balance 0).\n"
+          },
+          "key": "rpc:economy.tax.open"
         }
       ],
       "deps": [
@@ -5785,13 +5824,18 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "kind": "call",
           "to": "truman-town.economy.ledger.account",
           "cross_tree": false
+        },
+        {
+          "kind": "call",
+          "to": "truman-town.economy.ledger.transaction.recorder",
+          "cross_tree": false
         }
       ],
       "aggregate": {
         "descendant_count": 0,
-        "own_api_count": 2,
+        "own_api_count": 3,
         "inherited_api_count": 0,
-        "dep_out": 1,
+        "dep_out": 2,
         "dep_in": 0
       }
     },
@@ -6252,9 +6296,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/infra/config.js"
         }
       ],
-      "revision": "da6092c786d6c0615331ed8d297d5c0d6a2fa45a",
-      "updated_at": "2026-09-23T12:13:27.593Z",
-      "fingerprint": "2b5525483124e9b7913757a5d579c217b10aa99daa3b81545d027739a95b9fcd",
+      "revision": "291c1bea8967e3110e48250864e71452d803a9bf",
+      "updated_at": "2026-09-23T13:09:15.152Z",
+      "fingerprint": "7b461307a717d7e7ba30eeb34e2669789fae9b0a2ec92e11d7a2609e88e03da1",
       "apis": [
         {
           "protocol": "rpc",
@@ -12405,8 +12449,10 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
     "rpc:civilization.tech.tree.query": "truman-town.civilization.tech.tree",
     "rpc:civilization.tech.tree.unlock": "truman-town.civilization.tech.tree",
     "rpc:economy.bank.credit.apply": "truman-town.economy.bank.credit",
+    "rpc:economy.bank.credit.open": "truman-town.economy.bank.credit",
     "rpc:economy.bank.credit.repay": "truman-town.economy.bank.credit",
     "rpc:economy.bank.interest.accrue": "truman-town.economy.bank.interest",
+    "rpc:economy.bank.interest.accrueAll": "truman-town.economy.bank.interest",
     "rpc:economy.bankruptcy.file": "truman-town.economy.bankruptcy",
     "rpc:economy.bankruptcy.liquidate": "truman-town.economy.bankruptcy",
     "rpc:economy.industry.business.close": "truman-town.economy.industry.business",
@@ -12432,6 +12478,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
     "rpc:economy.market.price.quote": "truman-town.economy.market.price",
     "rpc:economy.market.price.update": "truman-town.economy.market.price",
     "rpc:economy.tax.collect": "truman-town.economy.tax",
+    "rpc:economy.tax.open": "truman-town.economy.tax",
     "rpc:economy.tax.redistribute": "truman-town.economy.tax",
     "rpc:genesis.agent_factory.assemble.create": "truman-town.genesis.agent-factory.assemble",
     "rpc:genesis.agent_factory.assemble.register": "truman-town.genesis.agent-factory.assemble",
@@ -13414,9 +13461,15 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "cross_tree": false
     },
     {
-      "from": "truman-town.economy.bank.interest",
-      "to": "truman-town.economy.ledger.account",
+      "from": "truman-town.economy.bank.credit",
+      "to": "truman-town.economy.ledger.transaction.recorder",
       "kind": "call",
+      "cross_tree": false
+    },
+    {
+      "from": "truman-town.economy.bank.interest",
+      "to": "truman-town.economy.bank.credit",
+      "kind": "reference",
       "cross_tree": false
     },
     {
@@ -13548,6 +13601,12 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
     {
       "from": "truman-town.economy.tax",
       "to": "truman-town.economy.ledger.account",
+      "kind": "call",
+      "cross_tree": false
+    },
+    {
+      "from": "truman-town.economy.tax",
+      "to": "truman-town.economy.ledger.transaction.recorder",
       "kind": "call",
       "cross_tree": false
     },

@@ -14,6 +14,7 @@ export const TYPES = {
   business: 'economy.business',
   production: 'economy.production',
   bankruptcy: 'economy.bankruptcy',
+  loan: 'economy.loan',
 };
 
 export function readAccount(accountId) {
@@ -86,6 +87,18 @@ export function listBankruptcies() {
 
 export function writeBankruptcy(caseId, data) {
   return graph.write({ id: caseId, type: TYPES.bankruptcy, data });
+}
+
+export function readLoan(loanId) {
+  return graph.read(loanId);
+}
+
+export function listLoans() {
+  return graph.read({ type: TYPES.loan });
+}
+
+export function writeLoan(loanId, data) {
+  return graph.write({ id: loanId, type: TYPES.loan, data });
 }
 
 /**
