@@ -15,6 +15,23 @@ import * as pressureScorer from '../../survival/needs/pressure/scorer.js';
 const TYPE = 'psyche.trauma';
 const PREFIX = 'psyche:trauma:';
 
+/**
+ * 创伤事件历史（agentId → 事件数组）。独立于 graph 节点存放，避免 graph.read/write
+ * 每次深拷贝整段事件历史导致的 O(t²) 增长；graph 节点只保存 { agentId, level }。
+ */
+const eventsByAgent = new Map();
+
+/** graph 复位代数：graph 被上层直接 __reset 时使本索引失效。 */
+let lastGeneration = -1;
+
+function ensureFresh() {
+  const gen = graph.__generation();
+  if (gen !== lastGeneration) {
+    eventsByAgent.clear();
+    lastGeneration = gen;
+  }
+}
+
 function clamp01(value) {
   return Math.max(0, Math.min(1, value));
 }
@@ -26,14 +43,18 @@ function assertAgentId(agentId) {
 }
 
 function load(agentId) {
+  ensureFresh();
   const node = graph.read(PREFIX + agentId);
-  if (node && node.data) return node.data;
-  return { agentId, level: 0, events: [] };
+  const events = eventsByAgent.get(agentId) ?? [];
+  if (node && node.data) return { ...node.data, events };
+  return { agentId, level: 0, events };
 }
 
 function save(state) {
-  graph.write({ id: PREFIX + state.agentId, type: TYPE, data: state });
-  return structuredClone(state);
+  ensureFresh();
+  const { events, ...rest } = state;
+  eventsByAgent.set(state.agentId, events);
+  graph.write({ id: PREFIX + state.agentId, type: TYPE, data: rest });
 }
 
 /**
@@ -78,7 +99,8 @@ export function add({ agentId, kind, severity = 0.1, source = null, ts } = {}) {
  */
 export function query({ agentId } = {}) {
   assertAgentId(agentId);
-  return structuredClone(load(agentId));
+  // load 已返回 graph.read 的深拷贝（或全新空状态），无需二次 structuredClone。
+  return load(agentId);
 }
 
 /**
@@ -121,7 +143,9 @@ export function accumulate({ agentId, rate = 0.2 } = {}) {
   return { agentId, level: result.level, pressure: pressure.normalized, added: severity, event: result.event };
 }
 
-/** 复位底层 graph store（测试用）。 */
+/** 复位底层 graph store 与事件索引（测试用）。 */
 export function __reset() {
+  eventsByAgent.clear();
   graph.__reset();
+  lastGeneration = graph.__generation();
 }

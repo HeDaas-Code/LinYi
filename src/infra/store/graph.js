@@ -14,6 +14,12 @@
 /** @type {Map<string, GraphNode>} */
 const nodes = new Map();
 
+/** @type {Map<string, Set<string>>} type → ids 索引，让 read({ type }) 免全量扫描。 */
+const byType = new Map();
+
+/** 复位代数：每次 __reset 自增，供上层派生索引检测失效。 */
+let generation = 0;
+
 function clone(value) {
   return value === undefined ? undefined : structuredClone(value);
 }
@@ -56,7 +62,15 @@ export function write(record) {
     data: clone(record.data ?? {}),
     edges: clone(record.edges ?? []),
   };
+  const prev = nodes.get(record.id);
+  if (prev && prev.type !== null && byType.has(prev.type)) {
+    byType.get(prev.type).delete(record.id);
+  }
   nodes.set(record.id, node);
+  if (node.type !== null) {
+    if (!byType.has(node.type)) byType.set(node.type, new Set());
+    byType.get(node.type).add(record.id);
+  }
   return clone(node);
 }
 
@@ -82,7 +96,9 @@ export function read(query) {
     return node === undefined ? null : clone(node);
   }
   if (typeof query.type === 'string') {
-    return clone([...nodes.values()].filter((n) => n.type === query.type));
+    const ids = byType.get(query.type);
+    if (ids === undefined || ids.size === 0) return clone([]);
+    return clone([...ids].map((id) => nodes.get(id)));
   }
   return clone([...nodes.values()]);
 }
@@ -90,4 +106,11 @@ export function read(query) {
 /** 清空全部节点（测试 / 复位用）。 */
 export function __reset() {
   nodes.clear();
+  byType.clear();
+  generation += 1;
+}
+
+/** 返回当前复位代数（供派生索引判断是否需要失效重建）。 */
+export function __generation() {
+  return generation;
 }
