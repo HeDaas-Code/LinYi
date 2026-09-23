@@ -8,7 +8,7 @@
         "root_uid": "d440391b"
       }
     ],
-    "compiled_at": "2026-09-23T13:09:15.349Z",
+    "compiled_at": "2026-09-23T18:03:41.725Z",
     "stats": {
       "tree_count": 1,
       "module_count": 227,
@@ -4802,9 +4802,9 @@
           "path": "src/economy/bankruptcy.js"
         }
       ],
-      "revision": "291c1bea8967e3110e48250864e71452d803a9bf",
-      "updated_at": "2026-09-23T13:07:29.470Z",
-      "fingerprint": "2853258afa24c7951a72f965b565b413c5cb6986ecfa26ec6ba09ca47b984a30",
+      "revision": "6b38498fdd1486b9bde9ab17553cc89337c951fd",
+      "updated_at": "2026-09-23T18:02:19.899Z",
+      "fingerprint": "9e5ce2a1369ee20b2e2ed4d3917b4cef5a093210e0b040e656fae63b83f8c247",
       "apis": [
         {
           "protocol": "rpc",
@@ -4891,9 +4891,9 @@
           "path": "src/economy/industry/business.js"
         }
       ],
-      "revision": "f4968a009dccf5f3735a3f0d7a362ed5f05ff7bf",
-      "updated_at": "2026-09-23T12:16:51.980Z",
-      "fingerprint": "e11e4bee3f71fd00f27ef025880d4ace53dcc48bda67259248da806cac3342ba",
+      "revision": "6b38498fdd1486b9bde9ab17553cc89337c951fd",
+      "updated_at": "2026-09-23T18:02:19.899Z",
+      "fingerprint": "5e4754119a25e9f52f15689a5b15f75021bf3ab5a4d706b801454eab592203db",
       "apis": [
         {
           "protocol": "rpc",
@@ -6141,9 +6141,9 @@
           "path": "src/infra/config.js"
         }
       ],
-      "revision": "291c1bea8967e3110e48250864e71452d803a9bf",
-      "updated_at": "2026-09-23T13:09:15.152Z",
-      "fingerprint": "7b461307a717d7e7ba30eeb34e2669789fae9b0a2ec92e11d7a2609e88e03da1",
+      "revision": "6b38498fdd1486b9bde9ab17553cc89337c951fd",
+      "updated_at": "2026-09-23T18:02:19.900Z",
+      "fingerprint": "35153a0562eb9b6a42848612760495467045e9239411193313508d6d83e60b39",
       "apis": [
         {
           "protocol": "rpc",

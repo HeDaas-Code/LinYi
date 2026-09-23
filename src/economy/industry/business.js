@@ -24,6 +24,10 @@ function validNum(v, fallback) {
   return typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : fallback;
 }
 
+function validCount(v, fallback) {
+  return Number.isInteger(v) && v >= 0 ? v : fallback;
+}
+
 function load(businessId) {
   const node = store.readBusiness(businessId);
   return (node !== null && node.type === store.TYPES.business) ? node.data : null;
@@ -68,10 +72,12 @@ export function found(input = {}) {
 }
 
 /**
- * 每 tick 运营：卖出库存商品按 goodsPrice 计收入、写入账户余额，并判定资不抵债。
- * 工资支出由 labour.pay 单独执行（本方法只结算收入与偿债能力）。
- * @param {{ businessId: string, goodsPrice?: number, tick?: number }} input
- * @returns {object} 运营结果
+ * 每 tick 运营：把库存商品卖给「真实买方」（buyers 数组，逐户付款），
+ * 通过 economy.ledger.transaction 真实转账结转收入，绝不 applyBalance 凭空造钱。
+ * 未售出的商品保留在企业库存（inventory.goods），不计入收入。
+ * 工资支出由 labour.pay 单独执行（本方法只结算销售收入与偿债能力）。
+ * @param {{ businessId: string, goodsPrice?: number, buyers?: Array<{accountId:string, quantity?:number}>, tick?: number }} input
+ * @returns {object} 运营结果（revenue / sold / unsold / balance / insolvent / status）
  */
 export function operate(input = {}) {
   const businessId = assertId(input?.businessId, 'businessId');
@@ -80,14 +86,39 @@ export function operate(input = {}) {
   if (biz.status !== 'active') throw new Error('business_inactive: ' + businessId);
 
   const goodsPrice = validNum(input?.goodsPrice, 8);
-  const sold = biz.inventory?.goods ?? 0;
-  const revenue = sold * goodsPrice;
-  if (revenue > 0) store.applyBalance(biz.accountId, revenue);
-  biz.inventory = { goods: 0 };
+  const buyers = Array.isArray(input?.buyers) ? input.buyers : [];
+
+  let inventory = biz.inventory?.goods ?? 0;
+  let sold = 0;
+  let revenue = 0;
+
+  // 逐买方成交：买方账户余额不足则按可负担数量成交，交易失败则跳过。
+  for (const buyer of buyers) {
+    if (inventory <= 0) break;
+    const accountId = buyer?.accountId;
+    const qty = validCount(buyer?.quantity, 1);
+    if (typeof accountId !== 'string' || accountId.trim() === '' || qty <= 0) continue;
+    const balance = ledger.account.balance(accountId) ?? 0;
+    const affordable = Math.min(qty, Math.floor(balance / goodsPrice));
+    const units = Math.min(inventory, affordable);
+    if (units <= 0) continue;
+    try {
+      ledger.transaction.recorder.post({
+        from: accountId, to: biz.accountId, amount: units * goodsPrice, ref: 'goods_sale', memo: '购买商品',
+      });
+    } catch {
+      continue; // 转账失败（销户/余额变动），跳过该买方
+    }
+    inventory -= units;
+    sold += units;
+    revenue += units * goodsPrice;
+  }
+
+  biz.inventory = { goods: inventory };
 
   const balance = ledger.account.balance(biz.accountId) ?? 0;
   const insolvent = balance <= 0;
-  biz.history.push({ at: Date.now(), event: 'operate', revenue, balance, insolvent });
+  biz.history.push({ at: Date.now(), event: 'operate', revenue, sold, unsold: inventory, balance, insolvent });
   if (insolvent) {
     biz.status = 'insolvent';
     pubsub.publish('economy.business.insolvent', { businessId, balance });
@@ -96,6 +127,8 @@ export function operate(input = {}) {
   return {
     businessId,
     revenue,
+    sold,
+    unsold: inventory,
     balance,
     employees: biz.employees.length,
     insolvent,

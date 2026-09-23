@@ -10,9 +10,9 @@ description:
   en: >
       Files and liquidates insolvent agents or businesses.
       
-revision: 291c1bea8967e3110e48250864e71452d803a9bf
-updated_at: "2026-09-23T13:07:29.470Z"
-fingerprint: 2853258afa24c7951a72f965b565b413c5cb6986ecfa26ec6ba09ca47b984a30
+revision: 6b38498fdd1486b9bde9ab17553cc89337c951fd
+updated_at: "2026-09-23T18:02:19.899Z"
+fingerprint: 9e5ce2a1369ee20b2e2ed4d3917b4cef5a093210e0b040e656fae63b83f8c247
 source:
   - path: "src/economy/bankruptcy.js"
 apis:

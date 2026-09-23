@@ -25,13 +25,16 @@ test('business: 创办/运营/关闭', () => {
   assert.equal(b.premises.plotId, 'plot:food:' + b.businessId); // town.land 占位
   assert.equal(economy.ledger.account.balance(b.accountId), 200);
 
-  // 生产 2 件商品后运营卖出
+  // 生产 2 件商品后运营卖给真实买方（t42：收入来自买方转账，杜绝 applyBalance 印钞）
+  const buyer = economy.ledger.account.open({ ownerId: 'buyer', balance: 100 });
   const plan = production.plan({ businessId: b.businessId, output: 2, energyInput: 1, foodInput: 0 });
   production.output({ planId: plan.planId });
-  const op = business.operate({ businessId: b.businessId, goodsPrice: 8 });
+  const op = business.operate({ businessId: b.businessId, goodsPrice: 8, buyers: [{ accountId: buyer.accountId, quantity: 2 }] });
   assert.equal(op.revenue, 16);
+  assert.equal(op.sold, 2);
   assert.equal(op.balance, 216);
   assert.equal(op.insolvent, false);
+  assert.equal(economy.ledger.account.balance(buyer.accountId), 84);
 
   const closed = business.close({ businessId: b.businessId });
   assert.equal(closed.status, 'closed');
@@ -109,13 +112,15 @@ test('bankruptcy: 立案/清算（变卖库存→清偿欠薪→归还创始人�
   const f = bankruptcy.file({ subjectId: b.businessId, subjectType: 'business', threshold: 20 });
   assert.equal(f.filed, true);
 
-  // 清算：变卖 4 件×8=32 → 余额 37；先清偿欠薪 8，再归还创始人 29
-  const liq = bankruptcy.liquidate({ caseId: f.caseId, goodsPrice: 8 });
+  // 清算：变卖 4 件×8=32 给真实买方 → 余额 37；先清偿欠薪 8，再归还创始人 29
+  const liquidator = economy.ledger.account.open({ ownerId: 'liq', balance: 100 });
+  const liq = bankruptcy.liquidate({ caseId: f.caseId, goodsPrice: 8, buyerAccountId: liquidator.accountId });
   assert.equal(liq.status, 'liquidated');
   assert.ok(liq.distribution.some((d) => d.kind === 'wage' && d.to === 'w1' && d.amount === 8));
   assert.ok(liq.distribution.some((d) => d.kind === 'remainder' && d.to === 'boss' && d.amount === 29));
   assert.equal(economy.ledger.account.balance(worker.accountId), 8);
   assert.equal(economy.ledger.account.balance(founder.accountId), 29);
+  assert.equal(economy.ledger.account.balance(liquidator.accountId), 68);
   assert.equal(economy.ledger.account.balance(b.accountId), undefined); // 账户已销
   assert.equal(business.list().find((x) => x.businessId === b.businessId).status, 'closed');
 });

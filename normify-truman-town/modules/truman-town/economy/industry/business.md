@@ -10,9 +10,9 @@ description:
   en: >
       Founds, operates and closes businesses as town industries.
       
-revision: f4968a009dccf5f3735a3f0d7a362ed5f05ff7bf
-updated_at: "2026-09-23T12:16:51.980Z"
-fingerprint: e11e4bee3f71fd00f27ef025880d4ace53dcc48bda67259248da806cac3342ba
+revision: 6b38498fdd1486b9bde9ab17553cc89337c951fd
+updated_at: "2026-09-23T18:02:19.899Z"
+fingerprint: 5e4754119a25e9f52f15689a5b15f75021bf3ab5a4d706b801454eab592203db
 source:
   - path: "src/economy/industry/business.js"
 apis:

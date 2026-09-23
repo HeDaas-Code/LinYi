@@ -84,9 +84,9 @@ export function file(input = {}) {
 }
 
 /**
- * 清算：变卖企业库存 → 清偿员工欠薪 → 剩余归还创始人 → 关闭账户/企业。
- * 智能体主体仅关闭其账户。
- * @param {{ caseId: string, goodsPrice?: number, tick?: number }} input
+ * 清算：变卖企业库存（卖给真实买方，经 ledger.transaction 结转，无买方则核销）→
+ * 清偿员工欠薪 → 清偿贷款 → 剩余归还创始人 → 关闭账户/企业。智能体主体仅关闭其账户。
+ * @param {{ caseId: string, goodsPrice?: number, buyerAccountId?: string, tick?: number }} input
  * @returns {object} 清算结果
  */
 export function liquidate(input = {}) {
@@ -103,9 +103,13 @@ export function liquidate(input = {}) {
     if (biz === null) throw new Error('business_not_found: ' + rec.subjectId);
     const goodsPrice = validNum(input?.goodsPrice, 8);
     const goods = biz.data.inventory?.goods ?? 0;
-    // 1) 变卖库存商品，计入企业账户
-    if (goods > 0) {
-      try { store.applyBalance(biz.data.accountId, goods * goodsPrice); } catch { /* 账户不可用则忽略 */ }
+    // 1) 变卖库存商品给真实买方（真实转账结转；无买方或余额不足则核销库存）
+    if (goods > 0 && typeof input?.buyerAccountId === 'string' && input.buyerAccountId !== '') {
+      try {
+        ledger.transaction.recorder.post({
+          from: input.buyerAccountId, to: biz.data.accountId, amount: goods * goodsPrice, ref: 'bankruptcy_sale', memo: '破产变卖库存',
+        });
+      } catch { /* 买方余额不足则核销，不凭空造钱 */ }
     }
     proceeds = ledger.account.balance(biz.data.accountId) ?? 0;
 

@@ -17,6 +17,7 @@ import * as town from '../../town/index.js';
 import * as survival from '../../survival/index.js';
 import * as observer from '../../observer/index.js';
 import * as rng from '../../infra/rng.js';
+import * as configStore from '../../infra/config.js';
 
 
 const RESIDENCE_ID = 'dorm_a';
@@ -46,6 +47,14 @@ let creditIssued = 0;
 let interestAccrued = 0;
 let taxCollected = 0;
 let taxRedistributed = 0;
+/** 企业能源/原料成本汇集账户（town:supply，货币守恒：企业→供应池→居民）。 */
+let supplyAccountId = null;
+let goodsSold = 0;
+let businessRevenue = 0;
+let businessCosts = 0;
+let residentEnergyUsed = 0;
+let industryEnergyUsed = 0;
+let lossTicks = 0;
 
 function sortedPairKey(a, b) {
   return a < b ? a + ':' + b : b + ':' + a;
@@ -83,6 +92,9 @@ export function makeTags(agentIndex = 0, config = {}) {
  * @returns {object}
  */
 export function seed(agents, config = {}) {
+  // 与 loop.step 一致的配置合并（DEFAULTS + 难度档位 + 显式覆盖），
+  // 避免 seed 用硬编码回退值而 step 用 DEFAULTS，造成两侧参数不一致。
+  config = { ...configStore.defaults(), ...configStore.currentDifficultyParams(), ...(config ?? {}) };
   seeded = true;
   accounts = new Map();
   reproducedPairs.clear();
@@ -101,6 +113,13 @@ export function seed(agents, config = {}) {
   interestAccrued = 0;
   taxCollected = 0;
   taxRedistributed = 0;
+  supplyAccountId = null;
+  goodsSold = 0;
+  businessRevenue = 0;
+  businessCosts = 0;
+  residentEnergyUsed = 0;
+  industryEnergyUsed = 0;
+  lossTicks = 0;
 
   // 1) town：初始避难所 + 居住分配
   const shelter = town.building.structure.spawnShelter();
@@ -172,11 +191,15 @@ export function seed(agents, config = {}) {
   const loanPrincipal = (typeof config.loanPrincipal === 'number' && config.loanPrincipal >= 0) ? config.loanPrincipal : 100;
   economy.bank.credit.open({ capital: bankCapital });
   economy.tax.open({});
+  const supplyAcct = economy.ledger.account.open({ ownerId: 'town:supply', balance: 0 });
+  supplyAccountId = supplyAcct.accountId;
   if (businessIds.length > 0 && loanPrincipal > 0) {
-    try {
-      const loan = economy.bank.credit.apply({ borrowerId: businessIds[0], borrowerType: 'business', principal: loanPrincipal, rate: creditRate, term: 0, tick: 0 });
-      creditIssued += loan.principal;
-    } catch { /* 金库未开或账户不可用则跳过 */ }
+    for (const bid of businessIds) {
+      try {
+        const loan = economy.bank.credit.apply({ borrowerId: bid, borrowerType: 'business', principal: loanPrincipal, rate: creditRate, term: 0, tick: 0 });
+        creditIssued += loan.principal;
+      } catch { /* 金库未开或账户不可用则跳过 */ }
+    }
   }
 
   return {
@@ -277,48 +300,119 @@ function runMarket(tick, agents, config = {}) {
 }
 
 /**
- * 产业经济每 tick：生产 → 交易 → 发薪 → 结算（运营偿债）→ 破产检查。
- * 生产消耗能源（能源每 tick 再生），产出商品按 goodsPrice 卖出计收入，
- * 发薪经 ledger.transaction 真实转账，余额不足累计欠薪（不产生负余额），
- * 资不抵债或余额低于阈值则启动破产清算。
+ * 产业经济每 tick：生产（消耗能源）→ 供需随机定价 → 卖给真实买方（居民付款转账）→
+ * 支付成本（能源 + 原料采购 → 供应池；工资 → 员工，均经 ledger.transaction 真实转账）→
+ * 破产检查。能源消耗与存活人口挂钩（居民取暖/照明/制作 + 工业生产），无固定回路印钞。
  */
 function runIndustry(tick, agents, config = {}) {
-  const result = { produced: 0, revenue: 0, wages: 0, bankruptcies: 0 };
+  const result = { produced: 0, revenue: 0, costs: 0, wages: 0, sold: 0, bankruptcies: 0 };
   if (businessIds.length === 0) return result;
 
-  const goodsPrice = (typeof config.goodsPrice === 'number' && config.goodsPrice > 0) ? config.goodsPrice : 8;
+  const baseGoodsPrice = (typeof config.goodsPrice === 'number' && config.goodsPrice > 0) ? config.goodsPrice : 8;
   const productionOutput = (Number.isInteger(config.productionOutput) && config.productionOutput >= 0) ? config.productionOutput : 2;
-  const energyInput = (typeof config.energyInput === 'number' && config.energyInput >= 0) ? config.energyInput : 1;
-  const energyRegen = (typeof config.energyRegen === 'number' && config.energyRegen >= 0) ? config.energyRegen : 2;
+  const energyInput = (typeof config.energyInput === 'number' && config.energyInput >= 0) ? config.energyInput : 2;
+  const energyPrice = (typeof config.energyPrice === 'number' && config.energyPrice >= 0) ? config.energyPrice : 2;
+  const rawInput = (typeof config.rawInput === 'number' && config.rawInput >= 0) ? config.rawInput : 2;
+  const rawPrice = (typeof config.rawPrice === 'number' && config.rawPrice >= 0) ? config.rawPrice : 1;
+  const energyRegen = (typeof config.energyRegen === 'number' && config.energyRegen >= 0) ? config.energyRegen : 20;
+  const residentEnergyUse = (typeof config.residentEnergyUse === 'number' && config.residentEnergyUse >= 0) ? config.residentEnergyUse : 0.2;
+  const goodsDemandPerCapita = (typeof config.goodsDemandPerCapita === 'number' && config.goodsDemandPerCapita >= 0) ? config.goodsDemandPerCapita : 0.3;
+  const priceVolatility = (typeof config.priceVolatility === 'number' && config.priceVolatility >= 0) ? config.priceVolatility : 0.4;
   const bankruptcyThreshold = (typeof config.bankruptcyThreshold === 'number' && config.bankruptcyThreshold >= 0) ? config.bankruptcyThreshold : 10;
 
-  // 能源再生
+  // 1) 能源：居民取暖/照明/制作等行为真实消耗（与存活人数相关），发电站再补充供给
+  const alive = agents.length;
+  const residentDemand = alive * residentEnergyUse;
+  survival.resources.energy.consume(residentDemand);
+  residentEnergyUsed += residentDemand;
   survival.resources.energy.produce(energyRegen);
+
+  // 2) 供需随机定价（价格波动 → 涌现性 + 企业余额非单调）
+  const goodsPrice = baseGoodsPrice * (1 + (rng.float(0, 1) * 2 - 1) * priceVolatility);
+  economy.market.price.update({ symbol: 'goods', price: goodsPrice });
 
   const activeIds = businessIds.filter((id) => {
     const biz = economy.industry.business.list().find((b) => b.businessId === id);
     return biz !== undefined && biz.status === 'active';
   });
+  if (activeIds.length === 0) return result;
+
+  // 候选买方：有账户且余额够买 1 件商品的居民
+  const buyerPool = agents
+    .map((a) => accounts.get(a.id))
+    .filter((acctId) => acctId && (economy.ledger.account.balance(acctId) ?? 0) >= goodsPrice);
+
+  let demandRemaining = Math.max(0, Math.round(alive * goodsDemandPerCapita * rng.float(0.5, 1.5)));
+  let tickLoss = false;
 
   for (const businessId of activeIds) {
-    // 1) 生产
+    // a) 生产（消耗能源，产出进入企业库存；产出量带随机波动 → 涌现性）
+    const outputTarget = Math.max(1, Math.round(productionOutput * rng.float(0.6, 1.4)));
+    let produced = 0;
+    let energyConsumed = 0;
     try {
-      const plan = economy.industry.production.plan({ businessId, output: productionOutput, energyInput, foodInput: 0 });
+      const plan = economy.industry.production.plan({ businessId, output: outputTarget, energyInput, foodInput: 0 });
       const out = economy.industry.production.output({ planId: plan.planId });
-      result.produced += out.goods;
-      goodsProduced += out.goods;
-      if (out.goods > 0) {
-        observer.recorder.eventLog.record({ tick, topic: 'economy.industry.production', payload: { businessId, goods: out.goods } });
+      produced = out.goods;
+      energyConsumed = out.energyConsumed;
+      result.produced += produced;
+      goodsProduced += produced;
+      industryEnergyUsed += energyConsumed;
+      if (produced > 0) {
+        observer.recorder.eventLog.record({ tick, topic: 'economy.industry.production', payload: { businessId, goods: produced } });
       }
     } catch { /* 企业不可用则跳过 */ }
 
-    // 2) 交易（卖出库存商品）
-    try {
-      const op = economy.industry.business.operate({ businessId, goodsPrice });
-      result.revenue += op.revenue;
-    } catch { /* 跳过 */ }
+    // 重新读取企业（拿到生产后的最新库存）
+    const current = economy.industry.business.list().find((b) => b.businessId === businessId);
+    if (current === undefined) continue;
+    const bizAccountId = current.accountId;
 
-    // 3) 发薪（真实转账，余额不足欠薪）
+    // b) 交易：库存卖给真实买方（居民付款，真实转账；未售出留库）
+    const inventory = current.inventory?.goods ?? 0;
+    const demand = Math.min(demandRemaining, inventory);
+    const buyers = rng.shuffle(buyerPool).slice(0, demand).map((acctId) => ({ accountId: acctId, quantity: 1 }));
+    let sold = 0;
+    let revenue = 0;
+    if (buyers.length > 0) {
+      try {
+        const op = economy.industry.business.operate({ businessId, goodsPrice, buyers });
+        sold = op.sold;
+        revenue = op.revenue;
+      } catch { /* 跳过 */ }
+    }
+    demandRemaining = Math.max(0, demandRemaining - sold);
+    result.sold += sold;
+    result.revenue += revenue;
+    goodsSold += sold;
+    businessRevenue += revenue;
+    if (sold > 0) {
+      tradeCount += 1;
+      observer.recorder.eventLog.record({ tick, topic: 'economy.industry.sale', payload: { businessId, sold, revenue, price: goodsPrice } });
+    }
+
+    // c) 成本：能源成本 + 原料采购成本（真实转账 → 供应池，不凭空造钱）
+    let costs = 0;
+    if (supplyAccountId !== null) {
+      const energyCost = energyConsumed * energyPrice;
+      const rawCost = rawInput * rawPrice;
+      if (energyCost > 0) {
+        try {
+          economy.ledger.transaction.recorder.post({ from: bizAccountId, to: supplyAccountId, amount: energyCost, ref: 'energy_cost', memo: '能源成本' });
+          costs += energyCost;
+        } catch { /* 余额不足则欠付 */ }
+      }
+      if (rawCost > 0) {
+        try {
+          economy.ledger.transaction.recorder.post({ from: bizAccountId, to: supplyAccountId, amount: rawCost, ref: 'raw_cost', memo: '原料采购' });
+          costs += rawCost;
+        } catch { /* 余额不足则欠付 */ }
+      }
+    }
+    result.costs += costs;
+    businessCosts += costs;
+
+    // d) 发薪（真实转账，余额不足欠薪，不产生负余额）
     try {
       const paid = economy.industry.labour.pay({ businessId });
       const amount = paid.paid.reduce((s, p) => s + p.amount, 0);
@@ -328,9 +422,15 @@ function runIndustry(tick, agents, config = {}) {
         observer.recorder.eventLog.record({ tick, topic: 'economy.industry.labour.pay', payload: { businessId, amount } });
       }
     } catch { /* 跳过 */ }
+
+    // 记录亏损 tick：本 tick 收入 < 成本 + 应发工资（"企业可亏损"证据）
+    const wageDue = (current.employees ?? []).reduce((s, emp) => s + (emp.wage ?? 0), 0);
+    if (revenue < costs + wageDue) tickLoss = true;
   }
 
-  // 4) 结算 + 破产检查
+  if (tickLoss) lossTicks += 1;
+
+  // e) 破产检查 + 清算（清算将库存卖给市场对手方/核销，不凭空造钱）
   for (const businessId of activeIds) {
     const biz = economy.industry.business.list().find((b) => b.businessId === businessId);
     if (biz === undefined) continue;
@@ -377,6 +477,23 @@ function runFiscal(tick, agents, config = {}) {
       result.taxRedistributed = redistributed.redistributed;
       taxRedistributed += redistributed.redistributed;
     } catch { /* 池未开则跳过 */ }
+  }
+
+  // 3) 供应池再分配：企业支付的能源/原料成本按人头回馈居民（货币闭环，不凭空造钱）
+  const supplyInterval = (Number.isInteger(config.supplyRedistributeInterval) && config.supplyRedistributeInterval > 0) ? config.supplyRedistributeInterval : 20;
+  if (supplyAccountId !== null && tick > 0 && tick % supplyInterval === 0) {
+    const residents = agents.map((a) => accounts.get(a.id)).filter(Boolean);
+    const pool = economy.ledger.account.balance(supplyAccountId) ?? 0;
+    if (pool > 0 && residents.length > 0) {
+      const share = Math.floor(pool / residents.length);
+      for (let i = 0; i < residents.length && share > 0; i += 1) {
+        const amount = i === residents.length - 1 ? (economy.ledger.account.balance(supplyAccountId) ?? 0) : share;
+        if (amount <= 0) continue;
+        try {
+          economy.ledger.transaction.recorder.post({ from: supplyAccountId, to: residents[i], amount, ref: 'supply_redistribute', memo: '供应池再分配' });
+        } catch { /* 余额不足则跳过 */ }
+      }
+    }
   }
   return result;
 }
@@ -440,17 +557,37 @@ function runResidence(tick, agents) {
   return { assigned, skipped };
 }
 
-/** 健康检查：症状推进 → 疫情检测 → 隔离 → 分诊治疗，并写 observer 日志。 */
+/** 健康检查：症状推进 → 疾病传播（与人口规模相关）→ 医疗物资增产（与人口相关）→ 疫情检测 → 隔离 → 分诊治疗。 */
 function runHealth(tick, agents, config) {
   const result = { infected: 0, epidemic: false, treated: 0, quarantined: 0 };
   if (agents.length === 0) return result;
   const ids = agents.map((a) => a.id);
 
+  // 1) 症状推进
   for (const a of agents) {
     if (survival.health.disease.status({ agentId: a.id }).infected) {
       survival.health.disease.symptom({ agentId: a.id, delta: 0.05, tick });
     }
   }
+
+  // 2) 疾病传播：感染者在易感者中随机传播（与人口规模挂钩，持续消耗医疗物资）
+  const infectionRate = (typeof config.infectionRate === 'number' && config.infectionRate >= 0) ? config.infectionRate : 0.01;
+  if (infectionRate > 0) {
+    const infectedIds = ids.filter((id) => survival.health.disease.status({ agentId: id }).infected);
+    for (const infId of infectedIds) {
+      for (const otherId of ids) {
+        if (otherId === infId) continue;
+        if (survival.health.disease.status({ agentId: otherId }).infected) continue;
+        if (rng.float(0, 1) < infectionRate) {
+          survival.health.disease.infect({ agentId: otherId, diseaseId: 'flu', severity: 0.3, tick });
+        }
+      }
+    }
+  }
+
+  // 3) 医疗物资增产：居民制作医疗物资（与存活人口相关）
+  const medicalRegenPerCapita = (typeof config.medicalRegenPerCapita === 'number' && config.medicalRegenPerCapita >= 0) ? config.medicalRegenPerCapita : 0.5;
+  survival.resources.medical.produce(ids.length * medicalRegenPerCapita);
 
   const threshold = (typeof config.epidemicThreshold === 'number' && config.epidemicThreshold >= 0 && config.epidemicThreshold <= 1)
     ? config.epidemicThreshold : 0.5;
@@ -466,18 +603,21 @@ function runHealth(tick, agents, config) {
     }
   }
 
+  // 4) 分诊治疗：治疗名额与存活人口规模相关（持续消耗 medical）
   const triage = survival.health.treatment.triage({ agents: ids, tick });
-  if (triage.length > 0) {
-    const patient = triage[0];
+  const treatPerCapita = (typeof config.treatPerCapita === 'number' && config.treatPerCapita >= 0) ? config.treatPerCapita : 0.04;
+  const capacity = Math.min(triage.length, Math.max(1, Math.ceil(ids.length * treatPerCapita)));
+  for (let i = 0; i < capacity && i < triage.length; i += 1) {
+    const patient = triage[i];
     const healed = survival.health.treatment.apply({ agentId: patient.agentId, tick });
     treatCount += 1;
+    result.treated += 1;
     observer.recorder.actionLog.record({
       tick,
       agentId: patient.agentId,
       action: 'treatment',
       outcome: { severity: healed.severity, consumed: healed.consumed, health: healed.health },
     });
-    result.treated = 1;
   }
 
   return result;
@@ -510,14 +650,21 @@ export function summary() {
     built: buildCount,
     treated: treatCount,
     quarantined: quarantineCount,
-    businesses: businessIds.length,
+    businesses: economy.industry.business.list().filter((b) => b.status === 'active').length,
     goodsProduced,
+    goodsSold,
+    businessRevenue,
+    businessCosts,
     wagesPaid,
     bankruptcies,
     creditIssued,
     interestAccrued,
     taxCollected,
     taxRedistributed,
+    residentEnergyUsed,
+    industryEnergyUsed,
+    lossTicks,
+    supplyBalance: supplyAccountId !== null ? (economy.ledger.account.balance(supplyAccountId) ?? 0) : 0,
   };
 }
 
@@ -542,6 +689,13 @@ export function __reset() {
   interestAccrued = 0;
   taxCollected = 0;
   taxRedistributed = 0;
+  supplyAccountId = null;
+  goodsSold = 0;
+  businessRevenue = 0;
+  businessCosts = 0;
+  residentEnergyUsed = 0;
+  industryEnergyUsed = 0;
+  lossTicks = 0;
 
   economy.__reset();
   agent.inventory.item.__reset();
