@@ -2,5 +2,8 @@ node_modules/
 .env
 .env.local
 bench-out/
-reports/
+# reports/ 下均为交付物；仅 bench.md 是每次 bench 运行都会覆盖的汇总文件
+reports/bench.md
+reports/bench-baseline.md
+reports/bench-tuned.md
 *.log
