@@ -4,12 +4,15 @@
 - 审计人：infra-engineer
 - 范围：git 审计 / 依赖与安全审计 / 交付清单 / 复跑命令 / 结论一致性抽查 / 已知限制
 - 约束遵守：本任务仅做审计与文档，未修改任何他人源码；抽查复跑输出写入 /tmp（未污染 bench-out/ 与既有报告）
+- **captain 补记（2026-09-23，HEAD 80a2355）**：t30 完成于 09cde7d，其后又有 3 个提交（80a2355 = t33 修复两项长跑阻断、c153893 = 补提交被忽略的 4 份报告、以及本次补记）。本报告第 2.3 与第 5、6 节中原有的「未提交的 t33 改动」「已定位未修复」等表述均已由 captain 更新为最终态，请以标注「captain 补记」的段落为准。
 
 ---
 
 ## 1. Git 审计
 
-### 1.1 提交清单（HEAD=09cde7d，共 11 个提交）
+### 1.1 提交清单（t30 审计时点 HEAD=09cde7d，共 11 个提交）
+
+> captain 补记：其后新增 3 个提交 —— 80a2355（t33 修复长跑两项阻断，9 文件）、c153893（docs(reports): force-add 4 份被 .gitignore 忽略的报告，4 文件）、以及本次 DELIVERY.md 更新。当前 HEAD 以 git log 为准。
 
 | # | hash | 标题 | 影响文件数 | 备注 |
 | --- | --- | --- | --- | --- |
@@ -66,6 +69,7 @@
 - node --test（工作区态）：tests 279 / pass 277 / fail 2。2 个失败均为 test/survival-gradient.test.js（采集池按 tick 再生并封顶、池空时采集受限），由并发未提交的 t33 改动（loop.js 采集池按人口缩放 + config.js 新增 foragePoolPerCapita/RegenPerCapita）导致，非本审计引入、非提交态回归。
 - normify_validate（工作区态）：3 error / 1 warning。3 个 error 均为 fingerprint-drift，对应模块 truman-town.infra.config、truman-town.observer.chronicle.compiler、truman-town.runtime.orchestrator.loop（即上述 t33 未提交改动）；1 个 warning 为既有 dep/unanchored（264 条）。
 - 提交态基线（HEAD 09cde7d）：npm test 279/279、normify_validate 0 error / 1 warning（见 t29/t31/t32 报告与 db7c340 收口）。
+- **最终态（captain 补记 2026-09-23，HEAD 80a2355，t33 已提交）：node --test 282/282 pass / 0 fail；normify_validate 0 error / 1 warning（既有 dep/unanchored）。** 上面的 279 与 277/2 是 t33 提交前的中间态，已被本行取代。
 
 ### 2.4 .env 权限
 
@@ -139,14 +143,32 @@
 
 一致性说明（非数字不一致）：bench-out/tuned/*.json 与 tuned-th/bench-ng-*.json 使用旧版/临时扫描脚本的 summary 字段名（顶层 survMedian/survP10/survP90/minFood 等），当前 bin/bench.js 输出 schema 为 survivalDuration.{count,min,max,mean,alive,buckets} 与 economy 等；底层数值与结论完全一致，仅字段命名/归属不同。属已识别、非阻断项。
 
+### 5.1 t33 修复后的抽查口径变化（captain 补记 2026-09-23）
+
+上面 3 项抽查核对的是 **t33 修复前**的版本（HEAD 09cde7d），数字仍然有效，且数据源 bench-out/tuned/bench-seed-1.json 保留完整、可随时复现。
+
+但同一条命令在当前 HEAD（80a2355，含 t33）复跑会得到**不同数字**，因为它测的是修复后的另一个世界：
+
+| 项目 | t33 前（bench-out/tuned） | t33 后（captain 复跑 80a2355） |
+| --- | --- | --- |
+| logCounts.total | 6154 | 211534 |
+| firstCollapse | tick 13（resource_exhausted） | 无崩溃（collapses=0） |
+| economy.trades | 68 | 1842 |
+| survivalRate / finalPop | 0.00（约 tick 40 全灭） | 1.00 / 52 |
+| survived 中位数 | 约 37–38 tick | 1998–2000 tick |
+
+原因：t33 修复了「采集池不随人口缩放导致 50 居民开局必死」与「chronicle spread 栈溢出」两项阻断。**这不是数字不可信，而是修复本身改变了结果**：旧数字对应有缺陷版本，新数字对应修复后版本。复核任何数字前，必须先确认它对应的 commit。
+
+因此本报告第 6 节第 1 条所引 bench-out/tuned 的数字，仅用于「调优前基线」对比，不能当作当前版本的表现。
+
 ---
 
 ## 6. 已知限制与未覆盖项
 
-1. RESULT.md 两处「未解决」项 → 已定位、已开修复任务 t33（工作区已有未提交实现）：
-   - forage 世界池固定容量不随人口缩放（50 居民默认参数约 40 tick 全灭）→ t33 在 config.js/loop.js 加 foragePoolPerCapita/forageRegenPerCapita 按人口缩放。
-   - observer chronicle 编译器 Math.min/max(...spread) 栈溢出 → t33 在 compiler.js 改为循环求 min/max。
-2. .gitignore 含 reports/：导致 4 份报告（audit-tuning / bench-sweep / observer-perf-fix / bench）未被 git 跟踪，干净检出会丢失这些报告，影响可回滚、可审计完备性。建议后续将需要留档的报告 git add -f 或调整忽略规则（本任务不自行改动忽略规则）。
+1. RESULT.md 两处「未解决」项 → **已修复（t33，commit 80a2355）**，captain 已独立复验：
+   - forage 世界池固定容量不随人口缩放 → 已加 foragePoolPerCapita=1.0 / forageRegenPerCapita=0.15，有效补给=基础值+人均×人口。复验：50 居民 × 200 tick × 3 种子 × needGrowth=0.08 全部存活（改前存活率 0）；50 居民 × 2000 tick × 1 种子存活率 1.00、min survived 1998、0 崩溃、21.2 万条日志、60.8 秒；20 居民 × 200 tick 仍 100% 存活（t32 结论未被推翻）；needGrowth 四档死亡 tick 中位 200 / 33~46 / 20 / 19 仍单调（梯度未被缩放抹平）。
+   - observer chronicle 编译器 Math.min/max(...spread) 栈溢出 → 已改为单趟循环求 min/max。复验：20 万+ 条 compile 不抛错，50 居民 × 2000 tick 跑完 snapshot 可读（211534 条）。
+2. .gitignore 含 reports/：4 份报告（audit-tuning / bench-sweep / observer-perf-fix / bench）曾被忽略、未被跟踪。**已修复（captain，commit c153893）**：git add -f 强制加入，reports/ 现共 10 个文件全部跟踪；bench-out/（每次重跑都会变的原始数据）保持忽略。
 3. provider.a6api 无超时/AbortSignal：上游挂起会无限等待，真实模型运行需外层 timeout 兜底（t26 已知，t30 后加固）。
 4. A6API 无 embedding 模型：embed() 不支持并回退 stub。
 5. 未覆盖：50 居民 × 2000 tick 全真实模型不可行（约 10 万次调用、数小时级、成本高），真实模型仅限 ≤10 居民 × ≤100 tick 且采用 --real-every 抽样（见 bench-baseline-real.md）。
