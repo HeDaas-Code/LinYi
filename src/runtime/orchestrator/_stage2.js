@@ -533,7 +533,6 @@ function runCrafting(tick, agents) {
   return result;
 }
 
-/** 居住分配：确保每个居民（含新生子代）都有住所；避难所满员时为软约束（不驱逐不处死）。 */
 /** 避难所修复：完整度不足时以劳动力修复，使容量回升（t43：危机信号可随修复下降）。 */
 function runShelterRepair(config = {}) {
   const rate = typeof config.shelterRepairRate === 'number' && Number.isFinite(config.shelterRepairRate)
