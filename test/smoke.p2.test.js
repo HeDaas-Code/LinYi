@@ -89,7 +89,7 @@ test('phase2 冒烟：4 居民跑 15 tick，家庭/经济/制作/居住/健康�
   // 7) 世界状态持续变化：tick 推进 + 资源衰减 + 居民增长
   assert.equal(report.world.tick, 15, '世界 tick 应推进到 15');
   assert.ok(report.resources.water.stockpile < 100, '水源应随 tick 衰减');
-  assert.ok(report.resources.food.stockpile < 100, '食物应随 tick 变化');
+  assert.ok(report.resources.food.stockpile > 0 && report.resources.food.stockpile <= 100, '食物应被采集补充并夹在 (0, capacity] 内');
   assert.ok(Object.keys(report.world.agents ?? {}).length > 4, '世界居民应随子代增长');
 
   // 8) 存活时长可观测

@@ -9,7 +9,7 @@
 
 import { createResource } from './_resource.js';
 
-const food = createResource({ kind: 'food', defaultStockpile: 100, defaultCapacity: 500 });
+const food = createResource({ kind: 'food', defaultStockpile: 100, defaultCapacity: 100 });
 
 /** 增产：调用 survival.resources.food.produce。 */
 export function produce(amount = 1) {

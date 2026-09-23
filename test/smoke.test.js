@@ -25,11 +25,11 @@ test('smoke: 3 智能体 × 20 tick 完整闭环，验证衰减/压力/决策/AI
   const N = 20;
   const report = await loop.run({ ticks: N, seed: 42, agentCount: 3 });
 
-  // 1) 资源衰减：水源只减不增（decay + drink，无增产），食物库存可观测
+  // 1) 资源库存可观测：采集（forage）可补充 food/water，库存夹在 [0, capacity]
   assert.equal(report.agents.length, 3);
   assert.ok(
-    report.resources.water.stockpile < 100,
-    '水源应随 tick 衰减（初始 100），实际 ' + report.resources.water.stockpile,
+    report.resources.water.stockpile >= 0 && report.resources.water.stockpile <= 100,
+    '水源库存应在 [0, capacity] 内，实际 ' + report.resources.water.stockpile,
   );
   assert.ok(report.resources.water.totalConsumed >= 0);
   assert.ok(typeof report.resources.food.stockpile === 'number');

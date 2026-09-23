@@ -26,6 +26,11 @@ export const DEFAULTS = Object.freeze({
   ritualInterval: 2,
   traumaRate: 0.2,
   breakThreshold: 0.7,
+  starvationThreshold: 0.9,
+  starvationTicks: 5,
+  starvationHealthDecline: 0.2,
+  eatThreshold: 0.4,
+  forageYield: 2,
 });
 
 /** 返回默认值深拷贝快照。 */
@@ -74,6 +79,11 @@ const RULES = {
   ritualInterval: (v) => (isPosInt(v) ? true : '必须是正整数'),
   traumaRate: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
   breakThreshold: (v) => (isUnit(v) ? true : '必须是 [0,1] 区间数值'),
+  starvationThreshold: (v) => (isUnit(v) ? true : '必须是 [0,1] 区间数值'),
+  starvationTicks: (v) => (isPosInt(v) ? true : '必须是正整数'),
+  starvationHealthDecline: (v) => (isUnit(v) ? true : '必须是 [0,1] 区间数值'),
+  eatThreshold: (v) => (isUnit(v) ? true : '必须是 [0,1] 区间数值'),
+  forageYield: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
 };
 
 /**

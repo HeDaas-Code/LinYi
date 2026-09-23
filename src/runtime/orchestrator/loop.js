@@ -104,23 +104,36 @@ export function spawnAgent(input = {}) {
   return registerAgent({ id, name, persona, food, water, candidates });
 }
 
-function dominantNeed(pressures) {
+function dominantPressure(pressures) {
   const sorted = [...(pressures ?? [])].sort((a, b) => (b.level ?? 0) - (a.level ?? 0));
-  return sorted.length > 0 ? sorted[0].need : null;
+  return sorted.length > 0 ? sorted[0] : { need: null, level: 0 };
 }
 
-/** 决策评分：需求驱动的行动在对应需求居首时加权，体现"压力影响决策"。 */
+function dominantNeed(pressures) {
+  return dominantPressure(pressures).need;
+}
+
+/**
+ * 决策评分：仅在需求超过 eatThreshold 时才进食/饮水；需求未达阈值时优先
+ * 采集（资源越稀缺越该采集）/ 休息。避免"永远进食"导致资源过快枯竭（P0-2 暴露）。
+ */
 function scoreAction(candidate, ctx = {}) {
   let score = typeof candidate?.score === 'number' && Number.isFinite(candidate.score) ? candidate.score : 0;
   const need = ctx.dominantNeed;
-  if (candidate?.action === 'eat' && need === 'food') score += 2;
-  if (candidate?.action === 'drink' && need === 'water') score += 2;
-  if (candidate?.action === 'rest' && need === null) score += 1;
+  const level = typeof ctx.dominantLevel === 'number' ? ctx.dominantLevel : 0;
+  const scarcity = typeof ctx.dominantScarcity === 'number' ? ctx.dominantScarcity : 0;
+  const threshold = clampUnit(ctx.eatThreshold, 0.4);
+  const hungry = need === 'food' && level >= threshold;
+  const thirsty = need === 'water' && level >= threshold;
+  if (candidate?.action === 'eat' && hungry) score += 2;
+  if (candidate?.action === 'drink' && thirsty) score += 2;
+  if (candidate?.action === 'forage' && !hungry && !thirsty) score += 1.2 + scarcity;
+  if (candidate?.action === 'rest' && !hungry && !thirsty) score += 0.5;
   return score;
 }
 
 /** 组装单个智能体的决策：感知 + 压力 + 预想 + 记忆 → 行动选择。 */
-function decide(agentId, tick, percepts) {
+function decide(agentId, tick, percepts, cfg = {}) {
   const pressure = survival.needs.pressure.scorer.score({ agentId });
   const anticipations = agent.anticipation.pool.selector.shortlist(agentId, { limit: 6 });
   if (anticipations.length === 0) return null;
@@ -138,11 +151,19 @@ function decide(agentId, tick, percepts) {
   const ranked = agent.decision.context.rank(context);
 
   const candidates = anticipations.map((a) => ({ id: a.id, action: a.action, score: a.score }));
-  const need = dominantNeed(pressures);
+  const top = dominantPressure(pressures);
+  const need = top.need;
+  const needLevel = top.level ?? 0;
+  const needScarcity = pressure.scarcity?.[need] ?? 0;
   const choice = agent.decision.selector.choose({
     candidates,
     context: { dominantNeed: need },
-    scoreFn: (candidate) => scoreAction(candidate, { dominantNeed: need }),
+    scoreFn: (candidate) => scoreAction(candidate, {
+      dominantNeed: need,
+      dominantLevel: needLevel,
+      dominantScarcity: needScarcity,
+      eatThreshold: cfg.eatThreshold,
+    }),
   });
   if (choice === null) return null;
 
@@ -158,21 +179,23 @@ function decide(agentId, tick, percepts) {
 }
 
 /** 行动 → 世界变更函数（供 dispatch.actions 调用）。 */
-function effectFor(agentId, action) {
+function effectFor(agentId, action, cfg = {}) {
   switch (action) {
     case 'eat':
       return () => {
-        survival.resources.food.consume(1);
-        survival.needs.meter.update({ agentId, need: 'food', delta: -0.5 });
+        const consumed = survival.resources.food.consume(1);
+        if (consumed.consumed > 0) survival.needs.meter.update({ agentId, need: 'food', delta: -0.5 });
       };
     case 'drink':
       return () => {
-        survival.resources.water.consume(1);
-        survival.needs.meter.update({ agentId, need: 'water', delta: -0.5 });
+        const consumed = survival.resources.water.consume(1);
+        if (consumed.consumed > 0) survival.needs.meter.update({ agentId, need: 'water', delta: -0.5 });
       };
     case 'forage':
       return () => {
-        survival.resources.food.produce(2);
+        const yieldAmount = typeof cfg.forageYield === 'number' && Number.isFinite(cfg.forageYield) ? cfg.forageYield : 2;
+        survival.resources.food.produce(yieldAmount);
+        survival.resources.water.produce(yieldAmount);
       };
     case 'rest':
       return () => {
@@ -231,6 +254,44 @@ function syncWorldState(tick) {
   worldState.set('needs', needs);
 }
 
+/** 饥饿/口渴 → 健康下降 → 死亡（P0-2：无死亡机制修复）。 */
+const mortality = new Map();
+
+/**
+ * 需求达上限持续 N tick → 健康下降；健康归零则死亡：移出 registry、
+ * 标记 world-state alive=false/deathTick，并写 observer event-log。
+ */
+function runMortality(tick, cfg) {
+  const threshold = clampUnit(cfg.starvationThreshold, 0.9);
+  const ticks = Number.isInteger(cfg.starvationTicks) && cfg.starvationTicks > 0 ? cfg.starvationTicks : 5;
+  const decline = clampUnit(cfg.starvationHealthDecline, 0.2);
+  const deaths = [];
+  for (const record of registry.lookup({ type: 'agent' })) {
+    const id = record.id;
+    const needs = survival.needs.meter.query({ agentId: id }).needs;
+    const starving = needs.food >= threshold || needs.water >= threshold;
+    let st = mortality.get(id);
+    if (st === undefined) { st = { starvingTicks: 0, health: 1 }; mortality.set(id, st); }
+    if (starving) {
+      st.starvingTicks += 1;
+      if (st.starvingTicks >= ticks) st.health = Math.max(0, st.health - decline);
+    } else {
+      st.starvingTicks = 0;
+      st.health = Math.min(1, st.health + 0.05);
+    }
+    if (st.health <= 0) {
+      const cause = needs.food >= needs.water ? 'starvation' : 'dehydration';
+      registry.unregister(id);
+      worldState.set(`agents.${id}.alive`, false);
+      worldState.set(`agents.${id}.deathTick`, tick);
+      observer.recorder.eventLog.record({ tick, topic: 'agent.death', payload: { agentId: id, cause, needs }, agentId: id });
+      mortality.delete(id);
+      deaths.push({ agentId: id, cause });
+    }
+  }
+  return deaths;
+}
+
 /**
  * 推进一个 tick（完整闭环）。
  * @param {object} [config] 与 DEFAULT_CONFIG 合并的运行参数
@@ -252,7 +313,7 @@ export async function step(config = {}) {
   const decisions = [];
   for (const record of agentRecords) {
     const agentId = record.id;
-    const decision = decide(agentId, tick, inbox[agentId] ?? []);
+    const decision = decide(agentId, tick, inbox[agentId] ?? [], cfg);
     if (decision === null) continue;
     observer.recorder.decisionLog.record({
       tick,
@@ -276,7 +337,7 @@ export async function step(config = {}) {
       params: { reason: decision.reason },
       reason: decision.reason,
       confidence: decision.confidence,
-      effect: effectFor(agentId, decision.action),
+      effect: effectFor(agentId, decision.action, cfg),
     }])[0];
     dispatch.actions(op, {
       onApplied: (record) => {
@@ -296,6 +357,9 @@ export async function step(config = {}) {
       tags: ['thought', String(decision.action)],
     });
   }
+
+  // 4.5) 死亡：饥饿/口渴持续 → 健康下降 → 死亡（移出 registry + 写 observer）
+  runMortality(tick, cfg);
 
   // 5) world-state 快照
   syncWorldState(tick);
@@ -349,6 +413,7 @@ export function reset() {
   perception.__reset();
   stage2.__reset();
   stage3.__reset();
+  mortality.clear();
 }
 
 /**

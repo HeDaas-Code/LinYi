@@ -12,7 +12,7 @@ const { scorer, ranker } = pressure;
 const { generator, impact } = events;
 const { roller, selector } = generator;
 
-const DEFAULT_SCARCITY = 1 - 100 / 500; // 0.8
+const DEFAULT_SCARCITY = 1 - 100 / 100; // 0（capacity 修正后初始即满）
 
 function resetAll() {
   graph.__reset();
@@ -29,16 +29,16 @@ beforeEach(() => {
   resetAll();
 });
 
-test('food: produce 增产、consume 消耗并夹在 [0, stockpile]', () => {
+test('food: produce 增产、consume 消耗并夹在 [0, capacity]', () => {
   assert.equal(food.query().stockpile, 100);
 
-  const afterProduce = food.produce(20);
-  assert.equal(afterProduce.stockpile, 120);
-  assert.equal(afterProduce.produced, 20);
-
   const afterConsume = food.consume(30);
-  assert.equal(afterConsume.stockpile, 90);
+  assert.equal(afterConsume.stockpile, 70);
   assert.equal(afterConsume.consumed, 30);
+
+  const afterProduce = food.produce(20);
+  assert.equal(afterProduce.stockpile, 90);
+  assert.equal(afterProduce.produced, 20);
 
   const clamp = food.consume(9999);
   assert.equal(clamp.stockpile, 0);
@@ -50,9 +50,13 @@ test('food: scarcity 随库存变化，capacity 限制上限', () => {
   assert.equal(food.query().scarcity, DEFAULT_SCARCITY);
 
   const capped = food.produce(9999);
-  assert.equal(capped.stockpile, 500);
-  assert.equal(capped.produced, 400);
+  assert.equal(capped.stockpile, 100);
+  assert.equal(capped.produced, 0);
   assert.equal(capped.scarcity, 0);
+
+  const depleted = food.consume(90);
+  assert.equal(depleted.stockpile, 10);
+  assert.equal(depleted.scarcity, 0.9);
 });
 
 test('food: decay 按比例自然损耗', () => {
@@ -62,9 +66,9 @@ test('food: decay 按比例自然损耗', () => {
 });
 
 test('water: 独立于 food 的库存语义', () => {
-  water.produce(50);
   water.consume(10);
-  assert.equal(water.query().stockpile, 140);
+  water.produce(5);
+  assert.equal(water.query().stockpile, 95);
   assert.equal(food.query().stockpile, 100);
 });
 
@@ -124,10 +128,10 @@ test('scorer.score: 从 meter 汇总需求缺口与稀缺度', () => {
   const s = scorer.score({ agentId: 'a1' });
 
   assert.equal(s.agentId, 'a1');
-  assert.equal(s.factors.food, 0.9); // 0.5 × 1.8
-  assert.equal(s.factors.water, 1.8); // 1.0 × 1.8
-  assert.equal(s.score, 2.7);
-  assert.equal(s.normalized, 2.7 / 4);
+  assert.equal(s.factors.food, 0.5); // 0.5 × (1 + 0)
+  assert.equal(s.factors.water, 1.0); // 1.0 × (1 + 0)
+  assert.equal(s.score, 1.5);
+  assert.equal(s.normalized, 1.5 / 4);
 });
 
 test('scorer.score: 支持显式 needs/scarcity，不需 agentId', () => {

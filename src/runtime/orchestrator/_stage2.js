@@ -16,6 +16,7 @@ import * as agent from '../../agent/index.js';
 import * as town from '../../town/index.js';
 import * as survival from '../../survival/index.js';
 import * as observer from '../../observer/index.js';
+import * as rng from '../../infra/rng.js';
 
 
 const RESIDENCE_ID = 'dorm_a';
@@ -41,6 +42,14 @@ function sortedPairKey(a, b) {
   return a < b ? a + ':' + b : b + ':' + a;
 }
 
+/** 特有特质候选池（makeTags 用 rng 无放回抽样，使不同种子的特质结构不同）。 */
+const UNIQUE_POOL = [
+  'resilient', 'cautious', 'sociable', 'curious', 'hardworking',
+  'stubborn', 'generous', 'greedy', 'brave', 'timid',
+  'wise', 'foolish', 'kind', 'cruel', 'diligent',
+  'lazy', 'loyal', 'treacherous', 'patient', 'impulsive',
+];
+
 /**
  * 生成 50 个特质标签（45 个共有 + 5 个居民特有），供 loop 播种 / 子代遗传使用。
  * @param {number} agentIndex 居民序号（用于生成唯一后缀）
@@ -51,7 +60,9 @@ export function makeTags(agentIndex = 0, config = {}) {
   const shared = (Number.isInteger(config.sharedTagCount) && config.sharedTagCount >= 0 && config.sharedTagCount <= tagCount) ? config.sharedTagCount : 45;
   const tags = [];
   for (let i = 0; i < shared; i += 1) tags.push({ key: 'base' + i, weight: 1.0 });
-  for (let i = 0; i < tagCount - shared; i += 1) tags.push({ key: 'u' + agentIndex + '_' + i, weight: 1.0 });
+  const unique = Math.max(0, tagCount - shared);
+  const pool = rng.shuffle(UNIQUE_POOL);
+  for (let i = 0; i < unique; i += 1) tags.push({ key: pool[i % pool.length], weight: rng.float(0.5, 1.0) });
   return tags;
 }
 
@@ -137,9 +148,9 @@ function runProcreation(tick, agents, spawnChild, config = {}) {
   const pairs = social.procreation.match.pair({ agentIds: ids, k: Math.max(4, ids.length), threshold: matchThreshold });
   if (pairs.length === 0) return result;
 
-  // 跳过已生育过的配对，取下一个未生育的兼容对（防同一对反复繁殖）
+  // 随机化配对顺序，再跳过已生育过的配对（防同一对反复繁殖 + 让种子产生结构差异）
   let pair = null;
-  for (const p of pairs) {
+  for (const p of rng.shuffle(pairs)) {
     if (!reproducedPairs.has(sortedPairKey(p.a, p.b))) { pair = p; break; }
   }
   if (pair === null) return result;
@@ -179,16 +190,21 @@ function runProcreation(tick, agents, spawnChild, config = {}) {
 }
 
 /** 市场：挂买卖单 → 撮合 → 结算 → 写交易事件日志。 */
-function runMarket(tick, agents) {
+function runMarket(tick, agents, config = {}) {
   const result = { trades: 0 };
   if (agents.length < 2) return result;
-  const sellerAcct = accounts.get(agents[0].id);
-  const buyerAcct = accounts.get(agents[1].id);
+  const ids = agents.map((a) => a.id);
+  const seller = rng.choice(ids);
+  const buyer = rng.choice(ids.filter((id) => id !== seller));
+  const sellerAcct = accounts.get(seller);
+  const buyerAcct = accounts.get(buyer);
   if (!sellerAcct || !buyerAcct) return result;
+  const priceValue = (typeof config.price === 'number' && config.price > 0) ? config.price : 4;
+  const quantity = rng.int(1, 3);
 
   try {
-    economy.market.orderbook.orders.place({ side: 'sell', symbol: SYMBOL, price: 4, quantity: 1, accountId: sellerAcct });
-    economy.market.orderbook.orders.place({ side: 'buy', symbol: SYMBOL, price: 4, quantity: 1, accountId: buyerAcct });
+    economy.market.orderbook.orders.place({ side: 'sell', symbol: SYMBOL, price: priceValue, quantity, accountId: sellerAcct });
+    economy.market.orderbook.orders.place({ side: 'buy', symbol: SYMBOL, price: priceValue, quantity, accountId: buyerAcct });
     const matched = economy.market.orderbook.matching.match({ symbol: SYMBOL });
     const receipts = economy.market.orderbook.matching.settle({ trades: matched });
     for (const r of receipts) {
@@ -310,7 +326,7 @@ function runHealth(tick, agents, config) {
 export function tick({ tick, agents, config = {}, spawnChild }) {
   return {
     procreation: runProcreation(tick, agents, spawnChild, config),
-    market: runMarket(tick, agents),
+    market: runMarket(tick, agents, config),
     crafting: runCrafting(tick, agents),
     residence: runResidence(tick, agents),
     health: runHealth(tick, agents, config),
