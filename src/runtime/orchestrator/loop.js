@@ -61,16 +61,29 @@ const DEFAULT_CONFIG = Object.freeze({
 // ---- 世界采集池（t32）：每 tick 再生、全局共享，避免补给随人口线性增长 ----
 let foragePool = null;
 
+function alivePopulation() {
+  const agents = registry.lookup({ type: 'agent' });
+  return Array.isArray(agents) ? agents.length : 0;
+}
+
 function foragePoolCapacityOf(cfg) {
-  return (typeof cfg.foragePoolCapacity === 'number' && Number.isFinite(cfg.foragePoolCapacity) && cfg.foragePoolCapacity > 0)
+  const base = typeof cfg.foragePoolCapacity === 'number' && Number.isFinite(cfg.foragePoolCapacity)
     ? cfg.foragePoolCapacity
     : configStore.defaults().foragePoolCapacity;
+  const perCapita = typeof cfg.foragePoolPerCapita === 'number' && Number.isFinite(cfg.foragePoolPerCapita)
+    ? cfg.foragePoolPerCapita
+    : configStore.defaults().foragePoolPerCapita;
+  return Math.max(0, base + perCapita * alivePopulation());
 }
 
 function forageRegenOf(cfg) {
-  return (typeof cfg.forageRegen === 'number' && Number.isFinite(cfg.forageRegen) && cfg.forageRegen >= 0)
+  const base = typeof cfg.forageRegen === 'number' && Number.isFinite(cfg.forageRegen)
     ? cfg.forageRegen
     : configStore.defaults().forageRegen;
+  const perCapita = typeof cfg.forageRegenPerCapita === 'number' && Number.isFinite(cfg.forageRegenPerCapita)
+    ? cfg.forageRegenPerCapita
+    : configStore.defaults().forageRegenPerCapita;
+  return Math.max(0, base + perCapita * alivePopulation());
 }
 
 /** 每 tick 开始前再生采集池（首次满池，此后 min(pool + regen, cap)）。 */

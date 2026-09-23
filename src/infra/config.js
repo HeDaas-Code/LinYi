@@ -33,6 +33,8 @@ export const DEFAULTS = Object.freeze({
   forageYield: 2,
   foragePoolCapacity: 30,
   forageRegen: 8,
+  foragePoolPerCapita: 1.0,
+  forageRegenPerCapita: 0.15,
 });
 
 /** 返回默认值深拷贝快照。 */
@@ -88,6 +90,8 @@ const RULES = {
   forageYield: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
   foragePoolCapacity: (v) => ((isNum(v) && v > 0) ? true : '必须是正有限数值'),
   forageRegen: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
+  foragePoolPerCapita: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
+  forageRegenPerCapita: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
 };
 
 /**

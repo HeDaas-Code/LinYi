@@ -94,17 +94,22 @@ export function compile(options = {}) {
     return true;
   });
   const counts = { decision: 0, action: 0, event: 0 };
+  let minTick = null;
+  let maxTick = null;
   for (const entry of filtered) {
     if (typeof counts[entry.kind] === 'number') counts[entry.kind] += 1;
+    if (typeof entry.tick === 'number') {
+      if (minTick === null || entry.tick < minTick) minTick = entry.tick;
+      if (maxTick === null || entry.tick > maxTick) maxTick = entry.tick;
+    }
   }
   counts.total = filtered.length;
   const buckets = bucket(filtered, { size: bucketSize });
   const entries = buckets.flatMap((b) => b.entries);
-  const ticks = entries.map((e) => e.tick).filter((t) => typeof t === 'number');
   return {
     compiledAt: Date.now(),
-    startTick: ticks.length > 0 ? Math.min(...ticks) : null,
-    endTick: ticks.length > 0 ? Math.max(...ticks) : null,
+    startTick: minTick,
+    endTick: maxTick,
     bucketSize,
     counts,
     buckets,
