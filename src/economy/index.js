@@ -7,6 +7,8 @@
 
 export * as ledger from './ledger/index.js';
 export * as market from './market/index.js';
+export * as industry from './industry/index.js';
+export * as bankruptcy from './bankruptcy.js';
 
 import * as graph from '../infra/store/graph.js';
 import * as identity from '../infra/identity.js';

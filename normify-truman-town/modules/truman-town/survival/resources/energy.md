@@ -10,8 +10,8 @@ description:
   en: >
       Tracks energy production, consumption and stockpile.
       
-revision: da6092c786d6c0615331ed8d297d5c0d6a2fa45a
-updated_at: "2026-09-23T12:12:22.376Z"
+revision: f4968a009dccf5f3735a3f0d7a362ed5f05ff7bf
+updated_at: "2026-09-23T12:16:51.981Z"
 fingerprint: e3e426b44e3c239ed3bdf10fdec51698b04e3c4e0992db8eeb218c8b11ae484e
 source:
   - path: "src/survival/resources/energy.js"

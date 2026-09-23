@@ -11,6 +11,9 @@ export const TYPES = {
   account: 'economy.account',
   tx: 'economy.tx',
   order: 'economy.order',
+  business: 'economy.business',
+  production: 'economy.production',
+  bankruptcy: 'economy.bankruptcy',
 };
 
 export function readAccount(accountId) {
@@ -47,6 +50,42 @@ export function listOrders() {
 
 export function writeOrder(orderId, data) {
   return graph.write({ id: orderId, type: TYPES.order, data });
+}
+
+export function readBusiness(businessId) {
+  return graph.read(businessId);
+}
+
+export function listBusinesses() {
+  return graph.read({ type: TYPES.business });
+}
+
+export function writeBusiness(businessId, data) {
+  return graph.write({ id: businessId, type: TYPES.business, data });
+}
+
+export function readProduction(planId) {
+  return graph.read(planId);
+}
+
+export function listProductions() {
+  return graph.read({ type: TYPES.production });
+}
+
+export function writeProduction(planId, data) {
+  return graph.write({ id: planId, type: TYPES.production, data });
+}
+
+export function readBankruptcy(caseId) {
+  return graph.read(caseId);
+}
+
+export function listBankruptcies() {
+  return graph.read({ type: TYPES.bankruptcy });
+}
+
+export function writeBankruptcy(caseId, data) {
+  return graph.write({ id: caseId, type: TYPES.bankruptcy, data });
 }
 
 /**

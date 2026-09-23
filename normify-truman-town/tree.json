@@ -8,7 +8,7 @@
         "root_uid": "d440391b"
       }
     ],
-    "compiled_at": "2026-09-23T12:14:10.170Z",
+    "compiled_at": "2026-09-23T12:17:32.540Z",
     "stats": {
       "tree_count": 1,
       "module_count": 227,
@@ -18,7 +18,7 @@
       "cross_tree_dep_count": 0,
       "max_depth": 5,
       "layout_count": 69,
-      "planned_count": 115,
+      "planned_count": 111,
       "deprecated_count": 0,
       "policy_rule_count": 2,
       "change_count": 5,
@@ -4762,7 +4762,6 @@
       "parent": "truman-town.economy",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "破产清算",
         "en": "Bankruptcy"
@@ -4771,10 +4770,14 @@
         "zh": "对资不抵债的智能体或企业启动破产与清算。\n",
         "en": "Files and liquidates insolvent agents or businesses.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/economy/bankruptcy.js"
+        }
+      ],
+      "revision": "f4968a009dccf5f3735a3f0d7a362ed5f05ff7bf",
+      "updated_at": "2026-09-23T12:16:51.980Z",
+      "fingerprint": "7fd7e67b04f6755055265817577d6638f0b606b3d4381f1e8c90dd50ed4e4b5e",
       "apis": [
         {
           "protocol": "rpc",
@@ -4848,7 +4851,6 @@
       "parent": "truman-town.economy.industry",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "企业",
         "en": "Business"
@@ -4857,10 +4859,14 @@
         "zh": "创办、运营与关闭企业，构成小镇产业组成。\n",
         "en": "Founds, operates and closes businesses as town industries.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/economy/industry/business.js"
+        }
+      ],
+      "revision": "f4968a009dccf5f3735a3f0d7a362ed5f05ff7bf",
+      "updated_at": "2026-09-23T12:16:51.980Z",
+      "fingerprint": "e11e4bee3f71fd00f27ef025880d4ace53dcc48bda67259248da806cac3342ba",
       "apis": [
         {
           "protocol": "rpc",
@@ -4916,7 +4922,6 @@
       "parent": "truman-town.economy.industry",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "劳动与雇佣",
         "en": "Labour"
@@ -4925,10 +4930,14 @@
         "zh": "发布职位、雇佣与发薪，连接智能体职业与经济。\n",
         "en": "Posts jobs, hires and pays wages linking careers to economy.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/economy/industry/labour.js"
+        }
+      ],
+      "revision": "f4968a009dccf5f3735a3f0d7a362ed5f05ff7bf",
+      "updated_at": "2026-09-23T12:16:51.980Z",
+      "fingerprint": "8c85094e7b84915a4e0aba11b88019c8fa24dc286bcfee385ff830748a3e8af1",
       "apis": [
         {
           "protocol": "rpc",
@@ -4970,7 +4979,6 @@
       "parent": "truman-town.economy.industry",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "生产",
         "en": "Production"
@@ -4979,10 +4987,14 @@
         "zh": "制定生产计划并产出商品与服务。\n",
         "en": "Plans production and outputs goods and services.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/economy/industry/production.js"
+        }
+      ],
+      "revision": "f4968a009dccf5f3735a3f0d7a362ed5f05ff7bf",
+      "updated_at": "2026-09-23T12:16:51.980Z",
+      "fingerprint": "af5f48951e04d492c61e35a76c0c515ddf41ea696535374368c72d3af3a3b45d",
       "apis": [
         {
           "protocol": "rpc",
@@ -11250,8 +11262,8 @@
           "path": "src/survival/resources/energy.js"
         }
       ],
-      "revision": "da6092c786d6c0615331ed8d297d5c0d6a2fa45a",
-      "updated_at": "2026-09-23T12:12:22.376Z",
+      "revision": "f4968a009dccf5f3735a3f0d7a362ed5f05ff7bf",
+      "updated_at": "2026-09-23T12:16:51.981Z",
       "fingerprint": "e3e426b44e3c239ed3bdf10fdec51698b04e3c4e0992db8eeb218c8b11ae484e",
       "apis": [
         {
