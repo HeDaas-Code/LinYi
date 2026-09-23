@@ -10,9 +10,9 @@ description:
   en: >
       Wires clock → survival events → perception → agent decision → ai.thought → dispatch → world-state into a minimal closed main loop, recording observer logs at every decision/action/event node; with phase2 enabled it also drives procreation, market trading, crafting, residence allocation and health checks each tick; with phase3 enabled it also drives politics, culture (norms/ritual/meme), psyche (trauma/coping/breakdown), tech (research/loss) and civilization (legacy/collapse/restart) each tick.
       
-revision: 8f46bbe36535fe49a2418c2f4d3f1c829c12ce06
-updated_at: "2026-09-22T16:53:11.998Z"
-fingerprint: c4672713804f5ffc6a66a375bd01b27f84ce46badfebf3f85e463650214036f4
+revision: 89092c863a1b823ec149783d7882b6e667080fcd
+updated_at: "2026-09-23T04:18:01.971Z"
+fingerprint: 92465faad0c57bc1dc80dde87bd66939b329921d088e068da61b7919bb6adb69
 source:
   - path: "src/runtime/orchestrator/loop.js"
 apis:
@@ -60,6 +60,15 @@ apis:
           
       en: >
           Resets all shared state (graph/rng/identity/clock/world-state/registry/needs/recorder).
+          
+  - protocol: rpc
+    path: "runtime.orchestrator.loop.foragePoolRemaining"
+    description:
+      zh: >
+          返回世界采集池当前剩余量（每 tick 再生，供测试/观测）。
+          
+      en: >
+          Returns the current remaining amount of the per-tick regenerating world forage pool (for tests/observation).
           
 deps:
   - kind: call

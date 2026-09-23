@@ -58,6 +58,33 @@ const DEFAULT_CONFIG = Object.freeze({
   phase3: false,
 });
 
+// ---- 世界采集池（t32）：每 tick 再生、全局共享，避免补给随人口线性增长 ----
+let foragePool = null;
+
+function foragePoolCapacityOf(cfg) {
+  return (typeof cfg.foragePoolCapacity === 'number' && Number.isFinite(cfg.foragePoolCapacity) && cfg.foragePoolCapacity > 0)
+    ? cfg.foragePoolCapacity
+    : configStore.defaults().foragePoolCapacity;
+}
+
+function forageRegenOf(cfg) {
+  return (typeof cfg.forageRegen === 'number' && Number.isFinite(cfg.forageRegen) && cfg.forageRegen >= 0)
+    ? cfg.forageRegen
+    : configStore.defaults().forageRegen;
+}
+
+/** 每 tick 开始前再生采集池（首次满池，此后 min(pool + regen, cap)）。 */
+function regenForagePool(cfg) {
+  const cap = foragePoolCapacityOf(cfg);
+  foragePool = foragePool === null ? cap : Math.min(foragePool + forageRegenOf(cfg), cap);
+  return foragePool;
+}
+
+/** 当前采集池剩余量（供测试 / 观测）。 */
+export function foragePoolRemaining() {
+  return foragePool === null ? 0 : foragePool;
+}
+
 function clampUnit(value, fallback = 0) {
   return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : fallback;
 }
@@ -194,8 +221,12 @@ function effectFor(agentId, action, cfg = {}) {
     case 'forage':
       return () => {
         const yieldAmount = typeof cfg.forageYield === 'number' && Number.isFinite(cfg.forageYield) ? cfg.forageYield : 2;
-        survival.resources.food.produce(yieldAmount);
-        survival.resources.water.produce(yieldAmount);
+        const take = Math.min(yieldAmount, foragePool);
+        foragePool = Math.max(0, foragePool - take);
+        if (take > 0) {
+          survival.resources.food.produce(take);
+          survival.resources.water.produce(take);
+        }
       };
     case 'rest':
       return () => {
@@ -243,10 +274,11 @@ function runSurvival(tick, config) {
 }
 
 /** 同步世界状态快照（资源 / 需求 / 行为，供 observer / api 观测）。 */
-function syncWorldState(tick) {
+function syncWorldState(tick, cfg) {
   worldState.set('tick', tick);
   worldState.set('resources.food', survival.resources.food.query());
   worldState.set('resources.water', survival.resources.water.query());
+  worldState.set('resources.foragePool', { pool: foragePoolRemaining(), capacity: foragePoolCapacityOf(cfg), regen: forageRegenOf(cfg) });
   const needs = {};
   for (const record of registry.lookup({ type: 'agent' })) {
     needs[record.id] = survival.needs.meter.query({ agentId: record.id }).needs;
@@ -300,6 +332,9 @@ function runMortality(tick, cfg) {
 export async function step(config = {}) {
   const cfg = { ...DEFAULT_CONFIG, ...(config ?? {}) };
   const tick = clock.tick().tick;
+
+  // 0) 世界采集池再生（每 tick 补充可采集总量）
+  regenForagePool(cfg);
 
   // 1) survival：衰减 / 需求增长 / 突发事件
   const eventPercepts = runSurvival(tick, cfg);
@@ -362,7 +397,7 @@ export async function step(config = {}) {
   runMortality(tick, cfg);
 
   // 5) world-state 快照
-  syncWorldState(tick);
+  syncWorldState(tick, cfg);
 
   // 6) 第二阶段：家庭/经济/制作/居住/健康（被主循环驱动并写 observer）
   let phase2Summary = null;
@@ -414,6 +449,7 @@ export function reset() {
   stage2.__reset();
   stage3.__reset();
   mortality.clear();
+  foragePool = null;
 }
 
 /**
