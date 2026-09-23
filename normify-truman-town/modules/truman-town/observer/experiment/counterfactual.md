@@ -10,8 +10,8 @@ description:
   en: >
       Branches counterfactual alternatives anchored on recorded decisions and compares what-if divergences; read-only.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T14:35:46.718Z"
+revision: 5ad9af8b020cb978dad9c8ac59c41cdb224d5c73
+updated_at: "2026-09-22T17:24:01.916Z"
 fingerprint: 2b14c01ab1e651c191e84a91e236de18b3711cf832c9b24f1cfca3d1208d94e8
 source:
   - path: "src/observer/experiment/counterfactual.js"

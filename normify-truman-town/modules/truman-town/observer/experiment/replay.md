@@ -10,8 +10,8 @@ description:
   en: >
       Replays causal chains of any period from the chronicle, with a seed-derived deterministic run id; read-only.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T14:35:46.718Z"
+revision: 5ad9af8b020cb978dad9c8ac59c41cdb224d5c73
+updated_at: "2026-09-22T17:24:01.916Z"
 fingerprint: 4c44d957a3f9db3df310bfd9c0312a232469916a7e863643fb682d4d9e16e93b
 source:
   - path: "src/observer/experiment/replay.js"
