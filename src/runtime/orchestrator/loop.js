@@ -28,6 +28,7 @@ import * as rng from '../../infra/rng.js';
 import * as agent from '../../agent/index.js';
 import * as ai from '../../ai/index.js';
 import * as survival from '../../survival/index.js';
+import * as social from '../../social/index.js';
 import * as observer from '../../observer/index.js';
 import * as stage2 from './_stage2.js';
 import * as stage3 from './_stage3.js';
@@ -213,10 +214,14 @@ function scheduleOverride(decision, agentId, tick, cfg) {
 
 /** 批次2-C（t48）：社会维度汇总（日程/职业/公共角色），供观测与跨种子对照。 */
 function socialSummary() {
+  const families = social.family.registry.list();
+  const members = families.reduce((n, f) => n + f.members.length, 0);
   return {
     schedule: agent.schedule.planner.summary(),
     careers: agent.role.career.summary(),
     society: agent.role.society.activeEffects(),
+    family: { families: families.length, members, size: families.length > 0 ? Math.max(...families.map((f) => f.members.length)) : 0 },
+    graph: { edges: social.graph.edges.list().length, communities: social.graph.community.detect({ threshold: 0.5 }).count },
   };
 }
 
@@ -466,6 +471,16 @@ function syncWorldState(tick, cfg) {
 /** 饥饿/口渴 → 健康下降 → 死亡（P0-2：无死亡机制修复）。 */
 const mortality = new Map();
 
+/** 批次2-D：成员死亡 → 写入所属家族编年史（供文明遗产继承）。 */
+function recordFamilyDeath(agentId, cause, tick) {
+  try {
+    const fams = social.family.registry.lookup({ memberId: agentId });
+    for (const f of fams) {
+      social.family.chronicle.append({ familyId: f.familyId, event: 'death', tick, actor: agentId, detail: { cause } });
+    }
+  } catch { /* 家族系统不可用则跳过 */ }
+}
+
 /**
  * 需求达上限持续 N tick → 健康下降；健康归零则死亡：移出 registry、
  * 标记 world-state alive=false/deathTick，并写 observer event-log。
@@ -496,6 +511,7 @@ function runMortality(tick, cfg) {
       observer.recorder.eventLog.record({ tick, topic: 'agent.death', payload: { agentId: id, cause, needs }, agentId: id });
       mortality.delete(id);
       deaths.push({ agentId: id, cause });
+      recordFamilyDeath(id, cause, tick);
     }
   }
   return deaths;
@@ -526,6 +542,7 @@ function runLifecycle(tick, cfg) {
       worldState.set('agents.' + record.id + '.deathTick', tick);
       observer.recorder.eventLog.record({ tick, topic: 'agent.death', payload: { agentId: record.id, cause: result.cause, age: result.age, stage: result.stage }, agentId: record.id });
       deaths.push({ agentId: record.id, cause: result.cause, age: result.age });
+      recordFamilyDeath(record.id, result.cause, tick);
     }
   }
   return deaths;

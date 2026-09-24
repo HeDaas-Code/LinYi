@@ -55,6 +55,9 @@ let businessCosts = 0;
 let residentEnergyUsed = 0;
 let industryEnergyUsed = 0;
 let lossTicks = 0;
+/** 批次2-D：社区发现缓存（每 N tick 重算，避免每 tick 全量重算拖慢长跑） */
+let lastCommunityTick = -1;
+let communitySnapshot = null;
 
 function sortedPairKey(a, b) {
   return a < b ? a + ':' + b : b + ':' + a;
@@ -120,6 +123,8 @@ export function seed(agents, config = {}) {
   residentEnergyUsed = 0;
   industryEnergyUsed = 0;
   lossTicks = 0;
+  lastCommunityTick = -1;
+  communitySnapshot = null;
 
   // 1) town：初始避难所 + 居住分配
   const shelter = town.building.structure.spawnShelter();
@@ -202,6 +207,9 @@ export function seed(agents, config = {}) {
     }
   }
 
+  // 7) family：初始居民分组成创始家族（批次2-D 家族登记真实接入的播种入口）
+  const familySeed = bootstrapFamilies(agents, config);
+
   return {
     shelter: shelter.length,
     residences: agents.length,
@@ -209,8 +217,69 @@ export function seed(agents, config = {}) {
     price: priceValue,
     goodsPrice,
     businesses: businessIds.length,
+    families: familySeed.families,
     itemIds: { ...itemIds },
   };
+}
+
+/** 批次2-D：初始居民分组成创始家族（家族登记真实接入的播种入口，跨种子分叉来源之一）。 */
+/** 本地确定性 PRNG（字符串哈希 + mulberry32），不消耗共享 rng，避免扰动经济/生存随机序列。 */
+function hashStr(str) {
+  let h = 1779033703 ^ str.length;
+  for (let i = 0; i < str.length; i += 1) {
+    h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  h = Math.imul(h ^ (h >>> 16), 2246822507);
+  h = Math.imul(h ^ (h >>> 13), 3266489909);
+  return (h ^ (h >>> 16)) >>> 0;
+}
+
+function mulberry(seedNum) {
+  let a = seedNum >>> 0;
+  return function next() {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function bootstrapFamilies(agents, config = {}) {
+  if (agents.length < 2) return { families: 0 };
+  // 用独立随机源做创始家族分组（跨种子分叉，但不消耗共享 rng）
+  const rnd = mulberry(hashStr(String(config.seed ?? 0) + ':family'));
+  const ids = agents.map((a) => a.id);
+  const shuffled = ids.slice();
+  for (let i = shuffled.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(rnd() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  const groupSize = 3 + Math.floor(rnd() * 4);
+  let created = 0;
+  for (let i = 0; i < shuffled.length; i += groupSize) {
+    const group = shuffled.slice(i, i + groupSize);
+    if (group.length === 0) continue;
+    const founder = group[0];
+    const fam = social.family.registry.create({
+      name: '创始家族' + (created + 1),
+      founder,
+      members: group,
+      generation: { 0: group },
+      tick: 0,
+    });
+    social.family.chronicle.append({ familyId: fam.familyId, event: 'founding', tick: 0, actor: founder, detail: { members: group.length } });
+    for (const m of group) {
+      social.family.lineage.register({ agentId: m, familyId: fam.familyId, parents: [], generation: 0 });
+      agent.persona.identity.update(m, { familyId: fam.familyId });
+      if (m !== founder) {
+        social.graph.edges.create({ a: founder, b: m, type: 'family', weight: 1, note: '创始家族' });
+      }
+    }
+    created += 1;
+  }
+  return { families: created };
 }
 
 /** 生育：找最契合的一对 → 恋爱 → 子代 → 谱系 → 注册进主循环。 */
@@ -245,13 +314,27 @@ function runProcreation(tick, agents, spawnChild, config = {}) {
   }
 
   childrenBorn += 1;
-  const familyId = 'fam_' + childrenBorn;
+  // 批次2-D：家族登记（registry 成为 lineage 的上层组织）+ 编年史 + 关系边
+  const fam = social.family.registry.create({
+    name: '家族' + childrenBorn,
+    founder: pair.a,
+    members: [pair.a, pair.b],
+    generation: { 0: [pair.a, pair.b] },
+    tick,
+  });
+  const familyId = fam.familyId;
   const child = social.procreation.offspring.request({
     a: pair.a, b: pair.b, familyId, name: '新生儿' + familyId,
   });
   social.family.lineage.register({
     agentId: child.id, familyId, parents: [pair.a, pair.b], generation: 1,
   });
+  social.family.registry.addMember({ familyId, memberId: child.id, generation: 1 });
+  social.family.chronicle.append({ familyId, event: 'founding', tick, actor: pair.a, detail: { spouse: pair.b } });
+  social.family.chronicle.append({ familyId, event: 'birth', tick, actor: child.id, detail: { parents: [pair.a, pair.b] } });
+  social.graph.edges.create({ a: pair.a, b: pair.b, type: 'romance', weight: 1, note: '婚配' });
+  social.graph.edges.create({ a: pair.a, b: child.id, type: 'family', weight: 1, note: '亲子' });
+  social.graph.edges.create({ a: pair.b, b: child.id, type: 'family', weight: 1, note: '亲子' });
   spawnChild(child);
 
   // 批次2-A：子代特质可遗传变异 + 身份（家庭归属）+ 择偶相似度观测
@@ -303,6 +386,9 @@ function runMarket(tick, agents, config = {}) {
       });
     }
     result.trades = receipts.length;
+    if (receipts.length > 0) {
+      social.graph.edges.create({ a: seller, b: buyer, type: 'trade', weight: 0.1, note: '交易' });
+    }
   } catch {
     // 余额不足等，跳过本 tick 交易
   }
@@ -523,6 +609,7 @@ function runSimilarityBonding(tick, agents, config = {}) {
   const threshold = (typeof config.similarityBondThreshold === 'number' && config.similarityBondThreshold > 0 && config.similarityBondThreshold <= 1) ? config.similarityBondThreshold : 0.6;
   if (best.similarity > threshold && social.relationship.friendship.strength({ a: target, b: best.agentId }) === 0) {
     social.relationship.friendship.update({ a: target, b: best.agentId, delta: 0.2, note: 'similarity' });
+    social.graph.edges.create({ a: target, b: best.agentId, type: 'friendship', weight: 0.8, note: 'similarity' });
     result.bonds += 1;
     result.pair = { a: target, b: best.agentId, similarity: best.similarity };
     observer.recorder.eventLog.record({
@@ -718,7 +805,19 @@ export function tick({ tick, agents, config = {}, spawnChild }) {
     shelter: runShelterRepair(config),
     residence: runResidence(tick, agents, config),
     health: runHealth(tick, agents, config),
+    community: runCommunity(tick, agents, config),
   };
+}
+
+/** 批次2-D：社区发现（每 N tick 重算，避免每 tick 全量重算拖慢长跑）。 */
+function runCommunity(tick, agents, config = {}) {
+  const interval = (Number.isInteger(config.communityDetectInterval) && config.communityDetectInterval > 0) ? config.communityDetectInterval : 10;
+  if (communitySnapshot !== null && lastCommunityTick >= 0 && tick - lastCommunityTick < interval) {
+    return { ...communitySnapshot, throttled: true };
+  }
+  lastCommunityTick = tick;
+  communitySnapshot = social.graph.community.detect({ threshold: 0.5 });
+  return communitySnapshot;
 }
 
 /** 阶段二累计摘要（供 loop.run 报告与观测）。 */
@@ -777,6 +876,8 @@ export function __reset() {
   residentEnergyUsed = 0;
   industryEnergyUsed = 0;
   lossTicks = 0;
+  lastCommunityTick = -1;
+  communitySnapshot = null;
 
   economy.__reset();
   agent.inventory.item.__reset();

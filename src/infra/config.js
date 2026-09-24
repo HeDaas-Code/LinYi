@@ -82,6 +82,8 @@ export const DEFAULTS = Object.freeze({
   scheduleLength: 12,
   careerEnabled: true,
   societyEnabled: true,
+  // 批次2-D：社区发现重算间隔（每 N tick 重算一次，避免每 tick 全量重算拖慢长跑）
+  communityDetectInterval: 10,
 });
 
 /** 返回默认值深拷贝快照。 */
@@ -292,6 +294,7 @@ const RULES = {
   scheduleLength: (v) => (isPosInt(v) ? true : '必须是正整数'),
   careerEnabled: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
   societyEnabled: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
+  communityDetectInterval: (v) => (isPosInt(v) ? true : '必须是正整数'),
 };
 
 /**
