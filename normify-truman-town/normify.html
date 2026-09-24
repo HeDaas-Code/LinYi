@@ -163,17 +163,17 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "root_uid": "d440391b"
       }
     ],
-    "compiled_at": "2026-09-23T18:03:41.725Z",
+    "compiled_at": "2026-09-24T15:12:28.110Z",
     "stats": {
       "tree_count": 1,
-      "module_count": 227,
-      "leaf_count": 158,
-      "api_count": 358,
-      "dep_count": 338,
+      "module_count": 229,
+      "leaf_count": 160,
+      "api_count": 368,
+      "dep_count": 345,
       "cross_tree_dep_count": 0,
       "max_depth": 5,
       "layout_count": 69,
-      "planned_count": 106,
+      "planned_count": 84,
       "deprecated_count": 0,
       "policy_rule_count": 2,
       "change_count": 5,
@@ -201,9 +201,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "updated_at": "2026-09-22T04:32:53Z",
       "fingerprint": "pending",
       "aggregate": {
-        "descendant_count": 226,
+        "descendant_count": 228,
         "own_api_count": 0,
-        "inherited_api_count": 358,
+        "inherited_api_count": 368,
         "dep_out": 0,
         "dep_in": 0
       }
@@ -228,9 +228,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "updated_at": "2026-09-22T04:32:53Z",
       "fingerprint": "pending",
       "aggregate": {
-        "descendant_count": 50,
+        "descendant_count": 51,
         "own_api_count": 0,
-        "inherited_api_count": 75,
+        "inherited_api_count": 79,
         "dep_out": 0,
         "dep_in": 0
       }
@@ -295,37 +295,40 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.agent.anticipation.pool",
       "tree": "truman-town",
       "depth": 5,
-      "state": "planned",
       "name": {
         "zh": "候选修剪器",
         "en": "Candidate Pruner"
       },
       "description": {
-        "zh": "按时间与可行性修剪过期候选。\n",
-        "en": "Prunes stale or infeasible candidates by time and viability.\n"
+        "zh": "按动机与性格对候选行动池打分并裁剪（保留前 K）。\n",
+        "en": "Scores and prunes the candidate action pool by motivation and personality (keep top-K).\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T05:27:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/agent/anticipation/pool/pruner.js"
+        }
+      ],
+      "revision": "26dba326d0f79bf978188bf6f3ac73c02723ff58",
+      "updated_at": "2026-09-24T15:12:14.789Z",
+      "fingerprint": "d1ed1494cec8a38656c3bb0c3a531deb4fd54f9f4c752c8d9aee8b5e2a3f1bc8",
       "apis": [
+        {
+          "protocol": "rpc",
+          "path": "agent.anticipation.pool.pruner.score",
+          "description": {
+            "zh": "对单个候选打分（基础分+动机+性格）。\n",
+            "en": "Scores one candidate (base + motivation + personality).\n"
+          },
+          "key": "rpc:agent.anticipation.pool.pruner.score"
+        },
         {
           "protocol": "rpc",
           "path": "agent.anticipation.pool.pruner.prune",
           "description": {
-            "zh": "调用 agent.anticipation.pool.pruner.prune。\n",
-            "en": "Calls agent.anticipation.pool.pruner.prune.\n"
+            "zh": "裁剪候选池，保留前 K 个。\n",
+            "en": "Prunes candidate pool, keeps top-K.\n"
           },
           "key": "rpc:agent.anticipation.pool.pruner.prune"
-        },
-        {
-          "protocol": "rpc",
-          "path": "agent.anticipation.pool.pruner.stale",
-          "description": {
-            "zh": "调用 agent.anticipation.pool.pruner.stale。\n",
-            "en": "Calls agent.anticipation.pool.pruner.stale.\n"
-          },
-          "key": "rpc:agent.anticipation.pool.pruner.stale"
         }
       ],
       "deps": [
@@ -429,9 +432,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/agent/anticipation/pool/store.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T06:24:06.394Z",
-      "fingerprint": "f32b8fa2b141175ab5a37321179df26af7906515e8e5ad7d3b94283d38193527",
+      "revision": "26dba326d0f79bf978188bf6f3ac73c02723ff58",
+      "updated_at": "2026-09-24T15:12:14.789Z",
+      "fingerprint": "7407fae91c83652ad973308f6652939eafac189e41c25e38c67055534b5bfffd",
       "apis": [
         {
           "protocol": "rpc",
@@ -464,7 +467,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "own_api_count": 2,
         "inherited_api_count": 0,
         "dep_out": 1,
-        "dep_in": 3
+        "dep_in": 4
       }
     },
     "truman-town.agent.anticipation.simulator": {
@@ -473,7 +476,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.agent.anticipation",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "行动模拟",
         "en": "Action Simulator"
@@ -482,28 +484,32 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "对候选行动做结果模拟与效用评分。\n",
         "en": "Simulates candidate action outcomes and scores their utility.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/agent/anticipation/simulator.js"
+        }
+      ],
+      "revision": "159dc43daf11d18b03ea9fc0ea5c3e6b18f16488",
+      "updated_at": "2026-09-24T02:49:57.817Z",
+      "fingerprint": "29c83b4baf35c9149b82eb13d56a846b393371cc8f37a78595a133068f009ada",
       "apis": [
         {
           "protocol": "rpc",
-          "path": "agent.anticipation.simulator.score",
+          "path": "agent.anticipation.simulator.simulate",
           "description": {
-            "zh": "调用 agent.anticipation.simulator.score。\n",
-            "en": "Calls agent.anticipation.simulator.score.\n"
+            "zh": "推演单个候选行动，输出期望效用与风险。\n",
+            "en": "Simulates one candidate action, outputs expected utility and risk.\n"
           },
-          "key": "rpc:agent.anticipation.simulator.score"
+          "key": "rpc:agent.anticipation.simulator.simulate"
         },
         {
           "protocol": "rpc",
-          "path": "agent.anticipation.simulator.compare",
+          "path": "agent.anticipation.simulator.predict",
           "description": {
-            "zh": "调用 agent.anticipation.simulator.compare。\n",
-            "en": "Calls agent.anticipation.simulator.compare.\n"
+            "zh": "推演全部候选并按期望效用降序预测。\n",
+            "en": "Simulates all candidates and predicts by expected utility desc.\n"
           },
-          "key": "rpc:agent.anticipation.simulator.compare"
+          "key": "rpc:agent.anticipation.simulator.predict"
         }
       ],
       "deps": [
@@ -814,7 +820,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "own_api_count": 2,
         "inherited_api_count": 0,
         "dep_out": 3,
-        "dep_in": 1
+        "dep_in": 2
       }
     },
     "truman-town.agent.crafting.workbench.output": {
@@ -1075,11 +1081,90 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         }
       ],
       "aggregate": {
-        "descendant_count": 3,
+        "descendant_count": 4,
         "own_api_count": 0,
-        "inherited_api_count": 6,
+        "inherited_api_count": 10,
         "dep_out": 6,
         "dep_in": 1
+      }
+    },
+    "truman-town.agent.decision.candidates": {
+      "uid": "c4a1d7e2",
+      "id": "truman-town.agent.decision.candidates",
+      "parent": "truman-town.agent.decision",
+      "tree": "truman-town",
+      "depth": 4,
+      "name": {
+        "zh": "候选规划器",
+        "en": "Candidate Planner"
+      },
+      "description": {
+        "zh": "按居民当前状态（背包材料、就业、识字、同伴）生成可达行动候选，恒定包含生存骨架（eat/drink/rest/forage），再追加规则准入的动态行动（craft/build/write/work/trade/socialize/court）；不可行时给出拒绝理由。\n",
+        "en": "Generates reachable action candidates from current agent state (materials, employment, literacy, peers). Always includes the survival skeleton, then appends rule-admitted dynamic actions, with a rejection reason when infeasible.\n"
+      },
+      "source": [
+        {
+          "path": "src/agent/decision/candidates.js"
+        }
+      ],
+      "revision": "26dba326d0f79bf978188bf6f3ac73c02723ff58",
+      "updated_at": "2026-09-24T15:12:14.790Z",
+      "fingerprint": "9e1003f8806eb10aa3fec7783d127dd97b96690200fb2c7a25008389169e7ba2",
+      "apis": [
+        {
+          "protocol": "rpc",
+          "path": "agent.decision.candidates.plan",
+          "description": {
+            "zh": "生成候选行动列表（生存骨架 + 规则准入的动态行动）。\n",
+            "en": "Builds the candidate action list.\n"
+          },
+          "key": "rpc:agent.decision.candidates.plan"
+        },
+        {
+          "protocol": "rpc",
+          "path": "agent.decision.candidates.actions",
+          "description": {
+            "zh": "返回全部可规划行动键。\n",
+            "en": "Returns all plannable action keys.\n"
+          },
+          "key": "rpc:agent.decision.candidates.actions"
+        },
+        {
+          "protocol": "rpc",
+          "path": "agent.decision.candidates.rules",
+          "description": {
+            "zh": "返回规则表（各行动的前置条件）。\n",
+            "en": "Returns the rule table.\n"
+          },
+          "key": "rpc:agent.decision.candidates.rules"
+        },
+        {
+          "protocol": "rpc",
+          "path": "agent.decision.candidates.baseScores",
+          "description": {
+            "zh": "返回各行动的基础分。\n",
+            "en": "Returns base scores.\n"
+          },
+          "key": "rpc:agent.decision.candidates.baseScores"
+        }
+      ],
+      "deps": [
+        {
+          "kind": "call",
+          "to": "truman-town.agent.anticipation.pool.store",
+          "label": {
+            "zh": "候选写入预想池",
+            "en": "Candidates written to pool"
+          },
+          "cross_tree": false
+        }
+      ],
+      "aggregate": {
+        "descendant_count": 0,
+        "own_api_count": 4,
+        "inherited_api_count": 0,
+        "dep_out": 1,
+        "dep_in": 0
       }
     },
     "truman-town.agent.decision.context": {
@@ -1155,7 +1240,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.agent.decision",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "决策解释器",
         "en": "Decision Explainer"
@@ -1164,17 +1248,21 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "解释决策依据并生成可被观察者审计的决策轨迹。\n",
         "en": "Explains decisions and produces auditable decision traces.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T05:27:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/agent/decision/explainer.js"
+        }
+      ],
+      "revision": "159dc43daf11d18b03ea9fc0ea5c3e6b18f16488",
+      "updated_at": "2026-09-24T02:31:02.018Z",
+      "fingerprint": "ca1556bf9ff32886e3a4350fa156921089687f3751db6a6a3863bb9433a77f9e",
       "apis": [
         {
           "protocol": "rpc",
           "path": "agent.decision.explainer.explain",
           "description": {
-            "zh": "调用 agent.decision.explainer.explain。\n",
-            "en": "Calls agent.decision.explainer.explain.\n"
+            "zh": "生成人类可读决策解释（为何选 A 不选 B）。\n",
+            "en": "Generates human-readable decision explanation (why A over B).\n"
           },
           "key": "rpc:agent.decision.explainer.explain"
         },
@@ -1182,8 +1270,8 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "protocol": "rpc",
           "path": "agent.decision.explainer.trace",
           "description": {
-            "zh": "调用 agent.decision.explainer.trace。\n",
-            "en": "Calls agent.decision.explainer.trace.\n"
+            "zh": "生成可审计的结构化决策轨迹。\n",
+            "en": "Produces an auditable structured decision trace.\n"
           },
           "key": "rpc:agent.decision.explainer.trace"
         }
@@ -1440,7 +1528,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.agent",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "生命周期",
         "en": "Lifecycle"
@@ -1449,10 +1536,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "管理智能体的出生、衰老与死亡，驱动小镇代际更替。\n",
         "en": "Manages birth, aging and death to drive generational turnover.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/agent/lifecycle.js"
+        }
+      ],
+      "revision": "6939444d190f953b7c3e7a73b35ad8b25ac43b07",
+      "updated_at": "2026-09-24T02:04:23.739Z",
+      "fingerprint": "5510f4bb5b1ec21c1d0b5eb210f6ca19ac17c9c475c6f9a150bbae694331afdf",
       "apis": [
         {
           "protocol": "rpc",
@@ -1676,37 +1767,40 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.agent.memory",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "语义记忆",
         "en": "Semantic Memory"
       },
       "description": {
-        "zh": "沉淀概念、人物与地点知识，支持结构化查询。\n",
-        "en": "Accumulates concepts, people and places for structured queries.\n"
+        "zh": "沉淀语义记忆条目（事件→摘要），按词面/标签相关度召回（默认纯词面匹配，不依赖 MiniLM）。\n",
+        "en": "Stores semantic memory entries (event→summary) and recalls them by lexical/tag relevance (default lexical matching, no MiniLM).\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/agent/memory/semantic.js"
+        }
+      ],
+      "revision": "159dc43daf11d18b03ea9fc0ea5c3e6b18f16488",
+      "updated_at": "2026-09-24T02:49:57.818Z",
+      "fingerprint": "bccf1aa2f63ed92a25ff6738d41a18cd071c7a1784447efaaaef1fac48230357",
       "apis": [
         {
           "protocol": "rpc",
-          "path": "agent.memory.semantic.update",
+          "path": "agent.memory.semantic.store",
           "description": {
-            "zh": "调用 agent.memory.semantic.update。\n",
-            "en": "Calls agent.memory.semantic.update.\n"
+            "zh": "写入一条语义记忆（事件→摘要），每主体上限裁剪。\n",
+            "en": "Stores one semantic memory entry (event→summary) with per-agent cap.\n"
           },
-          "key": "rpc:agent.memory.semantic.update"
+          "key": "rpc:agent.memory.semantic.store"
         },
         {
           "protocol": "rpc",
-          "path": "agent.memory.semantic.query",
+          "path": "agent.memory.semantic.recall",
           "description": {
-            "zh": "调用 agent.memory.semantic.query。\n",
-            "en": "Calls agent.memory.semantic.query.\n"
+            "zh": "按词面/标签相关度召回语义记忆（top-K）。\n",
+            "en": "Recalls semantic memories by lexical/tag relevance (top-K).\n"
           },
-          "key": "rpc:agent.memory.semantic.query"
+          "key": "rpc:agent.memory.semantic.recall"
         }
       ],
       "aggregate": {
@@ -1750,7 +1844,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.agent.persona",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "身份",
         "en": "Identity"
@@ -1759,10 +1852,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "描述智能体的姓名、年龄、职业与自我叙事。\n",
         "en": "Describes name, age, occupation and self-narrative.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/agent/persona/identity.js"
+        }
+      ],
+      "revision": "6939444d190f953b7c3e7a73b35ad8b25ac43b07",
+      "updated_at": "2026-09-24T02:04:23.738Z",
+      "fingerprint": "9c6bab4c4236c8733939a420b4a10f976f5ae073579317b7e1fd4819c4ff7400",
       "apis": [
         {
           "protocol": "rpc",
@@ -1797,7 +1894,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.agent.persona",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "动机",
         "en": "Motivation"
@@ -1806,10 +1902,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "评估需求、目标与情绪驱动力，输出行动优先级。\n",
         "en": "Evaluates needs, goals and emotional drives to rank action priorities.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/agent/persona/motivation.js"
+        }
+      ],
+      "revision": "6939444d190f953b7c3e7a73b35ad8b25ac43b07",
+      "updated_at": "2026-09-24T02:04:23.738Z",
+      "fingerprint": "c672a858be9b17677c79a42b99cdf716757df15e4ae73d3b5eb6304a08e23454",
       "apis": [
         {
           "protocol": "rpc",
@@ -1844,7 +1944,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.agent.persona",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "性格",
         "en": "Personality"
@@ -1853,10 +1952,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "用大五人格等维度刻画性格，并评估情境下的行为倾向。\n",
         "en": "Profiles personality traits and evaluates situational behavioral tendencies.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/agent/persona/personality.js"
+        }
+      ],
+      "revision": "1c7c3d69497e4bcdd67b1e32a59bd6bdbfdc92f5",
+      "updated_at": "2026-09-24T04:10:06.311Z",
+      "fingerprint": "d6a53c5c57f8f0c876645022b3d9552538983a5befcee363ee781f348fdeb0e4",
       "apis": [
         {
           "protocol": "rpc",
@@ -2114,9 +2217,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/agent/psyche/trauma.js"
         }
       ],
-      "revision": "e023d797f741ad817f8c81c2bd91de8d996e39ac",
-      "updated_at": "2026-09-23T04:24:00.238Z",
-      "fingerprint": "1a4cd07e476b5e4113b75170b098760d1de65f8201bfaff2af57043cd136d0c8",
+      "revision": "5363daa33de6939922915ece1c71fbb993114054",
+      "updated_at": "2026-09-24T07:54:56.513Z",
+      "fingerprint": "fa3968bd76c489c2c21248c2f53937edcc47b0a2b04d031fae3b0f0133505f93",
       "apis": [
         {
           "protocol": "rpc",
@@ -2216,7 +2319,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.agent.role",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "职业角色",
         "en": "Career Role"
@@ -2225,10 +2327,15 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "分配与释放职业身份，连接就业市场与产业。\n",
         "en": "Assigns and releases occupations linked to labour and industry.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/agent/role/career.js",
+          "line": 1
+        }
+      ],
+      "revision": "e350da98bb80d56a99c3c70b9cd269a351113026",
+      "updated_at": "2026-09-24T03:13:06.630Z",
+      "fingerprint": "51e4383a89ae1b86a5adb7674ce9312afe1988620ef7f319dad79277359a79d7",
       "apis": [
         {
           "protocol": "rpc",
@@ -2275,7 +2382,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.agent.role",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "公共角色",
         "en": "Civic Role"
@@ -2284,10 +2390,15 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "承担镇长、店主、居民等公共身份并参与治理。\n",
         "en": "Holds civic identities such as mayor, shopkeeper or resident.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/agent/role/society.js",
+          "line": 1
+        }
+      ],
+      "revision": "e350da98bb80d56a99c3c70b9cd269a351113026",
+      "updated_at": "2026-09-24T03:13:06.631Z",
+      "fingerprint": "f2c6662332eaf56b23501011d3e2e4ec1fc4bfdc3b1f70761b7adf116f921d9f",
       "apis": [
         {
           "protocol": "rpc",
@@ -2349,7 +2460,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.agent.schedule",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "日程执行",
         "en": "Schedule Executor"
@@ -2358,10 +2468,15 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "按世界时间推进日程项，触发对应行动。\n",
         "en": "Advances schedule items by world time and triggers actions.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/agent/schedule/executor.js",
+          "line": 1
+        }
+      ],
+      "revision": "e350da98bb80d56a99c3c70b9cd269a351113026",
+      "updated_at": "2026-09-24T03:13:06.630Z",
+      "fingerprint": "3f6b6c3bc3ec539299841def187b42f2161123f06ab399be924be3f68395e466",
       "apis": [
         {
           "protocol": "rpc",
@@ -2392,13 +2507,18 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "kind": "call",
           "to": "truman-town.agent.crafting.workbench",
           "cross_tree": false
+        },
+        {
+          "kind": "call",
+          "to": "truman-town.agent.schedule.planner",
+          "cross_tree": false
         }
       ],
       "aggregate": {
         "descendant_count": 0,
         "own_api_count": 2,
         "inherited_api_count": 0,
-        "dep_out": 2,
+        "dep_out": 3,
         "dep_in": 1
       }
     },
@@ -2408,7 +2528,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.agent.schedule",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "日程规划",
         "en": "Schedule Planner"
@@ -2417,10 +2536,15 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "根据角色、目标与约束生成和重排日程。\n",
         "en": "Generates and replans schedules from roles, goals and constraints.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/agent/schedule/planner.js",
+          "line": 1
+        }
+      ],
+      "revision": "e350da98bb80d56a99c3c70b9cd269a351113026",
+      "updated_at": "2026-09-24T03:13:06.630Z",
+      "fingerprint": "0c461c852583855d1fc1d57b0c532661a24ad3e21e16e4d8c81ca7fabda2076f",
       "apis": [
         {
           "protocol": "rpc",
@@ -2463,7 +2587,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "own_api_count": 2,
         "inherited_api_count": 0,
         "dep_out": 3,
-        "dep_in": 0
+        "dep_in": 1
       }
     },
     "truman-town.agent.traits": {
@@ -2499,7 +2623,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.agent.traits",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "特质演化",
         "en": "Trait Evolution"
@@ -2508,10 +2631,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "让 tag 发生小概率变异并随时间漂移，推动代际更新。\n",
         "en": "Applies rare mutation and temporal drift to evolve tags across generations.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/agent/traits/evolution.js"
+        }
+      ],
+      "revision": "6939444d190f953b7c3e7a73b35ad8b25ac43b07",
+      "updated_at": "2026-09-24T02:04:23.739Z",
+      "fingerprint": "d4345ace445bdb2f93b3190779cb7bdae37232b21603d773763286c6f50f1053",
       "apis": [
         {
           "protocol": "rpc",
@@ -2776,7 +2903,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.agent.traits.tagset",
       "tree": "truman-town",
       "depth": 5,
-      "state": "planned",
       "name": {
         "zh": "特质相似度",
         "en": "Tag Similarity"
@@ -2785,10 +2911,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "计算两个 50 标签集合的相似度并检索近邻。\n",
         "en": "Computes similarity between two 50-tag sets and finds neighbors.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T05:27:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/agent/traits/tagset/similarity.js"
+        }
+      ],
+      "revision": "6939444d190f953b7c3e7a73b35ad8b25ac43b07",
+      "updated_at": "2026-09-24T02:04:23.739Z",
+      "fingerprint": "fcc52c46932330246ac98d057a4bc49844e919b6214225fa852134f6f0a75f61",
       "apis": [
         {
           "protocol": "rpc",
@@ -2843,9 +2973,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/agent/traits/tagset/store.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T06:24:06.393Z",
-      "fingerprint": "2c18074880b0a92e1d372405322dca55f8eae4e30b6fb4770ec33497e1459efb",
+      "revision": "1c7c3d69497e4bcdd67b1e32a59bd6bdbfdc92f5",
+      "updated_at": "2026-09-24T04:10:06.312Z",
+      "fingerprint": "fd656aed6ef8f9e94be6af1a9bcd54d83aaab7a738d936940c673f53e7c1f479",
       "apis": [
         {
           "protocol": "rpc",
@@ -4635,9 +4765,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/civilization/tech/research.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T14:24:31.903Z",
-      "fingerprint": "c5d12d19c2ed73bb9221010062150662cbf2ad3e46ac9a0e5fe7591982daa179",
+      "revision": "5363daa33de6939922915ece1c71fbb993114054",
+      "updated_at": "2026-09-24T07:54:56.514Z",
+      "fingerprint": "08e1e60843d00c6db03eefa90af4942a03663a9ca04eacd0036f7c6272fa870e",
       "apis": [
         {
           "protocol": "rpc",
@@ -5219,7 +5349,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "own_api_count": 2,
         "inherited_api_count": 0,
         "dep_out": 3,
-        "dep_in": 0
+        "dep_in": 1
       }
     },
     "truman-town.economy.ledger": {
@@ -6296,9 +6426,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/infra/config.js"
         }
       ],
-      "revision": "6b38498fdd1486b9bde9ab17553cc89337c951fd",
-      "updated_at": "2026-09-23T18:02:19.900Z",
-      "fingerprint": "35153a0562eb9b6a42848612760495467045e9239411193313508d6d83e60b39",
+      "revision": "26dba326d0f79bf978188bf6f3ac73c02723ff58",
+      "updated_at": "2026-09-24T15:12:14.790Z",
+      "fingerprint": "ec62ab89a6f4c1a04fe5c6a7be4e7bbf9fd355960b3b3328b9ed8972526c3f4d",
       "apis": [
         {
           "protocol": "rpc",
@@ -7359,7 +7489,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "own_api_count": 0,
         "inherited_api_count": 3,
         "dep_out": 1,
-        "dep_in": 21
+        "dep_in": 22
       }
     },
     "truman-town.observer.recorder.action-log": {
@@ -7584,9 +7714,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "updated_at": "2026-09-22T06:59:44.285Z",
       "fingerprint": "pending",
       "aggregate": {
-        "descendant_count": 8,
+        "descendant_count": 9,
         "own_api_count": 0,
-        "inherited_api_count": 22,
+        "inherited_api_count": 27,
         "dep_out": 0,
         "dep_in": 0
       }
@@ -7669,9 +7799,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "updated_at": "2026-09-22T06:59:44.285Z",
       "fingerprint": "pending",
       "aggregate": {
-        "descendant_count": 4,
+        "descendant_count": 5,
         "own_api_count": 0,
-        "inherited_api_count": 13,
+        "inherited_api_count": 18,
         "dep_out": 0,
         "dep_in": 0
       }
@@ -7838,9 +7968,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/runtime/orchestrator/loop.js"
         }
       ],
-      "revision": "da6092c786d6c0615331ed8d297d5c0d6a2fa45a",
-      "updated_at": "2026-09-23T12:13:27.593Z",
-      "fingerprint": "941a05f462c2eafcf404ca347a62c4655e74d1ec477668934d047722c78edf32",
+      "revision": "26dba326d0f79bf978188bf6f3ac73c02723ff58",
+      "updated_at": "2026-09-24T15:12:14.790Z",
+      "fingerprint": "515ddb3d1667f30db95b8419efb503df9e0fea8a93e96989e189ac865142e0a3",
       "apis": [
         {
           "protocol": "rpc",
@@ -8277,6 +8407,112 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "inherited_api_count": 0,
         "dep_out": 1,
         "dep_in": 1
+      }
+    },
+    "truman-town.runtime.orchestrator.stage2": {
+      "uid": "e7b3f908",
+      "id": "truman-town.runtime.orchestrator.stage2",
+      "parent": "truman-town.runtime.orchestrator",
+      "tree": "truman-town",
+      "depth": 4,
+      "name": {
+        "zh": "第二阶段编排",
+        "en": "Phase-2 Orchestration"
+      },
+      "description": {
+        "zh": "阶段二世界推进：产业/经济/制作队列推进、居民自选行动的实际执行（performAgentAction）、社会与家庭汇总、疾病分诊等。\n",
+        "en": "Phase-2 world stepping: industry/economy/craft queue advancement, execution of agent-chosen actions, social and family aggregation, triage.\n"
+      },
+      "source": [
+        {
+          "path": "src/runtime/orchestrator/_stage2.js"
+        }
+      ],
+      "revision": "26dba326d0f79bf978188bf6f3ac73c02723ff58",
+      "updated_at": "2026-09-24T15:12:14.790Z",
+      "fingerprint": "9f12aa0667e772971098ef8c79cab0d6980cb3186ad48e9a4c251982fadea2bd",
+      "apis": [
+        {
+          "protocol": "rpc",
+          "path": "orchestrator.stage2.tick",
+          "description": {
+            "zh": "推进一步阶段二世界状态。\n",
+            "en": "Advances phase-2 world state by one tick.\n"
+          },
+          "key": "rpc:orchestrator.stage2.tick"
+        },
+        {
+          "protocol": "rpc",
+          "path": "orchestrator.stage2.performAgentAction",
+          "description": {
+            "zh": "执行居民自己选择的动态行动（craft/build/write/work/trade/socialize/court），不可行时不改世界。\n",
+            "en": "Executes an agent-chosen dynamic action; leaves world untouched when infeasible.\n"
+          },
+          "key": "rpc:orchestrator.stage2.performAgentAction"
+        },
+        {
+          "protocol": "rpc",
+          "path": "orchestrator.stage2.candidateStateFor",
+          "description": {
+            "zh": "返回候选刷新所需的状态（hasPeer/employed/businessActive），按 tick 缓存。\n",
+            "en": "Returns candidate-refresh state, cached per tick.\n"
+          },
+          "key": "rpc:orchestrator.stage2.candidateStateFor"
+        },
+        {
+          "protocol": "rpc",
+          "path": "orchestrator.stage2.craftMaterialId",
+          "description": {
+            "zh": "返回制作所需材料物品 id。\n",
+            "en": "Returns the crafting material item id.\n"
+          },
+          "key": "rpc:orchestrator.stage2.craftMaterialId"
+        },
+        {
+          "protocol": "rpc",
+          "path": "orchestrator.stage2.__reset",
+          "description": {
+            "zh": "复位阶段二状态。\n",
+            "en": "Resets phase-2 state.\n"
+          },
+          "key": "rpc:orchestrator.stage2.__reset"
+        }
+      ],
+      "deps": [
+        {
+          "kind": "call",
+          "to": "truman-town.agent.crafting.workbench.executor",
+          "label": {
+            "zh": "推进制作队列",
+            "en": "Advance craft queue"
+          },
+          "cross_tree": false
+        },
+        {
+          "kind": "call",
+          "to": "truman-town.economy.industry.production",
+          "label": {
+            "zh": "生产计划",
+            "en": "Production planning"
+          },
+          "cross_tree": false
+        },
+        {
+          "kind": "call",
+          "to": "truman-town.observer.recorder",
+          "label": {
+            "zh": "记录居民行动事件",
+            "en": "Record agent action events"
+          },
+          "cross_tree": false
+        }
+      ],
+      "aggregate": {
+        "descendant_count": 0,
+        "own_api_count": 5,
+        "inherited_api_count": 0,
+        "dep_out": 3,
+        "dep_in": 0
       }
     },
     "truman-town.runtime.registry": {
@@ -8739,7 +8975,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.social.family",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "家族编年史",
         "en": "Family Chronicle"
@@ -8748,10 +8983,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "记录家族成员的重要事件并编译成家族史。\n",
         "en": "Records major family events and compiles family history.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:55:51Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/social/family/chronicle.js"
+        }
+      ],
+      "revision": "1c7c3d69497e4bcdd67b1e32a59bd6bdbfdc92f5",
+      "updated_at": "2026-09-24T04:00:14.039Z",
+      "fingerprint": "b70796a1ebe6d268d62171ea22b02c408828c266d674485ec468204245d32287",
       "apis": [
         {
           "protocol": "rpc",
@@ -9033,7 +9272,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "own_api_count": 2,
         "inherited_api_count": 0,
         "dep_out": 1,
-        "dep_in": 4
+        "dep_in": 5
       }
     },
     "truman-town.social.family.registry": {
@@ -9042,7 +9281,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.social.family",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "家族登记",
         "en": "Family Registry"
@@ -9051,10 +9289,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "创建、查找与解散家族。\n",
         "en": "Creates, looks up and dissolves families.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:55:51Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/social/family/registry.js"
+        }
+      ],
+      "revision": "1c7c3d69497e4bcdd67b1e32a59bd6bdbfdc92f5",
+      "updated_at": "2026-09-24T04:00:14.039Z",
+      "fingerprint": "a90fcc189cec8083cdf18c7f49727d4e3064b4412cef8948e64892571a960fd9",
       "apis": [
         {
           "protocol": "rpc",
@@ -9300,7 +9542,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.social.graph",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "社区发现",
         "en": "Community Detection"
@@ -9309,10 +9550,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "识别社交圈与社区归属，影响信息传播。\n",
         "en": "Detects circles and communities that shape information flow.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/social/graph/community.js"
+        }
+      ],
+      "revision": "1c7c3d69497e4bcdd67b1e32a59bd6bdbfdc92f5",
+      "updated_at": "2026-09-24T04:00:14.039Z",
+      "fingerprint": "4466bdc37dad940b689497a39392e4b031754f8702c4c07ac2112c3681ac0c86",
       "apis": [
         {
           "protocol": "rpc",
@@ -9333,11 +9578,18 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "key": "rpc:social.graph.community.belong"
         }
       ],
+      "deps": [
+        {
+          "kind": "call",
+          "to": "truman-town.social.graph.edges",
+          "cross_tree": false
+        }
+      ],
       "aggregate": {
         "descendant_count": 0,
         "own_api_count": 2,
         "inherited_api_count": 0,
-        "dep_out": 0,
+        "dep_out": 1,
         "dep_in": 2
       }
     },
@@ -9347,7 +9599,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.social.graph",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "关系边",
         "en": "Graph Edges"
@@ -9356,10 +9607,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "创建与移除朋友、恋人、家人等关系边。\n",
         "en": "Creates and removes friend, lover and family edges.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/social/graph/edges.js"
+        }
+      ],
+      "revision": "1c7c3d69497e4bcdd67b1e32a59bd6bdbfdc92f5",
+      "updated_at": "2026-09-24T04:00:14.039Z",
+      "fingerprint": "c45e1a6fa22535cd5480e5109904ec50f97b71439d0c7398156cf67c237d83df",
       "apis": [
         {
           "protocol": "rpc",
@@ -9392,7 +9647,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "own_api_count": 2,
         "inherited_api_count": 0,
         "dep_out": 1,
-        "dep_in": 0
+        "dep_in": 1
       }
     },
     "truman-town.social.platform": {
@@ -9428,7 +9683,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.social.platform",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "信息流",
         "en": "Feeds"
@@ -9437,10 +9691,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "按关系与兴趣为智能体生成和排序信息流。\n",
         "en": "Generates and ranks feeds by relationships and interests.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/social/platform/feeds.js"
+        }
+      ],
+      "revision": "e317580e2e9326327504170ed572a942b2b0db47",
+      "updated_at": "2026-09-24T07:01:20.044Z",
+      "fingerprint": "895306c82c1890813ec2bcff91f59b2d854b803419a14ec27deaec7a23f39c1c",
       "apis": [
         {
           "protocol": "rpc",
@@ -9482,7 +9740,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.social.platform",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "帖子",
         "en": "Posts"
@@ -9491,10 +9748,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "发布、回复与回应帖子，承载公共表达。\n",
         "en": "Publishes posts, replies and reactions for public expression.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/social/platform/posts.js"
+        }
+      ],
+      "revision": "e317580e2e9326327504170ed572a942b2b0db47",
+      "updated_at": "2026-09-24T07:01:20.043Z",
+      "fingerprint": "d8ae82d4776d553250e664c327ea57d271bd881aad67bfc4f710b29d6aa37b54",
       "apis": [
         {
           "protocol": "rpc",
@@ -10072,7 +10333,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.social.relationship",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "家庭关系",
         "en": "Family"
@@ -10081,10 +10341,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "记录父母子女与亲属关系，支持家族追踪。\n",
         "en": "Records parent-child and kinship relations for family tracing.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/social/relationship/family.js"
+        }
+      ],
+      "revision": "1c7c3d69497e4bcdd67b1e32a59bd6bdbfdc92f5",
+      "updated_at": "2026-09-24T04:00:14.039Z",
+      "fingerprint": "77e4484f5dc26439b194078531eb00b52ee03c92ade6d4704fd0fe882e84ae49",
       "apis": [
         {
           "protocol": "rpc",
@@ -10110,13 +10374,18 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "kind": "call",
           "to": "truman-town.social.family.registry",
           "cross_tree": false
+        },
+        {
+          "kind": "dataflow",
+          "to": "truman-town.social.family.lineage",
+          "cross_tree": false
         }
       ],
       "aggregate": {
         "descendant_count": 0,
         "own_api_count": 2,
         "inherited_api_count": 0,
-        "dep_out": 1,
+        "dep_out": 2,
         "dep_in": 0
       }
     },
@@ -10257,7 +10526,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.social",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "声誉系统",
         "en": "Reputation"
@@ -10266,10 +10534,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "根据社交与交易行为更新声誉并供查询。\n",
         "en": "Updates and queries reputation from social and economic behavior.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/social/reputation.js"
+        }
+      ],
+      "revision": "e317580e2e9326327504170ed572a942b2b0db47",
+      "updated_at": "2026-09-24T07:01:20.044Z",
+      "fingerprint": "a57930478c3faadf467f03a5c1727b06d40ab0ec475546736be4ee19873f72ea",
       "apis": [
         {
           "protocol": "rpc",
@@ -10327,7 +10599,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "aggregate": {
         "descendant_count": 26,
         "own_api_count": 0,
-        "inherited_api_count": 45,
+        "inherited_api_count": 46,
         "dep_out": 0,
         "dep_in": 0
       }
@@ -10997,9 +11269,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/survival/health/disease.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T09:15:17.026Z",
-      "fingerprint": "c5e322756f6e385206f71675705afc3b2b85c8a9d8afa136fb2066e2b6bafe35",
+      "revision": "5363daa33de6939922915ece1c71fbb993114054",
+      "updated_at": "2026-09-24T07:54:56.514Z",
+      "fingerprint": "d499f46462fd1a352f5f17950cf6375272f05ce4b35740bc774f8c614563323c",
       "apis": [
         {
           "protocol": "rpc",
@@ -11697,9 +11969,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/survival/shelter.js"
         }
       ],
-      "revision": "da6092c786d6c0615331ed8d297d5c0d6a2fa45a",
-      "updated_at": "2026-09-23T12:12:22.377Z",
-      "fingerprint": "455c8fcfbfbb234043d6374227d71f9d9ec8974d8deab08f81a14f85fd8c9365",
+      "revision": "b79c517f68ea4ab47f3b657b9a2bf591b2b21aa4",
+      "updated_at": "2026-09-23T19:04:06.115Z",
+      "fingerprint": "303ed7b0dac9492de72ddb895241c66c374aa789f94f3a9bb5c43b8804ca7481",
       "apis": [
         {
           "protocol": "rpc",
@@ -11727,6 +11999,15 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
             "en": "Calls survival.shelter.damage.\n"
           },
           "key": "rpc:survival.shelter.damage"
+        },
+        {
+          "protocol": "rpc",
+          "path": "survival.shelter.repair",
+          "description": {
+            "zh": "调用 survival.shelter.repair（以劳动力修复完整度、使容量回升）。\n",
+            "en": "Calls survival.shelter.repair (repairs integrity and raises capacity).\n"
+          },
+          "key": "rpc:survival.shelter.repair"
         }
       ],
       "deps": [
@@ -11743,7 +12024,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       ],
       "aggregate": {
         "descendant_count": 0,
-        "own_api_count": 3,
+        "own_api_count": 4,
         "inherited_api_count": 0,
         "dep_out": 2,
         "dep_in": 3
@@ -12330,13 +12611,13 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
     "POST /api/v1/sim/start": "truman-town.api.control",
     "POST /api/v1/sim/step": "truman-town.api.control",
     "rpc:agent.anticipation.pool.pruner.prune": "truman-town.agent.anticipation.pool.pruner",
-    "rpc:agent.anticipation.pool.pruner.stale": "truman-town.agent.anticipation.pool.pruner",
+    "rpc:agent.anticipation.pool.pruner.score": "truman-town.agent.anticipation.pool.pruner",
     "rpc:agent.anticipation.pool.selector.select": "truman-town.agent.anticipation.pool.selector",
     "rpc:agent.anticipation.pool.selector.shortlist": "truman-town.agent.anticipation.pool.selector",
     "rpc:agent.anticipation.pool.store.add": "truman-town.agent.anticipation.pool.store",
     "rpc:agent.anticipation.pool.store.list": "truman-town.agent.anticipation.pool.store",
-    "rpc:agent.anticipation.simulator.compare": "truman-town.agent.anticipation.simulator",
-    "rpc:agent.anticipation.simulator.score": "truman-town.agent.anticipation.simulator",
+    "rpc:agent.anticipation.simulator.predict": "truman-town.agent.anticipation.simulator",
+    "rpc:agent.anticipation.simulator.simulate": "truman-town.agent.anticipation.simulator",
     "rpc:agent.crafting.construction.build": "truman-town.agent.crafting.construction",
     "rpc:agent.crafting.construction.tick": "truman-town.agent.crafting.construction",
     "rpc:agent.crafting.recipe.define": "truman-town.agent.crafting.recipe",
@@ -12350,6 +12631,10 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
     "rpc:agent.crafting.workbench.validator.materials": "truman-town.agent.crafting.workbench.validator",
     "rpc:agent.crafting.writing.tick": "truman-town.agent.crafting.writing",
     "rpc:agent.crafting.writing.write_book": "truman-town.agent.crafting.writing",
+    "rpc:agent.decision.candidates.actions": "truman-town.agent.decision.candidates",
+    "rpc:agent.decision.candidates.baseScores": "truman-town.agent.decision.candidates",
+    "rpc:agent.decision.candidates.plan": "truman-town.agent.decision.candidates",
+    "rpc:agent.decision.candidates.rules": "truman-town.agent.decision.candidates",
     "rpc:agent.decision.context.assemble": "truman-town.agent.decision.context",
     "rpc:agent.decision.context.rank": "truman-town.agent.decision.context",
     "rpc:agent.decision.explainer.explain": "truman-town.agent.decision.explainer",
@@ -12369,8 +12654,8 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
     "rpc:agent.memory.episodic.recaller.recall": "truman-town.agent.memory.episodic.recaller",
     "rpc:agent.memory.episodic.store.tag": "truman-town.agent.memory.episodic.store",
     "rpc:agent.memory.episodic.store.write": "truman-town.agent.memory.episodic.store",
-    "rpc:agent.memory.semantic.query": "truman-town.agent.memory.semantic",
-    "rpc:agent.memory.semantic.update": "truman-town.agent.memory.semantic",
+    "rpc:agent.memory.semantic.recall": "truman-town.agent.memory.semantic",
+    "rpc:agent.memory.semantic.store": "truman-town.agent.memory.semantic",
     "rpc:agent.persona.identity.describe": "truman-town.agent.persona.identity",
     "rpc:agent.persona.identity.update": "truman-town.agent.persona.identity",
     "rpc:agent.persona.motivation.evaluate": "truman-town.agent.persona.motivation",
@@ -12535,6 +12820,11 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
     "rpc:observer.recorder.event_log.record": "truman-town.observer.recorder.event-log",
     "rpc:observer.timeline.get": "truman-town.observer.timeline",
     "rpc:observer.timeline.range": "truman-town.observer.timeline",
+    "rpc:orchestrator.stage2.__reset": "truman-town.runtime.orchestrator.stage2",
+    "rpc:orchestrator.stage2.candidateStateFor": "truman-town.runtime.orchestrator.stage2",
+    "rpc:orchestrator.stage2.craftMaterialId": "truman-town.runtime.orchestrator.stage2",
+    "rpc:orchestrator.stage2.performAgentAction": "truman-town.runtime.orchestrator.stage2",
+    "rpc:orchestrator.stage2.tick": "truman-town.runtime.orchestrator.stage2",
     "rpc:runtime.clock.now": "truman-town.runtime.clock",
     "rpc:runtime.clock.schedule": "truman-town.runtime.clock",
     "rpc:runtime.clock.tick": "truman-town.runtime.clock",
@@ -12657,6 +12947,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
     "rpc:survival.resources.water.query": "truman-town.survival.resources.water",
     "rpc:survival.shelter.capacity": "truman-town.survival.shelter",
     "rpc:survival.shelter.damage": "truman-town.survival.shelter",
+    "rpc:survival.shelter.repair": "truman-town.survival.shelter",
     "rpc:survival.shelter.status": "truman-town.survival.shelter",
     "rpc:town.building.space.allocate": "truman-town.town.building.space",
     "rpc:town.building.space.release": "truman-town.town.building.space",
@@ -12901,6 +13192,16 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "cross_tree": false
     },
     {
+      "from": "truman-town.agent.decision.candidates",
+      "to": "truman-town.agent.anticipation.pool.store",
+      "kind": "call",
+      "cross_tree": false,
+      "label": {
+        "zh": "候选写入预想池",
+        "en": "Candidates written to pool"
+      }
+    },
+    {
       "from": "truman-town.agent.decision.context",
       "to": "truman-town.agent.anticipation.simulator",
       "kind": "call",
@@ -13121,6 +13422,12 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
     {
       "from": "truman-town.agent.schedule.executor",
       "to": "truman-town.agent.crafting.workbench",
+      "kind": "call",
+      "cross_tree": false
+    },
+    {
+      "from": "truman-town.agent.schedule.executor",
+      "to": "truman-town.agent.schedule.planner",
       "kind": "call",
       "cross_tree": false
     },
@@ -14215,6 +14522,36 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "cross_tree": false
     },
     {
+      "from": "truman-town.runtime.orchestrator.stage2",
+      "to": "truman-town.agent.crafting.workbench.executor",
+      "kind": "call",
+      "cross_tree": false,
+      "label": {
+        "zh": "推进制作队列",
+        "en": "Advance craft queue"
+      }
+    },
+    {
+      "from": "truman-town.runtime.orchestrator.stage2",
+      "to": "truman-town.economy.industry.production",
+      "kind": "call",
+      "cross_tree": false,
+      "label": {
+        "zh": "生产计划",
+        "en": "Production planning"
+      }
+    },
+    {
+      "from": "truman-town.runtime.orchestrator.stage2",
+      "to": "truman-town.observer.recorder",
+      "kind": "call",
+      "cross_tree": false,
+      "label": {
+        "zh": "记录居民行动事件",
+        "en": "Record agent action events"
+      }
+    },
+    {
       "from": "truman-town.social.culture.meme",
       "to": "truman-town.infra.rng",
       "kind": "call",
@@ -14431,6 +14768,12 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       }
     },
     {
+      "from": "truman-town.social.graph.community",
+      "to": "truman-town.social.graph.edges",
+      "kind": "call",
+      "cross_tree": false
+    },
+    {
       "from": "truman-town.social.graph.edges",
       "to": "truman-town.agent.memory.semantic",
       "kind": "dataflow",
@@ -14571,6 +14914,12 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "合并家族特质",
         "en": "Merge family traits"
       }
+    },
+    {
+      "from": "truman-town.social.relationship.family",
+      "to": "truman-town.social.family.lineage",
+      "kind": "dataflow",
+      "cross_tree": false
     },
     {
       "from": "truman-town.social.relationship.family",
@@ -15113,17 +15462,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
     "truman-town.agent.decision": {
       "schema_version": 1,
       "id": "truman-town.agent.decision",
-      "updated_at": "2026-09-22T05:28:31.207Z",
+      "updated_at": "2026-09-24T15:12:21.699Z",
       "mode": "grid",
       "max_columns": 2,
-      "reading": {
-        "zh": "查看 决策器实现 的实现组成，箭头表示模块间依赖。",
-        "en": "Inspect the implementation of Decision Implementation; arrows show dependencies."
-      },
       "order": [
         "truman-town.agent.decision.context",
         "truman-town.agent.decision.explainer",
-        "truman-town.agent.decision.selector"
+        "truman-town.agent.decision.selector",
+        "truman-town.agent.decision.candidates"
       ]
     },
     "truman-town.agent.inventory": {
@@ -15750,18 +16096,15 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
     "truman-town.runtime.orchestrator": {
       "schema_version": 1,
       "id": "truman-town.runtime.orchestrator",
-      "updated_at": "2026-09-22T06:59:30.078Z",
+      "updated_at": "2026-09-24T15:12:21.915Z",
       "mode": "grid",
       "max_columns": 2,
-      "reading": {
-        "zh": "查看 内循环编排 的内部组成：cycle 控制节奏，perception 分发感知，dispatch 执行行动，loop 把它们串成完整闭环。",
-        "en": "Inspect the Loop Orchestrator internals: cycle controls cadence, perception routes percepts, dispatch commits actions, and loop wires them into the full closed loop."
-      },
       "order": [
         "truman-town.runtime.orchestrator.cycle",
         "truman-town.runtime.orchestrator.dispatch",
         "truman-town.runtime.orchestrator.perception",
-        "truman-town.runtime.orchestrator.loop"
+        "truman-town.runtime.orchestrator.loop",
+        "truman-town.runtime.orchestrator.stage2"
       ]
     },
     "truman-town.social": {

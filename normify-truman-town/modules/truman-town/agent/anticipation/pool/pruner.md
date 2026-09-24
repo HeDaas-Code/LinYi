@@ -10,9 +10,9 @@ description:
   en: >
       Scores and prunes the candidate action pool by motivation and personality (keep top-K).
       
-revision: 159dc43daf11d18b03ea9fc0ea5c3e6b18f16488
-updated_at: "2026-09-24T02:31:02.016Z"
-fingerprint: df122ee4696bbbb5505aa3d4160e3051a7c87d2aed43b78bb8c9b17178cc7b15
+revision: 26dba326d0f79bf978188bf6f3ac73c02723ff58
+updated_at: "2026-09-24T15:12:14.789Z"
+fingerprint: d1ed1494cec8a38656c3bb0c3a531deb4fd54f9f4c752c8d9aee8b5e2a3f1bc8
 source:
   - path: "src/agent/anticipation/pool/pruner.js"
 apis:

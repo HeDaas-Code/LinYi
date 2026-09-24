@@ -1,17 +1,14 @@
 {
   "schema_version": 1,
   "id": "truman-town.runtime.orchestrator",
-  "updated_at": "2026-09-22T06:59:30.078Z",
+  "updated_at": "2026-09-24T15:12:21.915Z",
   "mode": "grid",
   "max_columns": 2,
-  "reading": {
-    "zh": "查看 内循环编排 的内部组成：cycle 控制节奏，perception 分发感知，dispatch 执行行动，loop 把它们串成完整闭环。",
-    "en": "Inspect the Loop Orchestrator internals: cycle controls cadence, perception routes percepts, dispatch commits actions, and loop wires them into the full closed loop."
-  },
   "order": [
     "truman-town.runtime.orchestrator.cycle",
     "truman-town.runtime.orchestrator.dispatch",
     "truman-town.runtime.orchestrator.perception",
-    "truman-town.runtime.orchestrator.loop"
+    "truman-town.runtime.orchestrator.loop",
+    "truman-town.runtime.orchestrator.stage2"
   ]
 }
