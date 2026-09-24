@@ -924,8 +924,9 @@ function reputationCreditMultiplier(score, config) {
 const SICK_TEMPLATES = ['我感觉不舒服，需要医疗帮助。', '我好像发烧了，有人有药吗？', '咳嗽好几天了，希望早点好起来。'];
 const CHAT_TEMPLATES = ['避难所今天还算安稳。', '今天的天气不错。', '大家要互相帮助啊。', '晚上一起吃点东西吧。'];
 
-/** 依真实处境拼装发帖内容（饥饿/患病/破产/贫困/闲聊），不调用真实大模型。 */
-function situationOf(agentId) {
+/** 依真实处境拼装发帖内容（饥饿/患病/破产/贫困/闲聊），不调用真实大模型。
+ *  failedFounders 由调用方每 tick 计算一次传入，避免逐帖重查全量企业列表。 */
+function situationOf(agentId, failedFounders) {
   let needs = { food: 0, water: 0 };
   try { needs = survival.needs.meter.query({ agentId }).needs; } catch { /* 无需求记录 */ }
   let infected = false;
@@ -933,11 +934,10 @@ function situationOf(agentId) {
   const acctId = accounts.get(agentId);
   let balance = 0;
   if (acctId) { try { balance = economy.ledger.account.balance(acctId) ?? 0; } catch { /* 无账户 */ } }
-  const failedFounder = economy.industry.business.list().some((b) => b.founderId === agentId && b.status !== 'active');
 
   if (infected) return { context: 'sick', content: SICK_TEMPLATES[Math.floor(prFloat(0, 1) * SICK_TEMPLATES.length)], salience: 0.9 };
   if (needs.food >= 0.6) return { context: 'hungry', content: '好饿，谁能分我点食物？', salience: 0.9 };
-  if (failedFounder) return { context: 'bankrupt', content: '我的企业破产了，真是糟透了。', salience: 0.85 };
+  if (failedFounders.has(agentId)) return { context: 'bankrupt', content: '我的企业破产了，真是糟透了。', salience: 0.85 };
   if (balance < 100) return { context: 'poor', content: '手头有点紧，想找份工作。', salience: 0.6 };
   return { context: 'chat', content: CHAT_TEMPLATES[Math.floor(prFloat(0, 1) * CHAT_TEMPLATES.length)], salience: 0.3 };
 }
@@ -967,10 +967,14 @@ function runPlatform(tick, agents, config = {}) {
   const allIds = agents.map((a) => a.id);
 
   // 1) 发帖：由真实处境驱动（饥饿/患病/破产/贫困/闲聊），数量带随机扰动 → 跨种子涌现
+  // 破产创始人集合每 tick 计算一次，避免逐帖重查全量企业列表（图读取热点）。
+  const failedFounders = new Set(
+    economy.industry.business.list().filter((b) => b.status !== 'active').map((b) => b.founderId),
+  );
   const posterCount = Math.max(1, Math.round(agents.length * postRate * prFloat(0.5, 1.5)));
   const posters = prShuffle(allIds).slice(0, posterCount);
   for (const authorId of posters) {
-    const sit = situationOf(authorId);
+    const sit = situationOf(authorId, failedFounders);
     const post = social.platform.posts.publish({ authorId, content: sit.content, context: sit.context, tick, salience: sit.salience });
     recentPostIds.push(post.postId);
     if (recentPostIds.length > 40) recentPostIds.shift();
@@ -1008,8 +1012,8 @@ function runPlatform(tick, agents, config = {}) {
     for (const reactorId of reactors) {
       const postId = recentPostIds[Math.floor(prFloat(0, 1) * recentPostIds.length)];
       const kind = prFloat(0, 1) < 0.7 ? 'up' : 'down';
-      const post = social.platform.posts.get(postId);
-      social.platform.posts.react({ postId, agentId: reactorId, kind, tick });
+      // 复用 react 返回的帖子（含 authorId），省去一次 posts.get 的图读取。
+      const post = social.platform.posts.react({ postId, agentId: reactorId, kind, tick });
       reactCount += 1;
       result.reactions += 1;
       if (post) {

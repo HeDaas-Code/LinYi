@@ -10,14 +10,27 @@ import * as community from '../graph/community.js';
 import * as edges from '../graph/edges.js';
 import * as reputation from '../reputation.js';
 
-function clone(v) {
-  return v === undefined ? undefined : structuredClone(v);
-}
-
 function assertAgentId(agentId) {
   if (typeof agentId !== 'string' || agentId.trim() === '') {
     throw new TypeError('platform.feeds: agentId 必须为非空字符串');
   }
+}
+
+// 与 graph.edges 的排序对键一致：a-b 与 b-a 视为同一条边（lexicographic）。
+function pairKey(a, b) {
+  return a < b ? a + ':' + b : b + ':' + a;
+}
+
+// 一次性读取全部关系边权重（Map<"a:b", weight>），避免逐帖 edges.between 反复
+// graph.read + structuredClone。仅统计未删除的边。
+function edgeWeightMap() {
+  const map = new Map();
+  for (const e of edges.list()) {
+    if (e && e.removed !== true && typeof e.weight === 'number') {
+      map.set(pairKey(e.a, e.b), e.weight);
+    }
+  }
+  return map;
 }
 
 /**
@@ -31,6 +44,11 @@ export function rank({ agentId, posts: postList, communitySnapshot, tick = 0 } =
   const list = Array.isArray(postList) ? postList : [];
   const snap = communitySnapshot ?? null;
   const viewerCommunity = snap && snap.mapping ? (snap.mapping[agentId] ?? null) : (community.belong({ agentId }).communityId);
+
+  // 批量预取声誉分数与关系边权重：各一次图读取，避免在逐帖循环里反复
+  // reputation.query / edges.between，从而消除每帖一次 graph.read + structuredClone 的热点。
+  const repScores = reputation.scoreMap();
+  const edgeWeights = edgeWeightMap();
 
   return list.map((p) => {
     let score = (typeof p.salience === 'number' ? p.salience : 0.5);
@@ -46,21 +64,20 @@ export function rank({ agentId, posts: postList, communitySnapshot, tick = 0 } =
     // 关系权重：与作者的关系边越强越靠前
     let relWeight = 0;
     if (p.authorId !== agentId) {
-      const edge = edges.between({ a: agentId, b: p.authorId });
-      relWeight = edge && typeof edge.weight === 'number' ? edge.weight : 0;
+      relWeight = edgeWeights.get(pairKey(agentId, p.authorId)) ?? 0;
     }
     score += Math.min(0.5, relWeight * 0.1);
 
     // 作者声誉：高声誉者内容更可见（声誉被读取的反馈点之一）
-    const rep = reputation.query({ agentId: p.authorId });
-    score += 0.4 * ((rep.score - 50) / 50);
+    const repScore = repScores.get(p.authorId) ?? 50;
+    score += 0.4 * ((repScore - 50) / 50);
 
     // 互动热度：点赞减踩（封顶 ±0.5）
     const up = p.reactions?.up ?? 0;
     const down = p.reactions?.down ?? 0;
     score += Math.max(-0.5, Math.min(0.5, (up - down) * 0.05));
 
-    return { ...clone(p), _score: score };
+    return { ...p, _score: score };
   }).sort((a, b) => (b._score - a._score) || a.postId.localeCompare(b.postId));
 }
 

@@ -4,6 +4,11 @@
  * 依据社交（发帖被回复/点赞/踩）与经济（履约交易/违约破产）行为更新个体声誉，
  * 并供行为反馈（治疗分诊优先级、信息流排序）读取。经济侧数据源为
  * economy.ledger.transaction 流水（由 _stage2 依据 ref 判定声誉增减）。
+ *
+ * 为消除逐次 update/query 反复 graph.read + structuredClone 深拷贝 64 条历史的
+ * O(n·history) 热点（t53 性能回归根因之一），本模块额外维护一份按 agentId 的
+ * 内存索引（byAgent），graph 仅作持久化落盘；读取走索引，写入照常落盘一次。
+ * 与 episodic.store 的 ensureFresh()（graph.__generation() 失效）同款做法。
  */
 
 import * as graph from '../infra/store/graph.js';
@@ -16,10 +21,6 @@ const MAX = 100;
 
 function nodeId(agentId) {
   return PREFIX + agentId;
-}
-
-function clone(v) {
-  return v === undefined ? undefined : structuredClone(v);
 }
 
 function assertAgentId(agentId) {
@@ -38,6 +39,21 @@ function levelOf(score) {
   return 'neutral';
 }
 
+/** @type {Map<string, object>} agentId → 最新声誉记录（score / level / history）。 */
+const byAgent = new Map();
+
+/** 上次校验的 graph 复位代数；graph 被直接 __reset 时使本索引失效。 */
+let lastGeneration = -1;
+
+/** graph 被上层直接 __reset 后重建本派生索引（保证与图一致）。 */
+function ensureFresh() {
+  const gen = graph.__generation();
+  if (gen !== lastGeneration) {
+    byAgent.clear();
+    lastGeneration = gen;
+  }
+}
+
 /**
  * 更新声誉：调用 social.reputation.update。
  * @param {{ agentId: string, delta?: number, reason?: string, tick?: number }} input
@@ -48,13 +64,12 @@ export function update({ agentId, delta = 0, reason = null, tick = 0 } = {}) {
   if (typeof delta !== 'number' || !Number.isFinite(delta)) {
     throw new TypeError('reputation.update: delta 必须为有限数值');
   }
-  const prevNode = graph.read(nodeId(agentId));
-  const before = prevNode && prevNode.data && typeof prevNode.data.score === 'number'
-    ? prevNode.data.score
-    : INITIAL;
+  ensureFresh();
+  const prev = byAgent.get(agentId);
+  const before = prev && typeof prev.score === 'number' ? prev.score : INITIAL;
   const score = clamp(before + delta);
   const history = [
-    ...(prevNode && prevNode.data && Array.isArray(prevNode.data.history) ? prevNode.data.history : []),
+    ...(prev && Array.isArray(prev.history) ? prev.history : []),
     { delta, reason, tick, before, after: score },
   ].slice(-64);
   const record = {
@@ -64,8 +79,12 @@ export function update({ agentId, delta = 0, reason = null, tick = 0 } = {}) {
     updatedAt: Date.now(),
     history,
   };
-  graph.write({ id: nodeId(agentId), type: TYPE, data: record });
-  return clone(record);
+  byAgent.set(agentId, record);
+  // 落盘仅保留标量（不含 history）：避免每次 update 深拷贝 64 条历史。
+  // history 仅存于内存索引 byAgent，query/list/scoreMap 都走索引，不读图。
+  graph.write({ id: nodeId(agentId), type: TYPE, data: { agentId, score, level: record.level, updatedAt: record.updatedAt } });
+  // record 为本次新建对象，直接返回即可（避免冗余 clone）。
+  return record;
 }
 
 /**
@@ -75,17 +94,32 @@ export function update({ agentId, delta = 0, reason = null, tick = 0 } = {}) {
  */
 export function query({ agentId } = {}) {
   assertAgentId(agentId);
-  const node = graph.read(nodeId(agentId));
-  if (node && node.data) return clone(node.data);
+  ensureFresh();
+  const rec = byAgent.get(agentId);
+  if (rec) return { ...rec, history: rec.history.slice() };
   return { agentId, score: INITIAL, level: 'neutral', history: [] };
 }
 
 /** 列出全部已登记声誉记录（辅助，供分布统计）。 */
 export function list() {
-  return graph.read({ type: TYPE }).map((n) => clone(n.data)).filter(Boolean);
+  ensureFresh();
+  return [...byAgent.values()].map((r) => ({ ...r, history: r.history.slice() }));
+}
+
+/**
+ * 一次性读取全部声誉分数（Map<agentId, score>）。
+ * 供信息流排序等批量场景使用：一次取全量，避免逐帖反复 query 造成的
+ * 逐次 graph.read + structuredClone 热点（t53 性能回归根因）。
+ */
+export function scoreMap() {
+  ensureFresh();
+  const map = new Map();
+  for (const [agentId, rec] of byAgent) map.set(agentId, rec.score);
+  return map;
 }
 
 /** 复位底层 graph store（测试用）。 */
 export function __reset() {
+  byAgent.clear();
   graph.__reset();
 }
