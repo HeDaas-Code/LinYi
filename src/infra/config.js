@@ -108,8 +108,13 @@ export const DEFAULTS = Object.freeze({
   llmDecideEveryTicks: 1,
   llmDecideMaxAgents: 1,
   actionSpaceAttribution: false,
-  // D0 生存门：人均库存低于该值时非生存行动让位于采集（1.5 太迟——实测 seed2 仍崩溃；3.0 稳定）
-  survivalGatePerCapita: 3,
+  // D0 生存门：人均库存低于该值时非生存行动让位于生存行动。
+  // 注意这必须是「真实短缺」判据，不能是「理想储备」判据：3.0 在 50 人规模下永不可达
+  //（实测人均库存长期停在 1.4-1.8），门因此恒开，等于把全城钉在永久应急态——
+  // t1-10 之后社交/制作/建造/交易全灭（craft 28→0、social 74→0），这是同一反模式的第 6 次复发。
+  // 1.5 实测：门常开率 100%→5-11%（仅在真短缺时触发），4 种子存活仍 52/52，
+  // 且 craft 28→77、build 23→36、write 15→50、social 74→131 全部恢复。
+  survivalGatePerCapita: 1.5,
 });
 
 /** 返回默认值深拷贝快照。 */
