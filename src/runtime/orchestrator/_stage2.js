@@ -23,6 +23,41 @@ import * as configStore from '../../infra/config.js';
 const RESIDENCE_ID = 'dorm_a';
 const SYMBOL = 'food';
 
+// 独立于全局 rng 的平台随机源：社交平台消费自有随机流，避免扰动既有经济/生存分叉。
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function hashSeed(str) {
+  let h = 1779033703 ^ str.length;
+  for (let i = 0; i < str.length; i += 1) {
+    h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  h = Math.imul(h ^ (h >>> 16), 2246822507);
+  h = Math.imul(h ^ (h >>> 13), 3266489909);
+  return (h ^ (h >>> 16)) >>> 0;
+}
+let platformGen = mulberry32(0x9e3779b9 >>> 0);
+function platformSeed(seedValue) {
+  platformGen = mulberry32(hashSeed('platform:' + String(seedValue ?? 0)));
+}
+function prFloat(min, max) {
+  return min + platformGen() * (max - min);
+}
+function prShuffle(arr) {
+  const out = arr.slice();
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(platformGen() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
 /** 阶段二模块级状态（由 __reset 清空）。 */
 let seeded = false;
 /** @type {Map<string, string>} agentId → accountId */
@@ -58,6 +93,15 @@ let lossTicks = 0;
 /** 批次2-D：社区发现缓存（每 N tick 重算，避免每 tick 全量重算拖慢长跑） */
 let lastCommunityTick = -1;
 let communitySnapshot = null;
+/** 批次2-E：社交平台与声誉累计 */
+let postCount = 0;
+let replyCount = 0;
+let reactCount = 0;
+let reputationTriageSwaps = 0;
+let lastFeedTick = -1;
+let feedSignature = [];
+/** 近期帖子 ID 环形缓存（回复/点赞踩的目标池，避免每 tick 全量 list 帖子） */
+let recentPostIds = [];
 
 function sortedPairKey(a, b) {
   return a < b ? a + ':' + b : b + ':' + a;
@@ -98,6 +142,7 @@ export function seed(agents, config = {}) {
   // 与 loop.step 一致的配置合并（DEFAULTS + 难度档位 + 显式覆盖），
   // 避免 seed 用硬编码回退值而 step 用 DEFAULTS，造成两侧参数不一致。
   config = { ...configStore.defaults(), ...configStore.currentDifficultyParams(), ...(config ?? {}) };
+  platformSeed(config.seed);
   seeded = true;
   accounts = new Map();
   reproducedPairs.clear();
@@ -125,6 +170,13 @@ export function seed(agents, config = {}) {
   lossTicks = 0;
   lastCommunityTick = -1;
   communitySnapshot = null;
+  postCount = 0;
+  replyCount = 0;
+  reactCount = 0;
+  reputationTriageSwaps = 0;
+  lastFeedTick = -1;
+  feedSignature = [];
+  recentPostIds = [];
 
   // 1) town：初始避难所 + 居住分配
   const shelter = town.building.structure.spawnShelter();
@@ -485,6 +537,19 @@ function runIndustry(tick, agents, config = {}) {
     if (sold > 0) {
       tradeCount += 1;
       observer.recorder.eventLog.record({ tick, topic: 'economy.industry.sale', payload: { businessId, sold, revenue, price: goodsPrice } });
+      // 声誉反馈（经济侧）：履约购买 / 交付商品 → 声誉上升（读 economy.ledger.transaction 数据流）
+      const repPurchaseGain = (typeof config.reputationPurchaseGain === 'number' ? config.reputationPurchaseGain : 0.1);
+      const repSaleGain = (typeof config.reputationSaleGain === 'number' ? config.reputationSaleGain : 0.5);
+      const soldBuyerAccounts = buyers.slice(0, sold).map((b) => b.accountId);
+      for (const acctId of soldBuyerAccounts) {
+        const buyerAgentId = agentIdByAccount(acctId);
+        if (buyerAgentId) {
+          try { social.reputation.update({ agentId: buyerAgentId, delta: repPurchaseGain, reason: 'purchase', tick }); } catch { /* 忽略 */ }
+        }
+      }
+      if (current.founderId) {
+        try { social.reputation.update({ agentId: current.founderId, delta: repSaleGain * sold, reason: 'sale', tick }); } catch { /* 忽略 */ }
+      }
     }
 
     // c) 成本：能源成本 + 原料采购成本（真实转账 → 供应池，不凭空造钱）
@@ -538,6 +603,11 @@ function runIndustry(tick, agents, config = {}) {
         bankruptcies += 1;
         result.bankruptcies += 1;
         observer.recorder.eventLog.record({ tick, topic: 'economy.bankruptcy', payload: { businessId, balance } });
+        // 声誉反馈（经济侧）：违约/破产 → 创始人声誉下降
+        if (biz.founderId) {
+          const repPenalty = (typeof config.reputationDefaultPenalty === 'number' ? config.reputationDefaultPenalty : 5);
+          try { social.reputation.update({ agentId: biz.founderId, delta: -repPenalty, reason: 'bankruptcy', tick }); } catch { /* 忽略 */ }
+        }
       }
     }
   }
@@ -556,8 +626,22 @@ function runFiscal(tick, agents, config = {}) {
   const taxRate = (typeof config.taxRate === 'number' && config.taxRate >= 0 && config.taxRate <= 1) ? config.taxRate : 0.002;
   const taxInterval = (Number.isInteger(config.taxInterval) && config.taxInterval > 0) ? config.taxInterval : 20;
 
-  // 1) 每 tick 计息
-  const accruals = economy.bank.interest.accrueAll({ mode: interestMode, rate: creditRate, tick });
+  // 1) 每 tick 计息（声誉反馈：高声誉借款人享受更低利率，声誉被读取并影响经济路径）
+  const repCreditEnabled = config.reputationCreditEnabled !== false;
+  let accruals;
+  if (repCreditEnabled) {
+    const bizByBorrower = new Map(economy.industry.business.list().map((b) => [b.businessId, b]));
+    accruals = economy.bank.credit.list()
+      .filter((loan) => loan.status === 'active')
+      .map((loan) => {
+        const biz = bizByBorrower.get(loan.borrowerId);
+        const founderId = biz ? biz.founderId : null;
+        const score = founderId ? social.reputation.query({ agentId: founderId }).score : 50;
+        return economy.bank.interest.accrue({ loanId: loan.loanId, mode: interestMode, rate: creditRate * reputationCreditMultiplier(score, config), tick });
+      });
+  } else {
+    accruals = economy.bank.interest.accrueAll({ mode: interestMode, rate: creditRate, tick });
+  }
   result.interestAccrued = accruals.reduce((s, a) => s + a.interest, 0);
   interestAccrued += result.interestAccrued;
 
@@ -773,8 +857,17 @@ function runHealth(tick, agents, config) {
   const triage = survival.health.treatment.triage({ agents: ids, tick });
   const treatPerCapita = (typeof config.treatPerCapita === 'number' && config.treatPerCapita >= 0) ? config.treatPerCapita : 0.04;
   const capacity = Math.min(triage.length, Math.max(1, Math.ceil(ids.length * treatPerCapita)));
-  for (let i = 0; i < capacity && i < triage.length; i += 1) {
-    const patient = triage[i];
+  // 声誉反馈：高声誉者优先获得治疗名额（声誉被读取并影响生存行为）
+  const repTriageEnabled = config.reputationTriageEnabled !== false;
+  const repTriageBoost = (typeof config.reputationTriageBoost === 'number' && config.reputationTriageBoost >= 0) ? config.reputationTriageBoost : 0.3;
+  const ordered = repTriageEnabled
+    ? rankTriageByReputation(triage, (id) => social.reputation.query({ agentId: id }).score, repTriageBoost)
+    : triage;
+  if (repTriageEnabled) {
+    reputationTriageSwaps += countTriageSwaps(triage, ordered);
+  }
+  for (let i = 0; i < capacity && i < ordered.length; i += 1) {
+    const patient = ordered[i];
     const healed = survival.health.treatment.apply({ agentId: patient.agentId, tick });
     treatCount += 1;
     result.treated += 1;
@@ -784,6 +877,156 @@ function runHealth(tick, agents, config) {
       action: 'treatment',
       outcome: { severity: healed.severity, consumed: healed.consumed, health: healed.health },
     });
+  }
+
+  return result;
+}
+
+/** 由 ledger 账户反查居民（声誉反馈：买方身份）。 */
+function agentIdByAccount(accountId) {
+  for (const [agentId, acctId] of accounts) {
+    if (acctId === accountId) return agentId;
+  }
+  return null;
+}
+
+/**
+ * 声誉加权分诊排序：在病情严重度基础上，叠加声誉加成。
+ * 高声誉者优先获得治疗名额（声誉被读取并影响生存行为的反馈点）。
+ * @param {Array<{agentId:string, severity:number}>} patients
+ * @param {(agentId:string)=>number} scoreOf
+ * @param {number} boost
+ * @returns {Array} 按 effective = severity + boost*(score-50)/50 降序
+ */
+export function rankTriageByReputation(patients, scoreOf, boost = 0.3) {
+  return [...patients].sort((a, b) => {
+    const ea = (a.severity ?? 0) + boost * ((scoreOf(a.agentId) - 50) / 50);
+    const eb = (b.severity ?? 0) + boost * ((scoreOf(b.agentId) - 50) / 50);
+    return (eb - ea) || String(a.agentId).localeCompare(String(b.agentId));
+  });
+}
+
+/** 统计声誉排序相对纯严重度排序改变了多少个病例的位置（有/无反馈对照证据）。 */
+function countTriageSwaps(original, ordered) {
+  const pos = new Map();
+  ordered.forEach((p, i) => pos.set(p.agentId, i));
+  let swaps = 0;
+  original.forEach((p, i) => { if (pos.get(p.agentId) !== i) swaps += 1; });
+  return swaps;
+}
+
+/** 声誉 → 信贷利率乘数：高声誉更低利率（100→0.5×），低声誉更高（0→1.5×）。 */
+function reputationCreditMultiplier(score, config) {
+  const boost = (typeof config.reputationCreditBoost === 'number' ? config.reputationCreditBoost : 0.5);
+  return 1 - boost * ((score - 50) / 50);
+}
+
+const SICK_TEMPLATES = ['我感觉不舒服，需要医疗帮助。', '我好像发烧了，有人有药吗？', '咳嗽好几天了，希望早点好起来。'];
+const CHAT_TEMPLATES = ['避难所今天还算安稳。', '今天的天气不错。', '大家要互相帮助啊。', '晚上一起吃点东西吧。'];
+
+/** 依真实处境拼装发帖内容（饥饿/患病/破产/贫困/闲聊），不调用真实大模型。 */
+function situationOf(agentId) {
+  let needs = { food: 0, water: 0 };
+  try { needs = survival.needs.meter.query({ agentId }).needs; } catch { /* 无需求记录 */ }
+  let infected = false;
+  try { infected = survival.health.disease.status({ agentId }).infected; } catch { /* 无健康记录 */ }
+  const acctId = accounts.get(agentId);
+  let balance = 0;
+  if (acctId) { try { balance = economy.ledger.account.balance(acctId) ?? 0; } catch { /* 无账户 */ } }
+  const failedFounder = economy.industry.business.list().some((b) => b.founderId === agentId && b.status !== 'active');
+
+  if (infected) return { context: 'sick', content: SICK_TEMPLATES[Math.floor(prFloat(0, 1) * SICK_TEMPLATES.length)], salience: 0.9 };
+  if (needs.food >= 0.6) return { context: 'hungry', content: '好饿，谁能分我点食物？', salience: 0.9 };
+  if (failedFounder) return { context: 'bankrupt', content: '我的企业破产了，真是糟透了。', salience: 0.85 };
+  if (balance < 100) return { context: 'poor', content: '手头有点紧，想找份工作。', salience: 0.6 };
+  return { context: 'chat', content: CHAT_TEMPLATES[Math.floor(prFloat(0, 1) * CHAT_TEMPLATES.length)], salience: 0.3 };
+}
+
+const REPLY_TEMPLATES = {
+  sick: ['注意休息，我帮你看看。', '医疗物资还够，别担心。'],
+  hungry: ['我分你一点食物。', '再坚持一下，采集队快回来了。'],
+  bankrupt: ['别灰心，重新再来。', '有需要就开口。'],
+  poor: ['我可以介绍你一份工。', '去企业问问看吧。'],
+  chat: ['说得对。', '同感。'],
+};
+
+/** 批次2-E：社交平台与声誉（发帖/回复/点赞踩/信息流/声誉反馈）。 */
+function runPlatform(tick, agents, config = {}) {
+  const result = { posts: 0, replies: 0, reactions: 0, feedGenerated: false, feedSignature: [] };
+  if (agents.length === 0) return result;
+
+  const postRate = (typeof config.postRate === 'number' && config.postRate >= 0) ? config.postRate : 0.08;
+  const replyRate = (typeof config.replyRate === 'number' && config.replyRate >= 0) ? config.replyRate : 0.12;
+  const reactRate = (typeof config.reactRate === 'number' && config.reactRate >= 0) ? config.reactRate : 0.25;
+  const repReplyGain = (typeof config.reputationReplyGain === 'number' ? config.reputationReplyGain : 0.5);
+  const repUpvoteGain = (typeof config.reputationUpvoteGain === 'number' ? config.reputationUpvoteGain : 0.05);
+  const repDownvotePenalty = (typeof config.reputationDownvotePenalty === 'number' ? config.reputationDownvotePenalty : 0.3);
+  const feedSize = (Number.isInteger(config.feedSize) && config.feedSize > 0) ? config.feedSize : 8;
+  const feedInterval = (Number.isInteger(config.feedInterval) && config.feedInterval > 0) ? config.feedInterval : 10;
+
+  const allIds = agents.map((a) => a.id);
+
+  // 1) 发帖：由真实处境驱动（饥饿/患病/破产/贫困/闲聊），数量带随机扰动 → 跨种子涌现
+  const posterCount = Math.max(1, Math.round(agents.length * postRate * prFloat(0.5, 1.5)));
+  const posters = prShuffle(allIds).slice(0, posterCount);
+  for (const authorId of posters) {
+    const sit = situationOf(authorId);
+    const post = social.platform.posts.publish({ authorId, content: sit.content, context: sit.context, tick, salience: sit.salience });
+    recentPostIds.push(post.postId);
+    if (recentPostIds.length > 40) recentPostIds.shift();
+    postCount += 1;
+    result.posts += 1;
+    observer.recorder.eventLog.record({ tick, topic: 'social.platform.post', payload: { postId: post.postId, authorId, context: sit.context }, agentId: authorId });
+  }
+
+  // 2) 回复：近期帖子被居民回复（首次被回复使作者声誉上升，避免刷回复灌声誉）
+  const replyTargets = recentPostIds.slice(-4);
+  for (const postId of replyTargets) {
+    const post = social.platform.posts.get(postId);
+    if (!post) continue;
+    const hadReplies = post.replyCount > 0;
+    const nReplies = Math.max(0, Math.round(allIds.length * replyRate * prFloat(0.5, 1.5)));
+    const repliers = prShuffle(allIds.filter((id) => id !== post.authorId)).slice(0, nReplies);
+    let added = 0;
+    for (const replierId of repliers) {
+      const tpls = REPLY_TEMPLATES[post.context] ?? REPLY_TEMPLATES.chat;
+      const content = tpls[Math.floor(prFloat(0, 1) * tpls.length)];
+      social.platform.posts.reply({ postId, authorId: replierId, content, tick });
+      replyCount += 1;
+      result.replies += 1;
+      added += 1;
+    }
+    if (!hadReplies && added > 0) {
+      try { social.reputation.update({ agentId: post.authorId, delta: repReplyGain, reason: 'first_reply', tick }); } catch { /* 忽略 */ }
+    }
+  }
+
+  // 3) 回应（点赞/踩）：居民表态（点赞微升、踩使作者声誉下降）
+  if (recentPostIds.length > 0 && reactRate > 0) {
+    const nReactors = Math.max(1, Math.round(agents.length * reactRate * prFloat(0.5, 1.5)));
+    const reactors = prShuffle(allIds).slice(0, nReactors);
+    for (const reactorId of reactors) {
+      const postId = recentPostIds[Math.floor(prFloat(0, 1) * recentPostIds.length)];
+      const kind = prFloat(0, 1) < 0.7 ? 'up' : 'down';
+      const post = social.platform.posts.get(postId);
+      social.platform.posts.react({ postId, agentId: reactorId, kind, tick });
+      reactCount += 1;
+      result.reactions += 1;
+      if (post) {
+        const delta = kind === 'up' ? repUpvoteGain : -repDownvotePenalty;
+        try { social.reputation.update({ agentId: post.authorId, delta, reason: kind === 'up' ? 'upvoted' : 'downvoted', tick }); } catch { /* 忽略 */ }
+      }
+    }
+  }
+
+  // 4) 信息流：按社区/关系/声誉排序（谁看到什么），按 feedInterval 节流
+  if (lastFeedTick < 0 || tick - lastFeedTick >= feedInterval) {
+    const viewer = allIds[0];
+    const feed = social.platform.feeds.generate({ agentId: viewer, limit: feedSize, communitySnapshot, tick });
+    lastFeedTick = tick;
+    feedSignature = feed.map((p) => p.authorId);
+    result.feedGenerated = true;
+    result.feedSignature = feedSignature;
   }
 
   return result;
@@ -805,6 +1048,7 @@ export function tick({ tick, agents, config = {}, spawnChild }) {
     shelter: runShelterRepair(config),
     residence: runResidence(tick, agents, config),
     health: runHealth(tick, agents, config),
+    platform: runPlatform(tick, agents, config),
     community: runCommunity(tick, agents, config),
   };
 }
@@ -818,6 +1062,21 @@ function runCommunity(tick, agents, config = {}) {
   lastCommunityTick = tick;
   communitySnapshot = social.graph.community.detect({ threshold: 0.5 });
   return communitySnapshot;
+}
+
+/** 声誉分布快照（跨种子涌现证据：均值/极值/受信/失信人数）。 */
+function reputationDistribution() {
+  const recs = social.reputation.list();
+  if (recs.length === 0) return { count: 0, mean: 50, min: 50, max: 50, trusted: 0, distrusted: 0 };
+  const scores = recs.map((r) => r.score);
+  return {
+    count: recs.length,
+    mean: scores.reduce((s, x) => s + x, 0) / scores.length,
+    min: Math.min(...scores),
+    max: Math.max(...scores),
+    trusted: recs.filter((r) => r.level === 'trusted').length,
+    distrusted: recs.filter((r) => r.level === 'distrusted').length,
+  };
 }
 
 /** 阶段二累计摘要（供 loop.run 报告与观测）。 */
@@ -845,6 +1104,12 @@ export function summary() {
     industryEnergyUsed,
     lossTicks,
     supplyBalance: supplyAccountId !== null ? (economy.ledger.account.balance(supplyAccountId) ?? 0) : 0,
+    postCount,
+    replyCount,
+    reactCount,
+    reputationTriageSwaps,
+    feedSignature,
+    reputation: reputationDistribution(),
   };
 }
 
@@ -878,6 +1143,13 @@ export function __reset() {
   lossTicks = 0;
   lastCommunityTick = -1;
   communitySnapshot = null;
+  postCount = 0;
+  replyCount = 0;
+  reactCount = 0;
+  reputationTriageSwaps = 0;
+  lastFeedTick = -1;
+  feedSignature = [];
+  recentPostIds = [];
 
   economy.__reset();
   agent.inventory.item.__reset();

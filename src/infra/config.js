@@ -84,6 +84,22 @@ export const DEFAULTS = Object.freeze({
   societyEnabled: true,
   // 批次2-D：社区发现重算间隔（每 N tick 重算一次，避免每 tick 全量重算拖慢长跑）
   communityDetectInterval: 10,
+  // 批次2-E：社交平台与声誉（t50）
+  postRate: 0.08,
+  replyRate: 0.12,
+  reactRate: 0.25,
+  feedSize: 8,
+  feedInterval: 10,
+  reputationTriageEnabled: true,
+  reputationTriageBoost: 0.4,
+  reputationPurchaseGain: 0.1,
+  reputationSaleGain: 1,
+  reputationDefaultPenalty: 30,
+  reputationReplyGain: 0.5,
+  reputationUpvoteGain: 0.05,
+  reputationDownvotePenalty: 0.3,
+  reputationCreditEnabled: true,
+  reputationCreditBoost: 0.5,
 });
 
 /** 返回默认值深拷贝快照。 */

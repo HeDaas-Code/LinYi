@@ -19,6 +19,9 @@ import * as traitDetector from './family/trait/detector.js';
 import * as traitEnforcer from './family/trait/enforcer.js';
 import * as graphEdges from './graph/edges.js';
 import * as graphCommunity from './graph/community.js';
+import * as platformPosts from './platform/posts.js';
+import * as platformFeeds from './platform/feeds.js';
+import * as reputation from './reputation.js';
 import * as culture from './culture/index.js';
 import * as politics from './politics/index.js';
 
@@ -32,7 +35,9 @@ export const family = {
   trait: { detector: traitDetector, enforcer: traitEnforcer },
 };
 export const graph = { edges: graphEdges, community: graphCommunity };
+export const platform = { posts: platformPosts, feeds: platformFeeds };
 
+export { reputation };
 export { culture };
 export { politics };
 
