@@ -10,9 +10,9 @@ description:
   en: >
       Profiles personality traits and evaluates situational behavioral tendencies.
       
-revision: 6939444d190f953b7c3e7a73b35ad8b25ac43b07
-updated_at: "2026-09-24T02:04:23.739Z"
-fingerprint: 43ca3e6d3bc4f74f8f659b2892ecbbb1b4a1db92a7d25b1197622b419ea03091
+revision: 1c7c3d69497e4bcdd67b1e32a59bd6bdbfdc92f5
+updated_at: "2026-09-24T04:10:06.311Z"
+fingerprint: d6a53c5c57f8f0c876645022b3d9552538983a5befcee363ee781f348fdeb0e4
 source:
   - path: "src/agent/persona/personality.js"
 apis:

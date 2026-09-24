@@ -9,6 +9,7 @@
  */
 
 import * as tagsetStore from '../traits/tagset/store.js';
+import * as graph from '../../infra/store/graph.js';
 
 /** 维度 → 正向/负向特质键。 */
 const DIMENSIONS = {
@@ -44,6 +45,26 @@ function weightMap(tags) {
 }
 
 /**
+ * profile 进程内缓存：agentId → profile|null。
+ * 失效条件：tagset 被写入（store.upsert → writeCount 变化）或底层 graph 复位
+ * （graph.__generation() 变化）。traits.evolution.drift 每 10 tick 会 upsert，
+ * 因此缓存会在漂移后自动失效，性格不会读到陈旧数据。
+ */
+const profileCache = new Map();
+let cacheWriteCount = -1;
+let cacheGraphGen = -1;
+
+function ensureCacheFresh() {
+  const wc = tagsetStore.__writeCount();
+  const gg = graph.__generation();
+  if (wc !== cacheWriteCount || gg !== cacheGraphGen) {
+    profileCache.clear();
+    cacheWriteCount = wc;
+    cacheGraphGen = gg;
+  }
+}
+
+/**
  * 计算单个性格维度（0..1，0.5 为中性）。
  */
 function dimensionScore(weights, pos, neg) {
@@ -60,15 +81,22 @@ function dimensionScore(weights, pos, neg) {
  */
 export function profile(agentId) {
   assertAgentId(agentId);
+  ensureCacheFresh();
+  if (profileCache.has(agentId)) return profileCache.get(agentId);
   const tagset = tagsetStore.get(agentId);
-  if (tagset === null) return null;
+  if (tagset === null) {
+    profileCache.set(agentId, null);
+    return null;
+  }
   const weights = weightMap(tagset.tags);
   const dimensions = {};
   for (const [name, { pos, neg }] of Object.entries(DIMENSIONS)) {
     dimensions[name] = dimensionScore(weights, pos, neg);
   }
   const dominant = Object.entries(dimensions).sort((a, b) => b[1] - a[1])[0][0];
-  return { agentId, dimensions, dominant, tagCount: tagset.tags.length };
+  const result = { agentId, dimensions, dominant, tagCount: tagset.tags.length };
+  profileCache.set(agentId, result);
+  return result;
 }
 
 /**
@@ -90,4 +118,8 @@ export function evaluate(agentId, action) {
 }
 
 /** 复位依赖（tagset store 由 agent.__reset 统一复位）。 */
-export function __reset() {}
+export function __reset() {
+  profileCache.clear();
+  cacheWriteCount = -1;
+  cacheGraphGen = -1;
+}

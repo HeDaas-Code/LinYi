@@ -3,7 +3,8 @@
  *
  * 读写单个智能体的 50 个特质标签。以 graph store 作为持久化基座：每个
  * 智能体对应一个 type=traits.tagset 的图节点，data.tags 为标签数组
- * [{ key, weight }]。get / upsert 均返回深拷贝，避免外部改动内部快照。
+ * [{ key, weight }]。get 带按写代数的读缓存（首次深拷贝、命中返回同一只读快照），
+ * upsert 返回深拷贝。
  */
 
 import * as graph from '../../../infra/store/graph.js';
@@ -14,6 +15,30 @@ export const TAG_COUNT = 50;
 const TYPE = 'traits.tagset';
 const PREFIX = 'traits:tagset:';
 const KEY_RE = /^[a-z][a-z0-9_]{0,31}$/;
+
+/** 写代数：每次 upsert / __reset 自增，供上层派生缓存（如 personality.profile）做失效。 */
+let writeCount = 0;
+
+/** get 读缓存：agentId → { agentId, tags } | null；upsert 按 agent 逐条失效，graph 复位整体失效。 */
+const readCache = new Map();
+let readCacheGraphGen = -1;
+
+function ensureReadCacheFresh() {
+  const gg = graph.__generation();
+  if (gg !== readCacheGraphGen) {
+    readCache.clear();
+    readCacheGraphGen = gg;
+  }
+}
+
+/** 浅拷贝扁平标签数组（{key,weight}），隔离调用方改动且比 structuredClone 更快。 */
+function cloneTags(tags) {
+  const out = new Array(tags.length);
+  for (let i = 0; i < tags.length; i += 1) {
+    out[i] = { key: tags[i].key, weight: tags[i].weight };
+  }
+  return out;
+}
 
 function nodeId(agentId) {
   return PREFIX + agentId;
@@ -79,9 +104,21 @@ function normalizeTags(tags) {
  */
 export function get(agentId) {
   assertAgentId(agentId);
+  ensureReadCacheFresh();
+  if (readCache.has(agentId)) {
+    const cached = readCache.get(agentId);
+    return cached === null ? null : { agentId, tags: cloneTags(cached.tags) };
+  }
   const node = graph.read(nodeId(agentId));
-  if (node === null || node.data === undefined) return null;
-  return { agentId, tags: structuredClone(node.data.tags ?? []) };
+  if (node === null || node.data === undefined) {
+    readCache.set(agentId, null);
+    return null;
+  }
+  // graph.read 已深拷贝 node（含 data.tags），缓存该快照；命中时手动浅拷贝扁平
+  // {key,weight} 标签数组（normalizeTag 保证结构扁平），既隔离又远快于 structuredClone。
+  const rawTags = node.data.tags ?? [];
+  readCache.set(agentId, { agentId, tags: rawTags });
+  return { agentId, tags: cloneTags(rawTags) };
 }
 
 /**
@@ -98,10 +135,20 @@ export function upsert(agentId, tags) {
     type: TYPE,
     data: { agentId, tags: normalized },
   });
+  writeCount += 1;
+  readCache.delete(agentId);
   return { agentId, tags: structuredClone(normalized) };
+}
+
+/** 返回当前写代数（每次 upsert / __reset 递增），供派生缓存判断是否失效。 */
+export function __writeCount() {
+  return writeCount;
 }
 
 /** 复位底层 graph store（测试用）。 */
 export function __reset() {
+  writeCount += 1;
+  readCache.clear();
+  readCacheGraphGen = -1;
   graph.__reset();
 }
