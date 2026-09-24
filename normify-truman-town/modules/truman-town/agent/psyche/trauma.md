@@ -10,9 +10,9 @@ description:
   en: >
       Records trauma from deaths, famine and conflict, with healing support.
       
-revision: e023d797f741ad817f8c81c2bd91de8d996e39ac
-updated_at: "2026-09-23T04:24:00.238Z"
-fingerprint: 1a4cd07e476b5e4113b75170b098760d1de65f8201bfaff2af57043cd136d0c8
+revision: 5363daa33de6939922915ece1c71fbb993114054
+updated_at: "2026-09-24T07:54:56.513Z"
+fingerprint: fa3968bd76c489c2c21248c2f53937edcc47b0a2b04d031fae3b0f0133505f93
 source:
   - path: "src/agent/psyche/trauma.js"
 apis:

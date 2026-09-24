@@ -8,7 +8,7 @@
         "root_uid": "d440391b"
       }
     ],
-    "compiled_at": "2026-09-24T07:02:01.490Z",
+    "compiled_at": "2026-09-24T07:55:09.877Z",
     "stats": {
       "tree_count": 1,
       "module_count": 227,
@@ -1983,9 +1983,9 @@
           "path": "src/agent/psyche/trauma.js"
         }
       ],
-      "revision": "e023d797f741ad817f8c81c2bd91de8d996e39ac",
-      "updated_at": "2026-09-23T04:24:00.238Z",
-      "fingerprint": "1a4cd07e476b5e4113b75170b098760d1de65f8201bfaff2af57043cd136d0c8",
+      "revision": "5363daa33de6939922915ece1c71fbb993114054",
+      "updated_at": "2026-09-24T07:54:56.513Z",
+      "fingerprint": "fa3968bd76c489c2c21248c2f53937edcc47b0a2b04d031fae3b0f0133505f93",
       "apis": [
         {
           "protocol": "rpc",
@@ -4531,9 +4531,9 @@
           "path": "src/civilization/tech/research.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T14:24:31.903Z",
-      "fingerprint": "c5d12d19c2ed73bb9221010062150662cbf2ad3e46ac9a0e5fe7591982daa179",
+      "revision": "5363daa33de6939922915ece1c71fbb993114054",
+      "updated_at": "2026-09-24T07:54:56.514Z",
+      "fingerprint": "08e1e60843d00c6db03eefa90af4942a03663a9ca04eacd0036f7c6272fa870e",
       "apis": [
         {
           "protocol": "rpc",
@@ -10929,9 +10929,9 @@
           "path": "src/survival/health/disease.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T09:15:17.026Z",
-      "fingerprint": "c5e322756f6e385206f71675705afc3b2b85c8a9d8afa136fb2066e2b6bafe35",
+      "revision": "5363daa33de6939922915ece1c71fbb993114054",
+      "updated_at": "2026-09-24T07:54:56.514Z",
+      "fingerprint": "d499f46462fd1a352f5f17950cf6375272f05ce4b35740bc774f8c614563323c",
       "apis": [
         {
           "protocol": "rpc",

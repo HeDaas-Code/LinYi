@@ -10,9 +10,9 @@ description:
   en: >
       Advances research progress by engineers, doctors and other roles to complete breakthroughs.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T14:24:31.903Z"
-fingerprint: c5d12d19c2ed73bb9221010062150662cbf2ad3e46ac9a0e5fe7591982daa179
+revision: 5363daa33de6939922915ece1c71fbb993114054
+updated_at: "2026-09-24T07:54:56.514Z"
+fingerprint: 08e1e60843d00c6db03eefa90af4942a03663a9ca04eacd0036f7c6272fa870e
 source:
   - path: "src/civilization/tech/research.js"
 apis:
