@@ -100,6 +100,10 @@ export const DEFAULTS = Object.freeze({
   reputationDownvotePenalty: 0.3,
   reputationCreditEnabled: true,
   reputationCreditBoost: 0.5,
+  actionSpaceEnabled: true,
+  actionSpaceAttribution: false,
+  // D0 生存门：人均库存低于该值时非生存行动让位于采集（1.5 太迟——实测 seed2 仍崩溃；3.0 稳定）
+  survivalGatePerCapita: 3,
 });
 
 /** 返回默认值深拷贝快照。 */
@@ -311,6 +315,9 @@ const RULES = {
   careerEnabled: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
   societyEnabled: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
   communityDetectInterval: (v) => (isPosInt(v) ? true : '必须是正整数'),
+  actionSpaceEnabled: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
+  actionSpaceAttribution: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
+  survivalGatePerCapita: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
 };
 
 /**

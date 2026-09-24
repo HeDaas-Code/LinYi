@@ -17,6 +17,7 @@ import * as town from '../../town/index.js';
 import * as survival from '../../survival/index.js';
 import * as observer from '../../observer/index.js';
 import * as rng from '../../infra/rng.js';
+import * as graph from '../../infra/store/graph.js';
 import * as configStore from '../../infra/config.js';
 
 
@@ -62,10 +63,11 @@ function prShuffle(arr) {
 let seeded = false;
 /** @type {Map<string, string>} agentId → accountId */
 let accounts = new Map();
+/** 当前存活居民 id 列表（每 tick 由 tick() 刷新，供候选状态与互动对象选取使用）。 */
+let settledAgentIds = [];
 /** @type {Set<string>} 已生育的配对键（排序 a:b，防重复生育） */
 const reproducedPairs = new Set();
 let childrenBorn = 0;
-let wroteBook = false;
 /** @type {Record<string, string>} itemIds / recipeIds */
 let itemIds = {};
 let tradeCount = 0;
@@ -149,7 +151,6 @@ export function seed(agents, config = {}) {
   accounts = new Map();
   reproducedPairs.clear();
   childrenBorn = 0;
-  wroteBook = false;
   tradeCount = 0;
   craftCount = 0;
   buildCount = 0;
@@ -708,29 +709,156 @@ function runSimilarityBonding(tick, agents, config = {}) {
   return result;
 }
 
+/** 制作所需材料（木头）的物品 id，供 loop 组装候选状态时判断「材料是否够」。 */
+export function craftMaterialId() {
+  return itemIds.wood ?? null;
+}
+
+/**
+ * 候选刷新所需的状态查询句柄（供 loop 组装候选状态时复用，避免 loop 直接依赖账户/企业内部结构）。
+ *
+ * 性能关键：本函数每 tick 每居民各调一次。若直接查 labour.staff()/business.list()，
+ * 每次都会 graph.read 深拷贝整份企业数据，实测令 structuredClone 占 CPU 71.7%、
+ * 主循环由 4.4s 恶化到 8.9s。因此在 tick 边界用 _candidateStateCache 缓存一次全量快照，
+ * 之后按 agentId O(1) 查询（每 tick 只读一次业务图，而非 O(居民数) 次）。
+ */
+let _candidateStateCache = null;
+let _candidateStateCacheTick = -1;
+
+export function candidateStateFor(agentId, tick = 0) {
+  if (_candidateStateCache === null || _candidateStateCacheTick !== tick) {
+    const employedIds = new Set();
+    let anyActive = false;
+    try {
+      for (const id of businessIds) {
+        for (const e of economy.industry.labour.staff(id)) employedIds.add(e.agentId);
+        const biz = economy.industry.business.list().find((b) => b.businessId === id);
+        if (biz !== undefined && biz.status === 'active') anyActive = true;
+      }
+    } catch { /* 无产业数据 */ }
+    _candidateStateCache = { employedIds, anyActive };
+    _candidateStateCacheTick = tick;
+  }
+  return {
+    hasPeer: settledAgentIds.length > 1,
+    employed: _candidateStateCache.employedIds.has(agentId),
+    businessActive: _candidateStateCache.anyActive,
+  };
+}
+
+/**
+ * 执行居民 **自己选择** 的行动效果（D0：行动空间地基）。
+ * 每个动作都调用真实模块；不可行时返回 { ok:false, reason } 且不改世界（不造假产出）。
+ * @returns {{ ok: boolean, reason?: string, detail?: object }}
+ */
+export function performAgentAction(tick, agentId, action, config = {}) {
+  if (typeof agentId !== 'string' || agentId.trim() === '') return { ok: false, reason: 'bad_agent' };
+  const itemIdsLocal = itemIds;
+  switch (action) {
+    case 'craft': {
+      if (pendingFor(agent.crafting.workbench.executor, agentId)) return { ok: false, reason: 'already_crafting' };
+      try {
+        const job = agent.crafting.workbench.executor.craft({ agentId, recipeId: 'axe', tick });
+        observer.recorder.eventLog.record({ tick, topic: 'agent.action.craft.started', payload: { recipeId: 'axe' }, agentId });
+        return { ok: true, detail: job };
+      } catch (err) { return { ok: false, reason: 'craft_failed:' + err.message.slice(0, 40) }; }
+    }
+    case 'build': {
+      if (pendingFor(agent.crafting.construction, agentId)) return { ok: false, reason: 'already_building' };
+      try {
+        const job = agent.crafting.construction.build({ agentId, recipeId: 'barn', tick });
+        observer.recorder.eventLog.record({ tick, topic: 'agent.action.build.started', payload: { recipeId: 'barn' }, agentId });
+        return { ok: true, detail: job };
+      } catch (err) { return { ok: false, reason: 'build_failed:' + err.message.slice(0, 40) }; }
+    }
+    case 'write': {
+      if (pendingFor(agent.crafting.writing, agentId)) return { ok: false, reason: 'already_writing' };
+      try {
+        const rec = agent.crafting.writing.write_book({
+          agentId,
+          title: '避难所纪事',
+          content: '第 ' + tick + ' 天，由 ' + agentId + ' 记录。',
+          tick,
+        });
+        observer.recorder.eventLog.record({ tick, topic: 'agent.action.write.started', payload: { bookId: rec?.bookId ?? null }, agentId });
+        return { ok: true, detail: rec };
+      } catch (err) { return { ok: false, reason: 'write_failed:' + err.message.slice(0, 40) }; }
+    }
+    case 'work': {
+      const biz = businessIds.find((id) => {
+        const b = economy.industry.business.list().find((x) => x.businessId === id);
+        return b !== undefined && b.status === 'active'
+          && economy.industry.labour.staff(id).some((e) => e.agentId === agentId);
+      });
+      if (biz === undefined) return { ok: false, reason: 'not_employed' };
+      const shiftOutput = (Number.isInteger(config.productionOutput) && config.productionOutput > 0) ? config.productionOutput : 4;
+      const labourShare = Math.max(1, Math.round(shiftOutput * 0.5));
+      try {
+        economy.industry.production.plan({ businessId: biz, output: labourShare });
+        observer.recorder.eventLog.record({ tick, topic: 'agent.action.work', payload: { businessId: biz, output: labourShare }, agentId });
+        return { ok: true, detail: { businessId: biz, planned: labourShare } };
+      } catch (err) { return { ok: false, reason: 'work_failed:' + err.message.slice(0, 40) }; }
+    }
+    case 'trade': {
+      const acctId = accounts.get(agentId);
+      if (!acctId) return { ok: false, reason: 'no_account' };
+      const woodId = itemIdsLocal.wood;
+      if (!woodId) return { ok: false, reason: 'no_item_catalog' };
+      let held = 0;
+      try { held = agent.inventory.backpack.list({ agentId }).items?.[woodId] ?? 0; } catch { held = 0; }
+      const sellable = held - 2;
+      if (sellable <= 0) return { ok: false, reason: 'no_surplus' };
+      const price = (typeof config.rawPrice === 'number' && config.rawPrice > 0) ? config.rawPrice : 1;
+      const revenue = sellable * price;
+      try {
+        const poolAcct = supplyAccountId;
+        const bal = (typeof poolAcct === 'string' && poolAcct !== '')
+          ? (economy.ledger.account.balance(poolAcct) ?? 0) : 0;
+        if (bal < revenue) return { ok: false, reason: 'pool_insufficient' };
+        economy.ledger.transaction.recorder.post({ from: poolAcct, to: acctId, amount: revenue, ref: 'trade', memo: '出售余粮' });
+        agent.inventory.backpack.remove({ agentId, itemId: woodId, quantity: sellable });
+        observer.recorder.eventLog.record({ tick, topic: 'agent.action.trade', payload: { itemId: woodId, quantity: sellable, revenue }, agentId });
+        return { ok: true, detail: { quantity: sellable, revenue } };
+      } catch (err) { return { ok: false, reason: 'trade_failed:' + err.message.slice(0, 40) }; }
+    }
+    case 'socialize': {
+      const peer = pickPeer(agentId);
+      if (peer === null) return { ok: false, reason: 'no_peer' };
+      social.relationship.friendship.update({ a: agentId, b: peer, delta: 0.05, note: 'tick ' + tick });
+      observer.recorder.eventLog.record({ tick, topic: 'agent.action.socialize', payload: { peer }, agentId });
+      return { ok: true, detail: { peer } };
+    }
+    case 'court': {
+      const peer = pickPeer(agentId);
+      if (peer === null) return { ok: false, reason: 'no_peer' };
+      try {
+        social.relationship.romance.propose({ from: agentId, to: peer });
+        observer.recorder.eventLog.record({ tick, topic: 'agent.action.court', payload: { peer }, agentId });
+        return { ok: true, detail: { peer } };
+      } catch (err) { return { ok: false, reason: 'court_failed:' + err.message.slice(0, 40) }; }
+    }
+    default:
+      return { ok: false, reason: 'unknown_action' };
+  }
+}
+
+/** 选取一个互动对象（确定性：按 id 排序后取 agentId 的哈希位，不消耗全局 rng）。 */
+function pickPeer(agentId) {
+  const ids = settledAgentIds.filter((id) => id !== agentId);
+  if (ids.length === 0) return null;
+  let h = 2166136261;
+  for (let i = 0; i < agentId.length; i += 1) { h ^= agentId.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return ids[(h >>> 0) % ids.length];
+}
+
 function pendingFor(queue, agentId) {
   return queue.pending().some((j) => j.agentId === agentId);
 }
 
-/** 制作：发起物品制作 / 建筑建造 / 自由写书，并推进三路任务队列。 */
+/** 制作队列推进：只推进已由居民 **自己发起** 的任务（发起见 performAgentAction）。 */
 function runCrafting(tick, agents) {
   const result = { crafted: 0, built: 0, wrote: 0 };
   if (agents.length === 0) return result;
-
-  const crafter = agents[0].id;
-  const builder = agents.length > 1 ? agents[1].id : null;
-  const writer = agents.length > 2 ? agents[2].id : null;
-
-  if (!pendingFor(agent.crafting.workbench.executor, crafter)) {
-    try { agent.crafting.workbench.executor.craft({ agentId: crafter, recipeId: 'axe' }); } catch { /* 材料不足 */ }
-  }
-  if (builder && !pendingFor(agent.crafting.construction, builder)) {
-    try { agent.crafting.construction.build({ agentId: builder, recipeId: 'barn' }); } catch { /* 材料不足 */ }
-  }
-  if (writer && !wroteBook) {
-    agent.crafting.writing.write_book({ agentId: writer, title: '避难所纪事', content: '第 ' + tick + ' 天的记录' });
-    wroteBook = true;
-  }
 
   const craftDone = agent.crafting.workbench.executor.tick();
   const buildDone = agent.crafting.construction.tick();
@@ -1046,6 +1174,8 @@ function runPlatform(tick, agents, config = {}) {
  * @returns {object}
  */
 export function tick({ tick, agents, config = {}, spawnChild }) {
+  settledAgentIds = agents.map((a) => a.id);
+  _candidateStateCache = null;
   return {
     procreation: runProcreation(tick, agents, spawnChild, config),
     similarityBonding: runSimilarityBonding(tick, agents, config),
@@ -1128,8 +1258,10 @@ export function __reset() {
   accounts = new Map();
   reproducedPairs.clear();
   childrenBorn = 0;
-  wroteBook = false;
   itemIds = {};
+  settledAgentIds = [];
+  _candidateStateCache = null;
+  _candidateStateCacheTick = -1;
   tradeCount = 0;
   craftCount = 0;
   buildCount = 0;

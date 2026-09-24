@@ -19,6 +19,7 @@ import * as poolSelector from './anticipation/pool/selector.js';
 import * as decisionContext from './decision/context.js';
 import * as decisionSelector from './decision/selector.js';
 import * as explainer from './decision/explainer.js';
+import * as candidates from './decision/candidates.js';
 import * as episodicStore from './memory/episodic/store.js';
 import * as episodicRecaller from './memory/episodic/recaller.js';
 import * as semantic from './memory/semantic.js';
@@ -63,6 +64,7 @@ export const decision = {
   context: decisionContext,
   selector: decisionSelector,
   explainer,
+  candidates,
 };
 
 export const memory = {

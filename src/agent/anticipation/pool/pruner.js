@@ -53,8 +53,30 @@ export function score(candidate, context = {}) {
 
   if (candidate?.action === 'eat' && hungry) s += 2;
   if (candidate?.action === 'drink' && thirsty) s += 2;
-  if (candidate?.action === 'forage' && !hungry && !thirsty) s += 1.0;
-  if (candidate?.action === 'rest' && !hungry && !thirsty) s += 0.4;
+  // D0：饥饿/口渴时压抑非生存行动（生存优先骨架保持）；非饥饿时 forage 略高于
+  // 非生存行动，但幅度已下调，使「制作/上工/社交」在温饱状态下能与采集竞争。
+  if (candidate?.action === 'forage' && !hungry && !thirsty) s += 0.3;
+  if (candidate?.action === 'rest' && !hungry && !thirsty) s += 0.2;
+  // 库存门（D0 生存门，主判据）：人均库存低于阈值时，**采集优先于一切**。
+  // 注意 needs 与资源库存是两套信号：库存见底时 needs 可能仍读 0（hungry=false），
+  // 因此不能只靠 needs 判定，必须显式给 forage 加分并压低 rest（否则居民会饿死前还在休息）。
+  if (context.survivalGate === true) {
+    if (candidate?.action === 'forage') s += 3.0;
+    if (candidate?.action === 'rest') s -= 1.0;
+  }
+
+  const NON_SURVIVAL = ['craft', 'build', 'write', 'work', 'trade', 'socialize', 'court'];
+  if (NON_SURVIVAL.includes(candidate?.action)) {
+    // 生存优先：饥饿/口渴时基础分折半（让 eat/drink 的 +2 稳定胜出，但不压成负数）。
+    if (hungry || thirsty) s = baseOf(candidate) * 0.5;
+    // 资源稀缺时进一步压抑非生存行动：**这是 D0 的关键生存门**。
+    // 无此门时，居民会在水池见底前一直制作/建造，导致整镇渴死后崩溃（seed2 实测 alive=0）。
+    const scarc = context.scarcity ?? {};
+    const worst = Math.max(scarc.food ?? 0, scarc.water ?? 0);
+    if (worst >= 0.5) s -= 2.0 * worst;
+    // 库存门（D0 生存门，主判据）：人均库存不足阈值时非生存行动彻底让位于采集。
+    if (context.survivalGate === true) s -= 5.0;
+  }
 
   s += tagBias(candidate?.action, context.tags);
   return s;

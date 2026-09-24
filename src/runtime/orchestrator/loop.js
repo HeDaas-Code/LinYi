@@ -41,13 +41,18 @@ const DEFAULT_EVENTS = Object.freeze([
   { id: 'blight', type: 'blight', weight: 1, effects: { foodDelta: -8 } },
 ]);
 
-/** 默认候选行动（每个智能体的预想池初始候选）。 */
+/** 生存骨架候选（永远可选；非生存候选由 agent.decision.candidates 按状态动态追加）。 */
 const DEFAULT_ACTIONS = Object.freeze([
   { id: 'eat', action: 'eat', score: 0.3 },
   { id: 'drink', action: 'drink', score: 0.3 },
   { id: 'rest', action: 'rest', score: 0.2 },
   { id: 'forage', action: 'forage', score: 0.2 },
 ]);
+
+/** 非生存行动的基础分（与 candidate planner 的 BASE_SCORE 一致，供逐 tick 刷新时复用）。 */
+const DYNAMIC_BASE_SCORE = Object.freeze({
+  craft: 0.9, build: 0.8, write: 0.7, work: 1.0, trade: 0.8, socialize: 0.6, court: 0.5,
+});
 
 /** 默认特质标签（tagset 采样的底座）。 */
 const DEFAULT_TAGS = Object.freeze({ resilient: 1.0, cautious: 0.8, sociable: 0.6, curious: 0.7, hardworking: 0.9 });
@@ -68,9 +73,30 @@ const DEFAULT_CONFIG = Object.freeze({
 let foragePool = null;
 let currentSeed = 'default';
 
+/**
+ * 存活人口。性能关键：registry.lookup 会 graph.read 深拷贝全部智能体，
+ * 而本函数在每 tick 每居民的决策路径上都会被调用（≈10,400 次/200tick 局），
+ * 同时采集池容量/再生也要用它——把 O(居民²) 降为 O(居民)。
+ *
+ * 缓存按**显式世代号**失效（而非 clock.now().tick）：regenForagePool 在 step 早期
+ * 执行时 clock 可能尚未推进，用 tick 作键会读到上一 tick 的值，导致容量/再生算错
+ * （表现为「采集池按人口缩放」用例 bigRegen 与 smallRegen 相同）。
+ */
+let _alivePopGeneration = -1;
+let _alivePopValue = 0;
+
+/** 使存活人口缓存失效（在人口发生变化的节点调用：step 入口、出生、死亡、复位）。 */
+function invalidateAlivePopulation() {
+  _alivePopGeneration -= 1;
+}
+
 function alivePopulation() {
-  const agents = registry.lookup({ type: 'agent' });
-  return Array.isArray(agents) ? agents.length : 0;
+  if (_alivePopGeneration !== 0) {
+    const agents = registry.lookup({ type: 'agent' });
+    _alivePopValue = Array.isArray(agents) ? agents.length : 0;
+    _alivePopGeneration = 0;
+  }
+  return _alivePopValue;
 }
 
 function foragePoolCapacityOf(cfg) {
@@ -203,6 +229,20 @@ function scheduleOverride(decision, agentId, tick, cfg) {
   const emergency = (need === 'food' || need === 'water') && level >= clampUnit(cfg.eatThreshold, 0.4);
   const scheduled = agent.schedule.executor.tick(agentId, { tick, interrupted: emergency, trigger: emergency ? 'emergency' : 'interrupt' });
   if (!scheduled || !scheduled.action) return null;
+  // D0：日程**建议**行动，但不得剥夺居民自己可执行的「非生存选择」。
+  // 仅当（a）处于紧急需求，或（b）居民选的是生存骨架行动时，日程才结果性覆盖；
+  // 否则日程仅作为理由记录，行动仍取居民的决定（否则日程会退回成"代码替居民决定"）。
+  const own = decision?.action;
+  const ownIsSurvival = own === 'eat' || own === 'drink' || own === 'forage' || own === 'rest';
+  if (!emergency && !ownIsSurvival && own !== undefined) {
+    return {
+      action: own,
+      reason: '居民自选「' + own + '」（日程建议：' + scheduled.action + '）',
+      replanned: scheduled.replanned,
+      trigger: 'agent_choice',
+      meta: { action: own, block: scheduled.block?.reason ?? null, suggested: scheduled.action, replanned: scheduled.replanned },
+    };
+  }
   return {
     action: scheduled.action,
     reason: '日程块「' + (scheduled.block?.reason ?? scheduled.action) + '」',
@@ -269,8 +309,43 @@ function scoreAction(candidate, ctx = {}) {
   return score;
 }
 
+/** 把候选池重置为「生存骨架 + 当前状态可达的动态行动」（D0：行动空间地基）。 */
+function refreshCandidates(agentId, tick, cfg) {
+  // 行动空间关闭时保持既有行为（也不付候选重建成本）：存活骨架已在 spawnAgent 写定。
+  if (cfg.actionSpaceEnabled === false) return null;
+  const state = stage2.candidateStateFor(agentId, tick);
+  let held = 0;
+  try { held = agent.inventory.backpack.list({ agentId }).items?.[stage2.craftMaterialId()] ?? 0; } catch { held = 0; }
+  const planned = agent.decision.candidates.plan({
+    actionSpaceEnabled: cfg.actionSpaceEnabled !== false,
+    hasWorkbenchMaterial: held >= 2,
+    hasBuildingMaterial: held >= 3,
+    literate: societyEffectsHasLiteracy(),
+    employed: state.employed,
+    businessActive: state.businessActive,
+    hasSurplus: held > 2,
+    hasPeer: state.hasPeer,
+    eligibleMate: false,
+  }, { attributeRandom: cfg.actionSpaceAttribution === true });
+
+  // 整批替换（单次 graph.write）：逐候选 add() 会触发逐次 graph.read 深拷贝，
+  // 实测把主循环从 4.4s 拖到 10.4s（structuredClone 占 73%）。
+  agent.anticipation.pool.store.replace(
+    agentId,
+    planned.map((c) => ({ id: agentId + ':' + c.action, action: c.action, score: c.score })),
+  );
+  return planned;
+}
+
+/** 识字判定：教师角色提供 literacyRate，长期有效即认为成人识字。 */
+function societyEffectsHasLiteracy() {
+  const eff = agent.role.society.activeEffects();
+  return (eff?.effects?.literacyRate ?? 0) > 0;
+}
+
 /** 组装单个智能体的决策：感知 + 压力 + 预想 + 记忆 → 行动选择。 */
 function decide(agentId, tick, percepts, cfg = {}) {
+  refreshCandidates(agentId, tick, cfg);
   const pressure = survival.needs.pressure.scorer.score({ agentId });
   const anticipations = agent.anticipation.pool.selector.shortlist(agentId, { limit: 6 });
   if (anticipations.length === 0) return null;
@@ -299,12 +374,20 @@ function decide(agentId, tick, percepts, cfg = {}) {
 
   // 批次2-B（t47）：候选修剪（动机+性格裁剪前 K）→ 行动模拟（简化推演+探索噪声）
   const tags = agent.traits.tagset.store.get(agentId)?.tags ?? [];
+  // D0 生存门：以「人均库存天数」判据。仅靠 pressure.scarcity 不够——它在采集池见底后
+  // 才饱和，那时已不可恢复（实测 seed2 因早期制作耗尽水库存而整镇渴死）。
+  const aliveNow = Math.max(1, alivePopulation());
+  const foodStock = survival.resources.food.query().stockpile ?? 0;
+  const waterStock = survival.resources.water.query().stockpile ?? 0;
+  const survivalGate = (Math.min(foodStock, waterStock) / aliveNow) < (cfg.survivalGatePerCapita ?? 3);
   const pruned = agent.anticipation.pool.pruner.prune(agentId, anticipations, {
     k: cfg.pruneK,
     dominantNeed: need,
     level: needLevel,
     threshold: cfg.eatThreshold,
     tags,
+    scarcity: pressure.scarcity ?? {},
+    survivalGate,
   });
   const resources = { food: survival.resources.food.query(), water: survival.resources.water.query() };
   const predicted = agent.anticipation.simulator.predict(agentId, pruned, {
@@ -586,6 +669,8 @@ function runTraitDrift(tick, cfg) {
 export async function step(config = {}) {
   const cfg = { ...DEFAULT_CONFIG, ...configStore.currentDifficultyParams(), ...(config ?? {}) };
   const tick = clock.tick().tick;
+  // 人口可能在上个 tick 因出生/死亡变化：先失效缓存再算采集池容量/再生。
+  invalidateAlivePopulation();
 
   // 0) 世界采集池再生（每 tick 补充可采集总量）
   regenForagePool(cfg);
@@ -638,21 +723,28 @@ export async function step(config = {}) {
 
   // 4) dispatch：行动落到 world-state + 观察者行为日志 + 情景记忆
   for (const { agentId, decision, thought } of decisions) {
+    // D0：非生存行动由居民自己发起（调用真实模块）；生存行动沿用 effectFor。
+    const performed = DYNAMIC_BASE_SCORE[decision.action] !== undefined
+      ? stage2.performAgentAction(tick, agentId, decision.action, cfg)
+      : null;
     const op = dispatch.resolve([{
       agentId,
       action: decision.action,
-      params: { reason: decision.reason },
+      params: performed === null
+        ? { reason: decision.reason }
+        : { reason: decision.reason, ok: performed.ok, detail: performed.reason ?? null },
       reason: decision.reason,
       confidence: decision.confidence,
       effect: effectFor(agentId, decision.action, cfg),
     }])[0];
     dispatch.actions(op, {
       onApplied: (record) => {
+        const dyn = DYNAMIC_BASE_SCORE[record.action] !== undefined;
         observer.recorder.actionLog.record({
           tick,
           agentId: record.agentId,
           action: record.action,
-          outcome: { applied: true },
+          outcome: dyn ? { applied: performed !== null && performed.ok === true, reason: performed?.reason ?? null } : { applied: true },
           actionId: record.id,
         });
       },
@@ -721,6 +813,7 @@ export async function step(config = {}) {
 
 /** 复位全部共享状态（graph/rng/identity/clock/world-state/registry/needs/recorder）。 */
 export function reset() {
+  invalidateAlivePopulation();
   graph.__reset();
   rng.__reset();
   identity.__reset();

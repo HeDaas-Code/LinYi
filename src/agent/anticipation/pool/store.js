@@ -82,6 +82,28 @@ export function list(agentId) {
   return structuredClone(node.data.candidates ?? []);
 }
 
+/** 清空某智能体的候选池（D0：逐 tick 按状态重建候选，而非出生时固定）。 */
+export function reset(agentId) {
+  assertAgentId(agentId);
+  graph.write({ id: nodeId(agentId), type: TYPE, data: { agentId, candidates: [] } });
+}
+
+/**
+ * 用给定候选**整批替换**某智能体的预想池（D0 性能关键路径）。
+ * 相比 reset()+N×add()，本接口只做一次 graph.write、且不读旧值，
+ * 避免逐候选的 graph.read 深拷贝（实测可省下约 70% 的 structuredClone 调用）。
+ * @param {string} agentId
+ * @param {Array<object>} candidates
+ * @returns {number} 写入的候选数
+ */
+export function replace(agentId, candidates) {
+  assertAgentId(agentId);
+  const list = Array.isArray(candidates) ? candidates : [];
+  const normalized = list.map((c) => normalizeCandidate(c));
+  graph.write({ id: nodeId(agentId), type: TYPE, data: { agentId, candidates: normalized } });
+  return normalized.length;
+}
+
 /** 复位底层 graph store（测试用）。 */
 export function __reset() {
   graph.__reset();
