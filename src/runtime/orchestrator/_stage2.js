@@ -65,6 +65,13 @@ let seeded = false;
 let accounts = new Map();
 /** 当前存活居民 id 列表（每 tick 由 tick() 刷新，供候选状态与互动对象选取使用）。 */
 let settledAgentIds = [];
+/**
+ * P1：恋爱/配对状态的内存索引（O(1) 查询，避免逐 agent 扫图）。
+ * pendingCourts: 被表白者 → 表白者列表；pairedIndex: agentId → 伴侣 id。
+ * 这两个索引让「谁和谁配对」由居民的双向决策（court/accept）决定，而不是代码配对。
+ */
+const pendingCourts = new Map();
+const pairedIndex = new Map();
 /** @type {Set<string>} 已生育的配对键（排序 a:b，防重复生育） */
 const reproducedPairs = new Set();
 let childrenBorn = 0;
@@ -344,30 +351,26 @@ function runProcreation(tick, agents, spawnChild, config = {}) {
   const result = { childId: null, parents: null, familyId: null };
   if (childrenBorn >= maxChildren || agents.length < 2) return result;
 
-  const ids = agents.map((a) => a.id);
-  const matchThreshold = (typeof config.procreationMatchThreshold === 'number' && config.procreationMatchThreshold >= 0 && config.procreationMatchThreshold <= 1)
-    ? config.procreationMatchThreshold : 0.3;
-  const pairs = social.procreation.match.pair({ agentIds: ids, k: Math.max(4, ids.length), threshold: matchThreshold });
-  if (pairs.length === 0) return result;
+  // P1：婚配**只**来自居民的双向决策（court → accept，见 performAgentAction）。
+  // 此前由 match.pair(code 匹配) + rng.shuffle 直接选出婚配对，并在这里替居民
+  // 走完 propose→accept，因此夫妻与家族结构与居民选择无关。
+  const seen = new Set();
+  const couples = [];
+  for (const [x, y] of pairedIndex) {
+    const key = sortedPairKey(x, y);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    couples.push({ a: x, b: y });
+  }
+  if (couples.length === 0) return result;
 
-  // 随机化配对顺序，再跳过已生育过的配对（防同一对反复繁殖 + 让种子产生结构差异）
+  // 随机化顺序并跳过已生育过的配对（防同一对反复繁殖 + 让种子产生结构差异）
   let pair = null;
-  for (const p of rng.shuffle(pairs)) {
-    if (!reproducedPairs.has(sortedPairKey(p.a, p.b))) { pair = p; break; }
+  for (const c of rng.shuffle(couples)) {
+    if (!reproducedPairs.has(sortedPairKey(c.a, c.b))) { pair = c; break; }
   }
   if (pair === null) return result;
   reproducedPairs.add(sortedPairKey(pair.a, pair.b));
-
-  try {
-    if (social.relationship.romance.state({ a: pair.a, b: pair.b }) === 'none') {
-      social.relationship.romance.propose({ from: pair.a, to: pair.b });
-    }
-    if (social.relationship.romance.state({ a: pair.a, b: pair.b }) === 'proposed') {
-      social.relationship.romance.accept({ from: pair.a, to: pair.b });
-    }
-  } catch {
-    // 已配对 / 已分手等，跳过恋爱状态迁移，不影响后续
-  }
 
   childrenBorn += 1;
   // 批次2-D：家族登记（registry 成为 lineage 的上层组织）+ 编年史 + 关系边
@@ -739,10 +742,14 @@ export function candidateStateFor(agentId, tick = 0) {
     _candidateStateCache = { employedIds, anyActive };
     _candidateStateCacheTick = tick;
   }
+  const paired = pairedIndex.has(agentId);
   return {
     hasPeer: settledAgentIds.length > 1,
     employed: _candidateStateCache.employedIds.has(agentId),
     businessActive: _candidateStateCache.anyActive,
+    paired,
+    eligibleMate: !paired && settledAgentIds.some((id) => id !== agentId && !pairedIndex.has(id)),
+    hasPendingCourt: !paired && (pendingCourts.get(agentId) ?? []).length > 0,
   };
 }
 
@@ -825,21 +832,52 @@ export function performAgentAction(tick, agentId, action, config = {}) {
       const peer = pickPeer(agentId);
       if (peer === null) return { ok: false, reason: 'no_peer' };
       social.relationship.friendship.update({ a: agentId, b: peer, delta: 0.05, note: 'tick ' + tick });
+      // P1：社交边由居民**自己的社交行动**产生。此前边只由代码的相似度建边产生，
+      // 导致行动空间 4→9 时社交结构逐字节不变（见 reports/laya-evaluation.md 同源审计）。
+      social.graph.edges.create({ a: agentId, b: peer, type: 'friendship', weight: 0.2, note: 'socialize' });
       observer.recorder.eventLog.record({ tick, topic: 'agent.action.socialize', payload: { peer }, agentId });
       return { ok: true, detail: { peer } };
     }
     case 'court': {
-      const peer = pickPeer(agentId);
-      if (peer === null) return { ok: false, reason: 'no_peer' };
+      if (pairedIndex.has(agentId)) return { ok: false, reason: 'already_paired' };
+      const peer = pickMate(agentId);
+      if (peer === null) return { ok: false, reason: 'no_eligible_mate' };
       try {
         social.relationship.romance.propose({ from: agentId, to: peer });
+        const list = pendingCourts.get(peer) ?? [];
+        if (!list.includes(agentId)) list.push(agentId);
+        pendingCourts.set(peer, list);
         observer.recorder.eventLog.record({ tick, topic: 'agent.action.court', payload: { peer }, agentId });
         return { ok: true, detail: { peer } };
       } catch (err) { return { ok: false, reason: 'court_failed:' + err.message.slice(0, 40) }; }
     }
+    case 'accept': {
+      // P1：接受表白是**被追求方自己的决策**，而非代码自动完成配对。
+      if (pairedIndex.has(agentId)) return { ok: false, reason: 'already_paired' };
+      const list = pendingCourts.get(agentId) ?? [];
+      if (list.length === 0) return { ok: false, reason: 'no_pending_court' };
+      const from = list[list.length - 1];
+      try {
+        social.relationship.romance.accept({ from, to: agentId });
+        pairedIndex.set(agentId, from);
+        pairedIndex.set(from, agentId);
+        pendingCourts.delete(agentId);
+        observer.recorder.eventLog.record({ tick, topic: 'agent.action.accept', payload: { from }, agentId });
+        return { ok: true, detail: { from } };
+      } catch (err) { return { ok: false, reason: 'accept_failed:' + err.message.slice(0, 40) }; }
+    }
     default:
       return { ok: false, reason: 'unknown_action' };
   }
+}
+
+/** 选取一个**未婚**求偶对象（同样用哈希位，不消耗全局 rng；无未婚同伴则返回 null）。 */
+function pickMate(agentId) {
+  const ids = settledAgentIds.filter((id) => id !== agentId && !pairedIndex.has(id));
+  if (ids.length === 0) return null;
+  let h = 2166136261;
+  for (let i = 0; i < agentId.length; i += 1) { h ^= agentId.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return ids[(h >>> 0) % ids.length];
 }
 
 /** 选取一个互动对象（确定性：按 id 排序后取 agentId 的哈希位，不消耗全局 rng）。 */
@@ -1178,7 +1216,9 @@ export function tick({ tick, agents, config = {}, spawnChild }) {
   _candidateStateCache = null;
   return {
     procreation: runProcreation(tick, agents, spawnChild, config),
-    similarityBonding: runSimilarityBonding(tick, agents, config),
+    // P1：行动空间开启时，社交边**只**由居民的 socialize 行动产生。
+    // 这条硬编码的相似度建边（内部固定用 agents[0]）会让社交结构对行动空间完全不敏感。
+    similarityBonding: config.actionSpaceEnabled === false ? runSimilarityBonding(tick, agents, config) : { bonds: 0, pair: null, gated: true },
     market: runMarket(tick, agents, config),
     industry: runIndustry(tick, agents, config),
     fiscal: runFiscal(tick, agents, config),
@@ -1262,6 +1302,8 @@ export function __reset() {
   settledAgentIds = [];
   _candidateStateCache = null;
   _candidateStateCacheTick = -1;
+  pendingCourts.clear();
+  pairedIndex.clear();
   tradeCount = 0;
   craftCount = 0;
   buildCount = 0;

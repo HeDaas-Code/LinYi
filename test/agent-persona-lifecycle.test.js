@@ -6,6 +6,7 @@ import * as tagsetStore from '../src/agent/traits/tagset/store.js';
 import * as worldState from '../src/runtime/world-state.js';
 import { loop, registry } from '../src/runtime/index.js';
 import * as observer from '../src/observer/index.js';
+import * as social from '../src/social/index.js';
 
 function resetUnits() {
   tagsetStore.__reset();
@@ -201,9 +202,12 @@ test('wiring: 6 模块被主循环真实调用（决策日志 + 事件流证据�
     assert.equal(agent.persona.identity.describe(childId).familyId, proc[0].data.payload.familyId, '子代应登记家庭归属');
   }
 
-  // similarity.neighbors：相似度社交纽带事件
-  const bond = observer.recorder.eventLog.list().filter((n) => n.data.topic === 'social.friendship.similarity');
-  assert.ok(bond.length >= 1, '应产生相似度社交纽带事件');
+  // P1：社交边改由居民的 socialize 行动产生（原先由代码的相似度生成器无条件建边，
+  // 导致行动空间 4→9 时社交结构逐字节不变）。断言改为验证「社交边来自决策」。
+  const socializeActs = observer.recorder.eventLog.list().filter((n) => n.data.topic === 'agent.action.socialize');
+  assert.ok(socializeActs.length >= 1, '居民应产生 socialize 行动事件');
+  const friendshipEdges = social.graph.edges.list().filter((e) => e.type === 'friendship');
+  assert.ok(friendshipEdges.length >= 1, 'socialize 行动应建立 friendship 社交边');
 });
 
 test('integration: 默认 50×200×3 种子存活率 1.00 且跨种子分叉', async () => {

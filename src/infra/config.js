@@ -74,7 +74,8 @@ export const DEFAULTS = Object.freeze({
   traitDriftInterval: 10,
   traitMutateRate: 0.02,
   // 批次2-B 智能体记忆 / 预演 / 决策解释（t47）
-  pruneK: 4,
+  // P1：行动空间已从 4 种扩到 12 种，窗口 4 会把社交/求偶类行动永久挤出（等于又替居民做了选择）。
+  pruneK: 6,
   simNoise: 0.5,
   semanticMaxEntries: 64,
   semanticLimit: 3,
@@ -101,6 +102,11 @@ export const DEFAULTS = Object.freeze({
   reputationCreditEnabled: true,
   reputationCreditBoost: 0.5,
   actionSpaceEnabled: true,
+  // 有模型 E2E：让真实大模型从候选集中选行动（默认关闭，保证空跑确定性与速度）。
+  // 实测 grok-4.6 单次约 18s，故用 llmDecideEveryTicks / llmDecideMaxAgents 控制规模。
+  llmDecideEnabled: false,
+  llmDecideEveryTicks: 1,
+  llmDecideMaxAgents: 1,
   actionSpaceAttribution: false,
   // D0 生存门：人均库存低于该值时非生存行动让位于采集（1.5 太迟——实测 seed2 仍崩溃；3.0 稳定）
   survivalGatePerCapita: 3,
@@ -318,6 +324,9 @@ const RULES = {
   actionSpaceEnabled: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
   actionSpaceAttribution: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
   survivalGatePerCapita: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
+  llmDecideEnabled: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
+  llmDecideEveryTicks: (v) => (isPosInt(v) ? true : '必须是正整数'),
+  llmDecideMaxAgents: (v) => (isPosInt(v) ? true : '必须是正整数'),
 };
 
 /**

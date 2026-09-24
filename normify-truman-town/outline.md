@@ -4,7 +4,7 @@
 
 ## truman-town
 
-- truman-town [计划] — 楚门小镇智能体沙盘 / Truman Town Agent Sandbox — 核战争后 LinYi 号避难所的自治沙盘：居民在资源与生存压力下自行发展，拥有背包与制作能力，智能体决策受心理状态影响，社会涌现治理与文化，文明通过技术与遗物积… — [模块 229 · API 368]
+- truman-town [计划] — 楚门小镇智能体沙盘 / Truman Town Agent Sandbox — 核战争后 LinYi 号避难所的自治沙盘：居民在资源与生存压力下自行发展，拥有背包与制作能力，智能体决策受心理状态影响，社会涌现治理与文化，文明通过技术与遗物积… — [模块 230 · API 371]
   - truman-town.agent [计划] — 智能体核心 / Agent Core — 智能体的完整心智与行为模型：人设、50 标签特质、心理、日程、行动预想池、背包与制作、决策、记忆、生命周期与社会角色。 — [模块 52 · API 79]
     - truman-town.agent.anticipation [计划] — 行动预想池 / Anticipation Pool — 为智能体维护候选行动集合，并通过模拟评分选择下一步。 — [模块 6 · API 8]
       - truman-town.agent.anticipation.pool [计划] — 预想池实现 / Anticipation Pool Implementation — 增删与修剪候选行动，保持预想池新鲜且可执行。 — [模块 4 · API 6]
@@ -57,7 +57,8 @@
         - truman-town.agent.traits.tagset.sampler — 特质采样 / Tag Sampler — 按权重随机采样特质标签，支持无放回抽取与单标签取样，随机源可 seed 复现。 — [模块 1 · API 2]
         - truman-town.agent.traits.tagset.similarity — 特质相似度 / Tag Similarity — 计算两个 50 标签集合的相似度并检索近邻。 — [模块 1 · API 2]
         - truman-town.agent.traits.tagset.store — 特质存储 / Tag Store — 持久化读写单个智能体的特质标签集（默认 50 个），支持对象或数组输入，读写均深拷贝隔离。 — [模块 1 · API 2]
-  - truman-town.ai [计划] — AI 引擎 / AI Engine — 为智能体提供 LLM 推理、提示词构建、思维与对话生成、记忆向量与安全护栏。 — [模块 13 · API 16]
+  - truman-town.ai [计划] — AI 引擎 / AI Engine — 为智能体提供 LLM 推理、提示词构建、思维与对话生成、记忆向量与安全护栏。 — [模块 14 · API 19]
+    - truman-town.ai.decide — 模型决策 / Model Decision — 让真实大模型从居民当前可行候选集内选择行动，是「有模型 E2E」的入口：状态→候选集→模型选择→行动执行。模型不得新增行动或绕过可行性约束，解析失败或越界时回落… — [模块 1 · API 3]
     - truman-town.ai.guard [计划] — 安全护栏 / AI Guard — 检查生成内容的安全性与世界观一致性。 — [模块 1 · API 2]
     - truman-town.ai.llm [计划] — LLM 网关 / LLM Gateway — 统一接入语言模型，支持补全、嵌入与路由。 — [模块 3 · API 4]
       - truman-town.ai.llm.gateway — 模型调用 / Model Gateway — 执行补全与嵌入请求，处理限流与重试。 — [模块 1 · API 2]
@@ -157,7 +158,7 @@
       - truman-town.runtime.orchestrator.dispatch — 行动执行 / Action Dispatch — 把智能体决策结果解析为世界操作并提交执行。 — [模块 1 · API 2]
       - truman-town.runtime.orchestrator.loop — 主循环集成 / Main Loop Integration — 把 clock → survival 事件 → 感知 → agent 决策 → ai.thought → dispatch → world-state 串成最小… — [模块 1 · API 6]
       - truman-town.runtime.orchestrator.perception — 感知分发 / Perception Dispatch — 采集世界事件并分发给相关智能体，形成可感知上下文。 — [模块 1 · API 2]
-      - truman-town.runtime.orchestrator.stage2 — 第二阶段编排 / Phase-2 Orchestration — 阶段二世界推进：产业/经济/制作队列推进、居民自选行动的实际执行（performAgentAction）、社会与家庭汇总、疾病分诊等。 — [模块 1 · API 5]
+      - truman-town.runtime.orchestrator.stage2 — 第二阶段编排 / Phase-2 Orchestration — 阶段二世界推进：产业/经济/制作队列推进、居民自选行动的实际执行（performAgentAction，含 P1 新增的 socialize/court/acc… — [模块 1 · API 5]
     - truman-town.runtime.registry — 实体注册表 / Entity Registry — 登记智能体、建筑、企业等实体，提供查找与注销能力。 — [模块 1 · API 3]
     - truman-town.runtime.world-state — 世界状态 / World State — 保存与恢复世界快照，支持状态比对与内循环回滚。 — [模块 1 · API 3]
   - truman-town.social [计划] — 社交系统 / Social System — 智能体的社交网络、社交平台与关系系统，由生育形成家族，并涌现出治理、文化与声誉。 — [模块 34 · API 56]

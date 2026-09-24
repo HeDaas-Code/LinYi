@@ -163,13 +163,13 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "root_uid": "d440391b"
       }
     ],
-    "compiled_at": "2026-09-24T15:12:28.110Z",
+    "compiled_at": "2026-09-24T19:40:24.355Z",
     "stats": {
       "tree_count": 1,
-      "module_count": 229,
-      "leaf_count": 160,
-      "api_count": 368,
-      "dep_count": 345,
+      "module_count": 230,
+      "leaf_count": 161,
+      "api_count": 371,
+      "dep_count": 346,
       "cross_tree_dep_count": 0,
       "max_depth": 5,
       "layout_count": 69,
@@ -201,9 +201,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "updated_at": "2026-09-22T04:32:53Z",
       "fingerprint": "pending",
       "aggregate": {
-        "descendant_count": 228,
+        "descendant_count": 229,
         "own_api_count": 0,
-        "inherited_api_count": 368,
+        "inherited_api_count": 371,
         "dep_out": 0,
         "dep_in": 0
       }
@@ -1107,9 +1107,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/agent/decision/candidates.js"
         }
       ],
-      "revision": "26dba326d0f79bf978188bf6f3ac73c02723ff58",
-      "updated_at": "2026-09-24T15:12:14.790Z",
-      "fingerprint": "9e1003f8806eb10aa3fec7783d127dd97b96690200fb2c7a25008389169e7ba2",
+      "revision": "9885f1e507ec4ef5a3c1f8c166ed456cf0026737",
+      "updated_at": "2026-09-24T19:39:37.707Z",
+      "fingerprint": "01d466abaa3e906726d43d06df04a88b9b9e0151ae02446978e8af9ff94b9ad8",
       "apis": [
         {
           "protocol": "rpc",
@@ -3031,10 +3031,86 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "updated_at": "2026-09-22T04:32:53Z",
       "fingerprint": "pending",
       "aggregate": {
-        "descendant_count": 12,
+        "descendant_count": 13,
         "own_api_count": 0,
-        "inherited_api_count": 16,
+        "inherited_api_count": 19,
         "dep_out": 0,
+        "dep_in": 0
+      }
+    },
+    "truman-town.ai.decide": {
+      "uid": "a3f81c25",
+      "id": "truman-town.ai.decide",
+      "parent": "truman-town.ai",
+      "tree": "truman-town",
+      "depth": 3,
+      "tags": [
+        "ai",
+        "decision",
+        "llm",
+        "e2e"
+      ],
+      "name": {
+        "zh": "模型决策",
+        "en": "Model Decision"
+      },
+      "description": {
+        "zh": "让真实大模型从居民当前可行候选集内选择行动，是「有模型 E2E」的入口：状态→候选集→模型选择→行动执行。模型不得新增行动或绕过可行性约束，解析失败或越界时回落确定性结果并记录原因。\n",
+        "en": "Lets a real LLM pick an action from the agent feasible candidate set; the LLM-in-the-loop entry point. No invented actions or bypassed feasibility.\n"
+      },
+      "source": [
+        {
+          "path": "src/ai/decide.js"
+        }
+      ],
+      "revision": "0000000000000000000000000000000000000000",
+      "updated_at": "2026-09-24T19:39:37Z",
+      "fingerprint": "c281ec12873453862b934a22bfb002bfa16b629cee25b297b07e4888f43405b4",
+      "apis": [
+        {
+          "protocol": "rpc",
+          "path": "ai.decide.composePrompt",
+          "description": {
+            "zh": "组装决策提示词：处境 + 候选行动（含可行性理由）。\n",
+            "en": "Builds the decision prompt with situation and candidates.\n"
+          },
+          "key": "rpc:ai.decide.composePrompt"
+        },
+        {
+          "protocol": "rpc",
+          "path": "ai.decide.parseAction",
+          "description": {
+            "zh": "从模型自由文本中提取行动名，容忍标点/引号/大小写/前后缀。\n",
+            "en": "Extracts an action name from free-form model text.\n"
+          },
+          "key": "rpc:ai.decide.parseAction"
+        },
+        {
+          "protocol": "rpc",
+          "path": "ai.decide.choose",
+          "description": {
+            "zh": "调用模型做一次行动选择，返回 action 与调用元数据。\n",
+            "en": "Calls the model once to choose an action.\n"
+          },
+          "key": "rpc:ai.decide.choose"
+        }
+      ],
+      "deps": [
+        {
+          "kind": "call",
+          "to": "truman-town.ai.llm.gateway",
+          "label": {
+            "zh": "经网关执行补全",
+            "en": "Completes via gateway"
+          },
+          "cross_tree": false
+        }
+      ],
+      "aggregate": {
+        "descendant_count": 0,
+        "own_api_count": 3,
+        "inherited_api_count": 0,
+        "dep_out": 1,
         "dep_in": 0
       }
     },
@@ -3159,7 +3235,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "own_api_count": 2,
         "inherited_api_count": 0,
         "dep_out": 0,
-        "dep_in": 5
+        "dep_in": 6
       }
     },
     "truman-town.ai.llm.router": {
@@ -4333,9 +4409,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/civilization/legacy/summary/writer.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T14:39:19.573Z",
-      "fingerprint": "fab7bb016e23d21ea587685d24e6b985fb93b771987edbcb09169b6ad884eb55",
+      "revision": "9885f1e507ec4ef5a3c1f8c166ed456cf0026737",
+      "updated_at": "2026-09-24T19:40:06.129Z",
+      "fingerprint": "243e44fe25c8edb2c3e086a38afcc9ac3d4b30e857fcd8cb2a279ef4f55f9879",
       "apis": [
         {
           "protocol": "rpc",
@@ -6426,9 +6502,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/infra/config.js"
         }
       ],
-      "revision": "26dba326d0f79bf978188bf6f3ac73c02723ff58",
-      "updated_at": "2026-09-24T15:12:14.790Z",
-      "fingerprint": "ec62ab89a6f4c1a04fe5c6a7be4e7bbf9fd355960b3b3328b9ed8972526c3f4d",
+      "revision": "9885f1e507ec4ef5a3c1f8c166ed456cf0026737",
+      "updated_at": "2026-09-24T19:40:06.130Z",
+      "fingerprint": "7dbeaa9df7f345e22e5bcdaecaa48cd2b7ac8b5d15a0e229569df82d4df14bb4",
       "apis": [
         {
           "protocol": "rpc",
@@ -7968,9 +8044,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/runtime/orchestrator/loop.js"
         }
       ],
-      "revision": "26dba326d0f79bf978188bf6f3ac73c02723ff58",
-      "updated_at": "2026-09-24T15:12:14.790Z",
-      "fingerprint": "515ddb3d1667f30db95b8419efb503df9e0fea8a93e96989e189ac865142e0a3",
+      "revision": "9885f1e507ec4ef5a3c1f8c166ed456cf0026737",
+      "updated_at": "2026-09-24T19:39:37.706Z",
+      "fingerprint": "184d828f53f095ab2de9ec5113806d3a99b433b47d951b25bc3aff5a1d70aa61",
       "apis": [
         {
           "protocol": "rpc",
@@ -8420,17 +8496,17 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "en": "Phase-2 Orchestration"
       },
       "description": {
-        "zh": "阶段二世界推进：产业/经济/制作队列推进、居民自选行动的实际执行（performAgentAction）、社会与家庭汇总、疾病分诊等。\n",
-        "en": "Phase-2 world stepping: industry/economy/craft queue advancement, execution of agent-chosen actions, social and family aggregation, triage.\n"
+        "zh": "阶段二世界推进：产业/经济/制作队列推进、居民自选行动的实际执行（performAgentAction，含 P1 新增的 socialize/court/accept 与由居民双向决策产生的婚配）、社会与家庭汇总、疾病分诊等。\n",
+        "en": "Phase-2 world stepping: industry/economy/craft queue advancement, execution of agent-chosen actions (including socialize/court/accept and decision-driven pairing), social and family aggregation, triage.\n"
       },
       "source": [
         {
           "path": "src/runtime/orchestrator/_stage2.js"
         }
       ],
-      "revision": "26dba326d0f79bf978188bf6f3ac73c02723ff58",
-      "updated_at": "2026-09-24T15:12:14.790Z",
-      "fingerprint": "9f12aa0667e772971098ef8c79cab0d6980cb3186ad48e9a4c251982fadea2bd",
+      "revision": "9885f1e507ec4ef5a3c1f8c166ed456cf0026737",
+      "updated_at": "2026-09-24T19:39:45.670Z",
+      "fingerprint": "1e57d23c298b444632962e13f3aba825015d5a3bdc6cba6ab8dc81f2e48c4b42",
       "apis": [
         {
           "protocol": "rpc",
@@ -12689,6 +12765,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
     "rpc:agent.traits.tagset.similarity.neighbors": "truman-town.agent.traits.tagset.similarity",
     "rpc:agent.traits.tagset.store.get": "truman-town.agent.traits.tagset.store",
     "rpc:agent.traits.tagset.store.upsert": "truman-town.agent.traits.tagset.store",
+    "rpc:ai.decide.choose": "truman-town.ai.decide",
+    "rpc:ai.decide.composePrompt": "truman-town.ai.decide",
+    "rpc:ai.decide.parseAction": "truman-town.ai.decide",
     "rpc:ai.guard.check": "truman-town.ai.guard",
     "rpc:ai.guard.sanitize": "truman-town.ai.guard",
     "rpc:ai.llm.gateway.complete": "truman-town.ai.llm.gateway",
@@ -13484,6 +13563,16 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "to": "truman-town.infra.store.graph",
       "kind": "call",
       "cross_tree": false
+    },
+    {
+      "from": "truman-town.ai.decide",
+      "to": "truman-town.ai.llm.gateway",
+      "kind": "call",
+      "cross_tree": false,
+      "label": {
+        "zh": "经网关执行补全",
+        "en": "Completes via gateway"
+      }
     },
     {
       "from": "truman-town.ai.llm.router",

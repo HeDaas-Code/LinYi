@@ -17,6 +17,7 @@ const RULES = Object.freeze({
   trade: (s) => (s.hasSurplus ? '背包有余粮，可以卖掉换钱' : null),
   socialize: (s) => (s.hasPeer ? '附近有其他居民，可以交谈' : null),
   court: (s) => (s.eligibleMate && s.hasPeer ? '有合适的对象，可以求偶' : null),
+  accept: (s) => (s.hasPendingCourt ? '有人向我表白，可以接受' : null),
 });
 
 /** 行动 → 基础分（在 scoreAction 再叠加需求/稀缺/性格/记忆修正）。 */
@@ -26,8 +27,10 @@ const BASE_SCORE = Object.freeze({
   write: 0.7,
   work: 1.0,
   trade: 0.8,
-  socialize: 0.6,
-  court: 0.5,
+  socialize: 0.7,
+  court: 0.85,
+  // 接受表白是**一次性的窗口**（对方在等答复），给高于日常劳动的优先级。
+  accept: 1.1,
 });
 
 const ALL_ACTIONS = Object.freeze(['eat', 'drink', 'rest', 'forage', ...Object.keys(RULES)]);

@@ -5,6 +5,7 @@
  * 供 runtime 决策链、agent 与 api 等上层模块直接 import。
  */
 
+export * as decide from './decide.js';
 export * as gateway from './llm/gateway.js';
 export * as router from './llm/router.js';
 export * as agentPrompt from './prompt/agent.js';

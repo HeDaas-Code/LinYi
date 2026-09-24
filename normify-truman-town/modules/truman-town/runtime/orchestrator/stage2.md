@@ -5,14 +5,14 @@ parent: truman-town.runtime.orchestrator
 name: {zh: "第二阶段编排", en: "Phase-2 Orchestration"}
 description:
   zh: >
-      阶段二世界推进：产业/经济/制作队列推进、居民自选行动的实际执行（performAgentAction）、社会与家庭汇总、疾病分诊等。
+      阶段二世界推进：产业/经济/制作队列推进、居民自选行动的实际执行（performAgentAction，含 P1 新增的 socialize/court/accept 与由居民双向决策产生的婚配）、社会与家庭汇总、疾病分诊等。
       
   en: >
-      Phase-2 world stepping: industry/economy/craft queue advancement, execution of agent-chosen actions, social and family aggregation, triage.
+      Phase-2 world stepping: industry/economy/craft queue advancement, execution of agent-chosen actions (including socialize/court/accept and decision-driven pairing), social and family aggregation, triage.
       
-revision: 26dba326d0f79bf978188bf6f3ac73c02723ff58
-updated_at: "2026-09-24T15:12:14.790Z"
-fingerprint: 9f12aa0667e772971098ef8c79cab0d6980cb3186ad48e9a4c251982fadea2bd
+revision: 9885f1e507ec4ef5a3c1f8c166ed456cf0026737
+updated_at: "2026-09-24T19:39:45.670Z"
+fingerprint: 1e57d23c298b444632962e13f3aba825015d5a3bdc6cba6ab8dc81f2e48c4b42
 source:
   - path: "src/runtime/orchestrator/_stage2.js"
 apis:

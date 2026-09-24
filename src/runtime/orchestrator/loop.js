@@ -50,8 +50,10 @@ const DEFAULT_ACTIONS = Object.freeze([
 ]);
 
 /** 非生存行动的基础分（与 candidate planner 的 BASE_SCORE 一致，供逐 tick 刷新时复用）。 */
+const SURVIVAL_ACTIONS = Object.freeze(['eat', 'drink', 'forage', 'rest']);
+
 const DYNAMIC_BASE_SCORE = Object.freeze({
-  craft: 0.9, build: 0.8, write: 0.7, work: 1.0, trade: 0.8, socialize: 0.6, court: 0.5,
+  craft: 0.9, build: 0.8, write: 0.7, work: 1.0, trade: 0.8, socialize: 0.7, court: 0.85, accept: 1.1,
 });
 
 /** 默认特质标签（tagset 采样的底座）。 */
@@ -243,6 +245,27 @@ function scheduleOverride(decision, agentId, tick, cfg) {
       meta: { action: own, block: scheduled.block?.reason ?? null, suggested: scheduled.action, replanned: scheduled.replanned },
     };
   }
+  // P1 修正：紧急时日程也不得夺走**采集**。drought/blight/storm 等环境事件会把居民
+  // 推进 emergency，日程的 4 行动词汇表随即整体接管——此时在 scoreAction 里加多少权重
+  // 都无效（分数算完就被丢弃），居民会在库存归零后一路空转 eat 至死
+  // （实测 seed42/seed2 + phase2：forage 仅 73/69 次而 eat 1077/1149 次，全员死亡）。
+  // forage 是唯一同时补食物与水源的行动，紧急覆盖必须保留它。
+  // 但仅保留**与紧急需求匹配**的行动：food 紧急时 own=drink 本身是错误选择
+  // （water_need 可能为 0），若也一并尊重，居民会饿着肚子一路喝水到死
+  // （实测 seed1：food_need=1.000、食物库存 100、t88-t95 连续 8 tick 选 drink，
+  //   期间 food 需求降幅为 0，至 t95-t101 集中饿死 10 人）。
+  const ownMatchesEmergency = (need === 'food' && own === 'eat')
+    || (need === 'water' && own === 'drink')
+    || own === 'forage';
+  if (emergency && scheduled.action !== 'forage' && ownMatchesEmergency) {
+    return {
+      action: own,
+      reason: '紧急中居民自选「' + own + '」（日程建议：' + scheduled.action + '）',
+      replanned: scheduled.replanned,
+      trigger: 'agent_choice_emergency',
+      meta: { action: own, block: scheduled.block?.reason ?? null, suggested: scheduled.action, replanned: scheduled.replanned },
+    };
+  }
   return {
     action: scheduled.action,
     reason: '日程块「' + (scheduled.block?.reason ?? scheduled.action) + '」',
@@ -306,6 +329,25 @@ function scoreAction(candidate, ctx = {}) {
   if (candidate?.action === 'drink' && thirsty) score += 2;
   if (candidate?.action === 'forage' && !hungry && !thirsty) score += 1.2 + scarcity;
   if (candidate?.action === 'rest' && !hungry && !thirsty) score += 0.5;
+  // P1 生存门（最终打分侧）：修剪器侧的门只能把候选**挤出窗口**；窗口一放宽，
+  // 非生存行动仍会被性格/行动模拟的加成推上首位（实测 pruneK=6 整镇饿死）。
+  // 因此门必须在**最终决定分数**上再施加一次，生存优先才成立。
+  if (ctx.survivalGate === true) {
+    const NON_SURVIVAL = ['craft', 'build', 'write', 'work', 'trade', 'socialize', 'court', 'accept'];
+    if (NON_SURVIVAL.includes(candidate?.action)) score -= 5;
+    if (candidate?.action === 'rest') score -= 1;
+    // 采集优先**仅限尚未挨饿时**：若已饿/渴，eat/drink 的 +2 必须压过采集。
+    // 否则会出现「守着满仓粮饿死」——实测 seed7 全员在 food=92 时需求饱和并死亡。
+    if (candidate?.action === 'forage' && !hungry && !thirsty) score += 3;
+    // 但库存真正见底时必须反转：此时 eat/drink 是**空操作**（consume 无货可扣，
+    // 需求也不会下降），只有 forage 能补货。若仍让 eat 胜出，居民会从库存归零
+    // 一路空转至死（实测 seed42+phase2：t13 起连续 19 tick 选 eat、forage 从未出现，
+    // 至 t32 全员死亡）。判据必须用「对应库存是否为 0」这一直接事实。
+    if (candidate?.action === 'forage' && (ctx.foodEmpty === true || ctx.waterEmpty === true)) score += 6;
+    // 空操作的进食/饮水必须明确降权，否则它们仍靠 +2 与基础分占优。
+    if (candidate?.action === 'eat' && ctx.foodEmpty === true) score -= 8;
+    if (candidate?.action === 'drink' && ctx.waterEmpty === true) score -= 8;
+  }
   return score;
 }
 
@@ -325,7 +367,9 @@ function refreshCandidates(agentId, tick, cfg) {
     businessActive: state.businessActive,
     hasSurplus: held > 2,
     hasPeer: state.hasPeer,
-    eligibleMate: false,
+    // P1：择偶资格与待答复表白改为真实状态（此前恒为 false，导致 court 永不出现）。
+    eligibleMate: state.eligibleMate === true,
+    hasPendingCourt: state.hasPendingCourt === true,
   }, { attributeRandom: cfg.actionSpaceAttribution === true });
 
   // 整批替换（单次 graph.write）：逐候选 add() 会触发逐次 graph.read 深拷贝，
@@ -380,6 +424,10 @@ function decide(agentId, tick, percepts, cfg = {}) {
   const foodStock = survival.resources.food.query().stockpile ?? 0;
   const waterStock = survival.resources.water.query().stockpile ?? 0;
   const survivalGate = (Math.min(foodStock, waterStock) / aliveNow) < (cfg.survivalGatePerCapita ?? 3);
+  // 库存见底标志：**不依赖主导需求**——食水同时归零时主导需求可能已切走，
+  // 用派生量推断会导致门静默失效（实测 forage 仍被压到 74 次而 eat 1081 次）。
+  const foodEmpty = foodStock <= 0;
+  const waterEmpty = waterStock <= 0;
   const pruned = agent.anticipation.pool.pruner.prune(agentId, anticipations, {
     k: cfg.pruneK,
     dominantNeed: need,
@@ -388,9 +436,18 @@ function decide(agentId, tick, percepts, cfg = {}) {
     tags,
     scarcity: pressure.scarcity ?? {},
     survivalGate,
+    foodEmpty,
+    waterEmpty,
   });
+  // P1 生存门（集合侧）：扣分是可被覆盖的——行动模拟与性格的加成能盖过 −5，
+  // 实测 seed42 agentCount=50 时全员在 20 tick 内死亡（食物并不缺）。
+  // 因此受威胁时直接收缩行动空间：窗口里只留生存行动，让选择在 eat/drink/forage/rest 内进行。
+  const threatened = needLevel >= (cfg.eatThreshold ?? 0.4) || survivalGate === true;
+  const window = threatened
+    ? (pruned.some((a) => a.action === 'forage') ? pruned.filter((a) => SURVIVAL_ACTIONS.includes(a.action)) : pruned)
+    : pruned;
   const resources = { food: survival.resources.food.query(), water: survival.resources.water.query() };
-  const predicted = agent.anticipation.simulator.predict(agentId, pruned, {
+  const predicted = agent.anticipation.simulator.predict(agentId, window, {
     needs: needsNow,
     resources,
     noise: cfg.simNoise,
@@ -407,7 +464,7 @@ function decide(agentId, tick, percepts, cfg = {}) {
   }, { limit: cfg.semanticLimit ?? 3 });
 
   const origScore = new Map(anticipations.map((a) => [a.id, a.score]));
-  const candidates = pruned.map((a) => ({ id: a.id, action: a.action, score: origScore.get(a.id) ?? 0 }));
+  const candidates = window.map((a) => ({ id: a.id, action: a.action, score: origScore.get(a.id) ?? 0 }));
   const choice = agent.decision.selector.choose({
     candidates,
     context: { dominantNeed: need },
@@ -416,6 +473,9 @@ function decide(agentId, tick, percepts, cfg = {}) {
       dominantLevel: needLevel,
       dominantScarcity: needScarcity,
       eatThreshold: cfg.eatThreshold,
+      survivalGate,
+      foodEmpty,
+      waterEmpty,
     }) + agent.persona.personality.evaluate(agentId, candidate.action)
       + (simBy.get(candidate.id) ?? 0),
   });
@@ -510,6 +570,58 @@ function agentContextOf(record) {
     tags: (tagset?.tags ?? []).map((t) => t.key),
     memory: memories.map((m) => (typeof m.content === 'string' ? m.content : JSON.stringify(m.content))),
   };
+}
+
+/**
+ * 有模型 E2E：让真实大模型从居民当前候选集内选择行动。
+ * fail-soft：模型输出不可解析或不在候选集内时返回 null，由确定性结果接管，
+ * 并在事件流中记录回落原因，保证可审计、且模型不会破坏生存可行性。
+ */
+async function decideByModel(record, decision, tick, cfg) {
+  const agentId = record.id;
+  const ctx = agentContextOf(record);
+  const needs = survival.needs.meter.query({ agentId }).needs;
+  const candidates = (decision.options ?? []).map((o) => ({
+    action: o.action,
+    why: o.reason ?? o.because ?? null,
+  }));
+  if (candidates.length === 0) return null;
+  try {
+    const picked = await ai.decide.choose({
+      name: ctx.name,
+      persona: ctx.persona,
+      tags: ctx.tags,
+      needs,
+      stock: {
+        food: survival.resources.food.query().stockpile,
+        water: survival.resources.water.query().stockpile,
+      },
+      candidates,
+      tick,
+    }, { model: cfg.llmDecideModel });
+    if (picked.action === null) {
+      observer.recorder.eventLog.record({
+        tick, topic: 'ai.decide.fallback', agentId,
+        payload: { reason: 'unparsed', raw: String(picked.raw ?? '').slice(0, 80), allowed: candidates.map((c) => c.action) },
+      });
+      return null;
+    }
+    observer.recorder.eventLog.record({
+      tick, topic: 'ai.decide', agentId,
+      payload: { action: picked.action, model: picked.meta.model, latencyMs: picked.meta.latencyMs, allowed: picked.meta.allowed },
+    });
+    return {
+      action: picked.action,
+      reason: '模型选择「' + picked.action + '」（候选 ' + picked.meta.allowed + ' 项，' + picked.meta.model + '）',
+      meta: picked.meta,
+    };
+  } catch (err) {
+    observer.recorder.eventLog.record({
+      tick, topic: 'ai.decide.fallback', agentId,
+      payload: { reason: 'error', message: String(err?.message ?? err).slice(0, 120) },
+    });
+    return null;
+  }
 }
 
 /** 生存阶段：资源衰减 + 需求增长 + 突发事件（impact 已写 event-log）。 */
@@ -685,10 +797,24 @@ export async function step(config = {}) {
   // 3) 逐智能体：决策 → 观察者决策日志 → AI 思考
   const agentRecords = registry.lookup({ type: 'agent' });
   const decisions = [];
+  // 有模型 E2E：采样式让真实大模型进入决策环。默认关闭；开启时按 tick 与人数限额
+  // 调用（实测单次约 18s，全量 50×200 不可行），其余居民走确定性路径。
+  const llmDecide = cfg.llmDecideEnabled === true && (tick % (cfg.llmDecideEveryTicks ?? 1) === 0);
+  let llmCalls = 0;
   for (const record of agentRecords) {
     const agentId = record.id;
     const decision = decide(agentId, tick, inbox[agentId] ?? [], cfg);
     if (decision === null) continue;
+    // 有模型 E2E：模型从**居民当前可行候选集**内做选择（不新增行动、不绕过可行性）。
+    if (llmDecide && llmCalls < (cfg.llmDecideMaxAgents ?? 1)) {
+      llmCalls += 1;
+      const picked = await decideByModel(record, decision, tick, cfg);
+      if (picked !== null) {
+        decision.action = picked.action;
+        decision.reason = picked.reason;
+        decision.llmDecide = picked.meta;
+      }
+    }
     // 批次2-C（t48）：日程驱动行动（非紧急时以日程为准，紧急触发重排）
     if (cfg.scheduleEnabled !== false) {
       const scheduled = scheduleOverride(decision, agentId, tick, cfg);

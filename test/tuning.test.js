@@ -31,10 +31,15 @@ test('P0-1 种子生效：不同种子产生结构性差异（交易数至少一
 
 test('P0-2 死亡机制：资源枯竭 → 需求空转不满足 → 饥饿持续 → 死亡并写 observer', async () => {
   loop.reset();
+  // 用「采集池归零 + 满衰减」制造**不可自救**的枯竭。旧的 decay 0.1 / needGrowth 0.3
+  // 在 P1 之后已可被采集自救（实测库存 6.76、无人死亡），会让本测试依赖上游
+  // 决策失误来触发死亡，而不是验证死亡机制本身。
   const report = await loop.run({
     ticks: 40, seed: 5, agentCount: 4,
-    decay: { food: 0.1, water: 0.1 },
+    decay: { food: 1, water: 1 },
     needGrowth: { food: 0.3, water: 0.3 },
+    foragePoolCapacity: 0, forageRegen: 0,
+    foragePoolPerCapita: 0, forageRegenPerCapita: 0,
     eventProbability: 0,
   });
 
@@ -59,8 +64,10 @@ test('P0-2 死亡事件载荷：标注死亡原因（饥饿/脱水）', async ()
   loop.reset();
   await loop.run({
     ticks: 40, seed: 5, agentCount: 4,
-    decay: { food: 0.1, water: 0.1 },
+    decay: { food: 1, water: 1 },
     needGrowth: { food: 0.3, water: 0.3 },
+    foragePoolCapacity: 0, forageRegen: 0,
+    foragePoolPerCapita: 0, forageRegenPerCapita: 0,
     eventProbability: 0,
   });
   const deathEvents = observer.recorder.eventLog.list().filter((n) => n.data.topic === 'agent.death');
