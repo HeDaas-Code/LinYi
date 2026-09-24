@@ -8,17 +8,17 @@
         "root_uid": "d440391b"
       }
     ],
-    "compiled_at": "2026-09-24T02:51:34.714Z",
+    "compiled_at": "2026-09-24T05:34:28.546Z",
     "stats": {
       "tree_count": 1,
       "module_count": 227,
       "leaf_count": 158,
       "api_count": 359,
-      "dep_count": 338,
+      "dep_count": 341,
       "cross_tree_dep_count": 0,
       "max_depth": 5,
       "layout_count": 69,
-      "planned_count": 96,
+      "planned_count": 84,
       "deprecated_count": 0,
       "policy_rule_count": 2,
       "change_count": 5,
@@ -1723,9 +1723,9 @@
           "path": "src/agent/persona/personality.js"
         }
       ],
-      "revision": "6939444d190f953b7c3e7a73b35ad8b25ac43b07",
-      "updated_at": "2026-09-24T02:04:23.739Z",
-      "fingerprint": "43ca3e6d3bc4f74f8f659b2892ecbbb1b4a1db92a7d25b1197622b419ea03091",
+      "revision": "1c7c3d69497e4bcdd67b1e32a59bd6bdbfdc92f5",
+      "updated_at": "2026-09-24T04:10:06.311Z",
+      "fingerprint": "d6a53c5c57f8f0c876645022b3d9552538983a5befcee363ee781f348fdeb0e4",
       "apis": [
         {
           "protocol": "rpc",
@@ -2085,7 +2085,6 @@
       "parent": "truman-town.agent.role",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "职业角色",
         "en": "Career Role"
@@ -2094,10 +2093,15 @@
         "zh": "分配与释放职业身份，连接就业市场与产业。\n",
         "en": "Assigns and releases occupations linked to labour and industry.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/agent/role/career.js",
+          "line": 1
+        }
+      ],
+      "revision": "e350da98bb80d56a99c3c70b9cd269a351113026",
+      "updated_at": "2026-09-24T03:13:06.630Z",
+      "fingerprint": "51e4383a89ae1b86a5adb7674ce9312afe1988620ef7f319dad79277359a79d7",
       "apis": [
         {
           "protocol": "rpc",
@@ -2144,7 +2148,6 @@
       "parent": "truman-town.agent.role",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "公共角色",
         "en": "Civic Role"
@@ -2153,10 +2156,15 @@
         "zh": "承担镇长、店主、居民等公共身份并参与治理。\n",
         "en": "Holds civic identities such as mayor, shopkeeper or resident.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/agent/role/society.js",
+          "line": 1
+        }
+      ],
+      "revision": "e350da98bb80d56a99c3c70b9cd269a351113026",
+      "updated_at": "2026-09-24T03:13:06.631Z",
+      "fingerprint": "f2c6662332eaf56b23501011d3e2e4ec1fc4bfdc3b1f70761b7adf116f921d9f",
       "apis": [
         {
           "protocol": "rpc",
@@ -2218,7 +2226,6 @@
       "parent": "truman-town.agent.schedule",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "日程执行",
         "en": "Schedule Executor"
@@ -2227,10 +2234,15 @@
         "zh": "按世界时间推进日程项，触发对应行动。\n",
         "en": "Advances schedule items by world time and triggers actions.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/agent/schedule/executor.js",
+          "line": 1
+        }
+      ],
+      "revision": "e350da98bb80d56a99c3c70b9cd269a351113026",
+      "updated_at": "2026-09-24T03:13:06.630Z",
+      "fingerprint": "3f6b6c3bc3ec539299841def187b42f2161123f06ab399be924be3f68395e466",
       "apis": [
         {
           "protocol": "rpc",
@@ -2261,13 +2273,18 @@
           "kind": "call",
           "to": "truman-town.agent.crafting.workbench",
           "cross_tree": false
+        },
+        {
+          "kind": "call",
+          "to": "truman-town.agent.schedule.planner",
+          "cross_tree": false
         }
       ],
       "aggregate": {
         "descendant_count": 0,
         "own_api_count": 2,
         "inherited_api_count": 0,
-        "dep_out": 2,
+        "dep_out": 3,
         "dep_in": 1
       }
     },
@@ -2277,7 +2294,6 @@
       "parent": "truman-town.agent.schedule",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "日程规划",
         "en": "Schedule Planner"
@@ -2286,10 +2302,15 @@
         "zh": "根据角色、目标与约束生成和重排日程。\n",
         "en": "Generates and replans schedules from roles, goals and constraints.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/agent/schedule/planner.js",
+          "line": 1
+        }
+      ],
+      "revision": "e350da98bb80d56a99c3c70b9cd269a351113026",
+      "updated_at": "2026-09-24T03:13:06.630Z",
+      "fingerprint": "0c461c852583855d1fc1d57b0c532661a24ad3e21e16e4d8c81ca7fabda2076f",
       "apis": [
         {
           "protocol": "rpc",
@@ -2332,7 +2353,7 @@
         "own_api_count": 2,
         "inherited_api_count": 0,
         "dep_out": 3,
-        "dep_in": 0
+        "dep_in": 1
       }
     },
     "truman-town.agent.traits": {
@@ -2718,9 +2739,9 @@
           "path": "src/agent/traits/tagset/store.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T06:24:06.393Z",
-      "fingerprint": "2c18074880b0a92e1d372405322dca55f8eae4e30b6fb4770ec33497e1459efb",
+      "revision": "1c7c3d69497e4bcdd67b1e32a59bd6bdbfdc92f5",
+      "updated_at": "2026-09-24T04:10:06.312Z",
+      "fingerprint": "fd656aed6ef8f9e94be6af1a9bcd54d83aaab7a738d936940c673f53e7c1f479",
       "apis": [
         {
           "protocol": "rpc",
@@ -6171,9 +6192,9 @@
           "path": "src/infra/config.js"
         }
       ],
-      "revision": "159dc43daf11d18b03ea9fc0ea5c3e6b18f16488",
-      "updated_at": "2026-09-24T02:49:57.818Z",
-      "fingerprint": "0c2fc4b4c346a21c3180253229e548b223bae6c73d3739a3b5b1b25eb78b99e6",
+      "revision": "4788222c1cdff2eb10ed7dc2c16d2ef52b8e3596",
+      "updated_at": "2026-09-24T05:33:37.707Z",
+      "fingerprint": "fd7804ec6a3a92e4a88cab9767f75ec3f0684b045d36224e92bdce6cada249a6",
       "apis": [
         {
           "protocol": "rpc",
@@ -7713,9 +7734,9 @@
           "path": "src/runtime/orchestrator/loop.js"
         }
       ],
-      "revision": "159dc43daf11d18b03ea9fc0ea5c3e6b18f16488",
-      "updated_at": "2026-09-24T02:49:57.818Z",
-      "fingerprint": "751eb6aaaa36cb33b5be311b94bea7cc51ddaf59e5063e8e8e1f698a46b8d37c",
+      "revision": "1c7c3d69497e4bcdd67b1e32a59bd6bdbfdc92f5",
+      "updated_at": "2026-09-24T04:02:46.659Z",
+      "fingerprint": "0562dc175cc1014e5e290700cb8074922800f3e78fcf149370ea030af35fd426",
       "apis": [
         {
           "protocol": "rpc",
@@ -8614,7 +8635,6 @@
       "parent": "truman-town.social.family",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "家族编年史",
         "en": "Family Chronicle"
@@ -8623,10 +8643,14 @@
         "zh": "记录家族成员的重要事件并编译成家族史。\n",
         "en": "Records major family events and compiles family history.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:55:51Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/social/family/chronicle.js"
+        }
+      ],
+      "revision": "1c7c3d69497e4bcdd67b1e32a59bd6bdbfdc92f5",
+      "updated_at": "2026-09-24T04:00:14.039Z",
+      "fingerprint": "b70796a1ebe6d268d62171ea22b02c408828c266d674485ec468204245d32287",
       "apis": [
         {
           "protocol": "rpc",
@@ -8908,7 +8932,7 @@
         "own_api_count": 2,
         "inherited_api_count": 0,
         "dep_out": 1,
-        "dep_in": 4
+        "dep_in": 5
       }
     },
     "truman-town.social.family.registry": {
@@ -8917,7 +8941,6 @@
       "parent": "truman-town.social.family",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "家族登记",
         "en": "Family Registry"
@@ -8926,10 +8949,14 @@
         "zh": "创建、查找与解散家族。\n",
         "en": "Creates, looks up and dissolves families.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:55:51Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/social/family/registry.js"
+        }
+      ],
+      "revision": "1c7c3d69497e4bcdd67b1e32a59bd6bdbfdc92f5",
+      "updated_at": "2026-09-24T04:00:14.039Z",
+      "fingerprint": "a90fcc189cec8083cdf18c7f49727d4e3064b4412cef8948e64892571a960fd9",
       "apis": [
         {
           "protocol": "rpc",
@@ -9175,7 +9202,6 @@
       "parent": "truman-town.social.graph",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "社区发现",
         "en": "Community Detection"
@@ -9184,10 +9210,14 @@
         "zh": "识别社交圈与社区归属，影响信息传播。\n",
         "en": "Detects circles and communities that shape information flow.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/social/graph/community.js"
+        }
+      ],
+      "revision": "1c7c3d69497e4bcdd67b1e32a59bd6bdbfdc92f5",
+      "updated_at": "2026-09-24T04:00:14.039Z",
+      "fingerprint": "4466bdc37dad940b689497a39392e4b031754f8702c4c07ac2112c3681ac0c86",
       "apis": [
         {
           "protocol": "rpc",
@@ -9208,11 +9238,18 @@
           "key": "rpc:social.graph.community.belong"
         }
       ],
+      "deps": [
+        {
+          "kind": "call",
+          "to": "truman-town.social.graph.edges",
+          "cross_tree": false
+        }
+      ],
       "aggregate": {
         "descendant_count": 0,
         "own_api_count": 2,
         "inherited_api_count": 0,
-        "dep_out": 0,
+        "dep_out": 1,
         "dep_in": 2
       }
     },
@@ -9222,7 +9259,6 @@
       "parent": "truman-town.social.graph",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "关系边",
         "en": "Graph Edges"
@@ -9231,10 +9267,14 @@
         "zh": "创建与移除朋友、恋人、家人等关系边。\n",
         "en": "Creates and removes friend, lover and family edges.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/social/graph/edges.js"
+        }
+      ],
+      "revision": "1c7c3d69497e4bcdd67b1e32a59bd6bdbfdc92f5",
+      "updated_at": "2026-09-24T04:00:14.039Z",
+      "fingerprint": "c45e1a6fa22535cd5480e5109904ec50f97b71439d0c7398156cf67c237d83df",
       "apis": [
         {
           "protocol": "rpc",
@@ -9267,7 +9307,7 @@
         "own_api_count": 2,
         "inherited_api_count": 0,
         "dep_out": 1,
-        "dep_in": 0
+        "dep_in": 1
       }
     },
     "truman-town.social.platform": {
@@ -9303,7 +9343,6 @@
       "parent": "truman-town.social.platform",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "信息流",
         "en": "Feeds"
@@ -9312,10 +9351,14 @@
         "zh": "按关系与兴趣为智能体生成和排序信息流。\n",
         "en": "Generates and ranks feeds by relationships and interests.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/social/platform/feeds.js"
+        }
+      ],
+      "revision": "4788222c1cdff2eb10ed7dc2c16d2ef52b8e3596",
+      "updated_at": "2026-09-24T05:32:40.349Z",
+      "fingerprint": "04816c0f96f4991ed25795e7d96ea468fac845885aaa976e59dedf9a4b43b8d9",
       "apis": [
         {
           "protocol": "rpc",
@@ -9357,7 +9400,6 @@
       "parent": "truman-town.social.platform",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "帖子",
         "en": "Posts"
@@ -9366,10 +9408,14 @@
         "zh": "发布、回复与回应帖子，承载公共表达。\n",
         "en": "Publishes posts, replies and reactions for public expression.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/social/platform/posts.js"
+        }
+      ],
+      "revision": "4788222c1cdff2eb10ed7dc2c16d2ef52b8e3596",
+      "updated_at": "2026-09-24T05:32:40.349Z",
+      "fingerprint": "5f4e70a1dbf72d40c3c99f921e4bfbb4743f6a049c26cbd497cedadb35c5e991",
       "apis": [
         {
           "protocol": "rpc",
@@ -9947,7 +9993,6 @@
       "parent": "truman-town.social.relationship",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "家庭关系",
         "en": "Family"
@@ -9956,10 +10001,14 @@
         "zh": "记录父母子女与亲属关系，支持家族追踪。\n",
         "en": "Records parent-child and kinship relations for family tracing.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/social/relationship/family.js"
+        }
+      ],
+      "revision": "1c7c3d69497e4bcdd67b1e32a59bd6bdbfdc92f5",
+      "updated_at": "2026-09-24T04:00:14.039Z",
+      "fingerprint": "77e4484f5dc26439b194078531eb00b52ee03c92ade6d4704fd0fe882e84ae49",
       "apis": [
         {
           "protocol": "rpc",
@@ -9985,13 +10034,18 @@
           "kind": "call",
           "to": "truman-town.social.family.registry",
           "cross_tree": false
+        },
+        {
+          "kind": "dataflow",
+          "to": "truman-town.social.family.lineage",
+          "cross_tree": false
         }
       ],
       "aggregate": {
         "descendant_count": 0,
         "own_api_count": 2,
         "inherited_api_count": 0,
-        "dep_out": 1,
+        "dep_out": 2,
         "dep_in": 0
       }
     },
@@ -10132,7 +10186,6 @@
       "parent": "truman-town.social",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "声誉系统",
         "en": "Reputation"
@@ -10141,10 +10194,14 @@
         "zh": "根据社交与交易行为更新声誉并供查询。\n",
         "en": "Updates and queries reputation from social and economic behavior.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/social/reputation.js"
+        }
+      ],
+      "revision": "4788222c1cdff2eb10ed7dc2c16d2ef52b8e3596",
+      "updated_at": "2026-09-24T05:32:40.350Z",
+      "fingerprint": "9ee9e9e3c302e991f88d53ab2fa29469a9a0921a5b576a7f01dd20dfab5aedf3",
       "apis": [
         {
           "protocol": "rpc",
@@ -13010,6 +13067,12 @@
       "cross_tree": false
     },
     {
+      "from": "truman-town.agent.schedule.executor",
+      "to": "truman-town.agent.schedule.planner",
+      "kind": "call",
+      "cross_tree": false
+    },
+    {
       "from": "truman-town.agent.schedule.planner",
       "to": "truman-town.agent.persona.motivation",
       "kind": "call",
@@ -14316,6 +14379,12 @@
       }
     },
     {
+      "from": "truman-town.social.graph.community",
+      "to": "truman-town.social.graph.edges",
+      "kind": "call",
+      "cross_tree": false
+    },
+    {
       "from": "truman-town.social.graph.edges",
       "to": "truman-town.agent.memory.semantic",
       "kind": "dataflow",
@@ -14456,6 +14525,12 @@
         "zh": "合并家族特质",
         "en": "Merge family traits"
       }
+    },
+    {
+      "from": "truman-town.social.relationship.family",
+      "to": "truman-town.social.family.lineage",
+      "kind": "dataflow",
+      "cross_tree": false
     },
     {
       "from": "truman-town.social.relationship.family",
