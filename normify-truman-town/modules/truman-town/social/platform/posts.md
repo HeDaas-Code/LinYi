@@ -10,9 +10,9 @@ description:
   en: >
       Publishes posts, replies and reactions for public expression.
       
-revision: 4788222c1cdff2eb10ed7dc2c16d2ef52b8e3596
-updated_at: "2026-09-24T05:32:40.349Z"
-fingerprint: 5f4e70a1dbf72d40c3c99f921e4bfbb4743f6a049c26cbd497cedadb35c5e991
+revision: e317580e2e9326327504170ed572a942b2b0db47
+updated_at: "2026-09-24T07:01:20.043Z"
+fingerprint: d8ae82d4776d553250e664c327ea57d271bd881aad67bfc4f710b29d6aa37b54
 source:
   - path: "src/social/platform/posts.js"
 apis:
