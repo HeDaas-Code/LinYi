@@ -254,10 +254,20 @@ function runProcreation(tick, agents, spawnChild, config = {}) {
   });
   spawnChild(child);
 
+  // 批次2-A：子代特质可遗传变异 + 身份（家庭归属）+ 择偶相似度观测
+  const mutateRate = (typeof config.traitMutateRate === 'number' && config.traitMutateRate >= 0 && config.traitMutateRate <= 1) ? config.traitMutateRate : 0.02;
+  try {
+    agent.traits.evolution.mutate({ agentId: child.id, rate: mutateRate });
+  } catch { /* 无标签集则跳过 */ }
+  agent.persona.identity.update(child.id, { familyId, parents: [pair.a, pair.b] });
+  agent.persona.identity.update(pair.a, { spouseId: pair.b });
+  agent.persona.identity.update(pair.b, { spouseId: pair.a });
+  const sim = agent.traits.tagset.similarity.compare({ a: pair.a, b: pair.b });
+
   observer.recorder.eventLog.record({
     tick,
     topic: 'social.procreation',
-    payload: { a: pair.a, b: pair.b, childId: child.id, familyId },
+    payload: { a: pair.a, b: pair.b, childId: child.id, familyId, similarity: sim.similarity },
   });
 
   result.childId = child.id;
@@ -498,6 +508,32 @@ function runFiscal(tick, agents, config = {}) {
   return result;
 }
 
+/**
+ * 批次2-A：特质相似度 → 社交纽带（最相似的一对若尚无友谊则建立友谊）。
+ * 供择偶/结社复用：similarity.neighbors 检索最近邻，compare 计算余弦相似度。
+ */
+function runSimilarityBonding(tick, agents, config = {}) {
+  const result = { bonds: 0, pair: null };
+  if (agents.length < 2) return result;
+  const ids = agents.map((a) => a.id);
+  const target = agents[0].id;
+  const neighbors = agent.traits.tagset.similarity.neighbors({ agentId: target, candidates: ids, k: 1 });
+  if (neighbors.length === 0) return result;
+  const best = neighbors[0];
+  const threshold = (typeof config.similarityBondThreshold === 'number' && config.similarityBondThreshold > 0 && config.similarityBondThreshold <= 1) ? config.similarityBondThreshold : 0.6;
+  if (best.similarity > threshold && social.relationship.friendship.strength({ a: target, b: best.agentId }) === 0) {
+    social.relationship.friendship.update({ a: target, b: best.agentId, delta: 0.2, note: 'similarity' });
+    result.bonds += 1;
+    result.pair = { a: target, b: best.agentId, similarity: best.similarity };
+    observer.recorder.eventLog.record({
+      tick,
+      topic: 'social.friendship.similarity',
+      payload: { a: target, b: best.agentId, similarity: best.similarity },
+    });
+  }
+  return result;
+}
+
 function pendingFor(queue, agentId) {
   return queue.pending().some((j) => j.agentId === agentId);
 }
@@ -674,6 +710,7 @@ function runHealth(tick, agents, config) {
 export function tick({ tick, agents, config = {}, spawnChild }) {
   return {
     procreation: runProcreation(tick, agents, spawnChild, config),
+    similarityBonding: runSimilarityBonding(tick, agents, config),
     market: runMarket(tick, agents, config),
     industry: runIndustry(tick, agents, config),
     fiscal: runFiscal(tick, agents, config),

@@ -51,6 +51,11 @@ const DEFAULT_ACTIONS = Object.freeze([
 /** 默认特质标签（tagset 采样的底座）。 */
 const DEFAULT_TAGS = Object.freeze({ resilient: 1.0, cautious: 0.8, sociable: 0.6, curious: 0.7, hardworking: 0.9 });
 
+/** 批次2-C（t48）：职业与公共角色目录（跨种子分叉用确定性哈希，不消耗全局 rng）。 */
+const CAREER_OCCUPATIONS = Object.freeze(['farmer', 'craftsman', 'merchant', 'medic', 'teacher', 'guard']);
+const CAREER_WAGES = Object.freeze({ farmer: 3, craftsman: 4, merchant: 5, medic: 6, teacher: 4, guard: 4 });
+const SOCIETY_ROLE_IDS = Object.freeze(['doctor', 'teacher', 'guard', 'priest']);
+
 const DEFAULT_CONFIG = Object.freeze({
   ...configStore.defaults(),
   events: DEFAULT_EVENTS,
@@ -60,6 +65,7 @@ const DEFAULT_CONFIG = Object.freeze({
 
 // ---- 世界采集池（t32）：每 tick 再生、全局共享，避免补给随人口线性增长 ----
 let foragePool = null;
+let currentSeed = 'default';
 
 function alivePopulation() {
   const agents = registry.lookup({ type: 'agent' });
@@ -123,7 +129,7 @@ function decayRate(cfg, key) {
  * 登记一个智能体（注册表 + 预想池 + 需求 + 世界状态）；标签由调用方负责。
  * spawnAgent 负责写标签，阶段二子代由 offspring 先写标签再走这里。
  */
-function registerAgent({ id, name, persona, food, water, candidates }) {
+function registerAgent({ id, name, persona, food, water, candidates, age }) {
   registry.register({ id, type: 'agent', data: { name, persona } });
   for (const candidate of candidates) {
     agent.anticipation.pool.store.add(id, {
@@ -135,7 +141,83 @@ function registerAgent({ id, name, persona, food, water, candidates }) {
   survival.needs.meter.update({ agentId: id, need: 'food', level: food });
   survival.needs.meter.update({ agentId: id, need: 'water', level: water });
   worldState.set(`agents.${id}`, { name, persona, alive: true, bornTick: clock.now().tick });
+  // 批次2-A：登记生命周期（初始年龄，子代默认 0）与身份
+  agent.lifecycle.birth(id, { tick: clock.now().tick, age: typeof age === 'number' ? age : 0 });
+  agent.persona.identity.update(id, { name, persona });
   return { id, name, persona };
+}
+
+/** 确定性初始年龄（FNV-1a 哈希 → [min,max)），不消耗全局 rng，保证随机流稳定。 */
+function deterministicAge(name) {
+  let h = 2166136261;
+  for (let i = 0; i < name.length; i += 1) { h ^= name.charCodeAt(i); h = Math.imul(h, 16777619); }
+  const u = (h >>> 0) / 4294967296;
+  return DEFAULT_CONFIG.initialAgeMin + u * (DEFAULT_CONFIG.initialAgeMax - DEFAULT_CONFIG.initialAgeMin);
+}
+
+/** 确定性哈希 → [0,1)，不消耗全局 rng（t48 跨种子分叉不扰动随机流）。 */
+function hashUnit(key) {
+  let h = 2166136261;
+  const str = String(key);
+  for (let i = 0; i < str.length; i += 1) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0) / 4294967296;
+}
+
+/** 批次2-C（t48）：为居民种子日程 / 职业 / 公共角色（真实调用 4 模块）。 */
+function seedAgentScheduleRoles(spawned, options) {
+  for (let i = 0; i < spawned.length; i += 1) {
+    const id = spawned[i].id;
+    if (options.careerEnabled !== false) {
+      const occ = CAREER_OCCUPATIONS[Math.floor(hashUnit(currentSeed + ':' + id + ':career') * CAREER_OCCUPATIONS.length)];
+      agent.role.career.assign(id, { occupation: occ, wage: CAREER_WAGES[occ], tick: 0 });
+    }
+    if (options.societyEnabled !== false && i < Math.max(1, Math.ceil(spawned.length * 0.08))) {
+      const role = SOCIETY_ROLE_IDS[Math.floor(hashUnit(currentSeed + ':' + id + ':society') * SOCIETY_ROLE_IDS.length)];
+      agent.role.society.hold(id, { role, tick: 0 });
+    }
+    if (options.scheduleEnabled !== false) {
+      const occupation = agent.role.career.current(id)?.occupation ?? null;
+      const length = (Number.isInteger(options.scheduleLength) ? options.scheduleLength : 12) + Math.floor(hashUnit(currentSeed + ':' + id + ':schedlen') * 4);
+      agent.schedule.planner.generate(id, { tick: 0, length, occupation });
+    }
+  }
+}
+
+/** 批次2-C（t48）：公共角色影响——医生按治疗名额实施治疗。 */
+function applySocietyEffects(tick, cfg) {
+  if (cfg.societyEnabled === false) return;
+  const { effects } = agent.role.society.activeEffects();
+  const capacity = effects.treatmentCapacity ?? 0;
+  if (capacity <= 0) return;
+  const patients = survival.health.treatment.triage({ tick });
+  for (let i = 0; i < Math.min(capacity, patients.length); i += 1) {
+    survival.health.treatment.apply({ agentId: patients[i].agentId, tick });
+  }
+}
+
+/** 批次2-C（t48）：日程驱动的行动覆盖（紧急时触发重排）。 */
+function scheduleOverride(decision, agentId, tick, cfg) {
+  const need = decision?.context?.dominantNeed;
+  const level = (decision?.context?.pressures ?? []).find((pp) => pp.need === need)?.level ?? 0;
+  const emergency = (need === 'food' || need === 'water') && level >= clampUnit(cfg.eatThreshold, 0.4);
+  const scheduled = agent.schedule.executor.tick(agentId, { tick, interrupted: emergency, trigger: emergency ? 'emergency' : 'interrupt' });
+  if (!scheduled || !scheduled.action) return null;
+  return {
+    action: scheduled.action,
+    reason: '日程块「' + (scheduled.block?.reason ?? scheduled.action) + '」',
+    replanned: scheduled.replanned,
+    trigger: emergency ? 'emergency' : 'interrupt',
+    meta: { action: scheduled.action, block: scheduled.block?.reason ?? null, replanned: scheduled.replanned },
+  };
+}
+
+/** 批次2-C（t48）：社会维度汇总（日程/职业/公共角色），供观测与跨种子对照。 */
+function socialSummary() {
+  return {
+    schedule: agent.schedule.planner.summary(),
+    careers: agent.role.career.summary(),
+    society: agent.role.society.activeEffects(),
+  };
 }
 
 export function spawnAgent(input = {}) {
@@ -146,9 +228,12 @@ export function spawnAgent(input = {}) {
   const candidates = Array.isArray(input?.candidates) && input.candidates.length > 0 ? input.candidates : DEFAULT_ACTIONS;
   const food = clampUnit(input?.food, 0.2);
   const water = clampUnit(input?.water, 0.2);
+  const age = typeof input?.age === 'number' && Number.isFinite(input.age)
+    ? input.age
+    : deterministicAge(name);
 
   agent.traits.tagset.store.upsert(id, tags);
-  return registerAgent({ id, name, persona, food, water, candidates });
+  return registerAgent({ id, name, persona, food, water, candidates, age });
 }
 
 function dominantPressure(pressures) {
@@ -197,11 +282,44 @@ function decide(agentId, tick, percepts, cfg = {}) {
   });
   const ranked = agent.decision.context.rank(context);
 
-  const candidates = anticipations.map((a) => ({ id: a.id, action: a.action, score: a.score }));
+  // 批次2-A：性格画像 + 动机权重（对候选行动施加小幅性格修正，观测分叉来源）
+  const profile = agent.persona.personality.profile(agentId);
+  const needsNow = survival.needs.meter.query({ agentId }).needs;
+  const motivations = agent.persona.motivation.rank(agentId, { needs: needsNow, profile });
+
   const top = dominantPressure(pressures);
   const need = top.need;
   const needLevel = top.level ?? 0;
   const needScarcity = pressure.scarcity?.[need] ?? 0;
+
+  // 批次2-B（t47）：候选修剪（动机+性格裁剪前 K）→ 行动模拟（简化推演+探索噪声）
+  const tags = agent.traits.tagset.store.get(agentId)?.tags ?? [];
+  const pruned = agent.anticipation.pool.pruner.prune(agentId, anticipations, {
+    k: cfg.pruneK,
+    dominantNeed: need,
+    level: needLevel,
+    threshold: cfg.eatThreshold,
+    tags,
+  });
+  const resources = { food: survival.resources.food.query(), water: survival.resources.water.query() };
+  const predicted = agent.anticipation.simulator.predict(agentId, pruned, {
+    needs: needsNow,
+    resources,
+    noise: cfg.simNoise,
+    seed: currentSeed,
+    tick,
+  });
+  const simBy = new Map();
+  for (const p of predicted) simBy.set(p.candidate?.id, p.expectedUtility);
+
+  // 语义记忆召回：按主导需求取相关过往摘要，注入决策上下文
+  const semanticMemories = agent.memory.semantic.recall(agentId, {
+    text: need === 'food' ? '食物 饥饿 进食' : need === 'water' ? '水源 缺水 饮水' : '采集 休息 资源',
+    tags: [need ?? 'sustenance'],
+  }, { limit: cfg.semanticLimit ?? 3 });
+
+  const origScore = new Map(anticipations.map((a) => [a.id, a.score]));
+  const candidates = pruned.map((a) => ({ id: a.id, action: a.action, score: origScore.get(a.id) ?? 0 }));
   const choice = agent.decision.selector.choose({
     candidates,
     context: { dominantNeed: need },
@@ -210,18 +328,52 @@ function decide(agentId, tick, percepts, cfg = {}) {
       dominantLevel: needLevel,
       dominantScarcity: needScarcity,
       eatThreshold: cfg.eatThreshold,
-    }),
+    }) + agent.persona.personality.evaluate(agentId, candidate.action)
+      + (simBy.get(candidate.id) ?? 0),
   });
   if (choice === null) return null;
+
+  // 决策解释：为什么选 A 不选 B（可叙事、可审计），供 observer 决策日志写入 reason
+  const alternatives = predicted
+    .filter((p) => p.action !== choice.action)
+    .map((p) => ({ action: p.action, expectedUtility: p.expectedUtility, risk: p.risk }));
+  const chosenPred = predicted.find((p) => p.action === choice.action);
+  const explanation = agent.decision.explainer.explain({
+    agentId,
+    tick,
+    chosen: { action: choice.action, score: choice.score, expectedUtility: chosenPred?.expectedUtility ?? choice.score },
+    alternatives,
+    context: { dominantNeed: need, level: needLevel, threshold: cfg.eatThreshold },
+  });
+  const trace = agent.decision.explainer.trace({
+    agentId,
+    tick,
+    chosen: { action: choice.action },
+    alternatives,
+    context: { dominantNeed: need, level: needLevel, threshold: cfg.eatThreshold },
+  });
 
   return {
     id: choice.id,
     action: choice.action,
     score: choice.score,
     confidence: choice.confidence,
-    reason: choice.reason,
+    reason: explanation,
+    explanation,
+    trace,
     options: candidates,
-    context: { pressures, topDriver: ranked.length > 0 ? ranked[0].id : null, dominantNeed: need },
+    predicted: alternatives,
+    context: {
+      pressures,
+      topDriver: ranked.length > 0 ? ranked[0].id : null,
+      dominantNeed: need,
+      personality: profile?.dominant ?? null,
+      topMotivation: motivations.length > 0 ? motivations[0].action : null,
+      semantic: semanticMemories.map((m) => ({ content: m.content, score: m.score })),
+      simulation: chosenPred
+        ? { expectedUtility: chosenPred.expectedUtility, risk: chosenPred.risk, exploration: chosenPred.exploration }
+        : null,
+    },
   };
 }
 
@@ -350,6 +502,66 @@ function runMortality(tick, cfg) {
 }
 
 /**
+ * 批次2-A：自然衰老（lifecycle.age）+ 老年死亡（lifecycle.death）。
+ * 与 runMortality 的饥饿/口渴致死并存而非重复：本函数只处理 cause=old_age，
+ * 且默认参数下 200 tick 内无人进入老年（初始年龄 20~50，每 tick 仅 +1/365 年）。
+ */
+function runLifecycle(tick, cfg) {
+  const deaths = [];
+  const ageRate = typeof cfg.ageRatePerTick === 'number' ? cfg.ageRatePerTick : 1 / 365;
+  const adultStart = typeof cfg.lifecycleAdultStart === 'number' ? cfg.lifecycleAdultStart : 18;
+  const elderStart = typeof cfg.lifecycleElderStart === 'number' ? cfg.lifecycleElderStart : 65;
+  const elderMortality = typeof cfg.lifecycleElderMortalityRate === 'number' ? cfg.lifecycleElderMortalityRate : 0.01;
+  for (const record of registry.lookup({ type: 'agent' })) {
+    const result = agent.lifecycle.age(record.id, {
+      tick,
+      ageRatePerTick: ageRate,
+      adultStart,
+      elderStart,
+      elderMortalityRate: elderMortality,
+    });
+    if (result.died) {
+      registry.unregister(record.id);
+      worldState.set('agents.' + record.id + '.alive', false);
+      worldState.set('agents.' + record.id + '.deathTick', tick);
+      observer.recorder.eventLog.record({ tick, topic: 'agent.death', payload: { agentId: record.id, cause: result.cause, age: result.age, stage: result.stage }, agentId: record.id });
+      deaths.push({ agentId: record.id, cause: result.cause, age: result.age });
+    }
+  }
+  return deaths;
+}
+
+/**
+ * 批次2-A：特质漂移（evolution.drift）。每 traitDriftInterval tick 依据生存压力
+ * 信号把相关特质权重缓慢推向目标（确定性单调漂移，不消耗 rng）。
+ */
+function runTraitDrift(tick, cfg) {
+  const interval = Number.isInteger(cfg.traitDriftInterval) && cfg.traitDriftInterval > 0 ? cfg.traitDriftInterval : 10;
+  if (tick % interval !== 0) return [];
+  const rate = typeof cfg.traitDriftRate === 'number' ? cfg.traitDriftRate : 0.05;
+  const drifted = [];
+  for (const record of registry.lookup({ type: 'agent' })) {
+    const needs = survival.needs.meter.query({ agentId: record.id }).needs;
+    const pressure = Math.max(needs.food ?? 0, needs.water ?? 0);
+    const signals = {
+      resilient: 0.5 + pressure,
+      cautious: 0.5 + pressure * 0.8,
+      brave: 1 - pressure * 0.6,
+      impulsive: 1 - pressure * 0.6,
+      sociable: 1 - pressure * 0.4,
+      hardworking: 0.5 + pressure * 0.3,
+    };
+    const res = agent.traits.evolution.drift({ agentId: record.id, signals, rate });
+    if (res.drifted > 0) drifted.push({ agentId: record.id, drifted: res.drifted });
+  }
+  if (drifted.length > 0) {
+    const first = drifted[0];
+    observer.recorder.eventLog.record({ tick, topic: 'agent.trait.drift', payload: { agentId: first.agentId, drifted: first.drifted, driftedAgents: drifted.length } });
+  }
+  return drifted;
+}
+
+/**
  * 推进一个 tick（完整闭环）。
  * @param {object} [config] 与 DEFAULT_CONFIG 合并的运行参数
  * @returns {Promise<object>} 本 tick 摘要
@@ -375,6 +587,18 @@ export async function step(config = {}) {
     const agentId = record.id;
     const decision = decide(agentId, tick, inbox[agentId] ?? [], cfg);
     if (decision === null) continue;
+    // 批次2-C（t48）：日程驱动行动（非紧急时以日程为准，紧急触发重排）
+    if (cfg.scheduleEnabled !== false) {
+      const scheduled = scheduleOverride(decision, agentId, tick, cfg);
+      if (scheduled) {
+        decision.action = scheduled.action;
+        decision.reason = scheduled.reason;
+        decision.schedule = scheduled.meta;
+        if (scheduled.replanned) {
+          observer.recorder.eventLog.record({ tick, topic: 'agent.schedule.replan', payload: { agentId, trigger: scheduled.trigger } });
+        }
+      }
+    }
     observer.recorder.decisionLog.record({
       tick,
       agentId,
@@ -384,6 +608,12 @@ export async function step(config = {}) {
       reason: decision.reason,
       decisionId: decision.id,
     });
+    // 批次2-B（t47）：把本次决策沉淀为语义记忆（事件→摘要），供后续召回
+    agent.memory.semantic.store(agentId, {
+      content: '第 ' + tick + ' tick 选择「' + decision.action + '」' + (decision.context?.dominantNeed ? '（主导需求：' + decision.context.dominantNeed + '）' : ''),
+      tags: [decision.action, decision.context?.dominantNeed ?? 'sustenance'],
+      salience: 0.5,
+    }, { maxEntries: cfg.semanticMaxEntries });
     const situation = `当前处境：${(inbox[agentId] ?? []).map((p) => p.topic).join('、') || '一切如常'}。你决定采取行动「${decision.action}」。`;
     const thought = await ai.thought.generate(agentContextOf(record), situation);
     decisions.push({ agentId, decision, thought });
@@ -420,6 +650,13 @@ export async function step(config = {}) {
 
   // 4.5) 死亡：饥饿/口渴持续 → 健康下降 → 死亡（移出 registry + 写 observer）
   runMortality(tick, cfg);
+
+  // 4.6) 批次2-C（t48）：公共角色影响（医生治疗等）
+  applySocietyEffects(tick, cfg);
+
+  // 4.6) 批次2-A：自然衰老（老年死亡）+ 特质漂移（与 needs 致死并存）
+  runLifecycle(tick, cfg);
+  runTraitDrift(tick, cfg);
 
   // 5) world-state 快照
   syncWorldState(tick, cfg);
@@ -481,6 +718,7 @@ export function reset() {
   stage3.__reset();
   mortality.clear();
   foragePool = null;
+  currentSeed = 'default';
 }
 
 /**
@@ -499,7 +737,7 @@ export function reset() {
  */
 export async function run(options = {}) {
   if (options.reset !== false) reset();
-  if (options.seed !== undefined) rng.seed(options.seed);
+  if (options.seed !== undefined) { currentSeed = String(options.seed); rng.seed(options.seed); }
 
   const spawned = [];
   const phase2 = options.phase2 === true;
@@ -533,6 +771,9 @@ export async function run(options = {}) {
   // 生存目标：记录起始 tick（elapsed 与主循环 tick 一致）
   survival.goal.survive({ tick: 0 });
 
+  // 批次2-C（t48）：为居民种子日程 / 职业 / 公共角色（真实调用 4 模块）
+  seedAgentScheduleRoles(spawned, options);
+
   const ticks = Number.isInteger(options.ticks) && options.ticks > 0 ? options.ticks : 1;
   const steps = [];
   for (let i = 0; i < ticks; i += 1) {
@@ -548,6 +789,7 @@ export async function run(options = {}) {
     world: worldState.snapshot(),
     resources: { food: survival.resources.food.query(), water: survival.resources.water.query(), energy: survival.resources.energy.query(), medical: survival.resources.medical.query() },
     chronicle: observer.chronicle.compiler.compile().counts,
+    social: socialSummary(),
     ...(phase2 ? { phase2: { seed: phase2Seed, summary: stage2.summary() } } : {}),
     ...(phase3 ? { phase3: { seed: phase3Seed, summary: stage3.summary() } } : {}),
   };
@@ -561,6 +803,7 @@ export function snapshot() {
     world: worldState.snapshot(),
     resources: { food: survival.resources.food.query(), water: survival.resources.water.query(), energy: survival.resources.energy.query(), medical: survival.resources.medical.query() },
     chronicle: observer.chronicle.compiler.compile().counts,
+    social: socialSummary(),
   };
 }
 

@@ -63,6 +63,25 @@ export const DEFAULTS = Object.freeze({
   shelterRepairRate: 1,
   exposureNeedGrowth: 0.01,
   supplyRedistributeInterval: 20,
+  // 批次2-A 人格与生命周期（自然衰老死亡默认 200 tick 内不触发 + 特质演化）
+  ageRatePerTick: 1 / 365,
+  initialAgeMin: 20,
+  initialAgeMax: 50,
+  lifecycleAdultStart: 18,
+  lifecycleElderStart: 65,
+  lifecycleElderMortalityRate: 0.01,
+  traitDriftRate: 0.05,
+  traitDriftInterval: 10,
+  traitMutateRate: 0.02,
+  // 批次2-B 智能体记忆 / 预演 / 决策解释（t47）
+  pruneK: 4,
+  simNoise: 0.5,
+  semanticMaxEntries: 64,
+  semanticLimit: 3,
+  scheduleEnabled: true,
+  scheduleLength: 12,
+  careerEnabled: true,
+  societyEnabled: true,
 });
 
 /** 返回默认值深拷贝快照。 */
@@ -256,6 +275,23 @@ const RULES = {
   shelterBaseCapacity: (v) => (isPosInt(v) ? true : '必须是正整数'),
   shelterRepairRate: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
   exposureNeedGrowth: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
+  ageRatePerTick: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
+  initialAgeMin: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
+  initialAgeMax: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
+  lifecycleAdultStart: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
+  lifecycleElderStart: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
+  lifecycleElderMortalityRate: (v) => (isUnit(v) ? true : '必须是 [0,1] 区间数值'),
+  traitDriftRate: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
+  traitDriftInterval: (v) => (isPosInt(v) ? true : '必须是正整数'),
+  traitMutateRate: (v) => (isUnit(v) ? true : '必须是 [0,1] 区间数值'),
+  pruneK: (v) => (isPosInt(v) ? true : '必须是正整数'),
+  simNoise: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
+  semanticMaxEntries: (v) => (isPosInt(v) ? true : '必须是正整数'),
+  semanticLimit: (v) => (isNonNegInt(v) ? true : '必须是非负整数'),
+  scheduleEnabled: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
+  scheduleLength: (v) => (isPosInt(v) ? true : '必须是正整数'),
+  careerEnabled: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
+  societyEnabled: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
 };
 
 /**
