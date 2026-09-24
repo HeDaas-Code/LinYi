@@ -11,6 +11,7 @@ import * as graph from '../../infra/store/graph.js';
 import * as identity from '../../infra/identity.js';
 import * as episodic from '../memory/episodic/store.js';
 import * as pressureScorer from '../../survival/needs/pressure/scorer.js';
+import * as society from '../../agent/role/society.js';
 
 const TYPE = 'psyche.trauma';
 const PREFIX = 'psyche:trauma:';
@@ -135,7 +136,9 @@ export function accumulate({ agentId, rate = 0.2 } = {}) {
     throw new TypeError('trauma.accumulate: rate 必须为非负有限数值');
   }
   const pressure = pressureScorer.score({ agentId });
-  const severity = clamp01(pressure.normalized * rate);
+  // 祭司主持的仪式提供心理慰藉（ritualBonus），减缓生存压力向创伤的累积。
+  const ritualBonus = clamp01(society.activeEffects().effects.ritualBonus ?? 0);
+  const severity = clamp01(pressure.normalized * rate * (1 - ritualBonus));
   if (severity <= 0) {
     return { agentId, level: query({ agentId }).level, pressure: pressure.normalized, added: 0 };
   }

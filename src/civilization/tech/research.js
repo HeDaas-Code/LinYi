@@ -14,9 +14,14 @@ import * as tree from './tree.js';
 import * as energy from './_energy.js';
 import * as eventLog from '../../observer/recorder/event-log.js';
 import * as actionLog from '../../observer/recorder/action-log.js';
+import * as society from '../../agent/role/society.js';
 
 /** @type {Map<string, object>} */
 const active = new Map();
+
+function clamp01(v) {
+  return Math.max(0, Math.min(1, v));
+}
 
 function snapshot(rec) {
   return {
@@ -84,6 +89,8 @@ export function progress(input = {}) {
     throw new TypeError('research.progress: n 必须为 >=0 的整数');
   }
   const tick = Number.isInteger(input.tick) ? input.tick : 0;
+  // 教师(literacyRate)提升研究效率：每 tick 累积分数进度，攒满 1 点即额外 +1 进度。
+  const literacyRate = clamp01(society.activeEffects().effects.literacyRate ?? 0) * 4;
   const out = [];
   for (const rec of [...active.values()]) {
     let advanced = 0;
@@ -92,6 +99,12 @@ export function progress(input = {}) {
       if (used.consumed < rec.energyCost) break; // 能源不足，停止推进
       rec.progress += 1;
       advanced += 1;
+      rec._literacy = (rec._literacy ?? 0) + literacyRate;
+      if (rec._literacy >= 1) {
+        const bonus = Math.floor(rec._literacy);
+        rec.progress = Math.min(rec.cost, rec.progress + bonus);
+        rec._literacy -= bonus;
+      }
     }
     if (advanced > 0) {
       actionLog.record({

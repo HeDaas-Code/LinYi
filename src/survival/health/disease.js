@@ -10,6 +10,7 @@
 
 import * as traitsStore from '../../agent/traits/tagset/store.js';
 import * as medical from './_medical.js';
+import * as society from '../../agent/role/society.js';
 
 const IMMUNE_TAG = 'immune';
 const DEFAULT_HEALTH = 100;
@@ -44,6 +45,11 @@ function immunity(agentId) {
   const tag = rec.tags.find((t) => t.key === IMMUNE_TAG);
   if (!tag || typeof tag.weight !== 'number') return 0;
   return clamp01(tag.weight / 10);
+}
+
+/** 治安官(safety)降低新感染严重度与症状推进速度。 */
+function safetyFactor() {
+  return clamp01(society.activeEffects().effects.safety ?? 0);
 }
 
 function load(agentId) {
@@ -87,7 +93,7 @@ export function infect(input = {}) {
     return { agentId, diseaseId, infected: false, reason: '免疫', immunity: imm, tick };
   }
 
-  const severity = clamp01(baseSeverity * (1 - imm));
+  const severity = clamp01(baseSeverity * (1 - imm) * (1 - safetyFactor()));
   const s = load(agentId);
   const existing = s.diseases.find((d) => d.diseaseId === diseaseId);
   if (existing) {
@@ -109,14 +115,15 @@ export function symptom(input = {}) {
   const agentId = input?.agentId; assertAgentId(agentId);
   const delta = clamp01(typeof input?.delta === 'number' ? input.delta : 0.1);
   const tick = Number.isInteger(input?.tick) ? input.tick : 0;
+  const effDelta = delta * (1 - safetyFactor());
 
   const s = load(agentId);
   for (const d of s.diseases) {
     if (input?.diseaseId !== undefined && d.diseaseId !== input.diseaseId) continue;
-    d.severity = clamp01(d.severity + delta);
+    d.severity = clamp01(d.severity + effDelta);
     d.stage = Math.min(3, (d.stage ?? 1) + 1);
   }
-  s.health = clamp(s.health - delta * 30, 0, 100);
+  s.health = clamp(s.health - effDelta * 30, 0, 100);
 
   return { ...snapshot(agentId, s), tick };
 }
