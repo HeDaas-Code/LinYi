@@ -98,6 +98,8 @@ let postCount = 0;
 let replyCount = 0;
 let reactCount = 0;
 let reputationTriageSwaps = 0;
+/** 声誉分诊治疗者的声誉得分合计（消融观测：开/关声誉分诊时被治疗者声誉构成不同）。 */
+let reputationTriageTreatedScore = 0;
 let lastFeedTick = -1;
 let feedSignature = [];
 /** 近期帖子 ID 环形缓存（回复/点赞踩的目标池，避免每 tick 全量 list 帖子） */
@@ -174,6 +176,7 @@ export function seed(agents, config = {}) {
   replyCount = 0;
   reactCount = 0;
   reputationTriageSwaps = 0;
+  reputationTriageTreatedScore = 0;
   lastFeedTick = -1;
   feedSignature = [];
   recentPostIds = [];
@@ -870,6 +873,7 @@ function runHealth(tick, agents, config) {
     const patient = ordered[i];
     const healed = survival.health.treatment.apply({ agentId: patient.agentId, tick });
     treatCount += 1;
+    reputationTriageTreatedScore += social.reputation.query({ agentId: patient.agentId }).score;
     result.treated += 1;
     observer.recorder.actionLog.record({
       tick,
@@ -1112,6 +1116,7 @@ export function summary() {
     replyCount,
     reactCount,
     reputationTriageSwaps,
+    reputationTriageTreatedScore,
     feedSignature,
     reputation: reputationDistribution(),
   };
@@ -1151,6 +1156,7 @@ export function __reset() {
   replyCount = 0;
   reactCount = 0;
   reputationTriageSwaps = 0;
+  reputationTriageTreatedScore = 0;
   lastFeedTick = -1;
   feedSignature = [];
   recentPostIds = [];

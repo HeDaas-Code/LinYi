@@ -56,7 +56,7 @@ export const DEFAULTS = Object.freeze({
   energyRegen: 20,
   bankruptcyThreshold: 10,
   infectionRate: 0.03,
-  treatPerCapita: 0.04,
+  treatPerCapita: 0.02,
   medicalRegenPerCapita: 0.5,
   // 避难所容量与修复（t43：容量约束真实生效 + 危机信号可恢复）
   shelterBaseCapacity: 54,
@@ -91,7 +91,7 @@ export const DEFAULTS = Object.freeze({
   feedSize: 8,
   feedInterval: 10,
   reputationTriageEnabled: true,
-  reputationTriageBoost: 0.4,
+  reputationTriageBoost: 1.0,
   reputationPurchaseGain: 0.1,
   reputationSaleGain: 1,
   reputationDefaultPenalty: 30,
