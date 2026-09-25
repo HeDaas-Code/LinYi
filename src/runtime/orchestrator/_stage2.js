@@ -82,6 +82,8 @@ let craftCount = 0;
 let buildCount = 0;
 let treatCount = 0;
 let quarantineCount = 0;
+/** 解除隔离次数：与 quarantineCount 配对，用于确认隔离是**闭环**而非只增不减。 */
+let releasesCount = 0;
 /** @type {string[]} 已创办企业 ID */
 let businessIds = [];
 let goodsProduced = 0;
@@ -163,6 +165,7 @@ export function seed(agents, config = {}) {
   buildCount = 0;
   treatCount = 0;
   quarantineCount = 0;
+  releasesCount = 0;
   businessIds = [];
   goodsProduced = 0;
   wagesPaid = 0;
@@ -815,8 +818,11 @@ function expeditionConditionsFor(agentId) {
     // 实测（50 人 120 tick）居民全员满包，285 次探索全部「有拾获但装不下」，
     // 探索退化为只扣健康不给收益的坏选择。故把剩余容量作为可行性条件之一。
     const hasRoom = freeSlots > 0;
+    // 被隔离者不得外出：这是让"隔离"真正产生行为后果的消费点。
+    // 此前隔离状态只被写入、从不被读取，机制等于装饰。
+    const confined = survival.health.epidemic.isQuarantined(agentId);
     return {
-      expeditionViable: p.viable && hasRoom,
+      expeditionViable: p.viable && hasRoom && !confined,
       expeditionRisk: p.risk,
       expeditionLoot: hasRoom ? p.expectedLootCount : 0,
       expeditionHours: p.hours,
@@ -1193,6 +1199,13 @@ function runHealth(tick, agents, config) {
       action: 'treatment',
       outcome: { severity: healed.severity, consumed: healed.consumed, health: healed.health },
     });
+
+    // 康复即解除隔离：让隔离状态真正闭环。
+    // 此前隔离名单只增不减、且无人读取，等于一个既无效果又不收敛的装饰机制。
+    if (!survival.health.disease.status({ agentId: patient.agentId }).infected) {
+      const released = survival.health.epidemic.release({ agentId: patient.agentId, tick });
+      if (released.changed) releasesCount += 1;
+    }
   }
 
   return result;
@@ -1413,6 +1426,7 @@ export function summary() {
     built: buildCount,
     treated: treatCount,
     quarantined: quarantineCount,
+    released: releasesCount,
     businesses: economy.industry.business.list().filter((b) => b.status === 'active').length,
     goodsProduced,
     goodsSold,
@@ -1455,6 +1469,7 @@ export function __reset() {
   buildCount = 0;
   treatCount = 0;
   quarantineCount = 0;
+  releasesCount = 0;
   businessIds = [];
   goodsProduced = 0;
   wagesPaid = 0;

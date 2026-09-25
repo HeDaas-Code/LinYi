@@ -29,6 +29,7 @@ import * as agent from '../../agent/index.js';
 import * as ai from '../../ai/index.js';
 import * as survival from '../../survival/index.js';
 import * as social from '../../social/index.js';
+import * as town from '../../town/index.js';
 import * as observer from '../../observer/index.js';
 import * as stage2 from './_stage2.js';
 import * as stage3 from './_stage3.js';
@@ -1123,6 +1124,66 @@ export function reset() {
   worldState.__reset();
   registry.__reset();
   survival.needs.meter.__reset();
+  // 健康链必须复位：疾病/隔离是**跨 run 残留**的模块级状态。
+  // 实测缺陷：reset() 原先漏掉它们，导致上一个 run 遗留的感染者与隔离名单
+  // 带入下一个 run——集成测试 seed 2 的存活率因此从 1.000 掉到 0.94，
+  // 而单独运行同一段代码恒为 1.000。测试与生产共用这个 reset，故必须补全。
+  survival.health.disease.__reset();
+  survival.health.epidemic.__reset();
+  // treatment 无自有状态（仅转发给 disease），故无需复位。
+  agent.traits.tagset.store.__reset();
+  agent.lifecycle.__reset();
+  agent.inventory.item.__reset();
+  agent.inventory.backpack.__reset();
+  // 日程 / 职业 / 社会角色同样跨 run 残留，且 loop.run 会读取它们
+  // （society.activeEffects 决定识字、career 决定职业分布、schedule 决定重规划）。
+  // 实测缺陷：漏掉这些后，集成测试 seed 2 的存活率在「与其它用例同进程」时为 0.94，
+  // 单独运行时却为 1.000——断言结果取决于此前跑过哪些用例，这是不可接受的。
+  agent.schedule.planner.__reset();
+  agent.schedule.executor.__reset();
+  agent.role.career.__reset();
+  agent.role.society.__reset();
+  // 其余携带仿真状态的模块级存储。全项目共 103 个模块导出 __reset，
+  // 而 reset() 原先只覆盖十余个——凡漏掉一个，它的残留就会跨 run 泄漏，
+  // 使同一份代码的结果取决于**此前跑过什么**（实测：先跑 3 人 12tick 局，
+  // 再跑 50 人 200tick 的 seed 2，存活率由 1.000 掉到 0.940）。
+  // 这里补齐所有会被 loop.run 读写的状态；纯派生的无状态模块无需列出。
+  agent.anticipation.pool.store.__reset();
+  agent.anticipation.pool.pruner.__reset();
+  agent.anticipation.pool.selector.__reset();
+  agent.anticipation.simulator.__reset();
+  agent.memory.episodic.store.__reset();
+  agent.memory.semantic.__reset();
+  agent.psyche.trauma.__reset();
+  agent.psyche.coping.__reset();
+  agent.psyche.break.__reset();
+  agent.persona.identity.__reset();
+  agent.persona.motivation.__reset();
+  agent.persona.personality.__reset();
+  agent.crafting.recipe.__reset();
+  agent.crafting.construction.__reset();
+  agent.crafting.writing.__reset();
+  agent.traits.evolution.__reset();
+  agent.traits.tagset.similarity.__reset();
+  social.graph.edges.__reset();
+  social.graph.community.__reset();
+  social.platform.posts.__reset();
+  social.reputation.__reset();
+  social.relationship.friendship.__reset();
+  social.relationship.romance.__reset();
+  social.relationship.family.__reset();
+  social.family.registry.__reset();
+  social.family.lineage.__reset();
+  social.culture.norms.__reset();
+  social.culture.ritual.__reset();
+  social.culture.meme.__reset();
+  survival.resources.medical.__reset();
+  survival.shelter.__reset();
+  survival.environment.weather.__reset();
+  survival.environment.radiation.__reset();
+  survival.events.generator.roller.__reset();
+  town.building.structure.__reset();
+  town.residence.__reset();
   observer.recorder.__reset();
   dispatch.__reset();
   perception.__reset();

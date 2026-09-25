@@ -71,6 +71,15 @@ export function quarantine(input = {}) {
   const agentId = input?.agentId; assertAgentId(agentId);
   const tick = Number.isInteger(input?.tick) ? input.tick : 0;
 
+  // 幂等：已在隔离名单中的居民不重复隔离、不重复写事件。
+  // 实测教训：主循环每 tick 都会对"当时所有感染者"调用本方法，
+  // 感染者未康复就被反复隔离，单次 200tick 跑批产生 **9552** 条 health.quarantine
+  // （占全部事件的 66%），把真正有信息量的事件全部淹没，
+  // 并连带刷出 8856 次 reputationTriageSwaps。
+  if (quarantined.has(agentId)) {
+    return { agentId, quarantined: true, tick, log: null, alreadyQuarantined: true };
+  }
+
   quarantined.add(agentId);
   const log = recorder.eventLog.record({
     tick,
@@ -79,12 +88,43 @@ export function quarantine(input = {}) {
     agentId,
   });
 
-  return { agentId, quarantined: true, tick, log };
+  return { agentId, quarantined: true, tick, log, alreadyQuarantined: false };
 }
 
 /** 查询某居民是否已隔离（辅助方法）。 */
 export function isQuarantined(agentId) {
   return quarantined.has(agentId);
+}
+
+/** 当前隔离名单（只读副本）。 */
+export function listQuarantined() {
+  return [...quarantined].sort();
+}
+
+/**
+ * 解除某居民的隔离。
+ *
+ * 为什么必须有这个入口：隔离名单原先只有 add 没有 delete，居民一旦被隔离就**永久**
+ * 被隔离，即使已经康复——而主循环又没有把该状态接到任何行为上，
+ * 于是"防疫"既无效果也不收敛，只往事件日志里灌垃圾（实测单次跑批 9552 条）。
+ * 康复即解除隔离，才让这个机制成为一个真正的闭环。
+ *
+ * @param {{ agentId: string, tick?: number }} input
+ */
+export function release(input = {}) {
+  const agentId = input?.agentId; assertAgentId(agentId);
+  const tick = Number.isInteger(input?.tick) ? input.tick : 0;
+  if (!quarantined.has(agentId)) {
+    return { agentId, quarantined: false, tick, log: null, changed: false };
+  }
+  quarantined.delete(agentId);
+  const log = recorder.eventLog.record({
+    tick,
+    topic: 'health.quarantine.release',
+    payload: { agentId, quarantined: false },
+    agentId,
+  });
+  return { agentId, quarantined: false, tick, log, changed: true };
 }
 
 /** 复位隔离名单（测试用）。 */

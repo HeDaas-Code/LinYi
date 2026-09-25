@@ -27,6 +27,7 @@ let normViolated = false;
 let memeMutated = false;
 let collapseHandled = false;
 let firstCollapse = null;
+let scarceTicks = 0;
 
 // ---- 累计计数 ----
 let lawsEnacted = 0;
@@ -63,7 +64,7 @@ export function seed(agents, config = {}) {
   factionA = null; factionB = null; allied = false;
   lawId = null; lawEnforced = false;
   conflictId = null; conflictResolved = false;
-  normViolated = false; memeMutated = false; collapseHandled = false; firstCollapse = null;
+  normViolated = false; memeMutated = false; collapseHandled = false; firstCollapse = null; scarceTicks = 0;
   lawsEnacted = 0; conflictsResolved = 0; ritualsHeld = 0; normsViolated = 0; memesMutated = 0;
   breakdowns = 0; recoveries = 0; copings = 0;
   researchesStarted = 0; researchesCompleted = 0; techsLost = 0; collapses = 0; restarts = 0;
@@ -269,17 +270,39 @@ async function runCivilization(tick, agents, config) {
   const crisisLevel = avgPressure(agents);
   const force = config.collapseForce === true;
 
+  // 资源枯竭需要**持续**才计入：单 tick 见底是水位振荡的正常谷底，不是文明崩溃。
+  const scarcityThreshold = 0.9;
+  if (1 - resourceRatio >= scarcityThreshold) scarceTicks += 1;
+  else scarceTicks = 0;
+  const scarceTicksRequired = Number.isInteger(config.collapseScarceTicks) && config.collapseScarceTicks > 0
+    ? config.collapseScarceTicks : 12;
+  const scarcitySustained = scarceTicks >= scarceTicksRequired;
+
   const det = civilization.collapse.detector.detect({
     population: force ? 0 : population,
-    resourceRatio,
+    resourceRatio: scarcitySustained ? resourceRatio : 1,
     crisisLevel,
     survivalTime: tick,
   });
+  // 未持续时按真实比值重算综合 score，避免上面的替换掩盖真实状态。
+  if (!scarcitySustained) {
+    const score = Math.min(1, Math.max(0,
+      0.4 * (population <= 0 ? 1 : 0) + 0.3 * (1 - resourceRatio) + 0.3 * crisisLevel));
+    det.score = score;
+    det.indicators = det.indicators.map((i) => (i.key === 'collapseScore'
+      ? { ...i, value: score, critical: score >= 0.6 } : i));
+    det.collapsed = (force ? true : population <= 0) || crisisLevel >= 0.8 || score >= det.threshold;
+  }
+  det.scarceTicks = scarceTicks;
+  det.scarcitySustained = scarcitySustained;
 
   if (det.collapsed && !collapseHandled) {
     collapseHandled = true;
     collapses += 1;
-    firstCollapse = { tick, reasons: det.reasons, score: det.score, population, resourceRatio, crisisLevel };
+    firstCollapse = {
+      tick, reasons: det.reasons, score: det.score, population, resourceRatio, crisisLevel,
+      scarceTicks: det.scarceTicks, scarcitySustained: det.scarcitySustained,
+    };
 
     civilization.collapse.confirmer.confirm({
       population: force ? 0 : population,
@@ -354,7 +377,7 @@ export function __reset() {
   factionA = null; factionB = null; allied = false;
   lawId = null; lawEnforced = false;
   conflictId = null; conflictResolved = false;
-  normViolated = false; memeMutated = false; collapseHandled = false; firstCollapse = null;
+  normViolated = false; memeMutated = false; collapseHandled = false; firstCollapse = null; scarceTicks = 0;
   lawsEnacted = 0; conflictsResolved = 0; ritualsHeld = 0; normsViolated = 0; memesMutated = 0;
   breakdowns = 0; recoveries = 0; copings = 0;
   researchesStarted = 0; researchesCompleted = 0; techsLost = 0; collapses = 0; restarts = 0;
