@@ -163,7 +163,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "root_uid": "d440391b"
       }
     ],
-    "compiled_at": "2026-09-25T10:03:51.304Z",
+    "compiled_at": "2026-09-25T10:17:43.766Z",
     "stats": {
       "tree_count": 1,
       "module_count": 231,
@@ -173,7 +173,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "cross_tree_dep_count": 0,
       "max_depth": 5,
       "layout_count": 69,
-      "planned_count": 47,
+      "planned_count": 42,
       "deprecated_count": 0,
       "policy_rule_count": 2,
       "change_count": 5,
@@ -6176,7 +6176,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.genesis.agent-factory",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "智能体组装",
         "en": "Agent Assembly"
@@ -6185,10 +6184,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "组装并注册新智能体到沙盘运行时。\n",
         "en": "Assembles and registers new agents into the runtime.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/genesis/agent-factory/assemble.js"
+        }
+      ],
+      "revision": "02dffcd347b42bfde4f8a766a3a77cff7de9c286",
+      "updated_at": "2026-09-25T10:17:35.034Z",
+      "fingerprint": "437e1e559322ca7923fc39370b5f9916d8f563ab980f7a6f19cff31451d7f2f7",
       "apis": [
         {
           "protocol": "rpc",
@@ -6235,7 +6238,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.genesis.agent-factory",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "模板生成",
         "en": "Template Builder"
@@ -6244,10 +6246,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "从特质与角色构建智能体模板。\n",
         "en": "Builds agent templates from traits and roles.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/genesis/agent-factory/template.js"
+        }
+      ],
+      "revision": "02dffcd347b42bfde4f8a766a3a77cff7de9c286",
+      "updated_at": "2026-09-25T10:17:35.033Z",
+      "fingerprint": "27e8c6edfe0c11ef1ce3357b3b5c026a582504e1a821ae306ff9e0ebd08196ad",
       "apis": [
         {
           "protocol": "rpc",
@@ -6316,7 +6322,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.genesis.heredity",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "提示词组装",
         "en": "Prompt Assembly"
@@ -6325,10 +6330,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "把子代特质、家庭背景与小镇世界观组装成新智能体提示词。\n",
         "en": "Assembles child traits, family context and town worldview into a new agent prompt.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/genesis/heredity/prompt.js"
+        }
+      ],
+      "revision": "02dffcd347b42bfde4f8a766a3a77cff7de9c286",
+      "updated_at": "2026-09-25T10:17:35.034Z",
+      "fingerprint": "139d70b9c303b9045231b4cc60fdaa51f252d4e52c3a74570aa91bd332f3d690",
       "apis": [
         {
           "protocol": "rpc",
@@ -6361,7 +6370,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.genesis.heredity",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "标签遗传",
         "en": "Tag Heredity"
@@ -6370,10 +6378,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "随机从父母双方 100 个 tag 中抽取 50 个组成子代特质串。\n",
         "en": "Randomly samples 50 tags from 100 parental tags for the child.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/genesis/heredity/tags.js"
+        }
+      ],
+      "revision": "02dffcd347b42bfde4f8a766a3a77cff7de9c286",
+      "updated_at": "2026-09-25T10:17:35.034Z",
+      "fingerprint": "c8922df0e187d0c2bd125b85feec177b2bc86232fb902107792c122eae8731bc",
       "apis": [
         {
           "protocol": "rpc",
@@ -6415,7 +6427,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.genesis",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "小镇更新",
         "en": "Town Renewal"
@@ -6424,10 +6435,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "评估人口、产业与空间结构并替换消亡个体，保持小镇自主更新。\n",
         "en": "Evaluates population, industry and space, replacing the dead to renew the town.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/genesis/renewal.js"
+        }
+      ],
+      "revision": "02dffcd347b42bfde4f8a766a3a77cff7de9c286",
+      "updated_at": "2026-09-25T10:17:35.034Z",
+      "fingerprint": "67680da37f40889699a831b0b2a5830e6a8bae255296fc1aebe3213dc6d2272a",
       "apis": [
         {
           "protocol": "rpc",
