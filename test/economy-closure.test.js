@@ -118,7 +118,11 @@ test('涌现性: 50 居民 × 200 tick × 3 种子关键经济字段跨种子差
   for (const seed of seeds) {
     const report = await loop.run({ agentCount: 50, ticks: 200, seed, phase2: true, phase3: true });
     const s = report.phase2.summary;
-    assert.equal(survivalRate(report), 1, '默认参数下存活率必须保持 1.00');
+    // P3 修订：原先要求存活率恒为 1.00。旧参数是资源过剩（人均库存 3.8、无一人需求 >0.7、
+    // 采集池只用 28/136），该断言实际在奖励"从未短缺"。默认档压力调到临界之上后，
+    // 生存率成为真实变量，改为 ≥0.96 —— 仍能约束系统不崩溃，但不再奖励资源过剩。
+    const rate = survivalRate(report);
+    assert.ok(rate >= 0.96, '默认参数下存活率应 ≥0.96（实测 ' + rate.toFixed(2) + '）');
     rows.push({ seed, businesses: s.businesses, goodsProduced: s.goodsProduced, wagesPaid: s.wagesPaid, bankruptcies: s.bankruptcies, trades: s.trades });
   }
 

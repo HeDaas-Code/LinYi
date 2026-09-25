@@ -138,7 +138,14 @@ test('integration: 日程真实驱动行动（10 tick 对照，紧急才覆盖�
   assert.equal(matches + emergencies, 10, '其余差异均为紧急进食/饮水覆盖');
 });
 
-test('integration: 默认 50×200×3 生存率 1.00 且跨种子分叉（≥2 字段）', async () => {
+// P3 修订：本测试原先断言「生存率恒为 1.00」。该断言在**资源过剩**的旧参数下才成立
+//（实测旧参数：人均库存长期 3.8、水食顶满、52 人中无一人需求超过 0.7、采集池只用 28/136），
+// 它把"从未短缺"当成了"求生成功"，并掩盖了系统其实没有真实生存压力这一事实。
+// 现在默认档压力已调到临界之上（储备 2.5/人、再生 0.30/人），生存率成为**真实变量**：
+// 多数种子 52/52，极端种子会出现个位数死亡且死因是长期力竭（t162 前后、死前仍在持续采集）。
+// 因此断言改为「绝大多数种子存活 ≥ 96%」——比恒等于 1 更能约束系统不崩溃，
+// 也不再奖励资源过剩。
+test('integration: 默认 50×200×3 生存率 ≥0.96 且跨种子分叉（≥2 字段）', async () => {
   resetAll();
   const seeds = [1, 2, 3];
   const seen = { scheduleLength: new Set(), replanCount: new Set(), careerDist: new Set(), societyHolders: new Set() };
@@ -146,7 +153,8 @@ test('integration: 默认 50×200×3 生存率 1.00 且跨种子分叉（≥2 �
     const r = await loop.run({ ticks: 200, agentCount: 50, seed, phase2: true, phase3: true });
     const initialIds = r.agents.map((a) => a.id);
     const alive = initialIds.filter((id) => r.world.agents[id] && r.world.agents[id].alive !== false).length;
-    assert.equal(alive / initialIds.length, 1, 'seed ' + seed + ' 生存率应为 1.00');
+    const rate = alive / initialIds.length;
+    assert.ok(rate >= 0.96, 'seed ' + seed + ' 生存率应 ≥0.96（实测 ' + rate.toFixed(2) + '）');
     seen.scheduleLength.add(r.social.schedule.averageLength);
     seen.replanCount.add(r.social.schedule.totalReplans);
     seen.careerDist.add(JSON.stringify(r.social.careers.distribution));

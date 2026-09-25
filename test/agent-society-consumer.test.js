@@ -112,15 +112,20 @@ test('society: 三效应上任/卸任增减（activeEffects 聚合）', () => {
 });
 
 // ---- 集成：生存红线 + 消融 ----
-test('integration: 默认 50×200×3 生存率 1.00（无回退）', async () => {
+// P3 修订：原先断言「生存率恒为 1.00」。该断言只在**资源过剩**的旧参数下成立
+//（旧参数实测：人均库存长期 3.8、水食顶满、52 人中无一人需求 >0.7），
+// 等于把"从未短缺"当成"求生成功"。默认档压力调到临界之上后，生存率成为真实变量，
+// 故改为「≥0.96」——仍能约束系统不崩溃，但不再奖励资源过剩。
+test('integration: 默认 50×200×3 生存率 ≥0.96（无回退）', async () => {
   resetAll();
   for (const seed of [1, 2, 3]) {
     const r = await loop.run({ ticks: 200, agentCount: 50, seed, phase2: true, phase3: true });
-    assert.equal(aliveRate(r), 1, 'seed ' + seed + ' 生存率 1.00');
+    const rate = aliveRate(r);
+    assert.ok(rate >= 0.96, 'seed ' + seed + ' 生存率应 ≥0.96（实测 ' + rate.toFixed(2) + '）');
   }
 });
 
-test('integration: societyEnabled 消融 — ≥2 项可观测指标差异 + 生存 1.00', async () => {
+test('integration: societyEnabled 消融 — ≥2 项可观测指标差异 + 生存 ≥0.96', async () => {
   resetAll();
   const sum = { severity: 0, health: 0, copings: 0, unlock: 0 };
   const off = { severity: 0, health: 0, copings: 0, unlock: 0 };
@@ -130,13 +135,13 @@ test('integration: societyEnabled 消融 — ≥2 项可观测指标差异 + 生
     sum.health += (disease.list().reduce((s, d) => s + d.health, 0) / Math.max(1, disease.list().length));
     sum.copings += on.phase3.summary.copings;
     sum.unlock += lastUnlockTick();
-    assert.equal(aliveRate(on), 1, 'ON seed ' + seed + ' 生存 1.00');
+    assert.ok(aliveRate(on) >= 0.96, 'ON seed ' + seed + ' 生存应 ≥0.96（实测 ' + aliveRate(on).toFixed(2) + '）');
     const o = await loop.run({ ticks: 200, agentCount: 50, seed, phase2: true, phase3: true, societyEnabled: false });
     off.severity += avgSeverity();
     off.health += (disease.list().reduce((s, d) => s + d.health, 0) / Math.max(1, disease.list().length));
     off.copings += o.phase3.summary.copings;
     off.unlock += lastUnlockTick();
-    assert.equal(aliveRate(o), 1, 'OFF seed ' + seed + ' 生存 1.00');
+    assert.ok(aliveRate(o) >= 0.96, 'OFF seed ' + seed + ' 生存应 ≥0.96（实测 ' + aliveRate(o).toFixed(2) + '）');
   }
   const diffs = [
     ['健康-平均疾病严重度(safety)', sum.severity < off.severity, sum.severity, off.severity],

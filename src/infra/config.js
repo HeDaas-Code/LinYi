@@ -51,7 +51,18 @@ export const DEFAULTS = Object.freeze({
   foragePoolCapacity: 32,
   forageRegen: 0,
   foragePoolPerCapita: 2.0,
-  forageRegenPerCapita: 0.40,
+  // P3：0.40 实测**过剩**——50 人 200 tick 下人均库存长期钉在 3.8 且水食双双顶满 200/200，
+  // 52 人中无一人需求超过 0.7（最高 0.36），采集池容量 136 只用了 28。
+  // 「0 死亡」因此不是求生成功，而是资源过剩；刚性生存门被误判为"死板"的根源也在此。
+  // 临界扫描（50 人 × 200 tick × seed1/42）：再生 0.30 存活 104/104 且门开率 5%；
+  // 再生 0.25 跌到 92/104、门开率 97%、非生存行为占比由 0.54 坍塌到 0.06。
+  // 取临界之上的 0.30，使压力真实存在但仍可持续。
+  forageRegenPerCapita: 0.30,
+  // P3：4 单位/人 × 200 tick 意味着整局无需采集即可存活。降到 2.5，
+  // 使开局储备只够缓冲、必须靠持续采集与制作维持（实测最低人均会触底 0 后回升，
+  // 即真实出现过短缺并靠行为恢复，而非从未短缺）。容量须同步下调，否则等于没降。
+  initialReservePerCapita: 2.5,
+  reserveCapacityPerCapita: 3,
   bankCapital: 500,
   creditRate: 0.01,
   interestMode: 'simple',
@@ -340,6 +351,8 @@ const RULES = {
   forageRegen: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
   foragePoolPerCapita: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
   forageRegenPerCapita: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
+  initialReservePerCapita: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
+  reserveCapacityPerCapita: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
   bankCapital: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
   creditRate: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
   interestMode: (v) => ((v === 'simple' || v === 'compound') ? true : "必须是 'simple' 或 'compound'"),
