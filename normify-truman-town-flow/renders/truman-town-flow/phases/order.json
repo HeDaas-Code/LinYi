@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "truman-town-flow.phases.order",
-  "updated_at": "2026-09-25T17:07:18.871Z",
+  "updated_at": "2026-09-25T17:26:50.177Z",
   "mode": "layers",
   "reading": {
     "zh": "按 tick 内的执行顺序排列。排查「某值在那一刻为什么是那样」时，看它前后相邻的阶段即可知道谁先改。",

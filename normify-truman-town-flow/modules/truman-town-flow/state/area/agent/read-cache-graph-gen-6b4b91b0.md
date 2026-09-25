@@ -6,25 +6,36 @@ name: {zh: "readCacheGraphGen", en: "readCacheGraphGen"}
 description:
   zh: >
       number 类型，声明于 src/agent/traits/tagset/store.js:24。写入方 1 个、读取方 1 个；已纳入复位。
+      
   en: >
       number declared at src/agent/traits/tagset/store.js:24; writers=1, readers=1
+      
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-01-01T00:00:00Z"
+updated_at: "2026-09-25T17:26:31.618Z"
 fingerprint: pending
 source: []
 apis:
   - protocol: rpc
-    path: "read-cache-graph-gen-6b4b91b0:write.ensureReadCacheFresh"
+    path: "read-cache-graph-gen-6b4b91b0:write-ensureReadCacheFresh"
     description:
       zh: >
-          写入方 ensureReadCacheFresh
+          写入方 ensureReadCacheFresh（src/agent/traits/tagset/store.js）
+          
       en: >
           writer ensureReadCacheFresh
+          
   - protocol: rpc
-    path: "read-cache-graph-gen-6b4b91b0:read.ensureReadCacheFresh"
+    path: "read-cache-graph-gen-6b4b91b0:read-ensureReadCacheFresh"
     description:
       zh: >
           读取方 ensureReadCacheFresh
+          
       en: >
           reader ensureReadCacheFresh
+          
+deps:
+  - kind: dataflow
+    to: truman-town-flow.code.agent.traits.tagset.store
+    from_api: "rpc:read-cache-graph-gen-6b4b91b0:read-ensureReadCacheFresh"
+    label: {zh: "读 readCacheGraphGen", en: "read readCacheGraphGen"}
 ---

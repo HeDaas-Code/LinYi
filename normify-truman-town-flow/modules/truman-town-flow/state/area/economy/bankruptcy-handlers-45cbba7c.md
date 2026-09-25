@@ -6,25 +6,36 @@ name: {zh: "bankruptcyHandlers", en: "bankruptcyHandlers"}
 description:
   zh: >
       set 类型，声明于 src/economy/ledger/transaction/validator.js:14。写入方 1 个、读取方 1 个；已纳入复位。
+      
   en: >
       set declared at src/economy/ledger/transaction/validator.js:14; writers=1, readers=1
+      
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-01-01T00:00:00Z"
+updated_at: "2026-09-25T17:26:33.450Z"
 fingerprint: pending
 source: []
 apis:
   - protocol: rpc
-    path: "bankruptcy-handlers-45cbba7c:write.onBankruptcy"
+    path: "bankruptcy-handlers-45cbba7c:write-onBankruptcy"
     description:
       zh: >
-          写入方 onBankruptcy
+          写入方 onBankruptcy（src/economy/ledger/transaction/validator.js）
+          
       en: >
           writer onBankruptcy
+          
   - protocol: rpc
-    path: "bankruptcy-handlers-45cbba7c:read.fireBankruptcy"
+    path: "bankruptcy-handlers-45cbba7c:read-fireBankruptcy"
     description:
       zh: >
           读取方 fireBankruptcy
+          
       en: >
           reader fireBankruptcy
+          
+deps:
+  - kind: dataflow
+    to: truman-town-flow.code.economy.ledger.transaction.validator
+    from_api: "rpc:bankruptcy-handlers-45cbba7c:read-fireBankruptcy"
+    label: {zh: "读 bankruptcyHandlers", en: "read bankruptcyHandlers"}
 ---

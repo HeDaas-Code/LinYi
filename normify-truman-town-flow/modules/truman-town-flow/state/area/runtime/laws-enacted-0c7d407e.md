@@ -6,32 +6,45 @@ name: {zh: "lawsEnacted", en: "lawsEnacted"}
 description:
   zh: >
       number 类型，声明于 src/runtime/orchestrator/_stage3.js:33。写入方 2 个、读取方 1 个；已纳入复位。
+      
   en: >
       number declared at src/runtime/orchestrator/_stage3.js:33; writers=2, readers=1
+      
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-01-01T00:00:00Z"
+updated_at: "2026-09-25T17:26:40.619Z"
 fingerprint: pending
 source: []
 apis:
   - protocol: rpc
-    path: "laws-enacted-0c7d407e:write.seed"
+    path: "laws-enacted-0c7d407e:write-seed"
     description:
       zh: >
-          写入方 seed
+          写入方 seed（src/runtime/orchestrator/_stage3.js）
+          
       en: >
           writer seed
+          
   - protocol: rpc
-    path: "laws-enacted-0c7d407e:write.runPolitics"
+    path: "laws-enacted-0c7d407e:write-runPolitics"
     description:
       zh: >
-          写入方 runPolitics
+          写入方 runPolitics（src/runtime/orchestrator/_stage3.js）
+          
       en: >
           writer runPolitics
+          
   - protocol: rpc
-    path: "laws-enacted-0c7d407e:read.summary"
+    path: "laws-enacted-0c7d407e:read-summary"
     description:
       zh: >
           读取方 summary
+          
       en: >
           reader summary
+          
+deps:
+  - kind: dataflow
+    to: truman-town-flow.code.runtime.orchestrator.stage2
+    from_api: "rpc:laws-enacted-0c7d407e:read-summary"
+    label: {zh: "读 lawsEnacted", en: "read lawsEnacted"}
 ---

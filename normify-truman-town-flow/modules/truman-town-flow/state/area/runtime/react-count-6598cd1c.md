@@ -6,32 +6,45 @@ name: {zh: "reactCount", en: "reactCount"}
 description:
   zh: >
       number 类型，声明于 src/runtime/orchestrator/_stage2.js:110。写入方 2 个、读取方 1 个；已纳入复位。
+      
   en: >
       number declared at src/runtime/orchestrator/_stage2.js:110; writers=2, readers=1
+      
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-01-01T00:00:00Z"
+updated_at: "2026-09-25T17:26:38.768Z"
 fingerprint: pending
 source: []
 apis:
   - protocol: rpc
-    path: "react-count-6598cd1c:write.seed"
+    path: "react-count-6598cd1c:write-seed"
     description:
       zh: >
-          写入方 seed
+          写入方 seed（src/runtime/orchestrator/_stage2.js）
+          
       en: >
           writer seed
+          
   - protocol: rpc
-    path: "react-count-6598cd1c:write.runPlatform"
+    path: "react-count-6598cd1c:write-runPlatform"
     description:
       zh: >
-          写入方 runPlatform
+          写入方 runPlatform（src/runtime/orchestrator/_stage2.js）
+          
       en: >
           writer runPlatform
+          
   - protocol: rpc
-    path: "react-count-6598cd1c:read.summary"
+    path: "react-count-6598cd1c:read-summary"
     description:
       zh: >
           读取方 summary
+          
       en: >
           reader summary
+          
+deps:
+  - kind: dataflow
+    to: truman-town-flow.code.runtime.orchestrator.stage2
+    from_api: "rpc:react-count-6598cd1c:read-summary"
+    label: {zh: "读 reactCount", en: "read reactCount"}
 ---

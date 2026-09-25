@@ -14,10 +14,10 @@ fingerprint: pending
 source: []
 apis:
   - protocol: rpc
-    path: "seeded-228e1d9c:write.seed"
+    path: "seeded-228e1d9c:write-seed"
     description:
       zh: >
-          写入方 seed
+          写入方 seed（src/infra/rng.js）
       en: >
           writer seed
 ---

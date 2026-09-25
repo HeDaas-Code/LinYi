@@ -6,53 +6,84 @@ name: {zh: "queue", en: "queue"}
 description:
   zh: >
       map 类型，声明于 src/infra/events/retry.js:20。写入方 2 个、读取方 4 个；已纳入复位。
+      
   en: >
       map declared at src/infra/events/retry.js:20; writers=2, readers=4
+      
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-01-01T00:00:00Z"
+updated_at: "2026-09-25T17:26:35.160Z"
 fingerprint: pending
 source: []
 apis:
   - protocol: rpc
-    path: "queue-d30bf235:write.enqueue"
+    path: "queue-d30bf235:write-enqueue"
     description:
       zh: >
-          写入方 enqueue
+          写入方 enqueue（src/infra/events/retry.js）
+          
       en: >
           writer enqueue
+          
   - protocol: rpc
-    path: "queue-d30bf235:write.run"
+    path: "queue-d30bf235:write-run"
     description:
       zh: >
-          写入方 run
+          写入方 run（src/infra/events/retry.js）
+          
       en: >
           writer run
+          
   - protocol: rpc
-    path: "queue-d30bf235:read.enqueue"
+    path: "queue-d30bf235:read-enqueue"
     description:
       zh: >
           读取方 enqueue
+          
       en: >
           reader enqueue
+          
   - protocol: rpc
-    path: "queue-d30bf235:read.run"
+    path: "queue-d30bf235:read-run"
     description:
       zh: >
           读取方 run
+          
       en: >
           reader run
+          
   - protocol: rpc
-    path: "queue-d30bf235:read.pending"
+    path: "queue-d30bf235:read-pending"
     description:
       zh: >
           读取方 pending
+          
       en: >
           reader pending
+          
   - protocol: rpc
-    path: "queue-d30bf235:read.getStats"
+    path: "queue-d30bf235:read-getStats"
     description:
       zh: >
           读取方 getStats
+          
       en: >
           reader getStats
+          
+deps:
+  - kind: dataflow
+    to: truman-town-flow.code.infra.events.retry
+    from_api: "rpc:queue-d30bf235:read-enqueue"
+    label: {zh: "读 queue", en: "read queue"}
+  - kind: dataflow
+    to: truman-town-flow.code.infra.events.retry
+    from_api: "rpc:queue-d30bf235:read-run"
+    label: {zh: "读 queue", en: "read queue"}
+  - kind: dataflow
+    to: truman-town-flow.code.civilization.tech.research
+    from_api: "rpc:queue-d30bf235:read-pending"
+    label: {zh: "读 queue", en: "read queue"}
+  - kind: dataflow
+    to: truman-town-flow.code.ai.laya
+    from_api: "rpc:queue-d30bf235:read-getStats"
+    label: {zh: "读 queue", en: "read queue"}
 ---

@@ -6,39 +6,54 @@ name: {zh: "tradeCount", en: "tradeCount"}
 description:
   zh: >
       number 类型，声明于 src/runtime/orchestrator/_stage2.js:80。写入方 3 个、读取方 1 个；已纳入复位。
+      
   en: >
       number declared at src/runtime/orchestrator/_stage2.js:80; writers=3, readers=1
+      
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-01-01T00:00:00Z"
+updated_at: "2026-09-25T17:26:38.769Z"
 fingerprint: pending
 source: []
 apis:
   - protocol: rpc
-    path: "trade-count-d66a257f:write.seed"
+    path: "trade-count-d66a257f:write-seed"
     description:
       zh: >
-          写入方 seed
+          写入方 seed（src/runtime/orchestrator/_stage2.js）
+          
       en: >
           writer seed
+          
   - protocol: rpc
-    path: "trade-count-d66a257f:write.runMarket"
+    path: "trade-count-d66a257f:write-runMarket"
     description:
       zh: >
-          写入方 runMarket
+          写入方 runMarket（src/runtime/orchestrator/_stage2.js）
+          
       en: >
           writer runMarket
+          
   - protocol: rpc
-    path: "trade-count-d66a257f:write.runIndustry"
+    path: "trade-count-d66a257f:write-runIndustry"
     description:
       zh: >
-          写入方 runIndustry
+          写入方 runIndustry（src/runtime/orchestrator/_stage2.js）
+          
       en: >
           writer runIndustry
+          
   - protocol: rpc
-    path: "trade-count-d66a257f:read.summary"
+    path: "trade-count-d66a257f:read-summary"
     description:
       zh: >
           读取方 summary
+          
       en: >
           reader summary
+          
+deps:
+  - kind: dataflow
+    to: truman-town-flow.code.runtime.orchestrator.stage2
+    from_api: "rpc:trade-count-d66a257f:read-summary"
+    label: {zh: "读 tradeCount", en: "read tradeCount"}
 ---

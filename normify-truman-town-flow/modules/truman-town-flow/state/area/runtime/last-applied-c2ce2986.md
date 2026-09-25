@@ -14,10 +14,10 @@ fingerprint: pending
 source: []
 apis:
   - protocol: rpc
-    path: "last-applied-c2ce2986:write.actions"
+    path: "last-applied-c2ce2986:write-actions"
     description:
       zh: >
-          写入方 actions
+          写入方 actions（src/runtime/orchestrator/dispatch.js）
       en: >
           writer actions
 ---

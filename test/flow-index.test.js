@@ -77,6 +77,32 @@ test('flow-index: 图节点的生产/消费关系可解析，孤立类型须受�
     + orphan.map((o) => o.type).join(', '));
 });
 
+test('flow-to-normify: 生成的数据流转树必须有真实连线（禁止零边）', () => {
+  const treePath = ROOT + '/normify-truman-town-flow/tree.json';
+  const tree = JSON.parse(readFileSync(treePath, 'utf8'));
+  assert.ok(tree.edges.length > 200,
+    '数据流转树必须有连线；实测曾产出 0 条边（只有清单没有流转），边数=' + tree.edges.length);
+
+  // 每条边都必须锚定到具体 API —— 否则箭头只能浮在框边，看不出「谁调用了谁的哪个函数」。
+  const anchored = tree.edges.filter((e) => e.from_api || e.to_api).length;
+  assert.equal(anchored, tree.edges.length, (tree.edges.length - anchored) + ' 条边未锚定到 API');
+
+  // 流转必须经「代码模块」中转：写者文件 →(写) 状态 →(读) 读者文件。
+  // 若把读者也建成状态到状态的边，语义就错了（实测 foragePool 的读者被误归到另一状态）。
+  const CODE = 'truman-town-flow.code.';
+  const writeEdges = tree.edges.filter((e) => e.from.startsWith(CODE) && e.to.includes('.state.area.'));
+  const readEdges = tree.edges.filter((e) => e.from.includes('.state.area.') && e.to.startsWith(CODE));
+  assert.ok(writeEdges.length > 50, '写边过少=' + writeEdges.length);
+  assert.ok(readEdges.length > 50, '读边过少=' + readEdges.length);
+
+  // 跨文件流转的数量是这张图的核心价值：同文件读写不产生新信息。
+  let cross = 0;
+  for (const e of writeEdges) {
+    if (tree.edges.some((x) => x.from === e.to && x.to.startsWith(CODE) && x.to !== e.from)) cross += 1;
+  }
+  assert.ok(cross > 30, '跨文件流转过少=' + cross + '，图退化成了自环集合');
+});
+
 test('flow-index: 关键机制与状态机在索引中可查', () => {
   const idx = JSON.parse(readFileSync(INDEX_PATH, 'utf8'));
   assert.ok(idx.stepPhases.length >= 10, '主循环阶段应被索引，实际 ' + idx.stepPhases.length);

@@ -6,46 +6,75 @@ name: {zh: "businessIds", en: "businessIds"}
 description:
   zh: >
       array 类型，声明于 src/runtime/orchestrator/_stage2.js:88。写入方 1 个、读取方 4 个；已纳入复位。
+      
   en: >
       array declared at src/runtime/orchestrator/_stage2.js:88; writers=1, readers=4
+      
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-01-01T00:00:00Z"
+updated_at: "2026-09-25T17:26:36.897Z"
 fingerprint: pending
 source: []
 apis:
   - protocol: rpc
-    path: "business-ids-89b39352:write.seed"
+    path: "business-ids-89b39352:write-seed"
     description:
       zh: >
-          写入方 seed
+          写入方 seed（src/runtime/orchestrator/_stage2.js）
+          
       en: >
           writer seed
+          
   - protocol: rpc
-    path: "business-ids-89b39352:read.seed"
+    path: "business-ids-89b39352:read-seed"
     description:
       zh: >
           读取方 seed
+          
       en: >
           reader seed
+          
   - protocol: rpc
-    path: "business-ids-89b39352:read.runIndustry"
+    path: "business-ids-89b39352:read-runIndustry"
     description:
       zh: >
           读取方 runIndustry
+          
       en: >
           reader runIndustry
+          
   - protocol: rpc
-    path: "business-ids-89b39352:read.candidateStateFor"
+    path: "business-ids-89b39352:read-candidateStateFor"
     description:
       zh: >
           读取方 candidateStateFor
+          
       en: >
           reader candidateStateFor
+          
   - protocol: rpc
-    path: "business-ids-89b39352:read.performAgentAction"
+    path: "business-ids-89b39352:read-performAgentAction"
     description:
       zh: >
           读取方 performAgentAction
+          
       en: >
           reader performAgentAction
+          
+deps:
+  - kind: dataflow
+    to: truman-town-flow.code.infra.rng
+    from_api: "rpc:business-ids-89b39352:read-seed"
+    label: {zh: "读 businessIds", en: "read businessIds"}
+  - kind: dataflow
+    to: truman-town-flow.code.runtime.orchestrator.stage2
+    from_api: "rpc:business-ids-89b39352:read-runIndustry"
+    label: {zh: "读 businessIds", en: "read businessIds"}
+  - kind: dataflow
+    to: truman-town-flow.code.runtime.orchestrator.stage2
+    from_api: "rpc:business-ids-89b39352:read-candidateStateFor"
+    label: {zh: "读 businessIds", en: "read businessIds"}
+  - kind: dataflow
+    to: truman-town-flow.code.runtime.orchestrator.stage2
+    from_api: "rpc:business-ids-89b39352:read-performAgentAction"
+    label: {zh: "读 businessIds", en: "read businessIds"}
 ---

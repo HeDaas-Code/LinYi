@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "truman-town-flow.state.area",
-  "updated_at": "2026-09-25T17:07:18.806Z",
+  "updated_at": "2026-09-25T17:26:50.078Z",
   "mode": "grid",
   "reading": {
     "zh": "按顶层目录归组。先看【运行时】与【智能体】——主循环与居民状态是 bug 最常出没处；每个领域卡片上标注了「只写不读」与「未纳入复位」的数量，非零即值得点进去。",

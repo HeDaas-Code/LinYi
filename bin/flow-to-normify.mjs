@@ -66,6 +66,21 @@ await call('normify_project_init', {
 });
 
 const modules = [];
+/** 状态单元 id → 其模块 id，供后续生成跨模块连线时反查。 */
+const STATE_MODULE_BY_KEY = new Map();
+/** 文件路径 → 该文件里定义的状态模块 id 列表（函数名反查模块用）。 */
+const MODULES_BY_FILE = new Map();
+/** 已登记的模块 id 集合与索引（连线时校验端点存在）。 */
+const moduleIds = new Set();
+const moduleById = new Map();
+/** 全部模块登记完成后填充（连线逻辑在其后执行）。 */
+function indexModules() {
+  for (const m of modules) {
+    if (moduleById.has(m.id)) throw new Error('模块 id 重复: ' + m.id);
+    moduleIds.add(m.id);
+    moduleById.set(m.id, m);
+  }
+}
 // 根
 modules.push({ id: 'truman-town-flow', parent: null, name: b('楚门小镇数据流转索引', 'Truman Town Data-Flow Index'), desc: b('数据流转总索引 / Complete data-flow index', 'Complete data-flow index'), apis: [], deps: [] });
 
@@ -98,6 +113,9 @@ for (const [area, list] of [...byArea.entries()].sort((a, c) => a[0].localeCompa
   });
   for (const s of list.slice().sort((a, c) => a.id.localeCompare(c.id))) {
     const sid = areaId + '.' + seg(s.name) + '-' + uid8(s.id);
+    STATE_MODULE_BY_KEY.set(s.id, sid);
+    if (!MODULES_BY_FILE.has(s.file)) MODULES_BY_FILE.set(s.file, []);
+    MODULES_BY_FILE.get(s.file).push({ key: s.id, id: sid, name: s.name });
     modules.push({
       id: sid, parent: areaId,
       name: b(s.name, s.name),
@@ -107,9 +125,11 @@ for (const [area, list] of [...byArea.entries()].sort((a, c) => a[0].localeCompa
         + (s.resetCovered ? '已纳入复位。' : '**未纳入复位**（跨 run 可能残留）。'),
         s.kind + ' declared at ' + s.file + ':' + s.line + '; writers=' + s.writers.length + ', readers=' + s.readers.length,
       ),
+      // API 键即「写入口/读入口」，与下面 deps 的 from_api/to_api 精确对应，
+      // 箭头才能钉在框内的具体那一行而不是浮在框边。
       apis: [
-        ...s.writers.slice(0, 8).map((w) => ({ protocol: 'rpc', path: 'write.' + w, description: b('写入方 ' + w, 'writer ' + w) })),
-        ...s.readers.slice(0, 8).map((r) => ({ protocol: 'rpc', path: 'read.' + r, description: b('读取方 ' + r, 'reader ' + r) })),
+        ...s.writers.slice(0, 8).map((w) => ({ protocol: 'rpc', path: 'write-' + w, description: b('写入方 ' + w + '（' + s.file + '）', 'writer ' + w) })),
+        ...s.readers.slice(0, 8).map((r) => ({ protocol: 'rpc', path: 'read-' + r, description: b('读取方 ' + r, 'reader ' + r) })),
       ],
       deps: [],
     });
@@ -206,6 +226,106 @@ const clamp = (v) => ({
  * 容器模块（有子模块，含根）禁止 apis——Normify 规定 API 只定义在叶子上。
  * 因此先算出哪些 id 是父节点，再决定是否下发 apis。
  */
+indexModules();
+
+// ============ 连线：把「谁写谁读」变成真正的箭头 ============
+// 第一版把「读者」也建成状态模块之间的边，语义是错的：
+// 读者不是一个状态变量，而是**函数所属的代码模块**。
+// 实测后果：foragePool 的 7 个读者全在 loop.js，却都被画成指向 alive-pop-generation，
+// 因为反查退化成「同文件第一个状态模块」。
+//
+// 正确模型是四层三跳：
+//   写者代码模块 --写--> 状态单元 --读--> 读者代码模块
+// 其中「写者/读者代码模块」是新建的一层（每个有状态的文件一个节点），
+// 由函数名反查得到：函数名 → 声明它的文件 → 该文件对应的代码模块。
+// 于是 loop.js 只出现一次，foragePool 的读边全部汇聚到它，语义正确。
+// Normify 要求 parent === id 去掉最后一段，因此中间层级必须逐个补齐，
+// 不能直接把 src/a/b/c.js 挂到根下（实测报 structure/parent-mismatch）。
+const codeModuleOfFile = new Map();
+function ensureCodeModule(file) {
+  if (codeModuleOfFile.has(file)) return codeModuleOfFile.get(file);
+  const parts = file.replace(/^src\//, '').replace(/[.]js$/, '').split('/').map(seg);
+  let pid = 'truman-town-flow.code';
+  if (!moduleIds.has(pid)) {
+    modules.push({
+      id: pid, parent: 'truman-town-flow',
+      name: b('代码模块', 'Code Modules'),
+      desc: b('数据流转的端点：每个有状态的文件一个节点。出边=它写的状态，入边=它读的状态。',
+        'Data-flow endpoints: one node per file that holds state.'),
+      apis: [], deps: [],
+    });
+    moduleIds.add(pid); moduleById.set(pid, modules[modules.length - 1]);
+  }
+  for (let i = 0; i < parts.length; i += 1) {
+    const cid = pid + '.' + parts[i];
+    const isLeaf = i === parts.length - 1;
+    if (!moduleIds.has(cid)) {
+      modules.push({
+        id: cid, parent: pid,
+        name: b(isLeaf ? file.replace(/^src\//, '') : parts[i],
+          isLeaf ? file.replace(/^src\//, '') : parts[i]),
+        desc: isLeaf
+          ? b('代码模块 ' + file + '。出边=它写的状态，入边=它读的状态；箭头锚定到具体写/读函数。',
+              'Code module ' + file + ' as a data-flow endpoint.')
+          : b('代码模块目录 ' + parts.slice(0, i + 1).join('/') + '。',
+              'Code module directory.'),
+        apis: [], deps: [],
+      });
+      moduleIds.add(cid); moduleById.set(cid, modules[modules.length - 1]);
+    }
+    pid = cid;
+  }
+  codeModuleOfFile.set(file, pid);
+  return pid;
+}
+for (const s of idx.stores) ensureCodeModule(s.file);
+
+// 函数名 → 声明它的文件（由 flow-index 的 stores/writers/readers 汇总）。
+const fileOfFunction = new Map();
+for (const s of idx.stores) {
+  for (const fn of [...s.writers, ...s.readers]) {
+    if (!fileOfFunction.has(fn)) fileOfFunction.set(fn, s.file);
+  }
+}
+
+const edgeSet = new Set();
+function link(fromId, toId, fromApi, toApi, zh, en) {
+  if (fromId === undefined || toId === undefined || fromId === toId) return;
+  if (!moduleIds.has(fromId) || !moduleIds.has(toId)) return;
+  const k = fromId + '#' + toId + '#' + (fromApi || '') + '#' + (toApi || '');
+  if (edgeSet.has(k)) return;
+  edgeSet.add(k);
+  moduleById.get(fromId).deps.push({
+    kind: 'dataflow', to: toId,
+    ...(fromApi === null ? {} : { from_api: fromApi }),
+    ...(toApi === null ? {} : { to_api: toApi }),
+    label: { zh: zh.slice(0, 30), en: en.slice(0, 30) },
+  });
+}
+
+let writeEdges = 0;
+let readEdges = 0;
+for (const s of idx.stores) {
+  const stateId = STATE_MODULE_BY_KEY.get(s.id);
+  if (stateId === undefined) continue;
+  // label 受 30 字符限制：状态名先截断再拼。
+  const sn = s.name.length > 18 ? s.name.slice(0, 18) : s.name;
+  for (const w of s.writers) {
+    const cid = ensureCodeModule(fileOfFunction.get(w));
+    if (cid === undefined) continue;
+    link(cid, stateId, null, apiKeyOf(stateId, 'write-' + w),
+      '写 ' + sn, 'write ' + sn);
+    writeEdges += 1;
+  }
+  for (const r of s.readers) {
+    const cid = ensureCodeModule(fileOfFunction.get(r));
+    if (cid === undefined) continue;
+    link(stateId, cid, apiKeyOf(stateId, 'read-' + r), null,
+      '读 ' + sn, 'read ' + sn);
+    readEdges += 1;
+  }
+}
+
 const parentIds = new Set(modules.filter((m) => m.parent !== null).map((m) => m.parent));
 
 /**
@@ -213,6 +333,11 @@ const parentIds = new Set(modules.filter((m) => m.parent !== null).map((m) => m.
  * （同一个 loop.js 读很多状态）。把模块 id 折进 path 前缀即可保证唯一，
  * 同时仍保留可读的函数名，人看图时知道是哪个文件的哪个函数。
  */
+/** 模块内 API 的最终键名——连线两端都必须用它，否则 to_api 校验不过。 */
+function apiKeyOf(moduleId, path) {
+  return 'rpc:' + seg(moduleId.split('.').slice(-1)[0]) + ':' + path;
+}
+
 function keyedApis(m) {
   const tag = m.id.split('.').slice(-1)[0];
   return m.apis.map((a) => ({
@@ -222,40 +347,63 @@ function keyedApis(m) {
   }));
 }
 
-const frontmatter = (m) => ({
+/**
+ * 写盘必须分两轮：
+ *   第一轮只建模块（deps 为空）——矢量的目标模块可能还没落盘，
+ *     同批校验会报 dep/target-missing（实测如此）；
+ *   第二轮再用 patch 补 deps——此时全部端点都已存在。
+ * 代价是多一轮写入，换来的是「箭头永远指向真实存在的模块」。
+ */
+const frontmatter = (m, withDeps) => ({
   uid: uid8(m.id), id: m.id, parent: m.parent,
   name: m.name, description: clamp(m.desc),
   source: [], revision: '0'.repeat(40), updated_at: NOW,
   fingerprint: 'pending',
   ...(parentIds.has(m.id) ? {} : { apis: keyedApis(m) }),
-  deps: m.deps,
+  deps: withDeps ? m.deps : [],
 });
-for (let i = 0; i < modules.length; i += 40) {
-  const batch = modules.slice(i, i + 40).map((m) => ({ frontmatter: frontmatter(m) }));
-  const r = await call('normify_module_batch', { items: batch, mode: 'upsert' });
-  if (r.ok === false) {
-    console.error('批次失败 @' + i + ': ' + JSON.stringify(r.errors || r).slice(0, 600));
-    process.exit(1);
+async function writeAll(withDeps) {
+  const items = modules
+    .filter((m) => withDeps ? m.deps.length > 0 : true)
+    .map((m) => withDeps
+      ? { patch: { id: m.id, patch: { deps: m.deps } } }
+      : { frontmatter: frontmatter(m, false) });
+  const mode = withDeps ? 'patch' : 'upsert';
+  const size = withDeps ? 20 : 40;
+  for (let i = 0; i < items.length; i += size) {
+    const r = await call('normify_module_batch', { items: items.slice(i, i + size), mode });
+    if (r.ok === false) {
+      console.error((withDeps ? '补 deps 失败 @' : '建模块失败 @') + i + ': '
+        + JSON.stringify(r.errors || r).slice(0, 500));
+      process.exit(1);
+    }
   }
 }
+await writeAll(false);
+await writeAll(true);
 // ---- 渲染层：让每一层的图可读（阅读导语 + 分组 + 顺序）----
 const LAYOUTS = [
   {
     id: 'truman-town-flow',
     mode: 'groups',
     reading: {
-      zh: '排查一个非预期数据时按此顺序走：先看【状态单元】确认该值是谁写的、谁读的；再看【主循环阶段】确认它在 tick 的哪一刻被改；若涉及关系/事件则看【图节点类型】；若涉及生命/疾病/企业/文明这类阶段性状态，看【关键状态机】；最后看【诊断】里是否已标注可疑项。',
-      en: 'Debugging an unexpected value: check State Units (who writes/reads), then Main-Loop Phases (when in the tick), then Graph Node Types, State Machines, and Diagnostics.',
+      zh: '排查非预期数据时按此顺序：①【代码模块】找写它的文件（出边是它写的状态）；②【状态单元】看这个值被谁写、被谁读，箭头两端都锚定到具体函数；③【主循环阶段】确认它在 tick 的哪一刻被改；④【关键状态机】确认当前处于哪个状态、怎么迁移的；⑤【诊断】核对是否已知项。注意：状态单元之间**没有**直接连线，流转一律经【代码模块】中转——写者文件 →(写) 状态 →(读) 读者文件，这样才看得出跨文件的真实依赖。',
+      en: 'Debug order: Code Modules (which file writes it) then State Units (who writes/reads, anchored to functions), Main-Loop Phases (when in the tick), State Machines, Diagnostics.',
     },
     groups: [
-      { id: 'g-facts',
-        title: { zh: '事实：数据实际怎么流', en: 'Facts: how data actually flows' },
-        children: ['truman-town-flow.state', 'truman-town-flow.graph', 'truman-town-flow.phases', 'truman-town-flow.machines'] },
-      { id: 'g-diag',
-        title: { zh: '诊断：静态分析发现的可疑项', en: 'Diagnostics: static findings' },
-        children: ['truman-town-flow.diagnostics'] },
+      { id: 'g-code', title: { zh: '端点：数据从哪个文件流出/流入', en: 'Endpoints: code modules' }, children: ['truman-town-flow.code'] },
+      { id: 'g-facts', title: { zh: '事实：状态与读写方', en: 'Facts: state and accessors' }, children: ['truman-town-flow.state', 'truman-town-flow.graph', 'truman-town-flow.phases', 'truman-town-flow.machines'] },
+      { id: 'g-diag', title: { zh: '诊断：静态发现', en: 'Diagnostics' }, children: ['truman-town-flow.diagnostics'] },
     ],
-    order: ['truman-town-flow.state', 'truman-town-flow.phases', 'truman-town-flow.graph', 'truman-town-flow.machines', 'truman-town-flow.diagnostics'],
+    order: ['truman-town-flow.code', 'truman-town-flow.state', 'truman-town-flow.phases', 'truman-town-flow.graph', 'truman-town-flow.machines', 'truman-town-flow.diagnostics'],
+  },
+  {
+    id: 'truman-town-flow.code',
+    mode: 'layers',
+    reading: {
+      zh: '按源码目录组织的代码模块。点开任一文件：出边是它写入的状态单元（锚定到具体写函数），入边是它读取的状态单元。跨文件的数据流依赖都在这一层显现。',
+      en: 'Code modules by source directory. Out-edges = state written; in-edges = state read.',
+    },
   },
   {
     id: 'truman-town-flow.state.area',
@@ -285,6 +433,25 @@ for (const L of LAYOUTS) {
 const rb = await call('normify_build', { repoRoot: ROOT });
 const rr = await call('normify_render', {});
 console.log('layout+build+render ok=' + rb.ok + '/' + rr.ok);
+// ---- 架构规则：数据流转图**天然有环**，必须替换默认的 core-acyclic ----
+// A 模块写状态 X、B 模块读 X；B 又写状态 Y、A 读 Y —— 这就是环，
+// 但它描述的正是「两个模块互相影响」这一事实，不是设计缺陷。
+// truman-town 树描述调用依赖，环是 defect；本树描述数据流转，环是**常态**。
+// 因此这里安装一份只保留「结构正确性」的规则集，去掉 acyclic。
+const policy = await call('normify_policy_get', {});
+if (policy.ok !== false) {
+  await call('normify_policy_upsert', {
+    rules: [
+      {
+        id: 'flow-no-deprecated-target',
+        type: 'forbid-dependency',
+        severity: 'warning',
+        from: ['**'], to: ['**'], toState: 'deprecated',
+      },
+    ],
+  });
+}
+
 const v = await call('normify_validate', { repoRoot: ROOT });
 console.log('模块 ' + modules.length + ' / validate ok=' + v.ok
   + ' errors=' + (v.errors || []).length + ' warnings=' + (v.warnings || []).length);

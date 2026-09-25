@@ -6,25 +6,36 @@ name: {zh: "lastGeneration", en: "lastGeneration"}
 description:
   zh: >
       number 类型，声明于 src/social/platform/posts.js:35。写入方 1 个、读取方 1 个；**未纳入复位**（跨 run 可能残留）。
+      
   en: >
       number declared at src/social/platform/posts.js:35; writers=1, readers=1
+      
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-01-01T00:00:00Z"
+updated_at: "2026-09-25T17:26:44.509Z"
 fingerprint: pending
 source: []
 apis:
   - protocol: rpc
-    path: "last-generation-b243beda:write.ensureFresh"
+    path: "last-generation-b243beda:write-ensureFresh"
     description:
       zh: >
-          写入方 ensureFresh
+          写入方 ensureFresh（src/social/platform/posts.js）
+          
       en: >
           writer ensureFresh
+          
   - protocol: rpc
-    path: "last-generation-b243beda:read.ensureFresh"
+    path: "last-generation-b243beda:read-ensureFresh"
     description:
       zh: >
           读取方 ensureFresh
+          
       en: >
           reader ensureFresh
+          
+deps:
+  - kind: dataflow
+    to: truman-town-flow.code.agent.memory.episodic.store
+    from_api: "rpc:last-generation-b243beda:read-ensureFresh"
+    label: {zh: "读 lastGeneration", en: "read lastGeneration"}
 ---

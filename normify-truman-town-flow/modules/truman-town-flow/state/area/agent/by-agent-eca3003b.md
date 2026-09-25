@@ -6,46 +6,71 @@ name: {zh: "byAgent", en: "byAgent"}
 description:
   zh: >
       map 类型，声明于 src/agent/memory/semantic.js:21。写入方 2 个、读取方 3 个；已纳入复位。
+      
   en: >
       map declared at src/agent/memory/semantic.js:21; writers=2, readers=3
+      
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-01-01T00:00:00Z"
+updated_at: "2026-09-25T17:26:31.618Z"
 fingerprint: pending
 source: []
 apis:
   - protocol: rpc
-    path: "by-agent-eca3003b:write.ensureFresh"
+    path: "by-agent-eca3003b:write-ensureFresh"
     description:
       zh: >
-          写入方 ensureFresh
+          写入方 ensureFresh（src/agent/memory/semantic.js）
+          
       en: >
           writer ensureFresh
+          
   - protocol: rpc
-    path: "by-agent-eca3003b:write.store"
+    path: "by-agent-eca3003b:write-store"
     description:
       zh: >
-          写入方 store
+          写入方 store（src/agent/memory/semantic.js）
+          
       en: >
           writer store
+          
   - protocol: rpc
-    path: "by-agent-eca3003b:read.store"
+    path: "by-agent-eca3003b:read-store"
     description:
       zh: >
           读取方 store
+          
       en: >
           reader store
+          
   - protocol: rpc
-    path: "by-agent-eca3003b:read.list"
+    path: "by-agent-eca3003b:read-list"
     description:
       zh: >
           读取方 list
+          
       en: >
           reader list
+          
   - protocol: rpc
-    path: "by-agent-eca3003b:read.recall"
+    path: "by-agent-eca3003b:read-recall"
     description:
       zh: >
           读取方 recall
+          
       en: >
           reader recall
+          
+deps:
+  - kind: dataflow
+    to: truman-town-flow.code.agent.memory.semantic
+    from_api: "rpc:by-agent-eca3003b:read-store"
+    label: {zh: "读 byAgent", en: "read byAgent"}
+  - kind: dataflow
+    to: truman-town-flow.code.agent.memory.episodic.store
+    from_api: "rpc:by-agent-eca3003b:read-list"
+    label: {zh: "读 byAgent", en: "read byAgent"}
+  - kind: dataflow
+    to: truman-town-flow.code.agent.memory.semantic
+    from_api: "rpc:by-agent-eca3003b:read-recall"
+    label: {zh: "读 byAgent", en: "read byAgent"}
 ---

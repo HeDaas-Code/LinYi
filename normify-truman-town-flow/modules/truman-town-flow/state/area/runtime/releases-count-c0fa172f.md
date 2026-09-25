@@ -6,32 +6,45 @@ name: {zh: "releasesCount", en: "releasesCount"}
 description:
   zh: >
       number 类型，声明于 src/runtime/orchestrator/_stage2.js:86。写入方 2 个、读取方 1 个；已纳入复位。
+      
   en: >
       number declared at src/runtime/orchestrator/_stage2.js:86; writers=2, readers=1
+      
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-01-01T00:00:00Z"
+updated_at: "2026-09-25T17:26:38.768Z"
 fingerprint: pending
 source: []
 apis:
   - protocol: rpc
-    path: "releases-count-c0fa172f:write.seed"
+    path: "releases-count-c0fa172f:write-seed"
     description:
       zh: >
-          写入方 seed
+          写入方 seed（src/runtime/orchestrator/_stage2.js）
+          
       en: >
           writer seed
+          
   - protocol: rpc
-    path: "releases-count-c0fa172f:write.runHealth"
+    path: "releases-count-c0fa172f:write-runHealth"
     description:
       zh: >
-          写入方 runHealth
+          写入方 runHealth（src/runtime/orchestrator/_stage2.js）
+          
       en: >
           writer runHealth
+          
   - protocol: rpc
-    path: "releases-count-c0fa172f:read.summary"
+    path: "releases-count-c0fa172f:read-summary"
     description:
       zh: >
           读取方 summary
+          
       en: >
           reader summary
+          
+deps:
+  - kind: dataflow
+    to: truman-town-flow.code.runtime.orchestrator.stage2
+    from_api: "rpc:releases-count-c0fa172f:read-summary"
+    label: {zh: "读 releasesCount", en: "read releasesCount"}
 ---
