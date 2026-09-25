@@ -2,15 +2,16 @@
 uid: "55312917"
 id: truman-town.agent.decision
 parent: truman-town.agent
-state: planned
 name: {zh: "决策器实现", en: "Decision Implementation"}
 description:
   zh: >
       综合动机、预想池评分与记忆，选择最终行动并给出解释。
+      
   en: >
       Chooses final actions from motivations, anticipation scores and memory, with explanations.
+      
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T05:27:53Z"
+updated_at: "2026-09-25T08:50:35.490Z"
 fingerprint: pending
 source: []
 deps:

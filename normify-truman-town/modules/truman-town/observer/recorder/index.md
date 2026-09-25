@@ -2,15 +2,16 @@
 uid: 1c7af2d5
 id: truman-town.observer.recorder
 parent: truman-town.observer
-state: planned
 name: {zh: "行为记录器实现", en: "Recorder Implementation"}
 description:
   zh: >
       把智能体的决策、行为与事件逐条写入不可变日志。
+      
   en: >
       Appends agent decisions, actions and events to an immutable log.
+      
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T05:27:53Z"
+updated_at: "2026-09-25T08:50:35.490Z"
 fingerprint: pending
 source: []
 deps:
