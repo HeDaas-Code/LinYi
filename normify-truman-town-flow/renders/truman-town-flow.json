@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "id": "truman-town-flow",
+  "updated_at": "2026-09-25T17:07:18.738Z",
+  "mode": "groups",
+  "reading": {
+    "zh": "排查一个非预期数据时按此顺序走：先看【状态单元】确认该值是谁写的、谁读的；再看【主循环阶段】确认它在 tick 的哪一刻被改；若涉及关系/事件则看【图节点类型】；若涉及生命/疾病/企业/文明这类阶段性状态，看【关键状态机】；最后看【诊断】里是否已标注可疑项。",
+    "en": "Debugging an unexpected value: check State Units (who writes/reads), then Main-Loop Phases (when in the tick), then Graph Node Types, State Machines, and Diagnostics."
+  },
+  "order": [
+    "truman-town-flow.state",
+    "truman-town-flow.phases",
+    "truman-town-flow.graph",
+    "truman-town-flow.machines",
+    "truman-town-flow.diagnostics"
+  ],
+  "groups": [
+    {
+      "id": "g-facts",
+      "title": {
+        "zh": "事实：数据实际怎么流",
+        "en": "Facts: how data actually flows"
+      },
+      "children": [
+        "truman-town-flow.state",
+        "truman-town-flow.graph",
+        "truman-town-flow.phases",
+        "truman-town-flow.machines"
+      ]
+    },
+    {
+      "id": "g-diag",
+      "title": {
+        "zh": "诊断：静态分析发现的可疑项",
+        "en": "Diagnostics: static findings"
+      },
+      "children": [
+        "truman-town-flow.diagnostics"
+      ]
+    }
+  ]
+}

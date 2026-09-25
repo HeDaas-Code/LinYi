@@ -1,0 +1,6269 @@
+{
+  "schemaVersion": 1,
+  "generatedFrom": "bin/flow-index.mjs",
+  "stats": {
+    "files": 192,
+    "modules": 49,
+    "stores": 153,
+    "graphTypes": 43,
+    "worldKeys": 11,
+    "filesWithReset": 107,
+    "byKind": {
+      "set": 8,
+      "map": 34,
+      "number": 64,
+      "expr": 7,
+      "string": 4,
+      "null": 16,
+      "array": 8,
+      "flag": 10,
+      "object": 2
+    },
+    "diagnostics": {
+      "error": 2,
+      "warning": 9
+    }
+  },
+  "stores": [
+    {
+      "id": "agent.crafting.recipe.KINDS",
+      "module": "agent.crafting.recipe",
+      "file": "src/agent/crafting/recipe.js",
+      "line": 10,
+      "name": "KINDS",
+      "keyword": "const",
+      "kind": "set",
+      "init": "new Set(['item', 'building', 'book'])",
+      "resetCovered": false,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [],
+      "readers": [
+        "define"
+      ],
+      "writeCount": 0,
+      "readCount": 1,
+      "exportedTouchers": [
+        "define"
+      ],
+      "exported": false,
+      "rawLine": "const KINDS = new Set(['item', 'building', 'book']);"
+    },
+    {
+      "id": "agent.crafting.recipe.recipes",
+      "module": "agent.crafting.recipe",
+      "file": "src/agent/crafting/recipe.js",
+      "line": 13,
+      "name": "recipes",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "define"
+      ],
+      "readers": [
+        "query",
+        "learn"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "define",
+        "query",
+        "learn",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const recipes = new Map();"
+    },
+    {
+      "id": "agent.crafting.recipe.learned",
+      "module": "agent.crafting.recipe",
+      "file": "src/agent/crafting/recipe.js",
+      "line": 15,
+      "name": "learned",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "learn"
+      ],
+      "readers": [
+        "learn",
+        "isLearned"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "learn",
+        "isLearned",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const learned = new Map();"
+    },
+    {
+      "id": "agent.crafting.recipe.seq",
+      "module": "agent.crafting.recipe",
+      "file": "src/agent/crafting/recipe.js",
+      "line": 16,
+      "name": "seq",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [],
+      "readers": [
+        "define"
+      ],
+      "writeCount": 0,
+      "readCount": 1,
+      "exportedTouchers": [
+        "define",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let seq = 0;"
+    },
+    {
+      "id": "agent.inventory.backpack.backpacks",
+      "module": "agent.inventory.backpack",
+      "file": "src/agent/inventory/backpack.js",
+      "line": 19,
+      "name": "backpacks",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "load"
+      ],
+      "readers": [
+        "load"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const backpacks = new Map();"
+    },
+    {
+      "id": "agent.inventory.item.items",
+      "module": "agent.inventory.item",
+      "file": "src/agent/inventory/item.js",
+      "line": 12,
+      "name": "items",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "define"
+      ],
+      "readers": [
+        "query"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "define",
+        "query",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const items = new Map();"
+    },
+    {
+      "id": "agent.memory.episodic.store.byAgent",
+      "module": "agent.memory.episodic.store",
+      "file": "src/agent/memory/episodic/store.js",
+      "line": 22,
+      "name": "byAgent",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "ensureFresh",
+        "write"
+      ],
+      "readers": [
+        "write",
+        "tag",
+        "list",
+        "_rawList"
+      ],
+      "writeCount": 2,
+      "readCount": 4,
+      "exportedTouchers": [
+        "write",
+        "tag",
+        "list",
+        "_rawList",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const byAgent = new Map();"
+    },
+    {
+      "id": "agent.memory.episodic.store.lastGeneration",
+      "module": "agent.memory.episodic.store",
+      "file": "src/agent/memory/episodic/store.js",
+      "line": 25,
+      "name": "lastGeneration",
+      "keyword": "let",
+      "kind": "number",
+      "init": "-1",
+      "resetCovered": false,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "ensureFresh"
+      ],
+      "readers": [
+        "ensureFresh"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [],
+      "exported": false,
+      "rawLine": "let lastGeneration = -1;"
+    },
+    {
+      "id": "agent.memory.semantic.byAgent",
+      "module": "agent.memory.semantic",
+      "file": "src/agent/memory/semantic.js",
+      "line": 21,
+      "name": "byAgent",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "ensureFresh",
+        "store"
+      ],
+      "readers": [
+        "store",
+        "list",
+        "recall"
+      ],
+      "writeCount": 2,
+      "readCount": 3,
+      "exportedTouchers": [
+        "store",
+        "list",
+        "recall",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const byAgent = new Map();"
+    },
+    {
+      "id": "agent.memory.semantic.lastGeneration",
+      "module": "agent.memory.semantic",
+      "file": "src/agent/memory/semantic.js",
+      "line": 22,
+      "name": "lastGeneration",
+      "keyword": "let",
+      "kind": "number",
+      "init": "-1",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "ensureFresh"
+      ],
+      "readers": [
+        "ensureFresh"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let lastGeneration = -1;"
+    },
+    {
+      "id": "agent.persona.personality.profileCache",
+      "module": "agent.persona.personality",
+      "file": "src/agent/persona/personality.js",
+      "line": 53,
+      "name": "profileCache",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "ensureCacheFresh",
+        "profile"
+      ],
+      "readers": [
+        "profile"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "profile",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const profileCache = new Map();"
+    },
+    {
+      "id": "agent.persona.personality.cacheWriteCount",
+      "module": "agent.persona.personality",
+      "file": "src/agent/persona/personality.js",
+      "line": 54,
+      "name": "cacheWriteCount",
+      "keyword": "let",
+      "kind": "number",
+      "init": "-1",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "ensureCacheFresh"
+      ],
+      "readers": [
+        "ensureCacheFresh"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let cacheWriteCount = -1;"
+    },
+    {
+      "id": "agent.persona.personality.cacheGraphGen",
+      "module": "agent.persona.personality",
+      "file": "src/agent/persona/personality.js",
+      "line": 55,
+      "name": "cacheGraphGen",
+      "keyword": "let",
+      "kind": "number",
+      "init": "-1",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "ensureCacheFresh"
+      ],
+      "readers": [
+        "ensureCacheFresh"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let cacheGraphGen = -1;"
+    },
+    {
+      "id": "agent.psyche.break.brokenAgents",
+      "module": "agent.psyche.break",
+      "file": "src/agent/psyche/break.js",
+      "line": 17,
+      "name": "brokenAgents",
+      "keyword": "const",
+      "kind": "set",
+      "init": "new Set()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "trigger",
+        "recover"
+      ],
+      "readers": [
+        "check",
+        "trigger",
+        "recover",
+        "decisionModifier"
+      ],
+      "writeCount": 2,
+      "readCount": 4,
+      "exportedTouchers": [
+        "check",
+        "trigger",
+        "recover",
+        "decisionModifier",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const brokenAgents = new Set();"
+    },
+    {
+      "id": "agent.psyche.coping.activeCoping",
+      "module": "agent.psyche.coping",
+      "file": "src/agent/psyche/coping.js",
+      "line": 23,
+      "name": "activeCoping",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "execute"
+      ],
+      "readers": [
+        "decisionWeights"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "execute",
+        "decisionWeights",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const activeCoping = new Map();"
+    },
+    {
+      "id": "agent.psyche.trauma.eventsByAgent",
+      "module": "agent.psyche.trauma",
+      "file": "src/agent/psyche/trauma.js",
+      "line": 23,
+      "name": "eventsByAgent",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "ensureFresh",
+        "save"
+      ],
+      "readers": [
+        "load"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const eventsByAgent = new Map();"
+    },
+    {
+      "id": "agent.psyche.trauma.lastGeneration",
+      "module": "agent.psyche.trauma",
+      "file": "src/agent/psyche/trauma.js",
+      "line": 26,
+      "name": "lastGeneration",
+      "keyword": "let",
+      "kind": "number",
+      "init": "-1",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "ensureFresh"
+      ],
+      "readers": [
+        "ensureFresh"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let lastGeneration = -1;"
+    },
+    {
+      "id": "agent.traits.tagset.store.writeCount",
+      "module": "agent.traits.tagset.store",
+      "file": "src/agent/traits/tagset/store.js",
+      "line": 20,
+      "name": "writeCount",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "upsert"
+      ],
+      "readers": [
+        "__writeCount"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "upsert",
+        "__writeCount",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let writeCount = 0;"
+    },
+    {
+      "id": "agent.traits.tagset.store.readCache",
+      "module": "agent.traits.tagset.store",
+      "file": "src/agent/traits/tagset/store.js",
+      "line": 23,
+      "name": "readCache",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "ensureReadCacheFresh",
+        "get",
+        "upsert"
+      ],
+      "readers": [
+        "ensureReadCacheFresh",
+        "get"
+      ],
+      "writeCount": 3,
+      "readCount": 2,
+      "exportedTouchers": [
+        "get",
+        "upsert",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const readCache = new Map();"
+    },
+    {
+      "id": "agent.traits.tagset.store.readCacheGraphGen",
+      "module": "agent.traits.tagset.store",
+      "file": "src/agent/traits/tagset/store.js",
+      "line": 24,
+      "name": "readCacheGraphGen",
+      "keyword": "let",
+      "kind": "number",
+      "init": "-1",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "ensureReadCacheFresh"
+      ],
+      "readers": [
+        "ensureReadCacheFresh"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let readCacheGraphGen = -1;"
+    },
+    {
+      "id": "ai.laya.cache",
+      "module": "ai.laya",
+      "file": "src/ai/laya.js",
+      "line": 30,
+      "name": "cache",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "judge"
+      ],
+      "readers": [
+        "getStats",
+        "judge",
+        "survivalUrgency"
+      ],
+      "writeCount": 1,
+      "readCount": 3,
+      "exportedTouchers": [
+        "__reset",
+        "getStats",
+        "judge",
+        "survivalUrgency"
+      ],
+      "exported": false,
+      "rawLine": "const cache = new Map();"
+    },
+    {
+      "id": "ai.llm.gateway.activeProvider",
+      "module": "ai.llm.gateway",
+      "file": "src/ai/llm/gateway.js",
+      "line": 70,
+      "name": "activeProvider",
+      "keyword": "let",
+      "kind": "expr",
+      "init": "stubProvider",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "registerProvider",
+        "useA6Api"
+      ],
+      "readers": [
+        "resolveProvider",
+        "provider",
+        "getProvider"
+      ],
+      "writeCount": 2,
+      "readCount": 3,
+      "exportedTouchers": [
+        "registerProvider",
+        "useA6Api",
+        "provider",
+        "getProvider",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let activeProvider = stubProvider;"
+    },
+    {
+      "id": "ai.llm.gateway.activeEmbedProvider",
+      "module": "ai.llm.gateway",
+      "file": "src/ai/llm/gateway.js",
+      "line": 71,
+      "name": "activeEmbedProvider",
+      "keyword": "let",
+      "kind": "expr",
+      "init": "stubProvider",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "registerProvider",
+        "useLocalEmbed"
+      ],
+      "readers": [
+        "embed"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "registerProvider",
+        "useLocalEmbed",
+        "embed",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let activeEmbedProvider = stubProvider;"
+    },
+    {
+      "id": "ai.llm.gateway.providersByName",
+      "module": "ai.llm.gateway",
+      "file": "src/ai/llm/gateway.js",
+      "line": 73,
+      "name": "providersByName",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map([[stubProvider.name, stubProvider]])",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "registerProvider",
+        "registerFromEnv",
+        "registerLocalEmbed"
+      ],
+      "readers": [
+        "resolveProvider",
+        "provider"
+      ],
+      "writeCount": 3,
+      "readCount": 2,
+      "exportedTouchers": [
+        "registerProvider",
+        "registerFromEnv",
+        "registerLocalEmbed",
+        "provider",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const providersByName = new Map([[stubProvider.name, stubProvider]]);"
+    },
+    {
+      "id": "ai.llm.gateway.config",
+      "module": "ai.llm.gateway",
+      "file": "src/ai/llm/gateway.js",
+      "line": 80,
+      "name": "config",
+      "keyword": "let",
+      "kind": "expr",
+      "init": "{ ...DEFAULT_CONFIG }",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "configure"
+      ],
+      "readers": [
+        "configure",
+        "getConfig",
+        "throttle",
+        "withRetry"
+      ],
+      "writeCount": 1,
+      "readCount": 4,
+      "exportedTouchers": [
+        "configure",
+        "getConfig",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let config = { ...DEFAULT_CONFIG };"
+    },
+    {
+      "id": "ai.llm.gateway.lastCallAt",
+      "module": "ai.llm.gateway",
+      "file": "src/ai/llm/gateway.js",
+      "line": 81,
+      "name": "lastCallAt",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "throttle"
+      ],
+      "readers": [
+        "throttle"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let lastCallAt = 0;"
+    },
+    {
+      "id": "api.control.phase",
+      "module": "api.control",
+      "file": "src/api/control.js",
+      "line": 24,
+      "name": "phase",
+      "keyword": "let",
+      "kind": "string",
+      "init": "'idle'",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "start",
+        "pause"
+      ],
+      "readers": [
+        "status",
+        "start"
+      ],
+      "writeCount": 2,
+      "readCount": 2,
+      "exportedTouchers": [
+        "start",
+        "pause",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let phase = 'idle';"
+    },
+    {
+      "id": "civilization.tech.research.active",
+      "module": "civilization.tech.research",
+      "file": "src/civilization/tech/research.js",
+      "line": 20,
+      "name": "active",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "start",
+        "complete"
+      ],
+      "readers": [
+        "start",
+        "progress",
+        "complete",
+        "pending"
+      ],
+      "writeCount": 2,
+      "readCount": 4,
+      "exportedTouchers": [
+        "start",
+        "progress",
+        "complete",
+        "pending",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const active = new Map();"
+    },
+    {
+      "id": "civilization.tech.tree.byId",
+      "module": "civilization.tech.tree",
+      "file": "src/civilization/tech/tree.js",
+      "line": 62,
+      "name": "byId",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map(TECH_CATALOG.map((t) => [t.id, t]))",
+      "resetCovered": false,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [],
+      "readers": [
+        "assertTechId",
+        "load",
+        "computeAvailable",
+        "snapshot",
+        "unlock"
+      ],
+      "writeCount": 0,
+      "readCount": 5,
+      "exportedTouchers": [
+        "unlock"
+      ],
+      "exported": false,
+      "rawLine": "const byId = new Map(TECH_CATALOG.map((t) => [t.id, t]));"
+    },
+    {
+      "id": "economy.bank.credit.treasuryAccountId",
+      "module": "economy.bank.credit",
+      "file": "src/economy/bank/credit.js",
+      "line": 20,
+      "name": "treasuryAccountId",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "open"
+      ],
+      "readers": [
+        "open",
+        "treasury",
+        "apply"
+      ],
+      "writeCount": 1,
+      "readCount": 3,
+      "exportedTouchers": [
+        "open",
+        "treasury",
+        "apply",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let treasuryAccountId = null;"
+    },
+    {
+      "id": "economy.ledger.transaction.recorder.seq",
+      "module": "economy.ledger.transaction.recorder",
+      "file": "src/economy/ledger/transaction/recorder.js",
+      "line": 16,
+      "name": "seq",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "post"
+      ],
+      "readers": [
+        "post"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "post",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let seq = 0;"
+    },
+    {
+      "id": "economy.ledger.transaction.validator.bankruptcyHandlers",
+      "module": "economy.ledger.transaction.validator",
+      "file": "src/economy/ledger/transaction/validator.js",
+      "line": 14,
+      "name": "bankruptcyHandlers",
+      "keyword": "const",
+      "kind": "set",
+      "init": "new Set()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "onBankruptcy"
+      ],
+      "readers": [
+        "fireBankruptcy"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "onBankruptcy",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const bankruptcyHandlers = new Set();"
+    },
+    {
+      "id": "economy.market.price.prices",
+      "module": "economy.market.price",
+      "file": "src/economy/market/price.js",
+      "line": 11,
+      "name": "prices",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "update"
+      ],
+      "readers": [
+        "quote"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "quote",
+        "update",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const prices = new Map();"
+    },
+    {
+      "id": "economy.tax.poolAccountId",
+      "module": "economy.tax",
+      "file": "src/economy/tax.js",
+      "line": 20,
+      "name": "poolAccountId",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "open"
+      ],
+      "readers": [
+        "open",
+        "poolBalance",
+        "collect",
+        "redistribute"
+      ],
+      "writeCount": 1,
+      "readCount": 4,
+      "exportedTouchers": [
+        "open",
+        "poolBalance",
+        "collect",
+        "redistribute",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let poolAccountId = null;"
+    },
+    {
+      "id": "genesis.agent-factory.assemble.assembled",
+      "module": "genesis.agent-factory.assemble",
+      "file": "src/genesis/agent-factory/assemble.js",
+      "line": 21,
+      "name": "assembled",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "create"
+      ],
+      "readers": [
+        "create",
+        "list",
+        "get",
+        "getStats"
+      ],
+      "writeCount": 1,
+      "readCount": 4,
+      "exportedTouchers": [
+        "__reset",
+        "create",
+        "list",
+        "get",
+        "getStats"
+      ],
+      "exported": false,
+      "rawLine": "const assembled = new Map();"
+    },
+    {
+      "id": "genesis.agent-factory.template.templates",
+      "module": "genesis.agent-factory.template",
+      "file": "src/genesis/agent-factory/template.js",
+      "line": 42,
+      "name": "templates",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "build"
+      ],
+      "readers": [
+        "ensure",
+        "get",
+        "list",
+        "instantiate"
+      ],
+      "writeCount": 1,
+      "readCount": 4,
+      "exportedTouchers": [
+        "__reset",
+        "build",
+        "get",
+        "list",
+        "instantiate"
+      ],
+      "exported": false,
+      "rawLine": "const templates = new Map();"
+    },
+    {
+      "id": "infra.config.currentDifficultyId",
+      "module": "infra.config",
+      "file": "src/infra/config.js",
+      "line": 261,
+      "name": "currentDifficultyId",
+      "keyword": "let",
+      "kind": "string",
+      "init": "'standard'",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "setDifficulty"
+      ],
+      "readers": [
+        "getDifficulty",
+        "currentDifficultyParams"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "getDifficulty",
+        "setDifficulty",
+        "currentDifficultyParams",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let currentDifficultyId = 'standard';"
+    },
+    {
+      "id": "infra.events.pubsub.handlers",
+      "module": "infra.events.pubsub",
+      "file": "src/infra/events/pubsub.js",
+      "line": 12,
+      "name": "handlers",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "subscribe"
+      ],
+      "readers": [
+        "subscribe",
+        "publish"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "subscribe",
+        "publish",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const handlers = new Map();"
+    },
+    {
+      "id": "infra.events.pubsub.wildcard",
+      "module": "infra.events.pubsub",
+      "file": "src/infra/events/pubsub.js",
+      "line": 14,
+      "name": "wildcard",
+      "keyword": "const",
+      "kind": "set",
+      "init": "new Set()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "subscribe"
+      ],
+      "readers": [
+        "publish"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "subscribe",
+        "publish",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const wildcard = new Set();"
+    },
+    {
+      "id": "infra.events.retry.queue",
+      "module": "infra.events.retry",
+      "file": "src/infra/events/retry.js",
+      "line": 20,
+      "name": "queue",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "enqueue",
+        "run"
+      ],
+      "readers": [
+        "enqueue",
+        "run",
+        "pending",
+        "getStats"
+      ],
+      "writeCount": 2,
+      "readCount": 4,
+      "exportedTouchers": [
+        "enqueue",
+        "run",
+        "pending",
+        "getStats",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const queue = new Map();"
+    },
+    {
+      "id": "infra.events.retry.deadLetters",
+      "module": "infra.events.retry",
+      "file": "src/infra/events/retry.js",
+      "line": 22,
+      "name": "deadLetters",
+      "keyword": "const",
+      "kind": "array",
+      "init": "[]",
+      "resetCovered": false,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "run"
+      ],
+      "readers": [
+        "run",
+        "dead",
+        "getStats"
+      ],
+      "writeCount": 1,
+      "readCount": 3,
+      "exportedTouchers": [
+        "run",
+        "dead",
+        "getStats",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const deadLetters = [];"
+    },
+    {
+      "id": "infra.events.retry.stats",
+      "module": "infra.events.retry",
+      "file": "src/infra/events/retry.js",
+      "line": 23,
+      "name": "stats",
+      "keyword": "let",
+      "kind": "expr",
+      "init": "{ enqueued: 0, delivered: 0, dropped: 0 }",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [],
+      "readers": [
+        "enqueue",
+        "run",
+        "getStats"
+      ],
+      "writeCount": 0,
+      "readCount": 3,
+      "exportedTouchers": [
+        "enqueue",
+        "run",
+        "getStats",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let stats = { enqueued: 0, delivered: 0, dropped: 0 };"
+    },
+    {
+      "id": "infra.identity.counter",
+      "module": "infra.identity",
+      "file": "src/infra/identity.js",
+      "line": 9,
+      "name": "counter",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "next"
+      ],
+      "readers": [
+        "next"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "next",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let counter = 0;"
+    },
+    {
+      "id": "infra.rng.state",
+      "module": "infra.rng",
+      "file": "src/infra/rng.js",
+      "line": 9,
+      "name": "state",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0x9e3779b9 >>> 0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed"
+      ],
+      "readers": [
+        "seed"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let state = 0x9e3779b9 >>> 0;"
+    },
+    {
+      "id": "infra.rng.seeded",
+      "module": "infra.rng",
+      "file": "src/infra/rng.js",
+      "line": 10,
+      "name": "seeded",
+      "keyword": "let",
+      "kind": "flag",
+      "init": "false",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed"
+      ],
+      "readers": [],
+      "writeCount": 1,
+      "readCount": 0,
+      "exportedTouchers": [
+        "seed",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let seeded = false;"
+    },
+    {
+      "id": "infra.rng.gen",
+      "module": "infra.rng",
+      "file": "src/infra/rng.js",
+      "line": 34,
+      "name": "gen",
+      "keyword": "let",
+      "kind": "expr",
+      "init": "mulberry32(state)",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed"
+      ],
+      "readers": [
+        "next"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "next",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let gen = mulberry32(state);"
+    },
+    {
+      "id": "infra.store.graph.nodes",
+      "module": "infra.store.graph",
+      "file": "src/infra/store/graph.js",
+      "line": 15,
+      "name": "nodes",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "write"
+      ],
+      "readers": [
+        "write",
+        "read"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "write",
+        "read",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const nodes = new Map();"
+    },
+    {
+      "id": "infra.store.graph.byType",
+      "module": "infra.store.graph",
+      "file": "src/infra/store/graph.js",
+      "line": 18,
+      "name": "byType",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "write"
+      ],
+      "readers": [
+        "write",
+        "read"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "write",
+        "read",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const byType = new Map();"
+    },
+    {
+      "id": "infra.store.graph.generation",
+      "module": "infra.store.graph",
+      "file": "src/infra/store/graph.js",
+      "line": 21,
+      "name": "generation",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [],
+      "readers": [
+        "__generation"
+      ],
+      "writeCount": 0,
+      "readCount": 1,
+      "exportedTouchers": [
+        "__reset",
+        "__generation"
+      ],
+      "exported": false,
+      "rawLine": "let generation = 0;"
+    },
+    {
+      "id": "infra.store.vector.dim",
+      "module": "infra.store.vector",
+      "file": "src/infra/store/vector.js",
+      "line": 16,
+      "name": "dim",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "upsert"
+      ],
+      "readers": [
+        "upsert",
+        "search",
+        "stats"
+      ],
+      "writeCount": 1,
+      "readCount": 3,
+      "exportedTouchers": [
+        "upsert",
+        "search",
+        "stats",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let dim = null;"
+    },
+    {
+      "id": "infra.store.vector.rows",
+      "module": "infra.store.vector",
+      "file": "src/infra/store/vector.js",
+      "line": 17,
+      "name": "rows",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "upsert"
+      ],
+      "readers": [
+        "upsert",
+        "search",
+        "list",
+        "stats"
+      ],
+      "writeCount": 1,
+      "readCount": 4,
+      "exportedTouchers": [
+        "upsert",
+        "search",
+        "list",
+        "stats",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const rows = new Map();"
+    },
+    {
+      "id": "infra.store.vector.STOPWORDS",
+      "module": "infra.store.vector",
+      "file": "src/infra/store/vector.js",
+      "line": 20,
+      "name": "STOPWORDS",
+      "keyword": "const",
+      "kind": "set",
+      "init": "new Set([",
+      "resetCovered": false,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [],
+      "readers": [
+        "tokenize"
+      ],
+      "writeCount": 0,
+      "readCount": 1,
+      "exportedTouchers": [],
+      "exported": false,
+      "rawLine": "const STOPWORDS = new Set(["
+    },
+    {
+      "id": "observer.chronicle.store.segments",
+      "module": "observer.chronicle.store",
+      "file": "src/observer/chronicle/store.js",
+      "line": 26,
+      "name": "segments",
+      "keyword": "let",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "capture"
+      ],
+      "readers": [
+        "capture",
+        "orderedSegments",
+        "getStats"
+      ],
+      "writeCount": 1,
+      "readCount": 3,
+      "exportedTouchers": [
+        "capture",
+        "getStats",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let segments = new Map();"
+    },
+    {
+      "id": "observer.recorder._shared.seq",
+      "module": "observer.recorder._shared",
+      "file": "src/observer/recorder/_shared.js",
+      "line": 8,
+      "name": "seq",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__resetSeq"
+      ],
+      "writers": [
+        "nextSeq"
+      ],
+      "readers": [
+        "nextSeq"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "nextSeq",
+        "__resetSeq"
+      ],
+      "exported": false,
+      "rawLine": "let seq = 0;"
+    },
+    {
+      "id": "observer.timeline.cache",
+      "module": "observer.timeline",
+      "file": "src/observer/timeline.js",
+      "line": 19,
+      "name": "cache",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "ensure"
+      ],
+      "readers": [
+        "ensure"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let cache = null;"
+    },
+    {
+      "id": "runtime.clock.currentTick",
+      "module": "runtime.clock",
+      "file": "src/runtime/clock.js",
+      "line": 9,
+      "name": "currentTick",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "tick"
+      ],
+      "readers": [
+        "snapshot",
+        "tick"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "tick",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let currentTick = 0;"
+    },
+    {
+      "id": "runtime.clock.startedAt",
+      "module": "runtime.clock",
+      "file": "src/runtime/clock.js",
+      "line": 10,
+      "name": "startedAt",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "tick"
+      ],
+      "readers": [
+        "snapshot",
+        "tick"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "tick",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let startedAt = null;"
+    },
+    {
+      "id": "runtime.clock.taskSeq",
+      "module": "runtime.clock",
+      "file": "src/runtime/clock.js",
+      "line": 11,
+      "name": "taskSeq",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [],
+      "readers": [
+        "schedule"
+      ],
+      "writeCount": 0,
+      "readCount": 1,
+      "exportedTouchers": [
+        "schedule",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let taskSeq = 0;"
+    },
+    {
+      "id": "runtime.clock.tasks",
+      "module": "runtime.clock",
+      "file": "src/runtime/clock.js",
+      "line": 14,
+      "name": "tasks",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "schedule"
+      ],
+      "readers": [
+        "tick",
+        "schedule"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "tick",
+        "schedule",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const tasks = new Map();"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.platformGen",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 46,
+      "name": "platformGen",
+      "keyword": "let",
+      "kind": "expr",
+      "init": "mulberry32(0x9e3779b9 >>> 0)",
+      "resetCovered": false,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "platformSeed"
+      ],
+      "readers": [
+        "prFloat",
+        "prShuffle"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [],
+      "exported": false,
+      "rawLine": "let platformGen = mulberry32(0x9e3779b9 >>> 0);"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.seeded",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 63,
+      "name": "seeded",
+      "keyword": "let",
+      "kind": "flag",
+      "init": "false",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let seeded = false;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.accounts",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 65,
+      "name": "accounts",
+      "keyword": "let",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed"
+      ],
+      "readers": [
+        "seed",
+        "runMarket",
+        "runIndustry",
+        "runFiscal",
+        "performAgentAction",
+        "agentIdByAccount",
+        "situationOf"
+      ],
+      "writeCount": 1,
+      "readCount": 7,
+      "exportedTouchers": [
+        "seed",
+        "performAgentAction",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let accounts = new Map();"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.settledAgentIds",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 67,
+      "name": "settledAgentIds",
+      "keyword": "let",
+      "kind": "array",
+      "init": "[]",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "tick"
+      ],
+      "readers": [
+        "candidateStateFor",
+        "pickMate",
+        "pickPeer"
+      ],
+      "writeCount": 1,
+      "readCount": 3,
+      "exportedTouchers": [
+        "candidateStateFor",
+        "tick",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let settledAgentIds = [];"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.pendingCourts",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 73,
+      "name": "pendingCourts",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "performAgentAction"
+      ],
+      "readers": [
+        "candidateStateFor",
+        "performAgentAction"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "candidateStateFor",
+        "performAgentAction",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const pendingCourts = new Map();"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.pairedIndex",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 74,
+      "name": "pairedIndex",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "performAgentAction"
+      ],
+      "readers": [
+        "runProcreation",
+        "candidateStateFor",
+        "expeditionConditionsFor",
+        "performAgentAction",
+        "pickMate"
+      ],
+      "writeCount": 1,
+      "readCount": 5,
+      "exportedTouchers": [
+        "candidateStateFor",
+        "performAgentAction",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const pairedIndex = new Map();"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.reproducedPairs",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 76,
+      "name": "reproducedPairs",
+      "keyword": "const",
+      "kind": "set",
+      "init": "new Set()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runProcreation"
+      ],
+      "readers": [
+        "runProcreation"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const reproducedPairs = new Set();"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.childrenBorn",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 77,
+      "name": "childrenBorn",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runProcreation"
+      ],
+      "readers": [
+        "runProcreation",
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 2,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let childrenBorn = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.itemIds",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 79,
+      "name": "itemIds",
+      "keyword": "let",
+      "kind": "object",
+      "init": "{}",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed"
+      ],
+      "readers": [
+        "seed",
+        "craftMaterialId",
+        "performAgentAction"
+      ],
+      "writeCount": 1,
+      "readCount": 3,
+      "exportedTouchers": [
+        "seed",
+        "craftMaterialId",
+        "performAgentAction",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let itemIds = {};"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.tradeCount",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 80,
+      "name": "tradeCount",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runMarket",
+        "runIndustry"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 3,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let tradeCount = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.craftCount",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 81,
+      "name": "craftCount",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runCrafting"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let craftCount = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.buildCount",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 82,
+      "name": "buildCount",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runCrafting"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let buildCount = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.treatCount",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 83,
+      "name": "treatCount",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runHealth"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let treatCount = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.quarantineCount",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 84,
+      "name": "quarantineCount",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runHealth"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let quarantineCount = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.releasesCount",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 86,
+      "name": "releasesCount",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runHealth"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let releasesCount = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.businessIds",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 88,
+      "name": "businessIds",
+      "keyword": "let",
+      "kind": "array",
+      "init": "[]",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed"
+      ],
+      "readers": [
+        "seed",
+        "runIndustry",
+        "candidateStateFor",
+        "performAgentAction"
+      ],
+      "writeCount": 1,
+      "readCount": 4,
+      "exportedTouchers": [
+        "seed",
+        "candidateStateFor",
+        "performAgentAction",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let businessIds = [];"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.goodsProduced",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 89,
+      "name": "goodsProduced",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runIndustry"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let goodsProduced = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.wagesPaid",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 90,
+      "name": "wagesPaid",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runIndustry"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let wagesPaid = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.bankruptcies",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 91,
+      "name": "bankruptcies",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runIndustry"
+      ],
+      "readers": [
+        "runIndustry",
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 2,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let bankruptcies = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.creditIssued",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 92,
+      "name": "creditIssued",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed"
+      ],
+      "readers": [
+        "runFiscal",
+        "summary"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let creditIssued = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.interestAccrued",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 93,
+      "name": "interestAccrued",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runFiscal"
+      ],
+      "readers": [
+        "runFiscal",
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 2,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let interestAccrued = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.taxCollected",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 94,
+      "name": "taxCollected",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runFiscal"
+      ],
+      "readers": [
+        "runFiscal",
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 2,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let taxCollected = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.taxRedistributed",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 95,
+      "name": "taxRedistributed",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runFiscal"
+      ],
+      "readers": [
+        "runFiscal",
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 2,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let taxRedistributed = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.supplyAccountId",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 97,
+      "name": "supplyAccountId",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed"
+      ],
+      "readers": [
+        "runIndustry",
+        "runFiscal",
+        "performAgentAction",
+        "summary"
+      ],
+      "writeCount": 1,
+      "readCount": 4,
+      "exportedTouchers": [
+        "seed",
+        "performAgentAction",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let supplyAccountId = null;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.goodsSold",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 98,
+      "name": "goodsSold",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runIndustry"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let goodsSold = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.businessRevenue",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 99,
+      "name": "businessRevenue",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runIndustry"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let businessRevenue = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.businessCosts",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 100,
+      "name": "businessCosts",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runIndustry"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let businessCosts = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.residentEnergyUsed",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 101,
+      "name": "residentEnergyUsed",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runIndustry"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let residentEnergyUsed = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.industryEnergyUsed",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 102,
+      "name": "industryEnergyUsed",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runIndustry"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let industryEnergyUsed = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.lossTicks",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 103,
+      "name": "lossTicks",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runIndustry"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let lossTicks = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.lastCommunityTick",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 105,
+      "name": "lastCommunityTick",
+      "keyword": "let",
+      "kind": "number",
+      "init": "-1",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runCommunity"
+      ],
+      "readers": [
+        "runCommunity"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let lastCommunityTick = -1;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.communitySnapshot",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 106,
+      "name": "communitySnapshot",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runCommunity"
+      ],
+      "readers": [
+        "runPlatform",
+        "runCommunity"
+      ],
+      "writeCount": 2,
+      "readCount": 2,
+      "exportedTouchers": [
+        "seed",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let communitySnapshot = null;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.postCount",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 108,
+      "name": "postCount",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runPlatform"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let postCount = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.replyCount",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 109,
+      "name": "replyCount",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runPlatform"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let replyCount = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.reactCount",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 110,
+      "name": "reactCount",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runPlatform"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let reactCount = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.reputationTriageSwaps",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 111,
+      "name": "reputationTriageSwaps",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runHealth"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let reputationTriageSwaps = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.reputationTriageTreatedScore",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 113,
+      "name": "reputationTriageTreatedScore",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runHealth"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let reputationTriageTreatedScore = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.lastFeedTick",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 114,
+      "name": "lastFeedTick",
+      "keyword": "let",
+      "kind": "number",
+      "init": "-1",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runPlatform"
+      ],
+      "readers": [
+        "runPlatform"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let lastFeedTick = -1;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.feedSignature",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 115,
+      "name": "feedSignature",
+      "keyword": "let",
+      "kind": "array",
+      "init": "[]",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runPlatform"
+      ],
+      "readers": [
+        "runPlatform",
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 2,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let feedSignature = [];"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.recentPostIds",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 117,
+      "name": "recentPostIds",
+      "keyword": "let",
+      "kind": "array",
+      "init": "[]",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runPlatform"
+      ],
+      "readers": [
+        "runPlatform"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let recentPostIds = [];"
+    },
+    {
+      "id": "runtime.orchestrator._stage2._candidateStateCache",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 761,
+      "name": "_candidateStateCache",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "candidateStateFor",
+        "tick"
+      ],
+      "readers": [
+        "candidateStateFor"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "candidateStateFor",
+        "tick",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let _candidateStateCache = null;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2._candidateStateCacheTick",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 762,
+      "name": "_candidateStateCacheTick",
+      "keyword": "let",
+      "kind": "number",
+      "init": "-1",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "candidateStateFor"
+      ],
+      "readers": [
+        "candidateStateFor"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "candidateStateFor",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let _candidateStateCacheTick = -1;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.seeded",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 18,
+      "name": "seeded",
+      "keyword": "let",
+      "kind": "flag",
+      "init": "false",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let seeded = false;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.factionA",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 19,
+      "name": "factionA",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed"
+      ],
+      "readers": [
+        "seed",
+        "runPolitics"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "seed",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let factionA = null;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.factionB",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 20,
+      "name": "factionB",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed"
+      ],
+      "readers": [
+        "runPolitics"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let factionB = null;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.allied",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 21,
+      "name": "allied",
+      "keyword": "let",
+      "kind": "flag",
+      "init": "false",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runPolitics"
+      ],
+      "readers": [
+        "runPolitics"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let allied = false;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.lawId",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 22,
+      "name": "lawId",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed"
+      ],
+      "readers": [
+        "runPolitics"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let lawId = null;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.lawEnforced",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 23,
+      "name": "lawEnforced",
+      "keyword": "let",
+      "kind": "flag",
+      "init": "false",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runPolitics"
+      ],
+      "readers": [
+        "runPolitics"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let lawEnforced = false;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.conflictId",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 24,
+      "name": "conflictId",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runPolitics"
+      ],
+      "readers": [
+        "runPolitics"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let conflictId = null;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.conflictResolved",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 25,
+      "name": "conflictResolved",
+      "keyword": "let",
+      "kind": "flag",
+      "init": "false",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runPolitics"
+      ],
+      "readers": [
+        "runPolitics"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let conflictResolved = false;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.normViolated",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 26,
+      "name": "normViolated",
+      "keyword": "let",
+      "kind": "flag",
+      "init": "false",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runCulture"
+      ],
+      "readers": [
+        "runCulture"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let normViolated = false;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.memeMutated",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 27,
+      "name": "memeMutated",
+      "keyword": "let",
+      "kind": "flag",
+      "init": "false",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runCulture"
+      ],
+      "readers": [
+        "runCulture"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let memeMutated = false;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.collapseHandled",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 28,
+      "name": "collapseHandled",
+      "keyword": "let",
+      "kind": "flag",
+      "init": "false",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runCivilization"
+      ],
+      "readers": [
+        "runCivilization"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let collapseHandled = false;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.firstCollapse",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 29,
+      "name": "firstCollapse",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runCivilization"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let firstCollapse = null;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.scarceTicks",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 30,
+      "name": "scarceTicks",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runCivilization"
+      ],
+      "readers": [
+        "runCivilization"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let scarceTicks = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.lawsEnacted",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 33,
+      "name": "lawsEnacted",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runPolitics"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let lawsEnacted = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.conflictsResolved",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 34,
+      "name": "conflictsResolved",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runPolitics"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let conflictsResolved = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.ritualsHeld",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 35,
+      "name": "ritualsHeld",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runCulture"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let ritualsHeld = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.normsViolated",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 36,
+      "name": "normsViolated",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runCulture"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let normsViolated = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.memesMutated",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 37,
+      "name": "memesMutated",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runCulture"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let memesMutated = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.breakdowns",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 38,
+      "name": "breakdowns",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runPsyche"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let breakdowns = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.recoveries",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 39,
+      "name": "recoveries",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runPsyche"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let recoveries = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.copings",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 40,
+      "name": "copings",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runPsyche"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let copings = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.researchesStarted",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 41,
+      "name": "researchesStarted",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runTech"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let researchesStarted = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.researchesCompleted",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 42,
+      "name": "researchesCompleted",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runTech"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let researchesCompleted = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.techsLost",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 43,
+      "name": "techsLost",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runTech"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let techsLost = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.collapses",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 44,
+      "name": "collapses",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runCivilization"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let collapses = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.restarts",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 45,
+      "name": "restarts",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runCivilization"
+      ],
+      "readers": [
+        "summary"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let restarts = 0;"
+    },
+    {
+      "id": "runtime.orchestrator.cycle.phase",
+      "module": "runtime.orchestrator.cycle",
+      "file": "src/runtime/orchestrator/cycle.js",
+      "line": 11,
+      "name": "phase",
+      "keyword": "let",
+      "kind": "string",
+      "init": "'idle'",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "run",
+        "pause",
+        "resume"
+      ],
+      "readers": [
+        "status",
+        "run"
+      ],
+      "writeCount": 3,
+      "readCount": 2,
+      "exportedTouchers": [
+        "run",
+        "pause",
+        "resume",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let phase = 'idle'; // idle | running | paused"
+    },
+    {
+      "id": "runtime.orchestrator.cycle.stepFn",
+      "module": "runtime.orchestrator.cycle",
+      "file": "src/runtime/orchestrator/cycle.js",
+      "line": 12,
+      "name": "stepFn",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "configure",
+        "run"
+      ],
+      "readers": [
+        "run"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "configure",
+        "run",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let stepFn = null;"
+    },
+    {
+      "id": "runtime.orchestrator.cycle.stepCount",
+      "module": "runtime.orchestrator.cycle",
+      "file": "src/runtime/orchestrator/cycle.js",
+      "line": 13,
+      "name": "stepCount",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "run"
+      ],
+      "readers": [
+        "status",
+        "run"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "run",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let stepCount = 0;"
+    },
+    {
+      "id": "runtime.orchestrator.dispatch.opSeq",
+      "module": "runtime.orchestrator.dispatch",
+      "file": "src/runtime/orchestrator/dispatch.js",
+      "line": 12,
+      "name": "opSeq",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "normalizeDecision"
+      ],
+      "readers": [
+        "normalizeDecision"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let opSeq = 0;"
+    },
+    {
+      "id": "runtime.orchestrator.dispatch.lastApplied",
+      "module": "runtime.orchestrator.dispatch",
+      "file": "src/runtime/orchestrator/dispatch.js",
+      "line": 13,
+      "name": "lastApplied",
+      "keyword": "let",
+      "kind": "array",
+      "init": "[]",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "actions"
+      ],
+      "readers": [],
+      "writeCount": 1,
+      "readCount": 0,
+      "exportedTouchers": [
+        "actions",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let lastApplied = [];"
+    },
+    {
+      "id": "runtime.orchestrator.loop.layaUrgencyCache",
+      "module": "runtime.orchestrator.loop",
+      "file": "src/runtime/orchestrator/loop.js",
+      "line": 68,
+      "name": "layaUrgencyCache",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": false,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "reset"
+      ],
+      "writers": [
+        "prefetchLayaUrgency",
+        "step"
+      ],
+      "readers": [
+        "layaUrgencyFor",
+        "step"
+      ],
+      "writeCount": 2,
+      "readCount": 2,
+      "exportedTouchers": [
+        "step"
+      ],
+      "exported": false,
+      "rawLine": "const layaUrgencyCache = new Map();"
+    },
+    {
+      "id": "runtime.orchestrator.loop.foragePool",
+      "module": "runtime.orchestrator.loop",
+      "file": "src/runtime/orchestrator/loop.js",
+      "line": 144,
+      "name": "foragePool",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "reset"
+      ],
+      "writers": [
+        "regenForagePool",
+        "effectFor"
+      ],
+      "readers": [
+        "foragePoolCapacityOf",
+        "regenForagePool",
+        "foragePoolRemaining",
+        "scheduleOverride",
+        "decide",
+        "effectFor",
+        "syncWorldState"
+      ],
+      "writeCount": 2,
+      "readCount": 7,
+      "exportedTouchers": [
+        "foragePoolRemaining",
+        "reset"
+      ],
+      "exported": false,
+      "rawLine": "let foragePool = null;"
+    },
+    {
+      "id": "runtime.orchestrator.loop.currentSeed",
+      "module": "runtime.orchestrator.loop",
+      "file": "src/runtime/orchestrator/loop.js",
+      "line": 145,
+      "name": "currentSeed",
+      "keyword": "let",
+      "kind": "string",
+      "init": "'default'",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "reset"
+      ],
+      "writers": [
+        "run"
+      ],
+      "readers": [
+        "seedAgentScheduleRoles",
+        "decide"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "reset",
+        "run"
+      ],
+      "exported": false,
+      "rawLine": "let currentSeed = 'default';"
+    },
+    {
+      "id": "runtime.orchestrator.loop._alivePopGeneration",
+      "module": "runtime.orchestrator.loop",
+      "file": "src/runtime/orchestrator/loop.js",
+      "line": 156,
+      "name": "_alivePopGeneration",
+      "keyword": "let",
+      "kind": "number",
+      "init": "-1",
+      "resetCovered": false,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "reset"
+      ],
+      "writers": [
+        "invalidateAlivePopulation",
+        "alivePopulation"
+      ],
+      "readers": [
+        "alivePopulation"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [],
+      "exported": false,
+      "rawLine": "let _alivePopGeneration = -1;"
+    },
+    {
+      "id": "runtime.orchestrator.loop._alivePopValue",
+      "module": "runtime.orchestrator.loop",
+      "file": "src/runtime/orchestrator/loop.js",
+      "line": 157,
+      "name": "_alivePopValue",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": false,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "reset"
+      ],
+      "writers": [
+        "alivePopulation"
+      ],
+      "readers": [
+        "alivePopulation"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [],
+      "exported": false,
+      "rawLine": "let _alivePopValue = 0;"
+    },
+    {
+      "id": "runtime.orchestrator.loop.mortality",
+      "module": "runtime.orchestrator.loop",
+      "file": "src/runtime/orchestrator/loop.js",
+      "line": 835,
+      "name": "mortality",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "reset"
+      ],
+      "writers": [
+        "runMortality"
+      ],
+      "readers": [
+        "runMortality"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "reset"
+      ],
+      "exported": false,
+      "rawLine": "const mortality = new Map();"
+    },
+    {
+      "id": "runtime.orchestrator.perception.lastCollected",
+      "module": "runtime.orchestrator.perception",
+      "file": "src/runtime/orchestrator/perception.js",
+      "line": 11,
+      "name": "lastCollected",
+      "keyword": "let",
+      "kind": "array",
+      "init": "[]",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "collect"
+      ],
+      "readers": [
+        "collect",
+        "route"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "collect",
+        "route",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let lastCollected = [];"
+    },
+    {
+      "id": "runtime.registry.entities",
+      "module": "runtime.registry",
+      "file": "src/runtime/registry.js",
+      "line": 10,
+      "name": "entities",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "register",
+        "unregister"
+      ],
+      "readers": [
+        "lookup",
+        "unregister",
+        "count"
+      ],
+      "writeCount": 2,
+      "readCount": 3,
+      "exportedTouchers": [
+        "register",
+        "lookup",
+        "unregister",
+        "count",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const entities = new Map();"
+    },
+    {
+      "id": "runtime.world-state.world",
+      "module": "runtime.world-state",
+      "file": "src/runtime/world-state.js",
+      "line": 9,
+      "name": "world",
+      "keyword": "let",
+      "kind": "object",
+      "init": "{}",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "restore"
+      ],
+      "readers": [
+        "toPath",
+        "setByPath",
+        "snapshot",
+        "get",
+        "set",
+        "restore"
+      ],
+      "writeCount": 1,
+      "readCount": 6,
+      "exportedTouchers": [
+        "snapshot",
+        "get",
+        "set",
+        "restore",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let world = {};"
+    },
+    {
+      "id": "social.culture.norms.VALENCES",
+      "module": "social.culture.norms",
+      "file": "src/social/culture/norms.js",
+      "line": 21,
+      "name": "VALENCES",
+      "keyword": "const",
+      "kind": "set",
+      "init": "new Set(['accepted', 'forbidden'])",
+      "resetCovered": false,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [],
+      "readers": [
+        "update"
+      ],
+      "writeCount": 0,
+      "readCount": 1,
+      "exportedTouchers": [
+        "update"
+      ],
+      "exported": false,
+      "rawLine": "const VALENCES = new Set(['accepted', 'forbidden']);"
+    },
+    {
+      "id": "social.platform.posts.byId",
+      "module": "social.platform.posts",
+      "file": "src/social/platform/posts.js",
+      "line": 32,
+      "name": "byId",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "ensureFresh",
+        "publish"
+      ],
+      "readers": [
+        "reply",
+        "react",
+        "get",
+        "list"
+      ],
+      "writeCount": 2,
+      "readCount": 4,
+      "exportedTouchers": [
+        "publish",
+        "reply",
+        "react",
+        "get",
+        "list",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const byId = new Map();"
+    },
+    {
+      "id": "social.platform.posts.lastGeneration",
+      "module": "social.platform.posts",
+      "file": "src/social/platform/posts.js",
+      "line": 35,
+      "name": "lastGeneration",
+      "keyword": "let",
+      "kind": "number",
+      "init": "-1",
+      "resetCovered": false,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "ensureFresh"
+      ],
+      "readers": [
+        "ensureFresh"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [],
+      "exported": false,
+      "rawLine": "let lastGeneration = -1;"
+    },
+    {
+      "id": "social.reputation.byAgent",
+      "module": "social.reputation",
+      "file": "src/social/reputation.js",
+      "line": 43,
+      "name": "byAgent",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "ensureFresh",
+        "update"
+      ],
+      "readers": [
+        "update",
+        "query",
+        "list",
+        "scoreMap"
+      ],
+      "writeCount": 2,
+      "readCount": 4,
+      "exportedTouchers": [
+        "update",
+        "query",
+        "list",
+        "scoreMap",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const byAgent = new Map();"
+    },
+    {
+      "id": "social.reputation.lastGeneration",
+      "module": "social.reputation",
+      "file": "src/social/reputation.js",
+      "line": 46,
+      "name": "lastGeneration",
+      "keyword": "let",
+      "kind": "number",
+      "init": "-1",
+      "resetCovered": false,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "ensureFresh"
+      ],
+      "readers": [
+        "ensureFresh"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [],
+      "exported": false,
+      "rawLine": "let lastGeneration = -1;"
+    },
+    {
+      "id": "survival.environment.radiation.size",
+      "module": "survival.environment.radiation",
+      "file": "src/survival/environment/radiation.js",
+      "line": 26,
+      "name": "size",
+      "keyword": "let",
+      "kind": "expr",
+      "init": "DEFAULT_SIZE",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "configure"
+      ],
+      "readers": [
+        "idx",
+        "inBounds",
+        "generate",
+        "configure",
+        "spread",
+        "field"
+      ],
+      "writeCount": 1,
+      "readCount": 6,
+      "exportedTouchers": [
+        "__reset",
+        "configure",
+        "spread",
+        "field"
+      ],
+      "exported": false,
+      "rawLine": "let size = DEFAULT_SIZE;"
+    },
+    {
+      "id": "survival.environment.radiation.grid",
+      "module": "survival.environment.radiation",
+      "file": "src/survival/environment/radiation.js",
+      "line": 27,
+      "name": "grid",
+      "keyword": "let",
+      "kind": "array",
+      "init": "[]",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "generate",
+        "spread"
+      ],
+      "readers": [
+        "configure",
+        "query",
+        "spread",
+        "field"
+      ],
+      "writeCount": 2,
+      "readCount": 4,
+      "exportedTouchers": [
+        "__reset",
+        "configure",
+        "query",
+        "spread",
+        "field"
+      ],
+      "exported": false,
+      "rawLine": "let grid = [];"
+    },
+    {
+      "id": "survival.environment.radiation.initialized",
+      "module": "survival.environment.radiation",
+      "file": "src/survival/environment/radiation.js",
+      "line": 28,
+      "name": "initialized",
+      "keyword": "let",
+      "kind": "flag",
+      "init": "false",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "ensure",
+        "configure"
+      ],
+      "readers": [
+        "ensure"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "__reset",
+        "configure"
+      ],
+      "exported": false,
+      "rawLine": "let initialized = false;"
+    },
+    {
+      "id": "survival.environment.weather.current",
+      "module": "survival.environment.weather",
+      "file": "src/survival/environment/weather.js",
+      "line": 41,
+      "name": "current",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "forecast"
+      ],
+      "readers": [
+        "forecast",
+        "strike"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "__reset",
+        "forecast",
+        "strike"
+      ],
+      "exported": false,
+      "rawLine": "let current = null;"
+    },
+    {
+      "id": "survival.health.disease.residents",
+      "module": "survival.health.disease",
+      "file": "src/survival/health/disease.js",
+      "line": 19,
+      "name": "residents",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "load"
+      ],
+      "readers": [
+        "load",
+        "list"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "list",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const residents = new Map();"
+    },
+    {
+      "id": "survival.health.epidemic.quarantined",
+      "module": "survival.health.epidemic",
+      "file": "src/survival/health/epidemic.js",
+      "line": 14,
+      "name": "quarantined",
+      "keyword": "const",
+      "kind": "set",
+      "init": "new Set()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "quarantine",
+        "release"
+      ],
+      "readers": [
+        "quarantine",
+        "isQuarantined",
+        "listQuarantined",
+        "release"
+      ],
+      "writeCount": 2,
+      "readCount": 4,
+      "exportedTouchers": [
+        "quarantine",
+        "isQuarantined",
+        "listQuarantined",
+        "release",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const quarantined = new Set();"
+    },
+    {
+      "id": "survival.needs.meter.residents",
+      "module": "survival.needs.meter",
+      "file": "src/survival/needs/meter.js",
+      "line": 15,
+      "name": "residents",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "load"
+      ],
+      "readers": [
+        "load",
+        "query"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "query",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const residents = new Map();"
+    }
+  ],
+  "graphTypes": [
+    {
+      "constName": "TYPE",
+      "type": "anticipation.pool",
+      "file": "src/agent/anticipation/pool/store.js",
+      "line": 11
+    },
+    {
+      "constName": "STRUCTURE_TYPE",
+      "type": "town.building.structure",
+      "file": "src/agent/crafting/construction.js",
+      "line": 17
+    },
+    {
+      "constName": "TYPE",
+      "type": "memory.episodic",
+      "file": "src/agent/memory/episodic/store.js",
+      "line": 15
+    },
+    {
+      "constName": "TYPE",
+      "type": "memory.semantic",
+      "file": "src/agent/memory/semantic.js",
+      "line": 14
+    },
+    {
+      "constName": "TYPE",
+      "type": "psyche.trauma",
+      "file": "src/agent/psyche/trauma.js",
+      "line": 16
+    },
+    {
+      "constName": "TYPE",
+      "type": "agent.role.career",
+      "file": "src/agent/role/career.js",
+      "line": 14
+    },
+    {
+      "constName": "TYPE",
+      "type": "agent.role.society",
+      "file": "src/agent/role/society.js",
+      "line": 12
+    },
+    {
+      "constName": "TYPE",
+      "type": "agent.schedule.exec",
+      "file": "src/agent/schedule/executor.js",
+      "line": 17
+    },
+    {
+      "constName": "TYPE",
+      "type": "agent.schedule",
+      "file": "src/agent/schedule/planner.js",
+      "line": 16
+    },
+    {
+      "constName": "TYPE",
+      "type": "traits.tagset",
+      "file": "src/agent/traits/tagset/store.js",
+      "line": 15
+    },
+    {
+      "constName": "TYPE",
+      "type": "civilization.legacy.graph",
+      "file": "src/civilization/legacy/graph.js",
+      "line": 15
+    },
+    {
+      "constName": "HERITAGE_TYPE",
+      "type": "civilization.heritage",
+      "file": "src/civilization/restart.js",
+      "line": 16
+    },
+    {
+      "constName": "TYPE",
+      "type": "civilization.tech",
+      "file": "src/civilization/tech/tree.js",
+      "line": 16
+    },
+    {
+      "constName": "ACCOUNT_TYPE",
+      "type": "economy.account",
+      "file": "src/economy/ledger/transaction/querier.js",
+      "line": 13
+    },
+    {
+      "constName": "TX_TYPE",
+      "type": "economy.tx",
+      "file": "src/economy/ledger/transaction/querier.js",
+      "line": 14
+    },
+    {
+      "constName": "CONFIG_TYPE",
+      "type": "config",
+      "file": "src/infra/config.js",
+      "line": 12
+    },
+    {
+      "constName": "TYPE",
+      "type": "observer.chronicle.segment",
+      "file": "src/observer/chronicle/store.js",
+      "line": 21
+    },
+    {
+      "constName": "ARCHIVE_TYPE",
+      "type": "civilization.archive",
+      "file": "src/observer/experiment/compare.js",
+      "line": 11
+    },
+    {
+      "constName": "TYPE",
+      "type": "observer.action",
+      "file": "src/observer/recorder/action-log.js",
+      "line": 13
+    },
+    {
+      "constName": "TYPE",
+      "type": "observer.decision",
+      "file": "src/observer/recorder/decision-log.js",
+      "line": 13
+    },
+    {
+      "constName": "TYPE",
+      "type": "observer.event",
+      "file": "src/observer/recorder/event-log.js",
+      "line": 14
+    },
+    {
+      "constName": "MEME_TYPE",
+      "type": "social.culture.meme",
+      "file": "src/social/culture/meme.js",
+      "line": 13
+    },
+    {
+      "constName": "NORM_TYPE",
+      "type": "social.culture.norm",
+      "file": "src/social/culture/norms.js",
+      "line": 14
+    },
+    {
+      "constName": "VIOLATION_TYPE",
+      "type": "social.culture.norm.violation",
+      "file": "src/social/culture/norms.js",
+      "line": 15
+    },
+    {
+      "constName": "PRESSURE_TYPE",
+      "type": "social.culture.norm.pressure",
+      "file": "src/social/culture/norms.js",
+      "line": 16
+    },
+    {
+      "constName": "RITUAL_TYPE",
+      "type": "social.culture.ritual",
+      "file": "src/social/culture/ritual.js",
+      "line": 14
+    },
+    {
+      "constName": "TYPE",
+      "type": "social.family.chronicle",
+      "file": "src/social/family/chronicle.js",
+      "line": 11
+    },
+    {
+      "constName": "TYPE",
+      "type": "social.family.lineage",
+      "file": "src/social/family/lineage.js",
+      "line": 10
+    },
+    {
+      "constName": "TYPE",
+      "type": "social.family",
+      "file": "src/social/family/registry.js",
+      "line": 12
+    },
+    {
+      "constName": "TYPE",
+      "type": "social.family.trait",
+      "file": "src/social/family/trait/enforcer.js",
+      "line": 10
+    },
+    {
+      "constName": "TYPE",
+      "type": "social.graph.edge",
+      "file": "src/social/graph/edges.js",
+      "line": 12
+    },
+    {
+      "constName": "TYPE",
+      "type": "social.platform.post",
+      "file": "src/social/platform/posts.js",
+      "line": 18
+    },
+    {
+      "constName": "TYPE",
+      "type": "social.friendship",
+      "file": "src/social/relationship/friendship.js",
+      "line": 10
+    },
+    {
+      "constName": "TYPE",
+      "type": "social.romance",
+      "file": "src/social/relationship/romance.js",
+      "line": 10
+    },
+    {
+      "constName": "TYPE",
+      "type": "social.reputation",
+      "file": "src/social/reputation.js",
+      "line": 16
+    },
+    {
+      "constName": "TYPE",
+      "type": "survival.goal",
+      "file": "src/survival/goal.js",
+      "line": 13
+    },
+    {
+      "constName": "TYPE",
+      "type": "survival.resource",
+      "file": "src/survival/resources/_resource.js",
+      "line": 12
+    },
+    {
+      "constName": "TYPE",
+      "type": "survival.shelter",
+      "file": "src/survival/shelter.js",
+      "line": 15
+    },
+    {
+      "constName": "TYPE",
+      "type": "town.building.space",
+      "file": "src/town/building/space.js",
+      "line": 10
+    },
+    {
+      "constName": "TYPE",
+      "type": "town.building.structure",
+      "file": "src/town/building/structure.js",
+      "line": 11
+    },
+    {
+      "constName": "TYPE",
+      "type": "town.facility.venue",
+      "file": "src/town/facility/venue.js",
+      "line": 11
+    },
+    {
+      "constName": "TYPE",
+      "type": "town.zoning",
+      "file": "src/town/map/zoning.js",
+      "line": 10
+    },
+    {
+      "constName": "TYPE",
+      "type": "town.residence",
+      "file": "src/town/residence.js",
+      "line": 10
+    }
+  ],
+  "graphFlow": [
+    {
+      "type": "agent.role.career",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/agent/role/career.js"
+      ],
+      "consumers": [
+        "src/agent/role/career.js",
+        "src/agent/role/society.js",
+        "src/civilization/tech/research.js",
+        "src/runtime/orchestrator/loop.js",
+        "src/survival/health/treatment.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/agent/role/career.js:14"
+      ]
+    },
+    {
+      "type": "agent.role.society",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/agent/role/society.js"
+      ],
+      "consumers": [
+        "src/agent/role/career.js",
+        "src/agent/role/society.js",
+        "src/civilization/tech/research.js",
+        "src/runtime/orchestrator/loop.js",
+        "src/survival/health/treatment.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/agent/role/society.js:12"
+      ]
+    },
+    {
+      "type": "agent.schedule",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/agent/schedule/planner.js"
+      ],
+      "consumers": [
+        "src/agent/schedule/executor.js",
+        "src/agent/schedule/planner.js",
+        "src/runtime/orchestrator/loop.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/agent/schedule/planner.js:16"
+      ]
+    },
+    {
+      "type": "agent.schedule.exec",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/agent/schedule/executor.js"
+      ],
+      "consumers": [
+        "src/agent/schedule/executor.js",
+        "src/agent/schedule/planner.js",
+        "src/runtime/orchestrator/loop.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/agent/schedule/executor.js:17"
+      ]
+    },
+    {
+      "type": "anticipation.pool",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/agent/anticipation/pool/store.js"
+      ],
+      "consumers": [
+        "src/agent/anticipation/pool/store.js",
+        "src/runtime/orchestrator/loop.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/agent/anticipation/pool/store.js:11"
+      ]
+    },
+    {
+      "type": "civilization.archive",
+      "constName": "ARCHIVE_TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/observer/experiment/compare.js"
+      ],
+      "consumers": [
+        "src/observer/experiment/compare.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/observer/experiment/compare.js:11"
+      ]
+    },
+    {
+      "type": "civilization.heritage",
+      "constName": "HERITAGE_TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/civilization/restart.js"
+      ],
+      "consumers": [
+        "src/genesis/renewal.js",
+        "src/runtime/orchestrator/_stage3.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/civilization/restart.js:16"
+      ]
+    },
+    {
+      "type": "civilization.legacy.graph",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/civilization/legacy/graph.js"
+      ],
+      "consumers": [
+        "src/genesis/renewal.js",
+        "src/runtime/orchestrator/_stage3.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/civilization/legacy/graph.js:15"
+      ]
+    },
+    {
+      "type": "civilization.tech",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/civilization/tech/tree.js"
+      ],
+      "consumers": [
+        "src/agent/crafting/recipe.js",
+        "src/civilization/tech/lock.js",
+        "src/civilization/tech/research.js",
+        "src/civilization/tech/tree.js",
+        "src/runtime/orchestrator/_stage3.js",
+        "src/survival/resources/energy.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/civilization/tech/tree.js:16"
+      ]
+    },
+    {
+      "type": "config",
+      "constName": "CONFIG_TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/infra/config.js"
+      ],
+      "consumers": [
+        "src/infra/config.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/infra/config.js:12"
+      ]
+    },
+    {
+      "type": "economy.account",
+      "constName": "ACCOUNT_TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/economy/_store.js",
+        "src/economy/ledger/transaction/querier.js"
+      ],
+      "consumers": [
+        "src/economy/_store.js",
+        "src/economy/bank/credit.js",
+        "src/economy/industry/business.js",
+        "src/economy/industry/labour.js",
+        "src/economy/ledger/account.js",
+        "src/economy/ledger/transaction/querier.js",
+        "src/economy/ledger/transaction/recorder.js",
+        "src/economy/ledger/transaction/validator.js",
+        "src/economy/tax.js",
+        "src/runtime/orchestrator/_stage2.js",
+        "src/social/reputation.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/economy/ledger/transaction/querier.js:13"
+      ]
+    },
+    {
+      "type": "economy.tx",
+      "constName": "TX_TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/economy/_store.js",
+        "src/economy/ledger/transaction/querier.js"
+      ],
+      "consumers": [
+        "src/economy/_store.js",
+        "src/economy/bank/credit.js",
+        "src/economy/industry/business.js",
+        "src/economy/industry/labour.js",
+        "src/economy/ledger/account.js",
+        "src/economy/ledger/transaction/querier.js",
+        "src/economy/ledger/transaction/recorder.js",
+        "src/economy/ledger/transaction/validator.js",
+        "src/economy/tax.js",
+        "src/runtime/orchestrator/_stage2.js",
+        "src/social/reputation.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/economy/ledger/transaction/querier.js:14"
+      ]
+    },
+    {
+      "type": "memory.episodic",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/agent/memory/episodic/store.js"
+      ],
+      "consumers": [
+        "src/agent/memory/episodic/store.js",
+        "src/runtime/orchestrator/loop.js",
+        "src/social/graph/edges.js",
+        "src/social/platform/posts.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/agent/memory/episodic/store.js:15"
+      ]
+    },
+    {
+      "type": "memory.semantic",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/agent/memory/semantic.js"
+      ],
+      "consumers": [
+        "src/runtime/orchestrator/loop.js",
+        "src/social/graph/edges.js",
+        "src/social/platform/posts.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/agent/memory/semantic.js:14"
+      ]
+    },
+    {
+      "type": "observer.action",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/observer/chronicle/store.js",
+        "src/observer/recorder/action-log.js"
+      ],
+      "consumers": [
+        "src/civilization/collapse/confirmer.js",
+        "src/civilization/restart.js",
+        "src/observer/chronicle/store.js",
+        "src/observer/recorder/action-log.js",
+        "src/runtime/orchestrator/_stage2.js",
+        "src/runtime/orchestrator/loop.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/observer/recorder/action-log.js:13"
+      ]
+    },
+    {
+      "type": "observer.chronicle.segment",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/observer/chronicle/store.js"
+      ],
+      "consumers": [
+        "src/observer/chronicle/store.js",
+        "src/runtime/orchestrator/loop.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/observer/chronicle/store.js:21"
+      ]
+    },
+    {
+      "type": "observer.decision",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/observer/chronicle/store.js",
+        "src/observer/recorder/decision-log.js"
+      ],
+      "consumers": [
+        "src/civilization/collapse/confirmer.js",
+        "src/civilization/restart.js",
+        "src/observer/chronicle/store.js",
+        "src/observer/recorder/decision-log.js",
+        "src/runtime/orchestrator/_stage2.js",
+        "src/runtime/orchestrator/loop.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/observer/recorder/decision-log.js:13"
+      ]
+    },
+    {
+      "type": "observer.event",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/observer/chronicle/store.js",
+        "src/observer/recorder/event-log.js"
+      ],
+      "consumers": [
+        "src/civilization/collapse/confirmer.js",
+        "src/civilization/restart.js",
+        "src/observer/chronicle/store.js",
+        "src/observer/recorder/event-log.js",
+        "src/runtime/orchestrator/_stage2.js",
+        "src/runtime/orchestrator/loop.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/observer/recorder/event-log.js:14"
+      ]
+    },
+    {
+      "type": "psyche.trauma",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/agent/psyche/trauma.js"
+      ],
+      "consumers": [
+        "src/agent/psyche/trauma.js",
+        "src/runtime/orchestrator/_stage3.js",
+        "src/runtime/orchestrator/loop.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/agent/psyche/trauma.js:16"
+      ]
+    },
+    {
+      "type": "social.culture.meme",
+      "constName": "MEME_TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/social/culture/meme.js"
+      ],
+      "consumers": [
+        "src/runtime/orchestrator/_stage3.js",
+        "src/runtime/orchestrator/loop.js",
+        "src/social/culture/meme.js",
+        "src/social/culture/norms.js",
+        "src/social/culture/ritual.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/social/culture/meme.js:13"
+      ]
+    },
+    {
+      "type": "social.culture.norm",
+      "constName": "NORM_TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/social/culture/norms.js"
+      ],
+      "consumers": [
+        "src/runtime/orchestrator/_stage3.js",
+        "src/runtime/orchestrator/loop.js",
+        "src/social/culture/meme.js",
+        "src/social/culture/norms.js",
+        "src/social/culture/ritual.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/social/culture/norms.js:14"
+      ]
+    },
+    {
+      "type": "social.culture.norm.pressure",
+      "constName": "PRESSURE_TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/social/culture/norms.js"
+      ],
+      "consumers": [
+        "src/runtime/orchestrator/_stage3.js",
+        "src/runtime/orchestrator/loop.js",
+        "src/social/culture/meme.js",
+        "src/social/culture/norms.js",
+        "src/social/culture/ritual.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/social/culture/norms.js:16"
+      ]
+    },
+    {
+      "type": "social.culture.norm.violation",
+      "constName": "VIOLATION_TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/social/culture/norms.js"
+      ],
+      "consumers": [
+        "src/runtime/orchestrator/_stage3.js",
+        "src/runtime/orchestrator/loop.js",
+        "src/social/culture/meme.js",
+        "src/social/culture/norms.js",
+        "src/social/culture/ritual.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/social/culture/norms.js:15"
+      ]
+    },
+    {
+      "type": "social.culture.ritual",
+      "constName": "RITUAL_TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/social/culture/ritual.js"
+      ],
+      "consumers": [
+        "src/runtime/orchestrator/_stage3.js",
+        "src/runtime/orchestrator/loop.js",
+        "src/social/culture/meme.js",
+        "src/social/culture/norms.js",
+        "src/social/culture/ritual.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/social/culture/ritual.js:14"
+      ]
+    },
+    {
+      "type": "social.family",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/social/family/registry.js"
+      ],
+      "consumers": [
+        "src/runtime/orchestrator/_stage2.js",
+        "src/runtime/orchestrator/loop.js",
+        "src/social/family/chronicle.js",
+        "src/social/family/lineage.js",
+        "src/social/family/registry.js",
+        "src/social/family/trait/enforcer.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/social/family/registry.js:12"
+      ]
+    },
+    {
+      "type": "social.family.chronicle",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/social/family/chronicle.js"
+      ],
+      "consumers": [
+        "src/runtime/orchestrator/_stage2.js",
+        "src/runtime/orchestrator/loop.js",
+        "src/social/family/chronicle.js",
+        "src/social/family/lineage.js",
+        "src/social/family/registry.js",
+        "src/social/family/trait/enforcer.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/social/family/chronicle.js:11"
+      ]
+    },
+    {
+      "type": "social.family.lineage",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/social/family/lineage.js"
+      ],
+      "consumers": [
+        "src/runtime/orchestrator/_stage2.js",
+        "src/runtime/orchestrator/loop.js",
+        "src/social/family/chronicle.js",
+        "src/social/family/lineage.js",
+        "src/social/family/registry.js",
+        "src/social/family/trait/enforcer.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/social/family/lineage.js:10"
+      ]
+    },
+    {
+      "type": "social.family.trait",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/social/family/trait/enforcer.js"
+      ],
+      "consumers": [
+        "src/runtime/orchestrator/_stage2.js",
+        "src/runtime/orchestrator/loop.js",
+        "src/social/family/chronicle.js",
+        "src/social/family/lineage.js",
+        "src/social/family/registry.js",
+        "src/social/family/trait/enforcer.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/social/family/trait/enforcer.js:10"
+      ]
+    },
+    {
+      "type": "social.friendship",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/social/relationship/friendship.js"
+      ],
+      "consumers": [
+        "src/runtime/orchestrator/_stage2.js",
+        "src/runtime/orchestrator/loop.js",
+        "src/social/relationship/family.js",
+        "src/social/relationship/friendship.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/social/relationship/friendship.js:10"
+      ]
+    },
+    {
+      "type": "social.graph.edge",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/social/graph/edges.js"
+      ],
+      "consumers": [
+        "src/runtime/orchestrator/_stage2.js",
+        "src/runtime/orchestrator/loop.js",
+        "src/social/graph/community.js",
+        "src/social/graph/edges.js",
+        "src/social/platform/feeds.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/social/graph/edges.js:12"
+      ]
+    },
+    {
+      "type": "social.platform.post",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/social/platform/posts.js"
+      ],
+      "consumers": [
+        "src/civilization/legacy/summary/writer.js",
+        "src/runtime/orchestrator/_stage2.js",
+        "src/runtime/orchestrator/loop.js",
+        "src/social/platform/feeds.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/social/platform/posts.js:18"
+      ]
+    },
+    {
+      "type": "social.reputation",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/social/reputation.js"
+      ],
+      "consumers": [
+        "src/runtime/orchestrator/_stage2.js",
+        "src/runtime/orchestrator/loop.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/social/reputation.js:16"
+      ]
+    },
+    {
+      "type": "social.romance",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/social/relationship/romance.js"
+      ],
+      "consumers": [
+        "src/runtime/orchestrator/_stage2.js",
+        "src/runtime/orchestrator/loop.js",
+        "src/social/relationship/family.js",
+        "src/social/relationship/romance.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/social/relationship/romance.js:10"
+      ]
+    },
+    {
+      "type": "survival.goal",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/survival/goal.js"
+      ],
+      "consumers": [
+        "src/runtime/orchestrator/loop.js",
+        "src/survival/goal.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/survival/goal.js:13"
+      ]
+    },
+    {
+      "type": "survival.resource",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/survival/resources/_resource.js"
+      ],
+      "consumers": [
+        "src/civilization/tech/_energy.js",
+        "src/civilization/tech/research.js",
+        "src/economy/industry/production.js",
+        "src/runtime/orchestrator/_stage2.js",
+        "src/runtime/orchestrator/_stage3.js",
+        "src/runtime/orchestrator/loop.js",
+        "src/survival/health/_medical.js",
+        "src/survival/resources/_resource.js",
+        "src/survival/resources/energy.js",
+        "src/survival/resources/food.js",
+        "src/survival/resources/water.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/survival/resources/_resource.js:12"
+      ]
+    },
+    {
+      "type": "survival.shelter",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/survival/shelter.js"
+      ],
+      "consumers": [
+        "src/runtime/orchestrator/_stage2.js",
+        "src/runtime/orchestrator/loop.js",
+        "src/survival/events/impact.js",
+        "src/survival/shelter.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/survival/shelter.js:15"
+      ]
+    },
+    {
+      "type": "town.building.space",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/town/building/space.js"
+      ],
+      "consumers": [
+        "src/agent/crafting/construction.js",
+        "src/economy/industry/business.js",
+        "src/runtime/orchestrator/_stage2.js",
+        "src/runtime/orchestrator/loop.js",
+        "src/town/building/space.js",
+        "src/town/building/structure.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/town/building/space.js:10"
+      ]
+    },
+    {
+      "type": "town.building.structure",
+      "constName": "STRUCTURE_TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/agent/crafting/construction.js",
+        "src/town/building/structure.js"
+      ],
+      "consumers": [
+        "src/runtime/orchestrator/_stage2.js",
+        "src/runtime/orchestrator/loop.js",
+        "src/town/building/structure.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": true,
+      "declaredBy": [
+        "src/agent/crafting/construction.js:17",
+        "src/town/building/structure.js:11"
+      ]
+    },
+    {
+      "type": "town.facility.venue",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/town/facility/venue.js"
+      ],
+      "consumers": [
+        "src/social/culture/ritual.js",
+        "src/town/facility/venue.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/town/facility/venue.js:11"
+      ]
+    },
+    {
+      "type": "town.residence",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/survival/shelter.js",
+        "src/town/residence.js"
+      ],
+      "consumers": [
+        "src/runtime/orchestrator/_stage2.js",
+        "src/runtime/orchestrator/loop.js",
+        "src/survival/shelter.js",
+        "src/town/residence.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/town/residence.js:10"
+      ]
+    },
+    {
+      "type": "town.zoning",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/town/map/zoning.js"
+      ],
+      "consumers": [
+        "src/town/map/zoning.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/town/map/zoning.js:10"
+      ]
+    },
+    {
+      "type": "traits.tagset",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/agent/traits/tagset/store.js"
+      ],
+      "consumers": [
+        "src/agent/persona/personality.js",
+        "src/agent/traits/evolution.js",
+        "src/agent/traits/tagset/similarity.js",
+        "src/agent/traits/tagset/store.js",
+        "src/genesis/agent-factory/assemble.js",
+        "src/genesis/heredity/tags.js",
+        "src/genesis/tag-pool.js",
+        "src/runtime/orchestrator/_stage2.js",
+        "src/runtime/orchestrator/loop.js",
+        "src/social/family/inherit/applier.js",
+        "src/social/procreation/offspring.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/agent/traits/tagset/store.js:15"
+      ]
+    }
+  ],
+  "worldKeys": [
+    "agents.",
+    "needs",
+    "resources.energy",
+    "resources.food",
+    "resources.foragePool",
+    "resources.medical",
+    "resources.water",
+    "shelter",
+    "survival.crisis",
+    "survival.goal",
+    "tick"
+  ],
+  "stepPhases": [
+    {
+      "order": 0,
+      "name": "采集池再生",
+      "fn": "regenForagePool",
+      "writes": [
+        "runtime.orchestrator.loop.foragePool"
+      ],
+      "reads": [
+        "runtime.orchestrator.loop._alivePopValue"
+      ],
+      "note": "每 tick 补池，容量按存活人口缩放；人口缓存须先失效"
+    },
+    {
+      "order": 1,
+      "name": "生存推进",
+      "fn": "runSurvival",
+      "writes": [
+        "survival.resources.food.stockpile",
+        "survival.resources.water.stockpile",
+        "survival.needs.meter"
+      ],
+      "reads": [],
+      "note": "资源衰减 / 需求增长 / 突发事件；返回事件感知"
+    },
+    {
+      "order": 2,
+      "name": "感知分发",
+      "fn": "perception.collect + perception.route",
+      "writes": [
+        "runtime.orchestrator.perception.inbox"
+      ],
+      "reads": [],
+      "note": "事件转 percept 并路由给各居民"
+    },
+    {
+      "order": 2.5,
+      "name": "LAYA 紧迫度预取",
+      "fn": "prefetchLayaUrgency",
+      "writes": [
+        "runtime.orchestrator.loop.layaUrgencyCache"
+      ],
+      "reads": [],
+      "note": "可选通路，默认关闭；服务不可用静默回退。缓存每 tick clear"
+    },
+    {
+      "order": 3,
+      "name": "逐居民决策",
+      "fn": "decide",
+      "writes": [
+        "observer.recorder.decisionLog",
+        "agent.memory.semantic"
+      ],
+      "reads": [
+        "runtime.orchestrator._stage2._candidateStateCache",
+        "agent.traits.tagset.store"
+      ],
+      "note": "候选生成 → 评分 → softmax；可被模型/日程覆盖"
+    },
+    {
+      "order": 3.5,
+      "name": "模型决策覆盖",
+      "fn": "decideByModel",
+      "writes": [],
+      "reads": [],
+      "note": "仅 llmDecideEnabled 时；模型从**已可行候选集**内选，不新增行动"
+    },
+    {
+      "order": 3.6,
+      "name": "日程覆盖",
+      "fn": "scheduleOverride",
+      "writes": [
+        "agent.schedule.planner"
+      ],
+      "reads": [],
+      "note": "非紧急时以日程为准，紧急触发重排并写 agent.schedule.replan 事件"
+    },
+    {
+      "order": 4,
+      "name": "行动落库",
+      "fn": "performAgentAction + dispatch.actions",
+      "writes": [
+        "observer.recorder.actionLog",
+        "agent.memory.episodic.store",
+        "runtime.world-state"
+      ],
+      "reads": [
+        "runtime.orchestrator.dispatch.lastApplied"
+      ],
+      "note": "非生存行动由居民自己发起（调用真实模块）；生存行动走 effectFor"
+    },
+    {
+      "order": 4.5,
+      "name": "死亡判定",
+      "fn": "mortality",
+      "writes": [
+        "runtime.orchestrator.loop.mortality"
+      ],
+      "reads": [
+        "survival.needs.meter"
+      ],
+      "note": "饥饿/口渴持续 → 健康下降 → 移出 registry"
+    },
+    {
+      "order": 4.6,
+      "name": "公共角色影响",
+      "fn": "society",
+      "writes": [
+        "agent.role.society"
+      ],
+      "reads": [],
+      "note": "医生治疗等；society.activeEffects 决定识字与安全"
+    },
+    {
+      "order": 5,
+      "name": "阶段二（经济/社会）",
+      "fn": "stage2.tick",
+      "writes": [
+        "economy.*",
+        "social.*"
+      ],
+      "reads": [
+        "agent.inventory.backpack"
+      ],
+      "note": "平台/声誉/企业/贸易/家庭"
+    },
+    {
+      "order": 6,
+      "name": "阶段三（文明）",
+      "fn": "stage3.tick",
+      "writes": [
+        "civilization.*"
+      ],
+      "reads": [
+        "runtime.orchestrator.loop.foragePool"
+      ],
+      "note": "崩溃检测 → 遗产 → 重启；科技研究"
+    }
+  ],
+  "stateMachines": [
+    {
+      "id": "agent.lifecycle",
+      "states": [
+        "未出生",
+        "存活",
+        "死亡"
+      ],
+      "transitions": [
+        {
+          "from": "未出生",
+          "to": "存活",
+          "trigger": "agent.lifecycle.birth({tick, age})",
+          "at": "src/agent/lifecycle.js:49"
+        },
+        {
+          "from": "存活",
+          "to": "存活(阶段变化)",
+          "trigger": "agent.lifecycle.age() → stageOf(age) 未成年/成年/老年",
+          "at": "src/agent/lifecycle.js:33"
+        },
+        {
+          "from": "存活",
+          "to": "死亡",
+          "trigger": "age 超过老年死亡率 或 needs 顶格持续（starvation/dehydration）",
+          "at": "src/agent/lifecycle.js:98"
+        }
+      ],
+      "persistedIn": [
+        "runtime.registry",
+        "runtime.world-state"
+      ]
+    },
+    {
+      "id": "survival.health.disease",
+      "states": [
+        "未感染",
+        "感染中(severity 0..1)",
+        "康复"
+      ],
+      "transitions": [
+        {
+          "from": "未感染",
+          "to": "感染中",
+          "trigger": "disease.infect({diseaseId, severity})",
+          "at": "src/survival/health/disease.js:85"
+        },
+        {
+          "from": "感染中",
+          "to": "感染中",
+          "trigger": "symptom() 推进严重度",
+          "at": "src/survival/health/disease.js:114"
+        },
+        {
+          "from": "感染中",
+          "to": "康复",
+          "trigger": "disease.recover()（医疗物资 + 免疫加成）",
+          "at": "src/survival/health/disease.js:136"
+        }
+      ],
+      "persistedIn": [
+        "survival.health.disease"
+      ]
+    },
+    {
+      "id": "survival.health.epidemic(隔离)",
+      "states": [
+        "自由",
+        "隔离中"
+      ],
+      "transitions": [
+        {
+          "from": "自由",
+          "to": "隔离中",
+          "trigger": "epidemic.quarantine()（疫情达阈值时对感染者）",
+          "at": "src/survival/health/epidemic.js:70"
+        },
+        {
+          "from": "隔离中",
+          "to": "自由",
+          "trigger": "epidemic.release()（已康复）",
+          "at": "src/survival/health/epidemic.js:110"
+        }
+      ],
+      "persistedIn": [
+        "survival.health.epidemic.quarantined"
+      ],
+      "consumedBy": [
+        "runtime.orchestrator._stage2.expeditionConditionsFor（被隔离者不得外出）"
+      ],
+      "note": "曾长期是「只写不读」的装饰机制，且不幂等、只增不减；e63b932 修复"
+    },
+    {
+      "id": "industry.business",
+      "states": [
+        "active",
+        "insolvent",
+        "closed"
+      ],
+      "transitions": [
+        {
+          "from": "不存在",
+          "to": "active",
+          "trigger": "bootstrapBusinesses（**固定路径，非涌现**）",
+          "at": "src/runtime/orchestrator/_stage2.js"
+        },
+        {
+          "from": "active",
+          "to": "insolvent",
+          "trigger": "business.insolvent（余额不足）",
+          "at": "src/economy/industry/business.js:124"
+        },
+        {
+          "from": "active",
+          "to": "closed",
+          "trigger": "business.closed",
+          "at": "src/economy/industry/business.js:151"
+        }
+      ],
+      "persistedIn": [
+        "economy.industry.business"
+      ],
+      "note": "已知缺口：创办走固定路径，三家种子 businesses 恒为 2。需实现居民驱动的 found/invest"
+    },
+    {
+      "id": "civilization.lifecycle",
+      "states": [
+        "存续",
+        "疑似崩溃",
+        "已确认",
+        "已重启"
+      ],
+      "transitions": [
+        {
+          "from": "存续",
+          "to": "疑似崩溃",
+          "trigger": "collapse.detector.detect() 任一路径触发",
+          "at": "src/civilization/collapse/detector.js:44"
+        },
+        {
+          "from": "疑似崩溃",
+          "to": "已确认",
+          "trigger": "collapse.confirmer.confirm()",
+          "at": "src/civilization/collapse/confirmer.js"
+        },
+        {
+          "from": "已确认",
+          "to": "已重启",
+          "trigger": "restart.execute() 注入遗产并开新一代",
+          "at": "src/civilization/restart.js:59"
+        }
+      ],
+      "persistedIn": [
+        "civilization.legacy.graph",
+        "civilization.restart.HERITAGE_TYPE"
+      ],
+      "note": "resource_exhausted 需**持续** collapsedScarceTicks 才计入；单 tick 见底是水位振荡的正常谷底（e63b932 修复）"
+    },
+    {
+      "id": "agent.schedule",
+      "states": [
+        "初始日程",
+        "已重排"
+      ],
+      "transitions": [
+        {
+          "from": "无",
+          "to": "初始日程",
+          "trigger": "planner.generate({length, occupation, needs})",
+          "at": "src/agent/schedule/planner.js"
+        },
+        {
+          "from": "初始日程",
+          "to": "已重排",
+          "trigger": "planner.replan()（紧急需求 / 跨日）",
+          "at": "src/agent/schedule/planner.js"
+        }
+      ],
+      "persistedIn": [
+        "agent.schedule.planner"
+      ],
+      "note": "日程只作非危机时的默认倾向；居民保有自决权，可自主选择日程外行动"
+    }
+  ],
+  "diagnostics": [
+    {
+      "level": "warning",
+      "code": "store/reset-missing",
+      "subject": "agent.memory.episodic.store.lastGeneration",
+      "message": "文件有 __reset 但未覆盖该变量：跨 run 残留会使结果取决于此前跑过什么",
+      "at": "src/agent/memory/episodic/store.js:25"
+    },
+    {
+      "level": "warning",
+      "code": "store/reset-missing",
+      "subject": "infra.events.retry.deadLetters",
+      "message": "文件有 __reset 但未覆盖该变量：跨 run 残留会使结果取决于此前跑过什么",
+      "at": "src/infra/events/retry.js:22"
+    },
+    {
+      "level": "error",
+      "code": "store/never-read",
+      "subject": "infra.rng.seeded",
+      "message": "被 1 处写入（seed）但无任何函数读取：状态不产生行为后果",
+      "at": "src/infra/rng.js:10"
+    },
+    {
+      "level": "warning",
+      "code": "store/reset-missing",
+      "subject": "runtime.orchestrator._stage2.platformGen",
+      "message": "文件有 __reset 但未覆盖该变量：跨 run 残留会使结果取决于此前跑过什么",
+      "at": "src/runtime/orchestrator/_stage2.js:46"
+    },
+    {
+      "level": "error",
+      "code": "store/never-read",
+      "subject": "runtime.orchestrator.dispatch.lastApplied",
+      "message": "被 1 处写入（actions）但无任何函数读取：状态不产生行为后果",
+      "at": "src/runtime/orchestrator/dispatch.js:13"
+    },
+    {
+      "level": "warning",
+      "code": "store/reset-missing",
+      "subject": "runtime.orchestrator.loop.layaUrgencyCache",
+      "message": "文件有 __reset 但未覆盖该变量：跨 run 残留会使结果取决于此前跑过什么",
+      "at": "src/runtime/orchestrator/loop.js:68"
+    },
+    {
+      "level": "warning",
+      "code": "store/reset-missing",
+      "subject": "runtime.orchestrator.loop._alivePopGeneration",
+      "message": "文件有 __reset 但未覆盖该变量：跨 run 残留会使结果取决于此前跑过什么",
+      "at": "src/runtime/orchestrator/loop.js:156"
+    },
+    {
+      "level": "warning",
+      "code": "store/reset-missing",
+      "subject": "runtime.orchestrator.loop._alivePopValue",
+      "message": "文件有 __reset 但未覆盖该变量：跨 run 残留会使结果取决于此前跑过什么",
+      "at": "src/runtime/orchestrator/loop.js:157"
+    },
+    {
+      "level": "warning",
+      "code": "store/reset-missing",
+      "subject": "social.platform.posts.lastGeneration",
+      "message": "文件有 __reset 但未覆盖该变量：跨 run 残留会使结果取决于此前跑过什么",
+      "at": "src/social/platform/posts.js:35"
+    },
+    {
+      "level": "warning",
+      "code": "store/reset-missing",
+      "subject": "social.reputation.lastGeneration",
+      "message": "文件有 __reset 但未覆盖该变量：跨 run 残留会使结果取决于此前跑过什么",
+      "at": "src/social/reputation.js:46"
+    },
+    {
+      "level": "warning",
+      "code": "graph/duplicate-declaration",
+      "subject": "town.building.structure",
+      "message": "同一图类型被多处各自声明（src/agent/crafting/construction.js:17, src/town/building/structure.js:11）：契约重复，改一处易漏另一处",
+      "at": "src/agent/crafting/construction.js:17"
+    }
+  ]
+}

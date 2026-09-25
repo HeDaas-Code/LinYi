@@ -1,0 +1,30 @@
+---
+uid: 91bb9064
+id: truman-town-flow.state.area.runtime.alive-pop-value-a60f77b3
+parent: truman-town-flow.state.area.runtime
+name: {zh: "_alivePopValue", en: "_alivePopValue"}
+description:
+  zh: >
+      number 类型，声明于 src/runtime/orchestrator/loop.js:157。写入方 1 个、读取方 1 个；**未纳入复位**（跨 run 可能残留）。
+  en: >
+      number declared at src/runtime/orchestrator/loop.js:157; writers=1, readers=1
+revision: "0000000000000000000000000000000000000000"
+updated_at: "2026-01-01T00:00:00Z"
+fingerprint: pending
+source: []
+apis:
+  - protocol: rpc
+    path: "alive-pop-value-a60f77b3:write.alivePopulation"
+    description:
+      zh: >
+          写入方 alivePopulation
+      en: >
+          writer alivePopulation
+  - protocol: rpc
+    path: "alive-pop-value-a60f77b3:read.alivePopulation"
+    description:
+      zh: >
+          读取方 alivePopulation
+      en: >
+          reader alivePopulation
+---

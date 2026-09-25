@@ -8,3 +8,6 @@ reports/bench.md
 reports/bench-baseline.md
 reports/bench-tuned.md
 *.log
+
+# flow-index 重新生成的临时产物
+flow-index.regen.json
