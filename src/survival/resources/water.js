@@ -31,6 +31,11 @@ export function decay(rate = 0) {
   return water.decay(rate);
 }
 
+/** 按人口规模配置储量与容量（辅助方法，不属于声明 RPC 契约）。 */
+export function configure(input) {
+  return water.configure(input);
+}
+
 /** 复位水源库存到默认值（测试用）。 */
 export function __reset() {
   water.__reset();

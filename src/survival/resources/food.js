@@ -31,6 +31,11 @@ export function decay(rate = 0) {
   return food.decay(rate);
 }
 
+/** 按人口规模配置储量与容量（辅助方法，不属于声明 RPC 契约）。 */
+export function configure(input) {
+  return food.configure(input);
+}
+
 /** 复位食物库存到默认值（测试用）。 */
 export function __reset() {
   food.__reset();

@@ -122,6 +122,10 @@ test('涌现性: 50 居民 × 200 tick × 3 种子关键经济字段跨种子差
     rows.push({ seed, businesses: s.businesses, goodsProduced: s.goodsProduced, wagesPaid: s.wagesPaid, bankruptcies: s.bankruptcies, trades: s.trades });
   }
 
+  // 全部五项都应跨种子分化。这些差异来自居民的自主行为（上工/交易/制作）经由
+  // 真实账本传导到企业盈亏，进而决定破产与否——企业**会因经营失败而消亡**。
+  // 注：企业仍由 bootstrap 创办（config.businessCount），「居民自行创办企业」
+  // 尚未接入行动空间；分化来自经营结果而非创办决策，这一点是已知边界。
   assert.ok(varied(rows.map((r) => r.businesses)), 'businesses 应跨种子出现差异');
   assert.ok(varied(rows.map((r) => r.goodsProduced)), 'goodsProduced 应跨种子出现差异');
   assert.ok(varied(rows.map((r) => r.wagesPaid)), 'wagesPaid 应跨种子出现差异');

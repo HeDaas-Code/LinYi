@@ -6,6 +6,7 @@
  */
 
 export * as decide from './decide.js';
+export * as laya from './laya.js';
 export * as gateway from './llm/gateway.js';
 export * as router from './llm/router.js';
 export * as agentPrompt from './prompt/agent.js';

@@ -97,6 +97,24 @@ export function createResource({ kind, defaultStockpile = 100, defaultCapacity =
       return { ...snapshot(save(state)), decayed: loss };
     },
 
+    /**
+     * 按人口规模配置储量与容量（供播种期按居民数设定避难所储备）。
+     * 原实现只有固定默认值（stockpile 100 / capacity 100），在 50 人时人均仅 2 单位，
+     * 开局同步进食/饮水会在十余 tick 内抽干库存；而 effectFor 的守卫是
+     * 「consume 成功才降需求」，库存为 0 时需求不再下降 → 需求涨到 1.0 触发死亡。
+     * 只允许上调容量，不下调，避免误改既有默认语义。
+     */
+    configure({ stockpile, capacity } = {}) {
+      const state = load();
+      if (typeof capacity === 'number' && Number.isFinite(capacity) && capacity > state.capacity) {
+        state.capacity = capacity;
+      }
+      if (typeof stockpile === 'number' && Number.isFinite(stockpile) && stockpile > state.stockpile) {
+        state.stockpile = clamp(stockpile, 0, state.capacity);
+      }
+      return snapshot(save(state));
+    },
+
     /** 复位到默认库存（测试用；只影响本资源节点）。 */
     __reset() {
       save(defaults());

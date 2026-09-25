@@ -82,7 +82,15 @@ export function tick(input = {}) {
     const content = job.payload.content;
     const author = job.payload.author;
     const book = item.define({ category: 'book', name: title, properties: { title, content, author } });
-    const bp = backpack.add({ agentId: job.agentId, itemId: book.id, quantity: 1 });
+    // 背包满时**优雅降级**：书籍仍然被写出来（物品已定义、日志照写），只是无法入包。
+    // 原实现直接 let RangeError 冒泡，会终止整个模拟（实测 peaceful 档 50 人 200 tick 时
+    // 背包容量 20 被填满后崩溃）。著作完成不应导致世界停摆。
+    let bp = null;
+    try {
+      bp = backpack.add({ agentId: job.agentId, itemId: book.id, quantity: 1 });
+    } catch (err) {
+      bp = { agentId: job.agentId, itemId: book.id, quantity: 0, carried: false, reason: String(err?.message ?? err).slice(0, 120) };
+    }
     const log = recorder.actionLog.record({
       tick: clock.now().tick,
       agentId: job.agentId,

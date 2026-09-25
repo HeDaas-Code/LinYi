@@ -8,7 +8,12 @@
 
 import * as item from './item.js';
 
-const DEFAULT_CAPACITY = 20;
+// 20 → 48：容量 20 是从"4 行动骨架"时期留下的旧参数，与当前的采集/制作/著书玩法不匹配。
+// 实测 50 人 200 tick 后抽样 10 人中 9 人背包已满（20/20），木材最多只能存 2 个——
+// 而 build 需 3 个木材，于是「建造」在后期永久不可达（build 从 29 衰减到 1-4 次）；
+// trade 的 hasSurplus（物品>2）判断也被满包扭曲；著书完成时还会因满包抛 RangeError
+// 终止整个模拟。容量须与居民实际产出量相称。
+const DEFAULT_CAPACITY = 48;
 
 /** @type {Map<string, { items: Map<string, number>, capacity: number|null, maxWeight: number|null }>} */
 const backpacks = new Map();

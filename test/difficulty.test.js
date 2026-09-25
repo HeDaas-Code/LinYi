@@ -46,21 +46,23 @@ test('非法档位报错：config 抛 RangeError，control 抛 404/400', () => {
 
 test('切换档位后 loop.run 参数快照反映新档位（人均缩放随档位变化）', async () => {
   fresh();
-  // 和平档：forageRegen=12 / perCapita=0.2 / capacity=40 / poolPerCapita=1.5
+  // 和平档：先切档，再从 getDifficulty() 读参数（避免硬编码——参数会随实测校准调整）
   config.setDifficulty('peaceful');
+  const P = config.getDifficulty().params;
   loop.reset();
   const r = await loop.run({ ticks: 1, agentCount: 20, seed: 1, eventProbability: 0, needGrowth: { food: 0, water: 0 } });
   const pool = r.world.resources.foragePool;
-  assert.equal(pool.regen, 12 + 0.2 * 20, '和平档 regen 应 = 12 + 0.2×20');
-  assert.equal(pool.capacity, 40 + 1.5 * 20, '和平档 capacity 应 = 40 + 1.5×20');
+  assert.equal(pool.regen, P.forageRegen + P.forageRegenPerCapita * 20, '和平档 regen 应随预设人均缩放');
+  assert.equal(pool.capacity, P.foragePoolCapacity + P.foragePoolPerCapita * 20, '和平档 capacity 应随预设人均缩放');
 
-  // 切回标准档：forageRegen=8 / perCapita=0.15 / capacity=30 / poolPerCapita=1.0
+  // 切回标准档：读该档预设（standard 档引用 DEFAULTS）
   config.setDifficulty('standard');
+  const D = config.getDifficulty().params;
   loop.reset();
   const r2 = await loop.run({ ticks: 1, agentCount: 20, seed: 1, eventProbability: 0, needGrowth: { food: 0, water: 0 } });
   const pool2 = r2.world.resources.foragePool;
-  assert.equal(pool2.regen, 8 + 0.15 * 20, '标准档 regen 应 = 8 + 0.15×20');
-  assert.equal(pool2.capacity, 30 + 1.0 * 20, '标准档 capacity 应 = 30 + 1.0×20');
+  assert.equal(pool2.regen, D.forageRegen + D.forageRegenPerCapita * 20, '标准档 regen 应随默认值人均缩放');
+  assert.equal(pool2.capacity, D.foragePoolCapacity + D.foragePoolPerCapita * 20, '标准档 capacity 应随默认值人均缩放');
 });
 
 test('既有默认行为不回归：默认档为 standard 且可正常步进', async () => {

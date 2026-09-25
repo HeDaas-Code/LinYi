@@ -189,6 +189,26 @@ export function seed(agents, config = {}) {
   feedSignature = [];
   recentPostIds = [];
 
+  // 0) survival：初始储备**按人口计价**。
+  // 原实现用资源的固定默认值（food/water 各 100），在 50 人时只够撑约 10 tick：
+  // 50 人集中饮水每 tick 消耗十余单位，库存很快归零；而 effectFor 的守卫是
+  // 「consume 成功才降需求」，库存为 0 时 consume 返回 0 → 需求不再下降 →
+  // 需求涨到 1.0 触发饥饿/脱水死亡（实测 seed42+50人：t18~25 死亡 11 人，
+  // 死因 dehydration 而当时水库存已回升到 99——死亡发生在开局的储备枯竭窗口）。
+  // 避难所的储备本就应与它供养的居民数相称。
+  const perCapitaReserve = (typeof config.initialReservePerCapita === 'number' && config.initialReservePerCapita >= 0)
+    ? config.initialReservePerCapita : 4;
+  const capacityPerCapita = (typeof config.reserveCapacityPerCapita === 'number' && config.reserveCapacityPerCapita >= 0)
+    ? config.reserveCapacityPerCapita : 4;
+  const n = Math.max(1, agents.length);
+  // 容量必须同步放大，否则储量被 capacity=100 截断（produce 会 clamp 到容量）。
+  const capacity = Math.max(100, Math.round(capacityPerCapita * n));
+  const reserve = Math.max(100, Math.round(perCapitaReserve * n));
+  survival.resources.food.__reset();
+  survival.resources.water.__reset();
+  survival.resources.food.configure({ capacity, stockpile: reserve });
+  survival.resources.water.configure({ capacity, stockpile: reserve });
+
   // 1) town：初始避难所 + 居住分配
   const shelter = town.building.structure.spawnShelter();
   for (const a of agents) {
@@ -811,9 +831,21 @@ export function performAgentAction(tick, agentId, action, config = {}) {
       if (!acctId) return { ok: false, reason: 'no_account' };
       const woodId = itemIdsLocal.wood;
       if (!woodId) return { ok: false, reason: 'no_item_catalog' };
+      // P2 修正：可交易品不能是**制作原料**。木头同时被 craft(耗 2) 与 build(耗 3) 争夺，
+      // 居民几乎不可能稳定持有 >2 个，因此 trade 恒被 no_surplus 拒绝（实测后期仅 4-6 次）。
+      // 改为统计背包里除木头外的**实际产出品**（斧头/书籍等）作为可售余量——
+      // 交易的对象是劳动成果，而非生产资料。
       let held = 0;
-      try { held = agent.inventory.backpack.list({ agentId }).items?.[woodId] ?? 0; } catch { held = 0; }
-      const sellable = held - 2;
+      let surplus = 0;
+      try {
+        const items = agent.inventory.backpack.list({ agentId }).items ?? {};
+        for (const [id, n] of Object.entries(items)) {
+          if (!Number.isFinite(n) || n <= 0) continue;
+          held += n;
+          if (id !== woodId) surplus += n;
+        }
+      } catch { held = 0; surplus = 0; }
+      const sellable = surplus;
       if (sellable <= 0) return { ok: false, reason: 'no_surplus' };
       const price = (typeof config.rawPrice === 'number' && config.rawPrice > 0) ? config.rawPrice : 1;
       const revenue = sellable * price;
@@ -823,8 +855,22 @@ export function performAgentAction(tick, agentId, action, config = {}) {
           ? (economy.ledger.account.balance(poolAcct) ?? 0) : 0;
         if (bal < revenue) return { ok: false, reason: 'pool_insufficient' };
         economy.ledger.transaction.recorder.post({ from: poolAcct, to: acctId, amount: revenue, ref: 'trade', memo: '出售余粮' });
-        agent.inventory.backpack.remove({ agentId, itemId: woodId, quantity: sellable });
-        observer.recorder.eventLog.record({ tick, topic: 'agent.action.trade', payload: { itemId: woodId, quantity: sellable, revenue }, agentId });
+        // 按产出品逐项扣减（跳过木头），避免误扣生产资料。
+        let remaining = sellable;
+        const toRemove = [];
+        try {
+          const items = agent.inventory.backpack.list({ agentId }).items ?? {};
+          for (const [id, n] of Object.entries(items)) {
+            if (remaining <= 0) break;
+            if (id === woodId || !Number.isFinite(n) || n <= 0) continue;
+            const take = Math.min(remaining, n);
+            toRemove.push([id, take]);
+            remaining -= take;
+          }
+        } catch { /* 读取失败则不扣减 */ }
+        for (const [id, qty] of toRemove) agent.inventory.backpack.remove({ agentId, itemId: id, quantity: qty });
+        const soldItemId = toRemove.length > 0 ? toRemove[0][0] : woodId;
+        observer.recorder.eventLog.record({ tick, topic: 'agent.action.trade', payload: { itemId: soldItemId, quantity: sellable, revenue }, agentId });
         return { ok: true, detail: { quantity: sellable, revenue } };
       } catch (err) { return { ok: false, reason: 'trade_failed:' + err.message.slice(0, 40) }; }
     }

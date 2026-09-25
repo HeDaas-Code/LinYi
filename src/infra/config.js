@@ -30,11 +30,28 @@ export const DEFAULTS = Object.freeze({
   starvationTicks: 5,
   starvationHealthDecline: 0.2,
   eatThreshold: 0.4,
+  // P2：**危机**阈值——只有需求达到此水平，日程才允许结果性覆盖居民的决定。
+  // 必须显著高于 eatThreshold(0.4)，否则「该吃饭了」会被当成「快死了」，
+  // 日程词汇表在需求长期处于 0.4~0.5 的大规模局里整体接管决策。
+  crisisNeedLevel: 0.8,
   forageYield: 2,
-  foragePoolCapacity: 30,
-  forageRegen: 8,
-  foragePoolPerCapita: 1.0,
-  forageRegenPerCapita: 0.15,
+  // P2：采集带回木材的概率。木头原先只在出生时一次性发放、无再生途径，
+  // 导致 craft/build 的窗口只在开局几次后永久关闭。
+  // 0.25 → 0.45：build 需 3 个木材、craft 需 2 个，而采集次数被收紧后木材供给不足
+  // （实测 build 后期掉到 0-3 次）。提高带回概率让"建造"重新具备可行性。
+  forageWoodChance: 0.45,
+  // P2：采集池必须与规模匹配。原 perCapita 值（容量 1.0、再生 0.15）在 52 人时
+  // 只够每 tick 7.9 次采集，而 52 人全被评分奖励去采 → 池瞬间抽干、采集变空转。
+  // 提到容量 2.0 / 再生 0.35：52 人时可支持约 20 次采集/tick，与人口量级相称。
+  // P2：再生速率必须**全部按人均计价**。固定基数（forageRegen）在大规模下被稀释：
+  // 原 (regen 9 + 0.18/人) 在 50 人时支持 9.2 次采集/tick（0.18/人），
+  // 在 120 人时只支持 15.5 次（0.13/人）——人均采集机会随规模**下降**。
+  // 木材只从采集获得，于是 craft 在 80/120 人时从 323 崩到 6/10（制作灭绝）。
+  // 把基数并入人均项，使人均采集机会与规模无关。
+  foragePoolCapacity: 32,
+  forageRegen: 0,
+  foragePoolPerCapita: 2.0,
+  forageRegenPerCapita: 0.40,
   bankCapital: 500,
   creditRate: 0.01,
   interestMode: 'simple',
@@ -108,13 +125,22 @@ export const DEFAULTS = Object.freeze({
   llmDecideEveryTicks: 1,
   llmDecideMaxAgents: 1,
   actionSpaceAttribution: false,
-  // D0 生存门：人均库存低于该值时非生存行动让位于生存行动。
-  // 注意这必须是「真实短缺」判据，不能是「理想储备」判据：3.0 在 50 人规模下永不可达
-  //（实测人均库存长期停在 1.4-1.8），门因此恒开，等于把全城钉在永久应急态——
-  // t1-10 之后社交/制作/建造/交易全灭（craft 28→0、social 74→0），这是同一反模式的第 6 次复发。
-  // 1.5 实测：门常开率 100%→5-11%（仅在真短缺时触发），4 种子存活仍 52/52，
-  // 且 craft 28→77、build 23→36、write 15→50、social 74→131 全部恢复。
+  // 生存门：人均库存低于该值时，非生存行动在打分侧受到额外惩罚。
+  // 这必须是「真实短缺」判据，不能是「理想储备」判据：3.0 在 50 人规模下永不可达
+  //（实测人均库存长期停在 1.4-1.8），门因此恒开，等于把全城钉在永久应急态。
+  // P2 起门**不再删除候选**（旧实现在受威胁时把非生存行动从窗口移除），
+  // 只作为软压制的一个分量参与打分。
   survivalGatePerCapita: 1.5,
+  // P2：非生存行动的连续软压制权重。惩罚 = weight × pressureScore（pressureScore ∈ [0,1]），
+  // 因此有上限、永不清零——人格/动机/预演仍可把非生存行动顶回来。
+  // 取代了旧实现「受威胁即删除候选 + 硬扣 5 分」的刚性门（用户明确否掉）。
+  nonSurvivalPressureWeight: 4,
+  // P2：LAYA 语义紧迫度接入开关。默认关闭——它是**加权项**（压力分的 15%），
+  // 开启后需要本地 LAYA 服务可用；不可用时静默回退，决策链不受影响。
+  layaSemanticEnabled: false,
+  // P2：每 tick 允许调用 LAYA 的居民上限。实测全量预取（20 人 30 tick）耗 78s，
+  // 未开启时仅 0.45s；只对已达进食阈值者调用后，调用量降到个位数且覆盖真正需要判断的人。
+  layaMaxAgents: 8,
 });
 
 /** 返回默认值深拷贝快照。 */
@@ -136,8 +162,10 @@ export const DIFFICULTY_PRESETS = Object.freeze({
       eventProbability: 0.15,
       foragePoolCapacity: 40,
       forageRegen: 12,
-      foragePoolPerCapita: 1.5,
-      forageRegenPerCapita: 0.2,
+      foragePoolPerCapita: 2.6,
+      forageRegenPerCapita: 0.5,
+      initialReservePerCapita: 6,
+      reserveCapacityPerCapita: 6,
     }),
   }),
   standard: Object.freeze({
@@ -150,6 +178,8 @@ export const DIFFICULTY_PRESETS = Object.freeze({
       forageRegen: DEFAULTS.forageRegen,
       foragePoolPerCapita: DEFAULTS.foragePoolPerCapita,
       forageRegenPerCapita: DEFAULTS.forageRegenPerCapita,
+      initialReservePerCapita: DEFAULTS.initialReservePerCapita,
+      reserveCapacityPerCapita: DEFAULTS.reserveCapacityPerCapita,
     }),
   }),
   harsh: Object.freeze({
@@ -159,9 +189,12 @@ export const DIFFICULTY_PRESETS = Object.freeze({
       needGrowth: Object.freeze({ food: 0.12, water: 0.12 }),
       eventProbability: 0.3,
       foragePoolCapacity: 30,
-      forageRegen: 8,
-      foragePoolPerCapita: 1.0,
-      forageRegenPerCapita: 0.15,
+      forageRegen: 0,
+      foragePoolPerCapita: 1.6,
+      forageRegenPerCapita: 0.22,
+      // 严酷档的初始储备本就稀少（人均 1.5，避难所几乎见底）——这是"难度"的来源之一。
+      initialReservePerCapita: 1.5,
+      reserveCapacityPerCapita: 3,
       businessCapital: 80,
       goodsDemandPerCapita: 0.1,
       rawPrice: 3,
@@ -177,9 +210,12 @@ export const DIFFICULTY_PRESETS = Object.freeze({
       needGrowth: Object.freeze({ food: 0.16, water: 0.16 }),
       eventProbability: 0.3,
       foragePoolCapacity: 30,
-      forageRegen: 8,
-      foragePoolPerCapita: 1.0,
+      forageRegen: 0,
+      foragePoolPerCapita: 1.2,
       forageRegenPerCapita: 0.15,
+      // 末日档储备近乎为零，采集也最贫瘠。
+      initialReservePerCapita: 1.0,
+      reserveCapacityPerCapita: 2,
       businessCapital: 50,
       goodsDemandPerCapita: 0.05,
       rawPrice: 4,
@@ -295,6 +331,10 @@ const RULES = {
   starvationTicks: (v) => (isPosInt(v) ? true : '必须是正整数'),
   starvationHealthDecline: (v) => (isUnit(v) ? true : '必须是 [0,1] 区间数值'),
   eatThreshold: (v) => (isUnit(v) ? true : '必须是 [0,1] 区间数值'),
+  crisisNeedLevel: (v) => (isUnit(v) ? true : '必须是 [0,1] 区间数值'),
+  nonSurvivalPressureWeight: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
+  layaSemanticEnabled: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
+  layaMaxAgents: (v) => (isNonNegInt(v) ? true : '必须是非负整数'),
   forageYield: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
   foragePoolCapacity: (v) => ((isNum(v) && v > 0) ? true : '必须是正有限数值'),
   forageRegen: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
@@ -329,6 +369,7 @@ const RULES = {
   actionSpaceEnabled: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
   actionSpaceAttribution: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
   survivalGatePerCapita: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
+  forageWoodChance: (v) => (isUnit(v) ? true : '必须是 [0,1] 区间数值'),
   llmDecideEnabled: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
   llmDecideEveryTicks: (v) => (isPosInt(v) ? true : '必须是正整数'),
   llmDecideMaxAgents: (v) => (isPosInt(v) ? true : '必须是正整数'),

@@ -56,6 +56,73 @@ const DYNAMIC_BASE_SCORE = Object.freeze({
   craft: 0.9, build: 0.8, write: 0.7, work: 1.0, trade: 0.8, socialize: 0.7, court: 0.85, accept: 1.1,
 });
 
+/**
+ * 语义紧迫度缓存（LAYA 结构化判断服务）。
+ *
+ * 只作**加权项**（压力分的 15%），不是决定者——决策权始终在居民手里。
+ * LAYA 是确定性函数，故按状态键缓存；服务不可用时静默回退（返回 null），
+ * 决策链完全不受影响。
+ */
+const layaUrgencyCache = new Map();
+
+/** 读取某居民的语义紧迫度（0..1）；未预取或服务不可用时返回 null。 */
+function layaUrgencyFor(agentId) {
+  const v = layaUrgencyCache.get(agentId);
+  return typeof v === 'number' && Number.isFinite(v) ? v : null;
+}
+
+/** 供 LAYA 预取使用的居民记录（只需 id 与名字）。 */
+function agentRecordsForLaya() {
+  return registry.lookup({ type: 'agent' }).map((a) => ({ id: a.id, name: a.name ?? a.id }));
+}
+
+/** 把数值分桶：既让缓存命中率上升（LAYA 是确定性函数），也避免浮点抖动造成键爆炸。 */
+function bucket(v, edges) {
+  for (let i = 0; i < edges.length; i += 1) if (v < edges[i]) return i;
+  return edges.length;
+}
+
+/**
+ * 为全体居民预取语义紧迫度（LAYA 结构化判断）。
+ *
+ * 单次调用约 200ms（首次），故**逐 tick 对全体居民调用代价过高**；
+ * 采用「按语义分桶的状态键」+ 进程内缓存：同一处境只调用一次，之后 0ms 命中。
+ * 任一居民失败静默跳过（其 urgency 为 null，压力分的语义项记 0），
+ * **决策链完全不受 LAYA 可用性影响**。
+ */
+async function prefetchLayaUrgency(records, cfg) {
+  const foodStock = survival.resources.food.query().stockpile ?? 0;
+  const waterStock = survival.resources.water.query().stockpile ?? 0;
+  const alive = Math.max(1, alivePopulation());
+  const perCapita = Math.min(foodStock, waterStock) / alive;
+  const hungerText = ['完全不饿', '略微饥饿', '明显饥饿', '非常饥饿', '极度饥饿'];
+  const thirstText = ['完全不渴', '略微口渴', '明显口渴', '非常口渴', '极度口渴'];
+  const scarcityText = ['储备充裕', '储备偏少', '储备紧张', '储备见底', '储备耗尽'];
+  // 实测（20 人 30 tick）：全量预取 calls=539、墙钟 78s（未开启时 0.45s）——慢 175 倍，
+  // 并发时单次延迟由 200ms 涨到 ~2.8s。这对主循环不可接受。
+  // 因此**只对处境已达进食阈值的人**调用：数量少（通常个位数）、价值高（正是需要判断的人），
+  // 且消息按分桶生成，缓存命中率随之提高。
+  const needThreshold = clampUnit(cfg.eatThreshold, 0.4);
+  const candidates = records.filter((rec) => {
+    try {
+      const needs = survival.needs.meter.query({ agentId: rec.id }).needs;
+      return needs.food >= needThreshold || needs.water >= needThreshold;
+    } catch { return false; }
+  });
+  const budget = Number.isInteger(cfg.layaMaxAgents) && cfg.layaMaxAgents > 0 ? cfg.layaMaxAgents : 8;
+  const selected = candidates.slice(0, budget);
+  await Promise.all(selected.map(async (rec) => {
+    try {
+      const needs = survival.needs.meter.query({ agentId: rec.id }).needs;
+      const msg = '居民处于地下避难所中：' + hungerText[bucket(needs.food, [0.2, 0.4, 0.7, 0.9])]
+        + '，' + thirstText[bucket(needs.water, [0.2, 0.4, 0.7, 0.9])]
+        + '；避难所' + scarcityText[bucket(perCapita, [0.5, 1.5, 3, 6])] + '。';
+      const r = await ai.laya.survivalUrgency({ message: msg });
+      layaUrgencyCache.set(rec.id, r.urgency);
+    } catch { layaUrgencyCache.set(rec.id, null); }
+  }));
+}
+
 /** 默认特质标签（tagset 采样的底座）。 */
 const DEFAULT_TAGS = Object.freeze({ resilient: 1.0, cautious: 0.8, sociable: 0.6, curious: 0.7, hardworking: 0.9 });
 
@@ -228,21 +295,32 @@ function applySocietyEffects(tick, cfg) {
 function scheduleOverride(decision, agentId, tick, cfg) {
   const need = decision?.context?.dominantNeed;
   const level = (decision?.context?.pressures ?? []).find((pp) => pp.need === need)?.level ?? 0;
-  const emergency = (need === 'food' || need === 'water') && level >= clampUnit(cfg.eatThreshold, 0.4);
+  // P2 修正：emergency 必须用**危机**阈值，而不是「该吃饭了」的 eatThreshold(0.4)。
+  // 用 0.4 时，80 人局的需求长期落在 0.4~0.5，于是居民**几乎永远处于"紧急"**，
+  // 日程的 4 行动词汇表整体接管决策（实测 t100+ 被日程覆盖 3456 次 vs 居民自选 629 次，
+  // craft 因此从 50 人局的 351 次塌到 6 次）。轻微饥饿不该剥夺居民的决定权。
+  const crisisLevel = clampUnit(cfg.crisisNeedLevel ?? 0.8, 0.4);
+  const emergency = (need === 'food' || need === 'water') && level >= crisisLevel;
   const scheduled = agent.schedule.executor.tick(agentId, { tick, interrupted: emergency, trigger: emergency ? 'emergency' : 'interrupt' });
   if (!scheduled || !scheduled.action) return null;
   // D0：日程**建议**行动，但不得剥夺居民自己可执行的「非生存选择」。
   // 仅当（a）处于紧急需求，或（b）居民选的是生存骨架行动时，日程才结果性覆盖；
   // 否则日程仅作为理由记录，行动仍取居民的决定（否则日程会退回成"代码替居民决定"）。
   const own = decision?.action;
-  const ownIsSurvival = own === 'eat' || own === 'drink' || own === 'forage' || own === 'rest';
-  if (!emergency && !ownIsSurvival && own !== undefined) {
+  // P2 修正：非紧急时**任何**居民自选行动都优先于日程。
+  // 旧实现只在「居民选了非生存行动」时让它赢，一旦居民选 eat/drink/forage/rest 就掉进
+  // 下面的兜底分支被日程接管——等价于「你选了正常的生存行动，反而失去了决定权」。
+  // 后果：居民从来没有真正执行过自己的休息/进食选择，行为维度被日程词汇表整体接管。
+  // 日程的定位是**建议与理由**（记入 reason/meta），不是决定者。
+  if (!emergency) {
     return {
-      action: own,
-      reason: '居民自选「' + own + '」（日程建议：' + scheduled.action + '）',
+      action: own ?? scheduled.action,
+      reason: own !== undefined
+        ? '居民自选「' + own + '」（日程建议：' + scheduled.action + '）'
+        : '日程块「' + (scheduled.block?.reason ?? scheduled.action) + '」',
       replanned: scheduled.replanned,
-      trigger: 'agent_choice',
-      meta: { action: own, block: scheduled.block?.reason ?? null, suggested: scheduled.action, replanned: scheduled.replanned },
+      trigger: own !== undefined ? 'agent_choice' : 'schedule',
+      meta: { action: own ?? scheduled.action, block: scheduled.block?.reason ?? null, suggested: scheduled.action, replanned: scheduled.replanned },
     };
   }
   // P1 修正：紧急时日程也不得夺走**采集**。drought/blight/storm 等环境事件会把居民
@@ -254,9 +332,15 @@ function scheduleOverride(decision, agentId, tick, cfg) {
   // （water_need 可能为 0），若也一并尊重，居民会饿着肚子一路喝水到死
   // （实测 seed1：food_need=1.000、食物库存 100、t88-t95 连续 8 tick 选 drink，
   //   期间 food 需求降幅为 0，至 t95-t101 集中饿死 10 人）。
+  // P2 修正：forage 只在**采集池确有可采量**时才算满足紧急需求。
+  // 原实现无条件放行 own==='forage'，于是采集池被抽干后（take=0、零产出），
+  // 紧急中的居民仍被允许一路采集，需求升到 1.0 也无人进食/饮水——
+  // 实测 seed42+50人+200tick 在 t18~25 死亡 11 人，死因 dehydration/starvation
+  // 而当时水库存为 99（典型的「守着满仓水渴死」）。
+  const forageHasYield = (foragePool ?? 0) > 0;
   const ownMatchesEmergency = (need === 'food' && own === 'eat')
     || (need === 'water' && own === 'drink')
-    || own === 'forage';
+    || (own === 'forage' && forageHasYield);
   if (emergency && scheduled.action !== 'forage' && ownMatchesEmergency) {
     return {
       action: own,
@@ -318,6 +402,13 @@ function dominantNeed(pressures) {
  * 采集（资源越稀缺越该采集）/ 休息。避免"永远进食"导致资源过快枯竭（P0-2 暴露）。
  */
 function scoreAction(candidate, ctx = {}) {
+  // P2：采集奖励必须绑定**实际可采量**。原实现给 forage 固定 +1.2+scarcity（生存门内再 +3），
+  // 完全不看采集池余量；而池每 tick 只再生 15.8、每次取 2 → 仅够 7.9 次采集，52 人却全被
+  // 奖励去采。池被瞬间抽干后 take=0（收益为零），但奖励仍在 → 全员持续选择 forage 做
+  // **零收益空转**，霸占决策带宽，craft/social/write 因此永久归零（实测 t100 后 forage 2686
+  // 次而 craft/socialize 各 1 次，且库存充裕、零死亡——证明与资源压力无关）。
+  // 现在按池余量缩放：池空时奖励为 0，"采不到就别去采"。
+  const poolFactor = ctx.forageAvailable === undefined ? 1 : clampUnit(ctx.forageAvailable, 0);
   let score = typeof candidate?.score === 'number' && Number.isFinite(candidate.score) ? candidate.score : 0;
   const need = ctx.dominantNeed;
   const level = typeof ctx.dominantLevel === 'number' ? ctx.dominantLevel : 0;
@@ -327,7 +418,7 @@ function scoreAction(candidate, ctx = {}) {
   const thirsty = need === 'water' && level >= threshold;
   if (candidate?.action === 'eat' && hungry) score += 2;
   if (candidate?.action === 'drink' && thirsty) score += 2;
-  if (candidate?.action === 'forage' && !hungry && !thirsty) score += 1.2 + scarcity;
+  if (candidate?.action === 'forage' && !hungry && !thirsty) score += (1.2 + scarcity) * poolFactor;
   if (candidate?.action === 'rest' && !hungry && !thirsty) score += 0.5;
   // P1 生存门（最终打分侧）：修剪器侧的门只能把候选**挤出窗口**；窗口一放宽，
   // 非生存行动仍会被性格/行动模拟的加成推上首位（实测 pruneK=6 整镇饿死）。
@@ -338,12 +429,12 @@ function scoreAction(candidate, ctx = {}) {
     if (candidate?.action === 'rest') score -= 1;
     // 采集优先**仅限尚未挨饿时**：若已饿/渴，eat/drink 的 +2 必须压过采集。
     // 否则会出现「守着满仓粮饿死」——实测 seed7 全员在 food=92 时需求饱和并死亡。
-    if (candidate?.action === 'forage' && !hungry && !thirsty) score += 3;
+    if (candidate?.action === 'forage' && !hungry && !thirsty) score += 3 * poolFactor;
     // 但库存真正见底时必须反转：此时 eat/drink 是**空操作**（consume 无货可扣，
     // 需求也不会下降），只有 forage 能补货。若仍让 eat 胜出，居民会从库存归零
     // 一路空转至死（实测 seed42+phase2：t13 起连续 19 tick 选 eat、forage 从未出现，
     // 至 t32 全员死亡）。判据必须用「对应库存是否为 0」这一直接事实。
-    if (candidate?.action === 'forage' && (ctx.foodEmpty === true || ctx.waterEmpty === true)) score += 6;
+    if (candidate?.action === 'forage' && (ctx.foodEmpty === true || ctx.waterEmpty === true)) score += 6 * poolFactor;
     // 空操作的进食/饮水必须明确降权，否则它们仍靠 +2 与基础分占优。
     if (candidate?.action === 'eat' && ctx.foodEmpty === true) score -= 8;
     if (candidate?.action === 'drink' && ctx.waterEmpty === true) score -= 8;
@@ -357,7 +448,18 @@ function refreshCandidates(agentId, tick, cfg) {
   if (cfg.actionSpaceEnabled === false) return null;
   const state = stage2.candidateStateFor(agentId, tick);
   let held = 0;
-  try { held = agent.inventory.backpack.list({ agentId }).items?.[stage2.craftMaterialId()] ?? 0; } catch { held = 0; }
+  const woodId = stage2.craftMaterialId();
+  // 产出品余量（不含制作原料木头）：trade 的可售对象是劳动成果，不是生产资料。
+  // 木头被 craft/build 持续消耗，用「木头>2」作判据会让 trade 永久不可达。
+  let surplusItems = 0;
+  try {
+    const items = agent.inventory.backpack.list({ agentId }).items ?? {};
+    for (const [id, n] of Object.entries(items)) {
+      if (!Number.isFinite(n) || n <= 0) continue;
+      if (id !== woodId) surplusItems += n;
+    }
+  } catch { surplusItems = 0; }
+  try { held = agent.inventory.backpack.list({ agentId }).items?.[woodId] ?? 0; } catch { held = 0; }
   const planned = agent.decision.candidates.plan({
     actionSpaceEnabled: cfg.actionSpaceEnabled !== false,
     hasWorkbenchMaterial: held >= 2,
@@ -365,7 +467,7 @@ function refreshCandidates(agentId, tick, cfg) {
     literate: societyEffectsHasLiteracy(),
     employed: state.employed,
     businessActive: state.businessActive,
-    hasSurplus: held > 2,
+    hasSurplus: surplusItems > 2,
     hasPeer: state.hasPeer,
     // P1：择偶资格与待答复表白改为真实状态（此前恒为 false，导致 court 永不出现）。
     eligibleMate: state.eligibleMate === true,
@@ -423,7 +525,8 @@ function decide(agentId, tick, percepts, cfg = {}) {
   const aliveNow = Math.max(1, alivePopulation());
   const foodStock = survival.resources.food.query().stockpile ?? 0;
   const waterStock = survival.resources.water.query().stockpile ?? 0;
-  const survivalGate = (Math.min(foodStock, waterStock) / aliveNow) < (cfg.survivalGatePerCapita ?? 3);
+  const perCapitaStock = Math.min(foodStock, waterStock) / aliveNow;
+  const survivalGate = perCapitaStock < (cfg.survivalGatePerCapita ?? 1.5);
   // 库存见底标志：**不依赖主导需求**——食水同时归零时主导需求可能已切走，
   // 用派生量推断会导致门静默失效（实测 forage 仍被压到 74 次而 eat 1081 次）。
   const foodEmpty = foodStock <= 0;
@@ -439,13 +542,31 @@ function decide(agentId, tick, percepts, cfg = {}) {
     foodEmpty,
     waterEmpty,
   });
-  // P1 生存门（集合侧）：扣分是可被覆盖的——行动模拟与性格的加成能盖过 −5，
-  // 实测 seed42 agentCount=50 时全员在 20 tick 内死亡（食物并不缺）。
-  // 因此受威胁时直接收缩行动空间：窗口里只留生存行动，让选择在 eat/drink/forage/rest 内进行。
+  // P2：**软压制取代物理删除**。
+  // 旧实现（P1）在受威胁时把非生存行动从候选窗口里**删掉**——这不是"居民在压力下选择
+  // 生存"，而是"系统不允许居民选择别的"。实测后果：survivalGatePerCapita=3.0 在 50 人局
+  // 永远不可达（人均库存稳定在 1.4~1.8），门恒为真 → craft/build/write/trade/socialize
+  // 在 t30 后全部归零。用户明确指出这"太过死板"。
+  // 现在：候选窗口保持完整，压力以**连续量**进入最终打分（见 scoreAction 的 pressureScore），
+  // 惩罚有上限且可被人格/动机/预演翻盘——"饿着也要写作"因此成为可能。
+  // P2 实测结论（重要，勿再重复尝试）：**这个收缩是承重的，不能用"连续软压制"取代。**
+  // 试图改成「压力分软压制 + 仅在危机线(0.8)收缩」后实测：seed1 死 19 人、seed42 全灭 52 人。
+  // 直接读数：seed42 的水库 t1→t5 由 200 掉到 6（消耗 ~39/tick），而采集再生仅 ~20.8/tick——
+  // 需求远超供给。收缩窗口是唯一能逼出足够采集（t11-30 forage 217 vs 软压制版 29）的机制。
+  // 因此保留 0.4 触发线；"不够宽松"的真正解法是**提高供给侧**（人均储备与人均采集再生，
+  // 见 config 的 initialReservePerCapita / forageRegenPerCapita），而不是拆掉生存保护。
   const threatened = needLevel >= (cfg.eatThreshold ?? 0.4) || survivalGate === true;
   const window = threatened
     ? (pruned.some((a) => a.action === 'forage') ? pruned.filter((a) => SURVIVAL_ACTIONS.includes(a.action)) : pruned)
     : pruned;
+  // 压力分（0..1）＝个体需求为主 + 公共库存为辅 + 语义紧迫度为补充。
+  // 个体需求占大头：居民**自己饿了**才该被压；仓库空但自己不饿，不该被剥夺决定权
+  // （旧配比让 stock 分量主导：居民 44/52 需求 <0.2 却被扣 1.6 分，超过 craft 的基础分）。
+  const stockPressure = Math.max(0, Math.min(1, 1 - perCapitaStock / (cfg.survivalGatePerCapita ?? 1.5)));
+  const emptyPressure = (foodEmpty || waterEmpty) ? 1 : 0;
+  const semanticPressure = clampUnit(layaUrgencyFor(agentId), 0);
+  const pressureScore = clampUnit(
+    0.6 * needLevel + 0.25 * stockPressure + 0.15 * Math.max(emptyPressure, semanticPressure), 0);
   const resources = { food: survival.resources.food.query(), water: survival.resources.water.query() };
   const predicted = agent.anticipation.simulator.predict(agentId, window, {
     needs: needsNow,
@@ -463,6 +584,10 @@ function decide(agentId, tick, percepts, cfg = {}) {
     tags: [need ?? 'sustenance'],
   }, { limit: cfg.semanticLimit ?? 3 });
 
+  // P2：采集可及性（0..1）＝池余量 / 池容量。池空时采集奖励归零，避免"采不到还去采"的空转。
+  const poolCap = Math.max(1, foragePoolCapacityOf(cfg));
+  const forageAvailable = Math.max(0, Math.min(1, (foragePool ?? 0) / poolCap));
+
   const origScore = new Map(anticipations.map((a) => [a.id, a.score]));
   const candidates = window.map((a) => ({ id: a.id, action: a.action, score: origScore.get(a.id) ?? 0 }));
   const choice = agent.decision.selector.choose({
@@ -476,6 +601,7 @@ function decide(agentId, tick, percepts, cfg = {}) {
       survivalGate,
       foodEmpty,
       waterEmpty,
+      forageAvailable,
     }) + agent.persona.personality.evaluate(agentId, candidate.action)
       + (simBy.get(candidate.id) ?? 0),
   });
@@ -546,6 +672,14 @@ function effectFor(agentId, action, cfg = {}) {
         if (take > 0) {
           survival.resources.food.produce(take);
           survival.resources.water.produce(take);
+          // P2：采集时按概率带回木材。原实现里木头只在出生时一次性发 6 个、无任何再生途径，
+          // 而 craft 耗 2 / build 耗 3 —— 制作与建造的窗口只在开局几次，之后**永久关闭**
+          // （实测 t100 后 craft/build 均为 0，而抽样 12 人中 8 人木材已归零）。
+          // 采集是唯一与外界的接触面，木材自此处产出才符合语义。
+          const woodId = stage2.craftMaterialId();
+          if (woodId !== null && rng.next() < (cfg.forageWoodChance ?? 0.25)) {
+            try { agent.inventory.backpack.add({ agentId, itemId: woodId, quantity: 1 }); } catch { /* 背包满则不带回 */ }
+          }
         }
       };
     case 'rest':
@@ -793,6 +927,15 @@ export async function step(config = {}) {
   // 2) perception：事件转 percept 并分发给智能体
   const percepts = perception.collect(eventPercepts);
   const inbox = perception.route(percepts);
+
+  // 2.5) LAYA 语义紧迫度预取（可选通路，默认关闭）
+  // 它不是决定者，只是压力分的语义分量（15%）；服务不可用时静默回退。
+  if (cfg.layaSemanticEnabled === true) {
+    layaUrgencyCache.clear();
+    await prefetchLayaUrgency(agentRecordsForLaya(), cfg);
+  } else if (layaUrgencyCache.size > 0) {
+    layaUrgencyCache.clear();
+  }
 
   // 3) 逐智能体：决策 → 观察者决策日志 → AI 思考
   const agentRecords = registry.lookup({ type: 'agent' });
