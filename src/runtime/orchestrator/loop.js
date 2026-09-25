@@ -1192,6 +1192,19 @@ export async function run(options = {}) {
     steps.push(await step(options));
   }
 
+  // 编年志分段持久化：把本次运行的全部 tick 落成可回取的段。
+  // 这一步让「跑完之后还能按 tick 查证据」成为可能，而不只是留下一个计数。
+  // 观察者不可用时（例如精简测试）静默跳过，不阻断主流程。
+  try {
+    const lastTick = clock.now().tick;
+    const segmentSize = Number.isInteger(options.chronicleSegmentSize) && options.chronicleSegmentSize > 0
+      ? options.chronicleSegmentSize : 50;
+    for (let from = 0; from <= lastTick; from += segmentSize) {
+      observer.chronicle.store.capture({ fromTick: from, toTick: Math.min(from + segmentSize - 1, lastTick) });
+    }
+    observer.timeline.__reset();
+  } catch { /* 观察者为可选能力 */ }
+
   return {
     seed: options.seed,
     agents: spawned,
@@ -1201,6 +1214,7 @@ export async function run(options = {}) {
     world: worldState.snapshot(),
     resources: { food: survival.resources.food.query(), water: survival.resources.water.query(), energy: survival.resources.energy.query(), medical: survival.resources.medical.query() },
     chronicle: observer.chronicle.compiler.compile().counts,
+    chronicleStore: observer.chronicle.store.getStats(),
     social: socialSummary(),
     ...(phase2 ? { phase2: { seed: phase2Seed, summary: stage2.summary() } } : {}),
     ...(phase3 ? { phase3: { seed: phase3Seed, summary: stage3.summary() } } : {}),
@@ -1215,6 +1229,7 @@ export function snapshot() {
     world: worldState.snapshot(),
     resources: { food: survival.resources.food.query(), water: survival.resources.water.query(), energy: survival.resources.energy.query(), medical: survival.resources.medical.query() },
     chronicle: observer.chronicle.compiler.compile().counts,
+    chronicleStore: observer.chronicle.store.getStats(),
     social: socialSummary(),
   };
 }

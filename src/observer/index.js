@@ -8,3 +8,6 @@
 export * as recorder from './recorder/index.js';
 export * as chronicle from './chronicle/index.js';
 export * as experiment from './experiment/index.js';
+export * as audit from './audit.js';
+export * as timeline from './timeline.js';
+export * as exporter from './export.js';

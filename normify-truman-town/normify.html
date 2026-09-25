@@ -163,7 +163,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "root_uid": "d440391b"
       }
     ],
-    "compiled_at": "2026-09-25T09:50:54.304Z",
+    "compiled_at": "2026-09-25T10:03:51.304Z",
     "stats": {
       "tree_count": 1,
       "module_count": 231,
@@ -173,7 +173,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "cross_tree_dep_count": 0,
       "max_depth": 5,
       "layout_count": 69,
-      "planned_count": 51,
+      "planned_count": 47,
       "deprecated_count": 0,
       "policy_rule_count": 2,
       "change_count": 5,
@@ -7143,7 +7143,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.observer",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "决策审计",
         "en": "Decision Audit"
@@ -7152,10 +7151,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "回溯单个智能体的决策链，并对比不同个体的行为差异。\n",
         "en": "Traces individual decision chains and compares behavior across agents.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:55:51Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/observer/audit.js"
+        }
+      ],
+      "revision": "796aec9412d132997f5cdc37d01cac934e03d018",
+      "updated_at": "2026-09-25T10:03:44.359Z",
+      "fingerprint": "51d20f39a7090ebf0a0ef330b4074a088767c5c6f5327944784e4db93f203e8d",
       "apis": [
         {
           "protocol": "rpc",
@@ -7288,7 +7291,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.observer.chronicle",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "编年存储",
         "en": "Chronicle Store"
@@ -7297,10 +7299,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "查询与范围读取编年志。\n",
         "en": "Queries and range-reads chronicles.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T05:27:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/observer/chronicle/store.js"
+        }
+      ],
+      "revision": "796aec9412d132997f5cdc37d01cac934e03d018",
+      "updated_at": "2026-09-25T10:03:44.359Z",
+      "fingerprint": "4b4c2d905c73fb29e158d46069575906f843210b5dbcd8d7f1fca4c84f3d937c",
       "apis": [
         {
           "protocol": "rpc",
@@ -7560,7 +7566,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.observer",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "观察导出",
         "en": "Observer Export"
@@ -7569,10 +7574,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "把编年志与审计结果导出为报告或 Markdown。\n",
         "en": "Exports chronicles and audits as reports or Markdown.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:55:51Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/observer/export.js"
+        }
+      ],
+      "revision": "796aec9412d132997f5cdc37d01cac934e03d018",
+      "updated_at": "2026-09-25T10:03:44.359Z",
+      "fingerprint": "d152d2681f1cad1e8369ea06b7a029f1aa8496bd7d770508f4a89574359143be",
       "apis": [
         {
           "protocol": "rpc",
@@ -7801,7 +7810,6 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "parent": "truman-town.observer",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "时间线",
         "en": "Timeline"
@@ -7810,10 +7818,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "zh": "提供任意时间区间的行为与决策时间线查询。\n",
         "en": "Queries behavior and decision timelines over arbitrary ranges.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:55:51Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/observer/timeline.js"
+        }
+      ],
+      "revision": "796aec9412d132997f5cdc37d01cac934e03d018",
+      "updated_at": "2026-09-25T10:03:44.359Z",
+      "fingerprint": "c31e0ac50ba84efa7ff510cd2d4e367b8189892cf854371ba9975b3becd5a887",
       "apis": [
         {
           "protocol": "rpc",
@@ -8122,9 +8134,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/runtime/orchestrator/loop.js"
         }
       ],
-      "revision": "36ce55d9e3d8994abf455c13925f0c4f4a3f316c",
-      "updated_at": "2026-09-25T09:50:48.372Z",
-      "fingerprint": "b85943b82c8f90b603ed4b42daf305b8817824786bf0c19624fe90ddba18cc2b",
+      "revision": "796aec9412d132997f5cdc37d01cac934e03d018",
+      "updated_at": "2026-09-25T10:03:44.360Z",
+      "fingerprint": "65349178263aafe98603f0d501cd62cfb4edf8f4e365aac74f7e019ddb89fba0",
       "apis": [
         {
           "protocol": "rpc",
