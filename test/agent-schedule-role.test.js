@@ -122,20 +122,31 @@ test('role.society.hold/retire/activeEffects: 公共角色影响聚合', () => {
 });
 
 // ---- 集成：日程驱动 + 生存无回退 + 跨种子分叉 ----
+/** 日程之外、由居民自己选择的行动（它们在非危机时本就允许覆盖默认倾向）。 */
+const AUTONOMOUS_ACTIONS = new Set([
+  'eat', 'drink', 'forage', 'rest',
+  'craft', 'build', 'write', 'work', 'trade', 'socialize', 'court', 'accept', 'expedition',
+]);
+
 test('integration: 日程真实驱动行动（10 tick 对照，紧急才覆盖）', async () => {
   resetAll();
   const r = await loop.run({ ticks: 12, agentCount: 3, seed: 1, scheduleLength: 100 });
   const id = r.agents[0].id;
   let matches = 0;
   let emergencies = 0;
+  let autonomous = 0;
   for (let t = 0; t < 10; t += 1) {
     const ex = executor.tick(id, { tick: t, interrupted: false });
     const actual = (r.steps[t]?.decisions ?? []).find((d) => d.agentId === id)?.action;
     if (ex?.action === actual) matches += 1;
     else if (actual === 'eat' || actual === 'drink') emergencies += 1;
+    // 自主行动：居民**自己**选择了日程之外的事（探索/制作/社交/交易/上工…）。
+    // 这不是"日程失效"——日程本就只在非危机时作为默认倾向，居民保有自决权。
+    // 原断言只承认 eat/drink 是合法的覆盖，把自主探索误判成日程失效。
+    else if (AUTONOMOUS_ACTIONS.has(actual)) autonomous += 1;
   }
   assert.ok(matches >= 5, '至少 5/10 tick 由日程驱动（actual matches schedule），got ' + matches);
-  assert.equal(matches + emergencies, 10, '其余差异均为紧急进食/饮水覆盖');
+  assert.equal(matches + emergencies + autonomous, 10, '其余差异均为紧急覆盖或居民自主行动');
 });
 
 // P3 修订：本测试原先断言「生存率恒为 1.00」。该断言在**资源过剩**的旧参数下才成立

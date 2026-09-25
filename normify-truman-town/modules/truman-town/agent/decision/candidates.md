@@ -10,9 +10,9 @@ description:
   en: >
       Generates reachable action candidates from current agent state (materials, employment, literacy, peers). Always includes the survival skeleton, then appends rule-admitted dynamic actions, with a rejection reason when infeasible.
       
-revision: 9885f1e507ec4ef5a3c1f8c166ed456cf0026737
-updated_at: "2026-09-24T19:39:37.707Z"
-fingerprint: 01d466abaa3e906726d43d06df04a88b9b9e0151ae02446978e8af9ff94b9ad8
+revision: 36ce55d9e3d8994abf455c13925f0c4f4a3f316c
+updated_at: "2026-09-25T09:50:48.372Z"
+fingerprint: 41a58a45a59e6935cca155bf271abdbfbb454f9e9cbc7b714fff7ed3a2e67713
 source:
   - path: "src/agent/decision/candidates.js"
 apis:

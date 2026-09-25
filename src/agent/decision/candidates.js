@@ -18,6 +18,11 @@ const RULES = Object.freeze({
   socialize: (s) => (s.hasPeer ? '附近有其他居民，可以交谈' : null),
   court: (s) => (s.eligibleMate && s.hasPeer ? '有合适的对象，可以求偶' : null),
   accept: (s) => (s.hasPendingCourt ? '有人向我表白，可以接受' : null),
+  // 探索：可行性与预期收益由 survival.environment.expedition.plan 评估后注入。
+  // 外出是**有代价的高收益**行动——风险高但能带回本地无法生产的物资。
+  expedition: (s) => (s.expeditionViable && s.expeditionRisk < 0.85
+    ? '可以外出探索废墟（风险 ' + Math.round((s.expeditionRisk ?? 0) * 100) + '%，预计拾获 ' + (s.expeditionLoot ?? 0) + ' 项）'
+    : null),
 });
 
 /** 行动 → 基础分（在 scoreAction 再叠加需求/稀缺/性格/记忆修正）。 */
@@ -31,6 +36,9 @@ const BASE_SCORE = Object.freeze({
   court: 0.85,
   // 接受表白是**一次性的窗口**（对方在等答复），给高于日常劳动的优先级。
   accept: 1.1,
+  // 探索基础分略低于日常劳动：它应该是在"资源紧张"或"有余力"时才被选中，
+  // 而不是无脑优先。风险与收益的具体权衡在 scoreAction 里按需叠加。
+  expedition: 0.75,
 });
 
 const ALL_ACTIONS = Object.freeze(['eat', 'drink', 'rest', 'forage', ...Object.keys(RULES)]);

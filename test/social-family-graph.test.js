@@ -121,9 +121,25 @@ test('graph.community: 已知小图连通分量正确 + belong 归属', () => {
   assert.equal(bx.communityId, null, '弱关系边不产生社区归属');
 });
 
-test('集成：50 居民 × 200 tick × 3 种子存活率 1.00 + 跨种子分叉（≥2 字段差异）', async () => {
+// P3 修订（补齐）：本测试原先断言「存活率恒为 1.00」。该断言只在**资源过剩**的旧参数下成立
+//（实测旧参数：人均库存长期 3.8、水食顶满、52 人中无一人需求超过 0.7、采集池只用 28/136），
+// 它把"从未短缺"当成了"求生成功"，并掩盖了系统其实没有真实生存压力这一事实。
+//
+// 现在默认档压力已在临界之上（储备 2.5/人、再生 0.30/人、探索引入地表风险），
+// 实测 6 个 (模式,种子) 组合中有 5 个食物库存触底到 0——生存压力是真实存在的：
+//   phase2        seed1 死3(饿2渴1)  seed2 死0  seed3 死0
+//   phase2+phase3 seed1 死1(渴)      seed2 死3(渴3) seed3 死0
+// 死因均为 starvation/dehydration，且死者**死前仍在持续采集与进食**
+//（如 agent_...028 最后 30 tick：12 次 forage、11 次 drink、5 次 eat，仍于 t34 饿死）
+// ——是力竭而非消极。
+//
+// 因此断言改为「不失衡」而非「零死亡」：单种子存活率 ≥0.90（即 50 人中最多 5 人损失），
+// 且 3 种子合计存活率 ≥0.96。这样阈值反映的是真实涌现分布，而不是"挑一个刚好能过的数"。
+test('集成：50 居民 × 200 tick × 3 种子存活率不失衡 + 跨种子分叉（≥2 字段差异）', async () => {
   const seeds = [1, 2, 3];
   const metrics = [];
+  let totalAlive = 0;
+  let totalInitial = 0;
   for (const seed of seeds) {
     const report = await loop.run({ agentCount: 50, ticks: 200, seed, phase2: true });
 
@@ -136,7 +152,9 @@ test('集成：50 居民 × 200 tick × 3 种子存活率 1.00 + 跨种子分叉
       if (rec && rec.alive !== false) alive += 1;
     }
     const rate = initialIds.length > 0 ? alive / initialIds.length : 0;
-    assert.equal(rate, 1, 'seed ' + seed + ' 默认参数下存活率必须保持 1.00');
+    assert.ok(rate >= 0.90, 'seed ' + seed + ' 存活率不应失衡（实际 ' + rate + '，死亡 ' + (initialIds.length - alive) + ' 人）');
+    totalAlive += alive;
+    totalInitial += initialIds.length;
 
     const families = registry.list();
     metrics.push({
@@ -147,6 +165,10 @@ test('集成：50 居民 × 200 tick × 3 种子存活率 1.00 + 跨种子分叉
       communityCount: community.detect({ threshold: 0.5 }).count,
     });
   }
+
+  // 三种子合计存活率：单种子允许个位数损失，合计必须仍然高（否则压力已越过临界）。
+  const overall = totalInitial > 0 ? totalAlive / totalInitial : 0;
+  assert.ok(overall >= 0.96, '三种子合计存活率应 ≥0.96（实际 ' + overall.toFixed(4) + '）');
 
   // 硬指标②：家族数/家族规模/关系边数/社区数中至少 2 个字段跨种子出现差异
   const keys = ['famCount', 'famSize', 'edgeCount', 'communityCount'];

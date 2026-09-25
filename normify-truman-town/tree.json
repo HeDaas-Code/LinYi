@@ -8,7 +8,7 @@
         "root_uid": "d440391b"
       }
     ],
-    "compiled_at": "2026-09-25T08:50:43.919Z",
+    "compiled_at": "2026-09-25T09:50:54.304Z",
     "stats": {
       "tree_count": 1,
       "module_count": 231,
@@ -18,7 +18,7 @@
       "cross_tree_dep_count": 0,
       "max_depth": 5,
       "layout_count": 69,
-      "planned_count": 57,
+      "planned_count": 51,
       "deprecated_count": 0,
       "policy_rule_count": 2,
       "change_count": 5,
@@ -949,9 +949,9 @@
           "path": "src/agent/decision/candidates.js"
         }
       ],
-      "revision": "9885f1e507ec4ef5a3c1f8c166ed456cf0026737",
-      "updated_at": "2026-09-24T19:39:37.707Z",
-      "fingerprint": "01d466abaa3e906726d43d06df04a88b9b9e0151ae02446978e8af9ff94b9ad8",
+      "revision": "36ce55d9e3d8994abf455c13925f0c4f4a3f316c",
+      "updated_at": "2026-09-25T09:50:48.372Z",
+      "fingerprint": "41a58a45a59e6935cca155bf271abdbfbb454f9e9cbc7b714fff7ed3a2e67713",
       "apis": [
         {
           "protocol": "rpc",
@@ -6629,7 +6629,6 @@
       "parent": "truman-town.infra.events",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "事件重试",
         "en": "Event Retry"
@@ -6638,10 +6637,14 @@
         "zh": "对失败事件入队重试与死信处理。\n",
         "en": "Retries failed events and handles dead letters.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/infra/events/retry.js"
+        }
+      ],
+      "revision": "36ce55d9e3d8994abf455c13925f0c4f4a3f316c",
+      "updated_at": "2026-09-25T09:50:41.310Z",
+      "fingerprint": "621b51f786b470749be1dd74b2e7abe5551efeefd54fff86a396849da8a8cd16",
       "apis": [
         {
           "protocol": "rpc",
@@ -6801,7 +6804,6 @@
       "parent": "truman-town.infra.store",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "存档存储",
         "en": "Archive Store"
@@ -6810,10 +6812,14 @@
         "zh": "保存与加载完整沙盘存档。\n",
         "en": "Saves and loads full sandbox archives.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/infra/store/archive.js"
+        }
+      ],
+      "revision": "36ce55d9e3d8994abf455c13925f0c4f4a3f316c",
+      "updated_at": "2026-09-25T09:50:41.310Z",
+      "fingerprint": "6e80b99a590086002245e53921ef33519471bb6e5b6f47f0ec397b495ef09ec7",
       "apis": [
         {
           "protocol": "rpc",
@@ -6905,7 +6911,6 @@
       "parent": "truman-town.infra.store",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "向量存储",
         "en": "Vector Store"
@@ -6914,10 +6919,14 @@
         "zh": "写入与检索记忆向量。\n",
         "en": "Upserts and searches memory vectors.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/infra/store/vector.js"
+        }
+      ],
+      "revision": "36ce55d9e3d8994abf455c13925f0c4f4a3f316c",
+      "updated_at": "2026-09-25T09:50:41.310Z",
+      "fingerprint": "056beb6dc30aaf9fce06c4b80bcaf57b696eefd543e5a21e384278a0a5f234ab",
       "apis": [
         {
           "protocol": "rpc",
@@ -7958,9 +7967,9 @@
           "path": "src/runtime/orchestrator/loop.js"
         }
       ],
-      "revision": "b2c533dcbb9a29bf0cd2322749845b223954c80f",
-      "updated_at": "2026-09-25T05:42:38.158Z",
-      "fingerprint": "022bc8cb8b904b36cf0e0606e80be803be0b7b73d893ed9912da83e0dae4a06a",
+      "revision": "36ce55d9e3d8994abf455c13925f0c4f4a3f316c",
+      "updated_at": "2026-09-25T09:50:48.372Z",
+      "fingerprint": "b85943b82c8f90b603ed4b42daf305b8817824786bf0c19624fe90ddba18cc2b",
       "apis": [
         {
           "protocol": "rpc",
@@ -8418,9 +8427,9 @@
           "path": "src/runtime/orchestrator/_stage2.js"
         }
       ],
-      "revision": "b2c533dcbb9a29bf0cd2322749845b223954c80f",
-      "updated_at": "2026-09-25T05:42:38.158Z",
-      "fingerprint": "70503eabb62a96ace6947e97d7a46fd49adaf3ceedb16913cc958e4048afbbdc",
+      "revision": "36ce55d9e3d8994abf455c13925f0c4f4a3f316c",
+      "updated_at": "2026-09-25T09:50:48.373Z",
+      "fingerprint": "0b013953a02189bc425ae4e66d072a4cc14f39ba2d783523a619a8866c5c8160",
       "apis": [
         {
           "protocol": "rpc",
@@ -10677,7 +10686,6 @@
       "parent": "truman-town.survival.environment",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "探索结算",
         "en": "Expedition Resolution"
@@ -10686,10 +10694,14 @@
         "zh": "把外出探索简化为一次计算：综合辐射、天气、物资、装备、Agent 特质、生存状态与随机数，得出探索结果；结果仅体现为一段日志、资源变化和 Agent 状态变化，不创建开放世界。\n",
         "en": "Resolves expeditions as one computation combining radiation, weather, supplies, gear, agent traits, survival state and randomness; the result is only a log entry plus resource and agent-state changes — no open world.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T05:20:43Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/survival/environment/expedition.js"
+        }
+      ],
+      "revision": "36ce55d9e3d8994abf455c13925f0c4f4a3f316c",
+      "updated_at": "2026-09-25T09:50:41.311Z",
+      "fingerprint": "61b1c434e21c90ddccc9e89318c3d7d8c3b9043c2a74b929af3c4efd901abafa",
       "apis": [
         {
           "protocol": "rpc",
@@ -10795,7 +10807,6 @@
       "parent": "truman-town.survival.environment",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "辐射区",
         "en": "Radiation"
@@ -10804,10 +10815,14 @@
         "zh": "作为探索结算的风险因子，查询辐射强度并计算其扩散。\n",
         "en": "Queries radiation intensity and spreads it as a risk factor for expedition resolution.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T05:20:43Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/survival/environment/radiation.js"
+        }
+      ],
+      "revision": "36ce55d9e3d8994abf455c13925f0c4f4a3f316c",
+      "updated_at": "2026-09-25T09:50:41.311Z",
+      "fingerprint": "29f52eaad0a19437b22556eaca188c5767536c77c47fbcd3975271b2eda38169",
       "apis": [
         {
           "protocol": "rpc",
@@ -10854,7 +10869,6 @@
       "parent": "truman-town.survival.environment",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "灾变天气",
         "en": "Weather"
@@ -10863,10 +10877,14 @@
         "zh": "作为探索结算与突发事件的影响因子，预测并施加灾变天气。\n",
         "en": "Forecasts and strikes with disasters as a factor for expedition resolution and events.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T05:20:43Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/survival/environment/weather.js"
+        }
+      ],
+      "revision": "36ce55d9e3d8994abf455c13925f0c4f4a3f316c",
+      "updated_at": "2026-09-25T09:50:41.311Z",
+      "fingerprint": "ed1dffb012ebd0e5dee79cc50a574fd60dcae5fbb786c0cd3e9aaf2b78dfc782",
       "apis": [
         {
           "protocol": "rpc",

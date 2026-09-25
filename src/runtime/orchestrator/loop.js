@@ -54,6 +54,7 @@ const SURVIVAL_ACTIONS = Object.freeze(['eat', 'drink', 'forage', 'rest']);
 
 const DYNAMIC_BASE_SCORE = Object.freeze({
   craft: 0.9, build: 0.8, write: 0.7, work: 1.0, trade: 0.8, socialize: 0.7, court: 0.85, accept: 1.1,
+  expedition: 0.75,
 });
 
 /**
@@ -420,11 +421,35 @@ function scoreAction(candidate, ctx = {}) {
   if (candidate?.action === 'drink' && thirsty) score += 2;
   if (candidate?.action === 'forage' && !hungry && !thirsty) score += (1.2 + scarcity) * poolFactor;
   if (candidate?.action === 'rest' && !hungry && !thirsty) score += 0.5;
+  // 探索：**风险调整后的期望值**，而不是单看收益。
+  // 实测教训（P3 第一次接入）：初版给 loot*0.18（最多 +1.2）+ 稀缺加成 1.5，
+  // 叠加基础分 0.75 后达 ~3.4，远超 craft 的 0.9 → 探索 442 次而 craft 由 478 掉到 300、
+  // write 掉到 181、social 掉到 157，还引入 5 例死亡。这是"新行动挤占既有行为"的第 8 次苗头。
+  //
+  // 现在按期望净收益打分：离家越久、风险越高，代价越大；
+  // 只有当"预期收获 - 风险代价"为正时才可能胜过日常劳动。
+  // 设定上探索就该是**偶发**行为——居民不该天天往废墟跑。
+  if (candidate?.action === 'expedition') {
+    const loot = typeof ctx.expeditionLoot === 'number' ? ctx.expeditionLoot : 0;
+    const risk = clampUnit(ctx.expeditionRisk, 0);
+    const hours = typeof ctx.expeditionHours === 'number' ? ctx.expeditionHours : 6;
+    // 期望收获（按 1 项≈0.35 分计价）
+    const expectedGain = loot * 0.35;
+    // 风险代价：重伤/失联的实际代价远高于拾获收益
+    const riskCost = risk * 2.2 + (hours / 6) * 0.15;
+    // 本地补给越缺，外出的相对价值越高（废墟里有本地造不出的东西）
+    const scarcityPull = scarcity * 0.8;
+    const net = expectedGain - riskCost + scarcityPull;
+    // 只有净收益为正才加分——负期望的探索必须显著劣于日常劳动，而不是靠基础分上榜。
+    if (!hungry && !thirsty && net > 0) score += net;
+    // 净收益为负时明确降权，避免它靠基础分 0.75 与性格加成蒙混入选。
+    if (net <= 0) score -= 0.6 + Math.abs(net) * 0.5;
+  }
   // P1 生存门（最终打分侧）：修剪器侧的门只能把候选**挤出窗口**；窗口一放宽，
   // 非生存行动仍会被性格/行动模拟的加成推上首位（实测 pruneK=6 整镇饿死）。
   // 因此门必须在**最终决定分数**上再施加一次，生存优先才成立。
   if (ctx.survivalGate === true) {
-    const NON_SURVIVAL = ['craft', 'build', 'write', 'work', 'trade', 'socialize', 'court', 'accept'];
+    const NON_SURVIVAL = ['craft', 'build', 'write', 'work', 'trade', 'socialize', 'court', 'accept', 'expedition'];
     if (NON_SURVIVAL.includes(candidate?.action)) score -= 5;
     if (candidate?.action === 'rest') score -= 1;
     // 采集优先**仅限尚未挨饿时**：若已饿/渴，eat/drink 的 +2 必须压过采集。
@@ -472,6 +497,9 @@ function refreshCandidates(agentId, tick, cfg) {
     // P1：择偶资格与待答复表白改为真实状态（此前恒为 false，导致 court 永不出现）。
     eligibleMate: state.eligibleMate === true,
     hasPendingCourt: state.hasPendingCourt === true,
+    expeditionViable: state.expeditionViable === true,
+    expeditionRisk: state.expeditionRisk,
+    expeditionLoot: state.expeditionLoot,
   }, { attributeRandom: cfg.actionSpaceAttribution === true });
 
   // 整批替换（单次 graph.write）：逐候选 add() 会触发逐次 graph.read 深拷贝，
@@ -588,6 +616,8 @@ function decide(agentId, tick, percepts, cfg = {}) {
   const poolCap = Math.max(1, foragePoolCapacityOf(cfg));
   const forageAvailable = Math.max(0, Math.min(1, (foragePool ?? 0) / poolCap));
 
+  // 探索条件（供打分使用）。refreshCandidates 已按同一 tick 缓存过，这里零成本。
+  const agentState = stage2.candidateStateFor(agentId, tick);
   const origScore = new Map(anticipations.map((a) => [a.id, a.score]));
   const candidates = window.map((a) => ({ id: a.id, action: a.action, score: origScore.get(a.id) ?? 0 }));
   const choice = agent.decision.selector.choose({
@@ -602,6 +632,9 @@ function decide(agentId, tick, percepts, cfg = {}) {
       foodEmpty,
       waterEmpty,
       forageAvailable,
+      expeditionRisk: agentState.expeditionRisk,
+      expeditionLoot: agentState.expeditionLoot,
+      expeditionHours: agentState.expeditionHours,
     }) + agent.persona.personality.evaluate(agentId, candidate.action)
       + (simBy.get(candidate.id) ?? 0),
   });

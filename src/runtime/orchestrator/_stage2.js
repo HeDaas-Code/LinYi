@@ -229,6 +229,16 @@ export function seed(agents, config = {}) {
     wood: agent.inventory.item.define({ category: 'material', name: '木头' }).id,
     metal: agent.inventory.item.define({ category: 'material', name: '金属' }).id,
     axe: agent.inventory.item.define({ category: 'tool', name: '石斧' }).id,
+    // 探索掉落物必须**注册进目录**，否则 backpack.add 会抛「未定义的物品」。
+    // 实测（P3）：探索 285 次全部「有拾获但装不下」——真因不是背包满，而是这 6 种
+    // 物资从未 define，add 抛错被 catch 后误报为容量不足。
+    // 教训：catch 里把两类不同错误合并成一个原因是错的，会把诊断引向错误方向。
+    scrap: agent.inventory.item.define({ category: 'material', name: '废金属' }).id,
+    cloth: agent.inventory.item.define({ category: 'material', name: '布料' }).id,
+    circuit: agent.inventory.item.define({ category: 'component', name: '电路板' }).id,
+    medicine: agent.inventory.item.define({ category: 'consumable', name: '药品' }).id,
+    seed: agent.inventory.item.define({ category: 'material', name: '种子' }).id,
+    fuel: agent.inventory.item.define({ category: 'consumable', name: '燃料' }).id,
   };
   agent.crafting.recipe.define({
     id: 'axe', name: '石斧', kind: 'item',
@@ -770,7 +780,52 @@ export function candidateStateFor(agentId, tick = 0) {
     paired,
     eligibleMate: !paired && settledAgentIds.some((id) => id !== agentId && !pairedIndex.has(id)),
     hasPendingCourt: !paired && (pendingCourts.get(agentId) ?? []).length > 0,
+    // 探索条件：由 expedition.plan 评估（纯读）。居民据此判断"今天值不值得出去"。
+    // 注意这是**建议**而非门：可行性为 false 只表示条件很差，最终选择权在居民。
+    ...expeditionConditionsFor(agentId),
   };
+}
+
+/**
+ * 评估某居民的探索条件。
+ * 把生存状态、特质、装备、天气与辐射都交给 expedition.plan，
+ * 让「外出探索」成为一个有信息依据的候选，而不是随机出现。
+ */
+function expeditionConditionsFor(agentId) {
+  try {
+    const needs = survival.needs.meter.query({ agentId }).needs;
+    const tags = [...(pairedIndex.get(agentId)?.tags ?? [])];
+    let health = 1;
+    try { health = survival.health.disease.status({ agentId }).health ?? 1; } catch { /* 无健康数据时按健康处理 */ }
+    let gear = [];
+    let freeSlots = 0;
+    try {
+      const bp = agent.inventory.backpack.list({ agentId });
+      const items = bp.items ?? {};
+      gear = Object.keys(items).filter((k) => k === 'scrap' || k === 'cloth' || k === 'circuit');
+      const used = Object.values(items).reduce((a, n) => a + (Number.isFinite(n) && n > 0 ? n : 0), 0);
+      const cap = typeof bp.capacity === 'number' && bp.capacity > 0 ? bp.capacity : 48;
+      freeSlots = Math.max(0, cap - used);
+    } catch { gear = []; freeSlots = 0; }
+    const wm = survival.environment.weather.modifiers({});
+    const p = survival.environment.expedition.plan({
+      agentId, range: 'mid', tags, needs, health, gear, weatherMods: wm,
+    });
+    // 背包没有任何空位时探索是**纯亏损**：必然受伤却装不下任何拾获。
+    // 实测（50 人 120 tick）居民全员满包，285 次探索全部「有拾获但装不下」，
+    // 探索退化为只扣健康不给收益的坏选择。故把剩余容量作为可行性条件之一。
+    const hasRoom = freeSlots > 0;
+    return {
+      expeditionViable: p.viable && hasRoom,
+      expeditionRisk: p.risk,
+      expeditionLoot: hasRoom ? p.expectedLootCount : 0,
+      expeditionHours: p.hours,
+      expeditionRange: p.range,
+    };
+  } catch {
+    // 环境模块不可用时，探索候选不出现（而不是以错误的理由出现）。
+    return { expeditionViable: false, expeditionRisk: 1, expeditionLoot: 0, expeditionRange: null };
+  }
 }
 
 /**
@@ -911,6 +966,51 @@ export function performAgentAction(tick, agentId, action, config = {}) {
         observer.recorder.eventLog.record({ tick, topic: 'agent.action.accept', payload: { from }, agentId });
         return { ok: true, detail: { from } };
       } catch (err) { return { ok: false, reason: 'accept_failed:' + err.message.slice(0, 40) }; }
+    }
+    case 'expedition': {
+      // 探索：**一次计算**，不是开放世界。综合天气/辐射/特质/装备/状态与随机数，
+      // 结果只落为「日志 + 背包变化 + 身体状态变化」。
+      // 条件评估用居民自己的真实状态（而非传入的乐观估计），避免"决策时以为安全、
+      // 执行时其实已经饿晕"的不一致。
+      const cond = expeditionConditionsFor(agentId);
+      if (cond.expeditionViable !== true) {
+        return { ok: false, reason: 'expedition_not_viable' };
+      }
+      try {
+        const needs = survival.needs.meter.query({ agentId }).needs;
+        let health = 1;
+        try { health = survival.health.disease.status({ agentId }).health ?? 1; } catch { /* 默认健康 */ }
+        let gear = [];
+        try {
+          const bp = agent.inventory.backpack.list({ agentId });
+          gear = Object.keys(bp.items ?? {}).filter((k) => k === 'scrap' || k === 'cloth' || k === 'circuit');
+        } catch { gear = []; }
+        const tags = [...(pairedIndex.get(agentId)?.tags ?? [])];
+        const wm = survival.environment.weather.modifiers({});
+        const plan = survival.environment.expedition.plan({
+          agentId, range: 'mid', tags, needs, health, gear, weatherMods: wm,
+        });
+        const result = survival.environment.expedition.execute({ plan, itemIds: itemIdsLocal });
+        const settled = survival.environment.expedition.settle({
+          agentId, plan, result,
+          backpack: agent.inventory.backpack,
+          // 辐射/外伤走既有的疾病通道（health 由疾病严重度驱动），
+          // 使用固定的辐射病病种 id，使「探索受伤」在健康模块里可见、可治疗、可恢复。
+          health: {
+            injure: (x) => {
+              try {
+                survival.health.disease.infect({ agentId: x.agentId, diseaseId: 'radiation_sickness', severity: x.amount, tick });
+              } catch { /* 健康模块不可用则只记日志 */ }
+            },
+          },
+          needs: survival.needs.meter,
+          chronicle: (x) => observer.recorder.eventLog.record({
+            tick, topic: 'agent.action.expedition', payload: { text: x.text, outcome: x.payload.outcome, range: x.payload.range, loot: x.payload.loot.length }, agentId,
+          }),
+        });
+        observer.recorder.actionLog.record({ tick, agentId, action: 'expedition', detail: { outcome: settled.outcome, loot: settled.changes.loot.length } });
+        return { ok: true, detail: settled };
+      } catch (err) { return { ok: false, reason: 'expedition_failed:' + err.message.slice(0, 60) }; }
     }
     default:
       return { ok: false, reason: 'unknown_action' };

@@ -3,9 +3,10 @@
  *
  * 汇总 resources（food/water/energy/medical）、needs（meter/pressure.scorer/
  * pressure.ranker）、events（generator.roller/generator.selector/impact）、
- * health（disease/treatment/epidemic）与 shelter/crisis/goal，供 runtime 主循环、
- * agent 决策与 api 控制直接 import，构成“资源衰减 → 需求缺口 → 压力评分 →
- * 影响决策 → 危机检测 → 生存目标”的生存压力闭环。
+ * health（disease/treatment/epidemic）、environment（weather/radiation/expedition）
+ * 与 shelter/crisis/goal，供 runtime 主循环、agent 决策与 api 控制直接 import，
+ * 构成“资源衰减 → 需求缺口 → 压力评分 → 影响决策 → 危机检测 → 生存目标”的
+ * 生存压力闭环，以及“天气/辐射 → 探索结算 → 日志与状态变化”的地表风险闭环。
  */
 
 import * as food from './resources/food.js';
@@ -24,6 +25,9 @@ import * as epidemic from './health/epidemic.js';
 import * as shelter from './shelter.js';
 import * as crisis from './crisis.js';
 import * as goal from './goal.js';
+import * as weather from './environment/weather.js';
+import * as radiation from './environment/radiation.js';
+import * as expedition from './environment/expedition.js';
 
 export const resources = { food, water, energy, medical };
 
@@ -38,6 +42,8 @@ export const events = {
 };
 
 export const health = { disease, treatment, epidemic };
+
+export const environment = { weather, radiation, expedition };
 
 export { shelter, crisis, goal };
 
