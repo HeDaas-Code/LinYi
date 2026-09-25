@@ -163,13 +163,13 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "root_uid": "d440391b"
       }
     ],
-    "compiled_at": "2026-09-24T20:18:59.777Z",
+    "compiled_at": "2026-09-25T05:43:13.582Z",
     "stats": {
       "tree_count": 1,
-      "module_count": 230,
-      "leaf_count": 161,
-      "api_count": 371,
-      "dep_count": 346,
+      "module_count": 231,
+      "leaf_count": 162,
+      "api_count": 375,
+      "dep_count": 347,
       "cross_tree_dep_count": 0,
       "max_depth": 5,
       "layout_count": 69,
@@ -201,9 +201,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "updated_at": "2026-09-22T04:32:53Z",
       "fingerprint": "pending",
       "aggregate": {
-        "descendant_count": 229,
+        "descendant_count": 230,
         "own_api_count": 0,
-        "inherited_api_count": 371,
+        "inherited_api_count": 375,
         "dep_out": 0,
         "dep_in": 0
       }
@@ -966,9 +966,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/agent/crafting/writing.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T08:02:32.265Z",
-      "fingerprint": "79ce183c71f5b44e5e9da6c2550879fd45f79097269412ee4e296f759f4d5816",
+      "revision": "b2c533dcbb9a29bf0cd2322749845b223954c80f",
+      "updated_at": "2026-09-25T05:42:38.157Z",
+      "fingerprint": "f8647ac9aea87b15d0b82efc85de97d3456ec888056ebc0c390b9f25704a7a0e",
       "apis": [
         {
           "protocol": "rpc",
@@ -1409,9 +1409,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/agent/inventory/backpack.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T08:02:32.225Z",
-      "fingerprint": "6393b3f28016de43eaf29b21574f0bac7dd690a5e89551f49811f12c4c68323d",
+      "revision": "b2c533dcbb9a29bf0cd2322749845b223954c80f",
+      "updated_at": "2026-09-25T05:42:38.158Z",
+      "fingerprint": "02a0f8a2e851bbc121055be7948a89e0c39751ea20cb764100f01950f5e2740a",
       "apis": [
         {
           "protocol": "rpc",
@@ -3031,9 +3031,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "updated_at": "2026-09-22T04:32:53Z",
       "fingerprint": "pending",
       "aggregate": {
-        "descendant_count": 13,
+        "descendant_count": 14,
         "own_api_count": 0,
-        "inherited_api_count": 19,
+        "inherited_api_count": 23,
         "dep_out": 0,
         "dep_in": 0
       }
@@ -3159,6 +3159,91 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "inherited_api_count": 0,
         "dep_out": 0,
         "dep_in": 1
+      }
+    },
+    "truman-town.ai.laya": {
+      "uid": "b7d24e19",
+      "id": "truman-town.ai.laya",
+      "parent": "truman-town.ai",
+      "tree": "truman-town",
+      "depth": 3,
+      "tags": [
+        "ai",
+        "laya",
+        "semantic",
+        "optional"
+      ],
+      "name": {
+        "zh": "语义判断",
+        "en": "Semantic Judgement"
+      },
+      "description": {
+        "zh": "接入本地 LAYA 结构化判断服务，把处境紧迫度交给语义模型而非固定阈值。它是压力分的语义分量（15%），不是决定者：服务不可用时静默回退，默认关闭。\n",
+        "en": "Optional LAYA structured-judgement client contributing a semantic share of the pressure score; never the decider, silent fallback, off by default.\n"
+      },
+      "source": [
+        {
+          "path": "src/ai/laya.js"
+        }
+      ],
+      "revision": "0000000000000000000000000000000000000000",
+      "updated_at": "2026-09-25T05:42:58Z",
+      "fingerprint": "55cce1d6d200ea3934410b860b36620cb93778e101f3ddc866c82a8886dcd495",
+      "apis": [
+        {
+          "protocol": "rpc",
+          "path": "ai.laya.judge",
+          "description": {
+            "zh": "发起一次 LAYA 结构化判断，按状态键缓存。\n",
+            "en": "Issues one LAYA judgement with state-key caching.\n"
+          },
+          "key": "rpc:ai.laya.judge"
+        },
+        {
+          "protocol": "rpc",
+          "path": "ai.laya.survivalUrgency",
+          "description": {
+            "zh": "把居民的饥饿与储备处境交给语义模型，返回紧迫度 0..1。\n",
+            "en": "Returns a 0..1 urgency for a resident state.\n"
+          },
+          "key": "rpc:ai.laya.survivalUrgency"
+        },
+        {
+          "protocol": "rpc",
+          "path": "ai.laya.scoreExpectation",
+          "description": {
+            "zh": "从 score 型的概率分布聚合出期望档位。\n",
+            "en": "Aggregates an expected score from probabilities.\n"
+          },
+          "key": "rpc:ai.laya.scoreExpectation"
+        },
+        {
+          "protocol": "rpc",
+          "path": "ai.laya.getStats",
+          "description": {
+            "zh": "调用与命中与失败与延迟快照。\n",
+            "en": "Call, hit, failure and latency snapshot.\n"
+          },
+          "key": "rpc:ai.laya.getStats"
+        }
+      ],
+      "deps": [
+        {
+          "kind": "reference",
+          "to": "truman-town.infra.config",
+          "label": {
+            "zh": "读取服务地址",
+            "en": "Reads endpoint config"
+          },
+          "cross_tree": false
+        }
+      ],
+      "aggregate": {
+        "descendant_count": 0,
+        "own_api_count": 4,
+        "inherited_api_count": 0,
+        "dep_out": 1,
+        "dep_in": 0
       }
     },
     "truman-town.ai.llm": {
@@ -6502,9 +6587,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/infra/config.js"
         }
       ],
-      "revision": "8ff7dc472f573ed2134294f6ca290fabca17d21d",
-      "updated_at": "2026-09-24T20:18:59.312Z",
-      "fingerprint": "a66f6929a110507dca57751b3c927991b99c250857b998c5a6194e75da433df6",
+      "revision": "b2c533dcbb9a29bf0cd2322749845b223954c80f",
+      "updated_at": "2026-09-25T05:42:38.158Z",
+      "fingerprint": "42d1b96515d9b66699ca0bdecb5887ee1415d960d3bb68541a41d576cac5740f",
       "apis": [
         {
           "protocol": "rpc",
@@ -6627,7 +6712,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "own_api_count": 12,
         "inherited_api_count": 0,
         "dep_out": 1,
-        "dep_in": 0
+        "dep_in": 1
       }
     },
     "truman-town.infra.events": {
@@ -8044,9 +8129,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/runtime/orchestrator/loop.js"
         }
       ],
-      "revision": "8ff7dc472f573ed2134294f6ca290fabca17d21d",
-      "updated_at": "2026-09-24T20:18:59.311Z",
-      "fingerprint": "184d828f53f095ab2de9ec5113806d3a99b433b47d951b25bc3aff5a1d70aa61",
+      "revision": "b2c533dcbb9a29bf0cd2322749845b223954c80f",
+      "updated_at": "2026-09-25T05:42:38.158Z",
+      "fingerprint": "022bc8cb8b904b36cf0e0606e80be803be0b7b73d893ed9912da83e0dae4a06a",
       "apis": [
         {
           "protocol": "rpc",
@@ -8504,9 +8589,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/runtime/orchestrator/_stage2.js"
         }
       ],
-      "revision": "9885f1e507ec4ef5a3c1f8c166ed456cf0026737",
-      "updated_at": "2026-09-24T19:39:45.670Z",
-      "fingerprint": "1e57d23c298b444632962e13f3aba825015d5a3bdc6cba6ab8dc81f2e48c4b42",
+      "revision": "b2c533dcbb9a29bf0cd2322749845b223954c80f",
+      "updated_at": "2026-09-25T05:42:38.158Z",
+      "fingerprint": "70503eabb62a96ace6947e97d7a46fd49adaf3ceedb16913cc958e4048afbbdc",
       "apis": [
         {
           "protocol": "rpc",
@@ -11868,9 +11953,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/survival/resources/food.js"
         }
       ],
-      "revision": "cb63f58a9c184362bd99a5144c83d0b10e9c5f87",
-      "updated_at": "2026-09-23T02:54:54.574Z",
-      "fingerprint": "21b96514b0404be8a5c7b7045a8902e277399bff141aecb9019334fe90b7190b",
+      "revision": "b2c533dcbb9a29bf0cd2322749845b223954c80f",
+      "updated_at": "2026-09-25T05:42:38.158Z",
+      "fingerprint": "2f5df38746dbf5bbc130a332bc2c32649fe0d54932dc773e0827acc1ad8de783",
       "apis": [
         {
           "protocol": "rpc",
@@ -11986,9 +12071,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/survival/resources/water.js"
         }
       ],
-      "revision": "cb63f58a9c184362bd99a5144c83d0b10e9c5f87",
-      "updated_at": "2026-09-23T02:54:54.574Z",
-      "fingerprint": "6da3b4e4fca1fe42be7a49972045a144af4d1384b67c442eab0afd21f3894ae7",
+      "revision": "b2c533dcbb9a29bf0cd2322749845b223954c80f",
+      "updated_at": "2026-09-25T05:42:38.158Z",
+      "fingerprint": "d27225deb547f3870a264d25ce5128f31240c3808152a69579ab6125f671ad03",
       "apis": [
         {
           "protocol": "rpc",
@@ -12770,6 +12855,10 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
     "rpc:ai.decide.parseAction": "truman-town.ai.decide",
     "rpc:ai.guard.check": "truman-town.ai.guard",
     "rpc:ai.guard.sanitize": "truman-town.ai.guard",
+    "rpc:ai.laya.getStats": "truman-town.ai.laya",
+    "rpc:ai.laya.judge": "truman-town.ai.laya",
+    "rpc:ai.laya.scoreExpectation": "truman-town.ai.laya",
+    "rpc:ai.laya.survivalUrgency": "truman-town.ai.laya",
     "rpc:ai.llm.gateway.complete": "truman-town.ai.llm.gateway",
     "rpc:ai.llm.gateway.embed": "truman-town.ai.llm.gateway",
     "rpc:ai.llm.router.fallback": "truman-town.ai.llm.router",
@@ -13572,6 +13661,16 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "label": {
         "zh": "经网关执行补全",
         "en": "Completes via gateway"
+      }
+    },
+    {
+      "from": "truman-town.ai.laya",
+      "to": "truman-town.infra.config",
+      "kind": "reference",
+      "cross_tree": false,
+      "label": {
+        "zh": "读取服务地址",
+        "en": "Reads endpoint config"
       }
     },
     {

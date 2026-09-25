@@ -10,9 +10,9 @@ description:
   en: >
       Phase-2 world stepping: industry/economy/craft queue advancement, execution of agent-chosen actions (including socialize/court/accept and decision-driven pairing), social and family aggregation, triage.
       
-revision: 9885f1e507ec4ef5a3c1f8c166ed456cf0026737
-updated_at: "2026-09-24T19:39:45.670Z"
-fingerprint: 1e57d23c298b444632962e13f3aba825015d5a3bdc6cba6ab8dc81f2e48c4b42
+revision: b2c533dcbb9a29bf0cd2322749845b223954c80f
+updated_at: "2026-09-25T05:42:38.158Z"
+fingerprint: 70503eabb62a96ace6947e97d7a46fd49adaf3ceedb16913cc958e4048afbbdc
 source:
   - path: "src/runtime/orchestrator/_stage2.js"
 apis:

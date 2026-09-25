@@ -10,9 +10,9 @@ description:
   en: >
       Tracks food production, consumption and stockpile.
       
-revision: cb63f58a9c184362bd99a5144c83d0b10e9c5f87
-updated_at: "2026-09-23T02:54:54.574Z"
-fingerprint: 21b96514b0404be8a5c7b7045a8902e277399bff141aecb9019334fe90b7190b
+revision: b2c533dcbb9a29bf0cd2322749845b223954c80f
+updated_at: "2026-09-25T05:42:38.158Z"
+fingerprint: 2f5df38746dbf5bbc130a332bc2c32649fe0d54932dc773e0827acc1ad8de783
 source:
   - path: "src/survival/resources/food.js"
 apis:

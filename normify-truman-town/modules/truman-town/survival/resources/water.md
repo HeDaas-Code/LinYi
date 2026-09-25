@@ -10,9 +10,9 @@ description:
   en: >
       Tracks water production, consumption and stockpile.
       
-revision: cb63f58a9c184362bd99a5144c83d0b10e9c5f87
-updated_at: "2026-09-23T02:54:54.574Z"
-fingerprint: 6da3b4e4fca1fe42be7a49972045a144af4d1384b67c442eab0afd21f3894ae7
+revision: b2c533dcbb9a29bf0cd2322749845b223954c80f
+updated_at: "2026-09-25T05:42:38.158Z"
+fingerprint: d27225deb547f3870a264d25ce5128f31240c3808152a69579ab6125f671ad03
 source:
   - path: "src/survival/resources/water.js"
 apis:
