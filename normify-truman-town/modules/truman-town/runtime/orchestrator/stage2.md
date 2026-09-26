@@ -5,14 +5,12 @@ parent: truman-town.runtime.orchestrator
 name: {zh: "第二阶段编排", en: "Phase-2 Orchestration"}
 description:
   zh: >
-      阶段二世界推进：产业/经济/制作队列推进、居民自选行动的实际执行（performAgentAction，含 P1 新增的 socialize/court/accept 与由居民双向决策产生的婚配）、社会与家庭汇总、疾病分诊等。
-      
+      阶段二世界推进：产业/经济/制作队列推进、居民自选行动的实际执行（performAgentAction，含 socialize/court/accept 与由居民双向决策产生的婚配，以及居民自主创办企业的 found），并在企业成立后为其招募工人与放发创业贷款；另含社会与家庭汇总、疾病分诊等。
   en: >
-      Phase-2 world stepping: industry/economy/craft queue advancement, execution of agent-chosen actions (including socialize/court/accept and decision-driven pairing), social and family aggregation, triage.
-      
-revision: 36ce55d9e3d8994abf455c13925f0c4f4a3f316c
-updated_at: "2026-09-25T09:50:48.373Z"
-fingerprint: 0b013953a02189bc425ae4e66d072a4cc14f39ba2d783523a619a8866c5c8160
+      Phase-2 world advance: industry/economy/crafting queues, execution of agent-chosen actions, and post-founding recruitment plus start-up credit for firms; also social and family rollups and disease triage.
+revision: 45f6c8b7b8ba210fcd94506b2097c8e601dd1382
+updated_at: "2026-09-26T01:47:11.884Z"
+fingerprint: 52f3c1372061cd041d760fedf6d65a7b2a30515feb037c3b1bf08811a12be21b
 source:
   - path: "src/runtime/orchestrator/_stage2.js"
 apis:
@@ -64,13 +62,26 @@ apis:
 deps:
   - kind: call
     to: truman-town.agent.crafting.workbench.executor
-    label: {zh: "推进制作队列", en: "Advance craft queue"}
   - kind: call
     to: truman-town.economy.industry.production
-    label: {zh: "生产计划", en: "Production planning"}
+  - kind: call
+    to: truman-town.economy.industry.business
+  - kind: call
+    to: truman-town.economy.industry.labour
+  - kind: call
+    to: truman-town.economy.bank.credit
+  - kind: call
+    to: truman-town.economy.ledger.account
+  - kind: call
+    to: truman-town.economy.market.price
   - kind: call
     to: truman-town.observer.recorder
-    label: {zh: "记录居民行动事件", en: "Record agent action events"}
+  - kind: call
+    to: truman-town.runtime.world-state
+  - kind: call
+    to: truman-town.agent.decision.candidates
+  - kind: call
+    to: truman-town.infra.config
 ---
 
 D0：阶段二承载「居民自选行动」的真实执行路径。

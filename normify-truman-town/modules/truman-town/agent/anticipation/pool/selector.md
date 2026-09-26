@@ -5,14 +5,14 @@ parent: truman-town.agent.anticipation.pool
 name: {zh: "候选选择器", en: "Candidate Selector"}
 description:
   zh: >
-      按模拟评分从预想池选择候选行动并生成短名单。
+      按模拟评分生成候选短名单。**生存骨架（eat/drink/rest/forage）免疫截断**，且 found/socialize/court/accept 保送独立席位——纯按分数截断会让基础分低的刚需行动被挤出窗口（实测后果：全镇不再采集、食水归零、存活率崩溃）。这是决策带宽的第一道闸。
       
   en: >
-      Selects and shortlists pool candidates by simulated scores.
+      Shortlists pool candidates by simulated score. **Survival spine (eat/drink/rest/forage) is exempt from truncation**, and found/socialize/court/accept get reserved seats; pure score truncation evicts low-base-score necessities (measured: settlement stops foraging, supplies hit zero, survival collapses). First of two decision-bandwidth gates.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T06:24:06.394Z"
-fingerprint: 6e3a72cba7017fc89b691e53267282d1cfda4b5f252aac42683be2400f109afe
+revision: 45f6c8b7b8ba210fcd94506b2097c8e601dd1382
+updated_at: "2026-09-26T01:44:47.422Z"
+fingerprint: 9f98bae0723d0753ca4b7fb25ae3010b7747fd4675bd504df2a6dadff184784e
 source:
   - path: "src/agent/anticipation/pool/selector.js"
 apis:
@@ -29,10 +29,10 @@ apis:
     path: "agent.anticipation.pool.selector.shortlist"
     description:
       zh: >
-          生成按评分降序的前 limit 个候选。
+          生成候选短名单：先保送生存骨架与发展行动，再按评分降序填充剩余名额。
           
       en: >
-          Returns the top `limit` candidates by score desc.
+          Builds the shortlist: reserves survival spine and development actions first, then fills remaining seats by score desc.
           
 deps:
   - kind: call

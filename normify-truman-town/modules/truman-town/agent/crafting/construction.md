@@ -10,9 +10,9 @@ description:
   en: >
       Consumes ticks and materials to build or reinforce shelter structures.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T08:02:32.260Z"
-fingerprint: 48dabaedca80825f696f740bdc6b3555607af4162395fc77746dc32cdc3b7429
+revision: 45f6c8b7b8ba210fcd94506b2097c8e601dd1382
+updated_at: "2026-09-26T01:40:46.603Z"
+fingerprint: ea6e1cc7713061ee1dac873c1ea37b5910518bbb16ae519cff9e0bff172c7326
 source:
   - path: "src/agent/crafting/construction.js"
 apis:

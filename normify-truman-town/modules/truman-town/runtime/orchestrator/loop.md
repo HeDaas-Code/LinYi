@@ -10,9 +10,9 @@ description:
   en: >
       Wires clock → survival events → perception → agent decision → ai.thought → dispatch → world-state into a minimal closed main loop, recording observer logs at every decision/action/event node; with phase2 enabled it also drives procreation, market trading, crafting, residence allocation and health checks each tick; with phase3 enabled it also drives politics, culture (norms/ritual/meme), psyche (trauma/coping/breakdown), tech (research/loss) and civilization (legacy/collapse/restart) each tick.
       
-revision: 796aec9412d132997f5cdc37d01cac934e03d018
-updated_at: "2026-09-25T10:03:44.360Z"
-fingerprint: 65349178263aafe98603f0d501cd62cfb4edf8f4e365aac74f7e019ddb89fba0
+revision: 45f6c8b7b8ba210fcd94506b2097c8e601dd1382
+updated_at: "2026-09-26T01:47:12.144Z"
+fingerprint: 67618bde515dc7d3325f08dca8adbe46d23d88ba94f38ad70d88a1a89a3b978d
 source:
   - path: "src/runtime/orchestrator/loop.js"
 apis:
@@ -197,6 +197,14 @@ deps:
     to: truman-town.civilization.collapse.confirmer
   - kind: call
     to: truman-town.civilization.restart
+  - kind: call
+    to: truman-town.agent.anticipation.pool.pruner
+  - kind: call
+    to: truman-town.agent.decision.candidates
+  - kind: call
+    to: truman-town.agent.persona.personality
+  - kind: call
+    to: truman-town.runtime.orchestrator.stage2
 ---
 
 ## 第三阶段集成（phase3）

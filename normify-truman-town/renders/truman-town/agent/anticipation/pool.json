@@ -1,16 +1,16 @@
 {
   "schema_version": 1,
   "id": "truman-town.agent.anticipation.pool",
-  "updated_at": "2026-09-22T05:28:31.359Z",
-  "mode": "grid",
+  "updated_at": "2026-09-26T01:48:53.451Z",
+  "mode": "layers",
   "max_columns": 2,
   "reading": {
-    "zh": "查看 预想池实现 的实现组成，箭头表示模块间依赖。",
-    "en": "Inspect the implementation of Anticipation Pool Implementation; arrows show dependencies."
+    "zh": "候选池的两级闸门：selector.shortlist 先按评分生成短名单，pruner.prune 再裁剪到前 K。两级都执行**同一套豁免规则**——生存骨架（eat/drink/rest/forage）无条件保送，found/socialize/court/accept 各占独立席位。纯按分数截断会让基础分低的刚需行动被挤出窗口：实测新增 found 后窗口变成 [craft,build,expedition,write,found,drink]，eat/forage 缺席，全镇不再采集，食水归零后永不恢复，三种子里两个全灭。",
+    "en": "Two gates over the candidate pool: selector.shortlist builds the shortlist by score, then pruner.prune trims to top-K. Both apply the SAME exemptions: the survival spine is always reserved and found/socialize/court/accept hold dedicated seats. Pure score truncation evicts low-base-score necessities; measured, adding found turned the window into [craft,build,expedition,write,found,drink] with eat/forage absent, the settlement stopped foraging, supplies hit zero and never recovered."
   },
   "order": [
-    "truman-town.agent.anticipation.pool.pruner",
+    "truman-town.agent.anticipation.pool.store",
     "truman-town.agent.anticipation.pool.selector",
-    "truman-town.agent.anticipation.pool.store"
+    "truman-town.agent.anticipation.pool.pruner"
   ]
 }

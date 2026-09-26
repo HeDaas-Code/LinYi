@@ -4,8 +4,8 @@
   "stats": {
     "files": 192,
     "modules": 49,
-    "stores": 153,
-    "graphTypes": 43,
+    "stores": 152,
+    "graphTypes": 42,
     "worldKeys": 11,
     "filesWithReset": 107,
     "byKind": {
@@ -14,14 +14,15 @@
       "number": 64,
       "expr": 7,
       "string": 4,
-      "null": 16,
-      "array": 8,
-      "flag": 10,
+      "null": 17,
+      "array": 7,
+      "flag": 9,
       "object": 2
     },
     "diagnostics": {
-      "error": 2,
-      "warning": 9
+      "error": 0,
+      "warning": 0,
+      "info": 3
     }
   },
   "stores": [
@@ -1147,7 +1148,7 @@
       "id": "infra.config.currentDifficultyId",
       "module": "infra.config",
       "file": "src/infra/config.js",
-      "line": 261,
+      "line": 270,
       "name": "currentDifficultyId",
       "keyword": "let",
       "kind": "string",
@@ -1281,7 +1282,7 @@
       "keyword": "const",
       "kind": "array",
       "init": "[]",
-      "resetCovered": false,
+      "resetCovered": true,
       "resetDeclared": true,
       "resetFunctions": [
         "__reset"
@@ -1369,7 +1370,7 @@
       "id": "infra.rng.state",
       "module": "infra.rng",
       "file": "src/infra/rng.js",
-      "line": 9,
+      "line": 11,
       "name": "state",
       "keyword": "let",
       "kind": "number",
@@ -1395,37 +1396,10 @@
       "rawLine": "let state = 0x9e3779b9 >>> 0;"
     },
     {
-      "id": "infra.rng.seeded",
-      "module": "infra.rng",
-      "file": "src/infra/rng.js",
-      "line": 10,
-      "name": "seeded",
-      "keyword": "let",
-      "kind": "flag",
-      "init": "false",
-      "resetCovered": true,
-      "resetDeclared": true,
-      "resetFunctions": [
-        "__reset"
-      ],
-      "writers": [
-        "seed"
-      ],
-      "readers": [],
-      "writeCount": 1,
-      "readCount": 0,
-      "exportedTouchers": [
-        "seed",
-        "__reset"
-      ],
-      "exported": false,
-      "rawLine": "let seeded = false;"
-    },
-    {
       "id": "infra.rng.gen",
       "module": "infra.rng",
       "file": "src/infra/rng.js",
-      "line": 34,
+      "line": 35,
       "name": "gen",
       "keyword": "let",
       "kind": "expr",
@@ -1848,7 +1822,7 @@
       "keyword": "let",
       "kind": "expr",
       "init": "mulberry32(0x9e3779b9 >>> 0)",
-      "resetCovered": false,
+      "resetCovered": true,
       "resetDeclared": true,
       "resetFunctions": [
         "__reset"
@@ -1862,7 +1836,9 @@
       ],
       "writeCount": 1,
       "readCount": 2,
-      "exportedTouchers": [],
+      "exportedTouchers": [
+        "__reset"
+      ],
       "exported": false,
       "rawLine": "let platformGen = mulberry32(0x9e3779b9 >>> 0);"
     },
@@ -1918,14 +1894,16 @@
         "runMarket",
         "runIndustry",
         "runFiscal",
+        "candidateStateFor",
         "performAgentAction",
         "agentIdByAccount",
         "situationOf"
       ],
       "writeCount": 1,
-      "readCount": 7,
+      "readCount": 8,
       "exportedTouchers": [
         "seed",
+        "candidateStateFor",
         "performAgentAction",
         "__reset"
       ],
@@ -2326,7 +2304,8 @@
         "__reset"
       ],
       "writers": [
-        "seed"
+        "seed",
+        "performAgentAction"
       ],
       "readers": [
         "seed",
@@ -2334,7 +2313,7 @@
         "candidateStateFor",
         "performAgentAction"
       ],
-      "writeCount": 1,
+      "writeCount": 2,
       "readCount": 4,
       "exportedTouchers": [
         "seed",
@@ -2454,16 +2433,18 @@
         "__reset"
       ],
       "writers": [
-        "seed"
+        "seed",
+        "performAgentAction"
       ],
       "readers": [
         "runFiscal",
         "summary"
       ],
-      "writeCount": 1,
+      "writeCount": 2,
       "readCount": 2,
       "exportedTouchers": [
         "seed",
+        "performAgentAction",
         "summary",
         "__reset"
       ],
@@ -3098,7 +3079,7 @@
       "id": "runtime.orchestrator._stage2._candidateStateCache",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 761,
+      "line": 814,
       "name": "_candidateStateCache",
       "keyword": "let",
       "kind": "null",
@@ -3113,10 +3094,14 @@
         "tick"
       ],
       "readers": [
+        "cacheBalance",
+        "cacheActiveCount",
+        "cacheStartedIds",
+        "demandPerTickEstimate",
         "candidateStateFor"
       ],
       "writeCount": 2,
-      "readCount": 1,
+      "readCount": 5,
       "exportedTouchers": [
         "candidateStateFor",
         "tick",
@@ -3129,7 +3114,7 @@
       "id": "runtime.orchestrator._stage2._candidateStateCacheTick",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 762,
+      "line": 815,
       "name": "_candidateStateCacheTick",
       "keyword": "let",
       "kind": "number",
@@ -3153,6 +3138,35 @@
       ],
       "exported": false,
       "rawLine": "let _candidateStateCacheTick = -1;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.foundCapitalConfig",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 817,
+      "name": "foundCapitalConfig",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "setFoundConfig"
+      ],
+      "readers": [
+        "foundCapitalOf",
+        "cfgVal"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let foundCapitalConfig = null;"
     },
     {
       "id": "runtime.orchestrator._stage3.seeded",
@@ -4045,7 +4059,7 @@
       "id": "runtime.orchestrator.dispatch.opSeq",
       "module": "runtime.orchestrator.dispatch",
       "file": "src/runtime/orchestrator/dispatch.js",
-      "line": 12,
+      "line": 14,
       "name": "opSeq",
       "keyword": "let",
       "kind": "number",
@@ -4070,42 +4084,15 @@
       "rawLine": "let opSeq = 0;"
     },
     {
-      "id": "runtime.orchestrator.dispatch.lastApplied",
-      "module": "runtime.orchestrator.dispatch",
-      "file": "src/runtime/orchestrator/dispatch.js",
-      "line": 13,
-      "name": "lastApplied",
-      "keyword": "let",
-      "kind": "array",
-      "init": "[]",
-      "resetCovered": true,
-      "resetDeclared": true,
-      "resetFunctions": [
-        "__reset"
-      ],
-      "writers": [
-        "actions"
-      ],
-      "readers": [],
-      "writeCount": 1,
-      "readCount": 0,
-      "exportedTouchers": [
-        "actions",
-        "__reset"
-      ],
-      "exported": false,
-      "rawLine": "let lastApplied = [];"
-    },
-    {
       "id": "runtime.orchestrator.loop.layaUrgencyCache",
       "module": "runtime.orchestrator.loop",
       "file": "src/runtime/orchestrator/loop.js",
-      "line": 68,
+      "line": 71,
       "name": "layaUrgencyCache",
       "keyword": "const",
       "kind": "map",
       "init": "new Map()",
-      "resetCovered": false,
+      "resetCovered": true,
       "resetDeclared": true,
       "resetFunctions": [
         "reset"
@@ -4121,7 +4108,8 @@
       "writeCount": 2,
       "readCount": 2,
       "exportedTouchers": [
-        "step"
+        "step",
+        "reset"
       ],
       "exported": false,
       "rawLine": "const layaUrgencyCache = new Map();"
@@ -4130,7 +4118,7 @@
       "id": "runtime.orchestrator.loop.foragePool",
       "module": "runtime.orchestrator.loop",
       "file": "src/runtime/orchestrator/loop.js",
-      "line": 144,
+      "line": 147,
       "name": "foragePool",
       "keyword": "let",
       "kind": "null",
@@ -4166,7 +4154,7 @@
       "id": "runtime.orchestrator.loop.currentSeed",
       "module": "runtime.orchestrator.loop",
       "file": "src/runtime/orchestrator/loop.js",
-      "line": 145,
+      "line": 148,
       "name": "currentSeed",
       "keyword": "let",
       "kind": "string",
@@ -4196,12 +4184,12 @@
       "id": "runtime.orchestrator.loop._alivePopGeneration",
       "module": "runtime.orchestrator.loop",
       "file": "src/runtime/orchestrator/loop.js",
-      "line": 156,
+      "line": 159,
       "name": "_alivePopGeneration",
       "keyword": "let",
       "kind": "number",
       "init": "-1",
-      "resetCovered": false,
+      "resetCovered": true,
       "resetDeclared": true,
       "resetFunctions": [
         "reset"
@@ -4215,7 +4203,9 @@
       ],
       "writeCount": 2,
       "readCount": 1,
-      "exportedTouchers": [],
+      "exportedTouchers": [
+        "reset"
+      ],
       "exported": false,
       "rawLine": "let _alivePopGeneration = -1;"
     },
@@ -4223,12 +4213,12 @@
       "id": "runtime.orchestrator.loop._alivePopValue",
       "module": "runtime.orchestrator.loop",
       "file": "src/runtime/orchestrator/loop.js",
-      "line": 157,
+      "line": 160,
       "name": "_alivePopValue",
       "keyword": "let",
       "kind": "number",
       "init": "0",
-      "resetCovered": false,
+      "resetCovered": true,
       "resetDeclared": true,
       "resetFunctions": [
         "reset"
@@ -4241,7 +4231,9 @@
       ],
       "writeCount": 1,
       "readCount": 1,
-      "exportedTouchers": [],
+      "exportedTouchers": [
+        "reset"
+      ],
       "exported": false,
       "rawLine": "let _alivePopValue = 0;"
     },
@@ -4249,7 +4241,7 @@
       "id": "runtime.orchestrator.loop.mortality",
       "module": "runtime.orchestrator.loop",
       "file": "src/runtime/orchestrator/loop.js",
-      "line": 835,
+      "line": 936,
       "name": "mortality",
       "keyword": "const",
       "kind": "map",
@@ -4765,12 +4757,6 @@
       "line": 11
     },
     {
-      "constName": "STRUCTURE_TYPE",
-      "type": "town.building.structure",
-      "file": "src/agent/crafting/construction.js",
-      "line": 17
-    },
-    {
       "constName": "TYPE",
       "type": "memory.episodic",
       "file": "src/agent/memory/episodic/store.js",
@@ -4996,7 +4982,7 @@
       "constName": "TYPE",
       "type": "town.building.structure",
       "file": "src/town/building/structure.js",
-      "line": 11
+      "line": 18
     },
     {
       "constName": "TYPE",
@@ -5753,22 +5739,23 @@
     },
     {
       "type": "town.building.structure",
-      "constName": "STRUCTURE_TYPE",
+      "constName": "TYPE",
       "declaredAt": "undefined:undefined",
       "producers": [
-        "src/agent/crafting/construction.js",
         "src/town/building/structure.js"
       ],
       "consumers": [
+        "src/agent/crafting/construction.js",
+        "src/economy/industry/business.js",
         "src/runtime/orchestrator/_stage2.js",
         "src/runtime/orchestrator/loop.js",
+        "src/town/building/space.js",
         "src/town/building/structure.js"
       ],
       "orphan": false,
-      "duplicateDeclaration": true,
+      "duplicateDeclaration": false,
       "declaredBy": [
-        "src/agent/crafting/construction.js:17",
-        "src/town/building/structure.js:11"
+        "src/town/building/structure.js:18"
       ]
     },
     {
@@ -6189,81 +6176,25 @@
   ],
   "diagnostics": [
     {
-      "level": "warning",
-      "code": "store/reset-missing",
+      "level": "info",
+      "code": "store/reset-by-generation",
       "subject": "agent.memory.episodic.store.lastGeneration",
-      "message": "文件有 __reset 但未覆盖该变量：跨 run 残留会使结果取决于此前跑过什么",
+      "message": "派生缓存（世代号）：由 __reset 或 ensureFresh 重建，非泄漏",
       "at": "src/agent/memory/episodic/store.js:25"
     },
     {
-      "level": "warning",
-      "code": "store/reset-missing",
-      "subject": "infra.events.retry.deadLetters",
-      "message": "文件有 __reset 但未覆盖该变量：跨 run 残留会使结果取决于此前跑过什么",
-      "at": "src/infra/events/retry.js:22"
-    },
-    {
-      "level": "error",
-      "code": "store/never-read",
-      "subject": "infra.rng.seeded",
-      "message": "被 1 处写入（seed）但无任何函数读取：状态不产生行为后果",
-      "at": "src/infra/rng.js:10"
-    },
-    {
-      "level": "warning",
-      "code": "store/reset-missing",
-      "subject": "runtime.orchestrator._stage2.platformGen",
-      "message": "文件有 __reset 但未覆盖该变量：跨 run 残留会使结果取决于此前跑过什么",
-      "at": "src/runtime/orchestrator/_stage2.js:46"
-    },
-    {
-      "level": "error",
-      "code": "store/never-read",
-      "subject": "runtime.orchestrator.dispatch.lastApplied",
-      "message": "被 1 处写入（actions）但无任何函数读取：状态不产生行为后果",
-      "at": "src/runtime/orchestrator/dispatch.js:13"
-    },
-    {
-      "level": "warning",
-      "code": "store/reset-missing",
-      "subject": "runtime.orchestrator.loop.layaUrgencyCache",
-      "message": "文件有 __reset 但未覆盖该变量：跨 run 残留会使结果取决于此前跑过什么",
-      "at": "src/runtime/orchestrator/loop.js:68"
-    },
-    {
-      "level": "warning",
-      "code": "store/reset-missing",
-      "subject": "runtime.orchestrator.loop._alivePopGeneration",
-      "message": "文件有 __reset 但未覆盖该变量：跨 run 残留会使结果取决于此前跑过什么",
-      "at": "src/runtime/orchestrator/loop.js:156"
-    },
-    {
-      "level": "warning",
-      "code": "store/reset-missing",
-      "subject": "runtime.orchestrator.loop._alivePopValue",
-      "message": "文件有 __reset 但未覆盖该变量：跨 run 残留会使结果取决于此前跑过什么",
-      "at": "src/runtime/orchestrator/loop.js:157"
-    },
-    {
-      "level": "warning",
-      "code": "store/reset-missing",
+      "level": "info",
+      "code": "store/reset-by-generation",
       "subject": "social.platform.posts.lastGeneration",
-      "message": "文件有 __reset 但未覆盖该变量：跨 run 残留会使结果取决于此前跑过什么",
+      "message": "派生缓存（世代号）：由 __reset 或 ensureFresh 重建，非泄漏",
       "at": "src/social/platform/posts.js:35"
     },
     {
-      "level": "warning",
-      "code": "store/reset-missing",
+      "level": "info",
+      "code": "store/reset-by-generation",
       "subject": "social.reputation.lastGeneration",
-      "message": "文件有 __reset 但未覆盖该变量：跨 run 残留会使结果取决于此前跑过什么",
+      "message": "派生缓存（世代号）：由 __reset 或 ensureFresh 重建，非泄漏",
       "at": "src/social/reputation.js:46"
-    },
-    {
-      "level": "warning",
-      "code": "graph/duplicate-declaration",
-      "subject": "town.building.structure",
-      "message": "同一图类型被多处各自声明（src/agent/crafting/construction.js:17, src/town/building/structure.js:11）：契约重复，改一处易漏另一处",
-      "at": "src/agent/crafting/construction.js:17"
     }
   ]
 }
