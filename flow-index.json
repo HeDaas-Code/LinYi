@@ -4,7 +4,7 @@
   "stats": {
     "files": 192,
     "modules": 49,
-    "stores": 152,
+    "stores": 153,
     "graphTypes": 42,
     "worldKeys": 11,
     "filesWithReset": 107,
@@ -14,7 +14,7 @@
       "number": 64,
       "expr": 7,
       "string": 4,
-      "null": 17,
+      "null": 18,
       "array": 7,
       "flag": 9,
       "object": 2
@@ -1148,7 +1148,7 @@
       "id": "infra.config.currentDifficultyId",
       "module": "infra.config",
       "file": "src/infra/config.js",
-      "line": 270,
+      "line": 275,
       "name": "currentDifficultyId",
       "keyword": "let",
       "kind": "string",
@@ -2311,14 +2311,16 @@
         "seed",
         "runIndustry",
         "candidateStateFor",
-        "performAgentAction"
+        "performAgentAction",
+        "summary"
       ],
       "writeCount": 2,
-      "readCount": 4,
+      "readCount": 5,
       "exportedTouchers": [
         "seed",
         "candidateStateFor",
         "performAgentAction",
+        "summary",
         "__reset"
       ],
       "exported": false,
@@ -2600,10 +2602,11 @@
         "runIndustry"
       ],
       "readers": [
+        "foundConditionsFor",
         "summary"
       ],
       "writeCount": 2,
-      "readCount": 1,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
@@ -4238,10 +4241,39 @@
       "rawLine": "let _alivePopValue = 0;"
     },
     {
+      "id": "runtime.orchestrator.loop.literateSet",
+      "module": "runtime.orchestrator.loop",
+      "file": "src/runtime/orchestrator/loop.js",
+      "line": 621,
+      "name": "literateSet",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "reset"
+      ],
+      "writers": [
+        "computeLiterateSet"
+      ],
+      "readers": [
+        "computeLiterateSet",
+        "isLiterate"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "reset"
+      ],
+      "exported": false,
+      "rawLine": "let literateSet = null;"
+    },
+    {
       "id": "runtime.orchestrator.loop.mortality",
       "module": "runtime.orchestrator.loop",
       "file": "src/runtime/orchestrator/loop.js",
-      "line": 936,
+      "line": 1032,
       "name": "mortality",
       "keyword": "const",
       "kind": "map",
@@ -5160,6 +5192,7 @@
         "src/civilization/tech/research.js",
         "src/civilization/tech/tree.js",
         "src/runtime/orchestrator/_stage3.js",
+        "src/runtime/orchestrator/loop.js",
         "src/survival/resources/energy.js"
       ],
       "orphan": false,

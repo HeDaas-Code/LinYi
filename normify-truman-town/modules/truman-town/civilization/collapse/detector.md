@@ -11,7 +11,7 @@ description:
       Detects collapse signals from survival crisis and civilization metrics.
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T14:39:19.573Z"
+updated_at: "2026-09-26T03:35:04.418Z"
 fingerprint: bcfabb6e33fbbcc8a0826dd1da11a6242c38061553c3e16ecebbb3b7bb4c8edb
 source:
   - path: "src/civilization/collapse/detector.js"
@@ -38,5 +38,5 @@ deps:
   - kind: call
     to: truman-town.survival.crisis
   - kind: call
-    to: truman-town.civilization.state
+    to: truman-town.survival.goal
 ---

@@ -11,7 +11,7 @@ description:
       Books and cancels event venues.
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T07:57:17.695Z"
+updated_at: "2026-09-26T03:35:09.438Z"
 fingerprint: 13d97fe7649728fd32f57df3c7302698950a6638c2802dac493690e980ae52ed
 source:
   - path: "src/town/facility/venue.js"
@@ -34,7 +34,4 @@ apis:
       en: >
           Cancels a venue booking.
           
-deps:
-  - kind: call
-    to: truman-town.town.facility.public
 ---

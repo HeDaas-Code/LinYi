@@ -11,7 +11,7 @@ description:
       Compares survival times, collapse modes and legacies across civilizations; read-only over archives.
       
 revision: 5ad9af8b020cb978dad9c8ac59c41cdb224d5c73
-updated_at: "2026-09-22T17:24:01.916Z"
+updated_at: "2026-09-26T03:35:08.522Z"
 fingerprint: cee92fb24030c2c7fa2dec1387516a0f4e00a36207d42699f67737d5fa7a8f8f
 source:
   - path: "src/observer/experiment/compare.js"
@@ -36,7 +36,7 @@ apis:
           
 deps:
   - kind: dataflow
-    to: truman-town.civilization.archive
+    to: truman-town.infra.store.archive
     label: {zh: "文明存档数据源", en: "Civ archive source"}
   - kind: call
     to: truman-town.infra.store.graph

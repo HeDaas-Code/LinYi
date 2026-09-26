@@ -1508,6 +1508,26 @@ function reputationCreditMultiplier(score, config) {
 const SICK_TEMPLATES = ['我感觉不舒服，需要医疗帮助。', '我好像发烧了，有人有药吗？', '咳嗽好几天了，希望早点好起来。'];
 const CHAT_TEMPLATES = ['避难所今天还算安稳。', '今天的天气不错。', '大家要互相帮助啊。', '晚上一起吃点东西吧。'];
 
+// **人格口吻**（缺陷 D：此前正文只从 3~4 条固定模板里随机取，
+// 同一处境下所有人的发言逐字相同，编年志读起来千篇一律）。
+// 现在正文由「处境数值 + 人格口吻」合成 —— 这正是探索契约所说的
+// 「由各方因素综合计算出的结果」：谁在说、处境多严重，都进正文。
+const PERSONA_VOICE = Object.freeze({
+  adventurous: '总想试试没做过的事。',
+  sociable: '还是人多了热闹。',
+  industrious: '手上有活干才踏实。',
+  cautious: '凡事还是稳一点好。',
+  generous: '大家互相帮衬着过吧。',
+});
+
+/** 取该居民的人格口吻（无画像时返回空串）。 */
+function voiceOf(agentId) {
+  try {
+    const prof = agent.persona.personality.profile(agentId);
+    return PERSONA_VOICE[prof?.dominant] ?? '';
+  } catch { return ''; }
+}
+
 /** 依真实处境拼装发帖内容（饥饿/患病/破产/贫困/闲聊），不调用真实大模型。
  *  failedFounders 由调用方每 tick 计算一次传入，避免逐帖重查全量企业列表。 */
 function situationOf(agentId, failedFounders) {
@@ -1519,11 +1539,24 @@ function situationOf(agentId, failedFounders) {
   let balance = 0;
   if (acctId) { try { balance = economy.ledger.account.balance(acctId) ?? 0; } catch { /* 无账户 */ } }
 
-  if (infected) return { context: 'sick', content: SICK_TEMPLATES[Math.floor(prFloat(0, 1) * SICK_TEMPLATES.length)], salience: 0.9 };
-  if (needs.food >= 0.6) return { context: 'hungry', content: '好饿，谁能分我点食物？', salience: 0.9 };
-  if (failedFounders.has(agentId)) return { context: 'bankrupt', content: '我的企业破产了，真是糟透了。', salience: 0.85 };
-  if (balance < 100) return { context: 'poor', content: '手头有点紧，想找份工作。', salience: 0.6 };
-  return { context: 'chat', content: CHAT_TEMPLATES[Math.floor(prFloat(0, 1) * CHAT_TEMPLATES.length)], salience: 0.3 };
+  // 正文 = 处境数值 + 人格口吻。数值让「有多严重」可读，口吻让「是谁在说」可辨。
+  const voice = voiceOf(agentId);
+  const pct = (v) => Math.round(Math.max(0, Math.min(1, v)) * 100) + '%';
+  if (infected) {
+    const frame = SICK_TEMPLATES[Math.floor(prFloat(0, 1) * SICK_TEMPLATES.length)];
+    return { context: 'sick', content: frame + voice, salience: 0.9 };
+  }
+  if (needs.food >= 0.6) {
+    return { context: 'hungry', content: '好饿（食物需求 ' + pct(needs.food) + '），谁能分我点食物？' + voice, salience: 0.9 };
+  }
+  if (failedFounders.has(agentId)) {
+    return { context: 'bankrupt', content: '我的企业破产了（余款 ' + Math.round(balance) + '），真是糟透了。' + voice, salience: 0.85 };
+  }
+  if (balance < 100) {
+    return { context: 'poor', content: '手头有点紧（余款 ' + Math.round(balance) + '），想找份工作。' + voice, salience: 0.6 };
+  }
+  const chat = CHAT_TEMPLATES[Math.floor(prFloat(0, 1) * CHAT_TEMPLATES.length)];
+  return { context: 'chat', content: chat + voice, salience: 0.3 };
 }
 
 const REPLY_TEMPLATES = {

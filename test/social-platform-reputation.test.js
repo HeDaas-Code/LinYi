@@ -7,6 +7,7 @@ import * as rng from '../src/infra/rng.js';
 import * as social from '../src/social/index.js';
 import { rankTriageByReputation } from '../src/runtime/orchestrator/_stage2.js';
 import { loop } from '../src/runtime/index.js';
+import * as observer from '../src/observer/index.js';
 
 const { posts, feeds } = social.platform;
 const reputation = social.reputation;
@@ -163,4 +164,45 @@ test('集成：50 居民 × 200 tick × 3 种子存活率 1.00 + 跨种子分叉
   // 至少产生处境驱动的帖子（供可叙事历史）
   const totalSituational = narratives.reduce((s, n) => s + n.situational, 0);
   assert.ok(totalSituational >= 1, '应产生处境驱动帖子，实际 ' + JSON.stringify(narratives.map((n) => n.situational)));
+});
+
+test('缺陷 D：发帖正文由处境数值与人格口吻合成，不是固定模板', async () => {
+  // 契约：编年志里的「居民说了什么」必须承载信息。
+  // 修复前正文从 3~4 条固定模板里随机取，同一处境下所有人逐字相同 ——
+  // 读者无法分辨是谁在说、有多严重，社交内容形同噪声。
+  resetAll();
+  await loop.run({ ticks: 60, seed: 42, agentCount: 12, phase2: true });
+
+  const all = posts.list();
+  assert.ok(all.length >= 4, '应产生帖子，实际 ' + all.length);
+  const bodies = all.map((p) => p.content);
+  assert.ok(bodies.every((c) => typeof c === 'string' && c.length > 0),
+    '每条帖子都应有非空正文');
+
+  // ① 不再是固定模板：不同正文的数量应显著多于模板条数（4 条聊天 + 3 条患病）。
+  const distinct = new Set(bodies);
+  assert.ok(distinct.size >= 5,
+    '正文应因处境数值/人格而异，实测不同正文仅 ' + distinct.size + ' 条：' + JSON.stringify([...distinct].slice(0, 8)));
+
+  // ② 处境数值确实进入了正文（饥饿/破产/贫困三类应带数字）。
+  const numeric = all.filter((p) => ['hungry','bankrupt','poor'].includes(p.context));
+  for (const p of numeric) {
+    assert.ok(/[0-9]/.test(p.content),
+      '处境类正文应携带可读数值：context=' + p.context + ' content=' + p.content);
+  }
+
+  // ③ 人格口吻确实进入了正文：同一处境下不同人格的正文应不同。
+  const voiceSuffixes = ['总想试试没做过的事。','还是人多了热闹。',
+    '手上有活干才踏实。','凡事还是稳一点好。','大家互相帮衬着过吧。'];
+  const voiced = all.filter((p) => voiceSuffixes.some((v) => p.content.endsWith(v)));
+  assert.ok(voiced.length >= 1,
+    '应有帖子带人格口吻，实测 0 条；样本=' + JSON.stringify(bodies.slice(0, 5)));
+
+  // ④ 观察者事件流的 payload 必须带上正文（此前 content 整体缺失）。
+  const events = observer.recorder.eventLog.list().filter((n) => n.data.topic === 'social.platform.post');
+  assert.ok(events.length >= 1, '发帖应写 observer 事件');
+  for (const e of events) {
+    assert.ok(typeof e.data.payload.content === 'string' && e.data.payload.content.length > 0,
+      'social.platform.post 事件应携带 content');
+  }
 });

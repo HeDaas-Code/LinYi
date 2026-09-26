@@ -2,15 +2,16 @@
 uid: 0330c8f8
 id: truman-town.ai.prompt.world
 parent: truman-town.ai.prompt
-state: planned
+state: deprecated
+replacement: truman-town.ai.prompt.agent
 name: {zh: "世界提示词", en: "World Prompt"}
 description:
   zh: >
-      组装小镇世界观、规则与空间背景提示词。
+      （已废弃，能力由 truman-town.ai.prompt.agent 承担：prompt.agent 已内置 DEFAULT_WORLDVIEW 与 worldview 参数。保留此条目以记录设计意图的归属。）
   en: >
-      Assembles town worldview, rules and spatial context prompts.
+      Deprecated: this capability lives in truman-town.ai.prompt.agent. Kept to record where the original intent ended up.
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T04:32:53Z"
+updated_at: "2026-09-26T03:30:39.686Z"
 fingerprint: pending
 source: []
 apis:
@@ -19,6 +20,8 @@ apis:
     description:
       zh: >
           调用 ai.prompt.world.compose。
+          
       en: >
           Calls ai.prompt.world.compose.
+          
 ---

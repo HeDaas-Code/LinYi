@@ -10,9 +10,9 @@ description:
   en: >
       Phase-2 world advance: industry/economy/crafting queues, execution of agent-chosen actions, and post-founding recruitment plus start-up credit for firms; also social and family rollups and disease triage.
       
-revision: 1fe29bb1e2491f51b484e2e2e047f8c23b95cfc4
-updated_at: "2026-09-26T02:17:15.021Z"
-fingerprint: bba976d0c3f2a94ea03c05f952fccfb7e328b482a9ecbd0d81044a5a3454ec54
+revision: 1639a6c056539210e6b26211bac5fd8b42cbc3a4
+updated_at: "2026-09-26T03:35:10.007Z"
+fingerprint: 1265a6488ce60ea58a25aff4e1d92f60b59a33d4769f8cdb188992a9fa8f6d83
 source:
   - path: "src/runtime/orchestrator/_stage2.js"
 apis:

@@ -11,7 +11,7 @@ description:
       Restarts the sandbox and injects the previous civilization's legacy into the new one.
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T14:39:19.573Z"
+updated_at: "2026-09-26T03:35:07.127Z"
 fingerprint: 72c03347b405a984190fd6265277f5c239c9e4f61b85b85952e538c730958262
 source:
   - path: "src/civilization/restart.js"
@@ -36,9 +36,9 @@ apis:
           
 deps:
   - kind: call
-    to: truman-town.civilization.archive
+    to: truman-town.infra.store.archive
   - kind: call
     to: truman-town.civilization.legacy.summary
   - kind: call
-    to: truman-town.genesis.world-factory
+    to: truman-town.town.map.topology
 ---
