@@ -10,9 +10,9 @@ description:
   en: >
       Stores semantic memory entries (event→summary) and recalls them by lexical/tag relevance (default lexical matching, no MiniLM).
       
-revision: 159dc43daf11d18b03ea9fc0ea5c3e6b18f16488
-updated_at: "2026-09-24T02:49:57.818Z"
-fingerprint: bccf1aa2f63ed92a25ff6738d41a18cd071c7a1784447efaaaef1fac48230357
+revision: f5619e53d4eabebf1a7aa7f58a657c03cf3d5583
+updated_at: "2026-09-26T16:03:47.710Z"
+fingerprint: 2c3de7aa214f0a641073f110a0fbd57fcc4184d3aee810cb2cac9da414fca9d3
 source:
   - path: "src/agent/memory/semantic.js"
 apis:

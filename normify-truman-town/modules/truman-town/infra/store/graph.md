@@ -10,9 +10,9 @@ description:
   en: >
       Reads and writes graph data such as social and spatial topology.
       
-revision: e023d797f741ad817f8c81c2bd91de8d996e39ac
-updated_at: "2026-09-23T04:24:00.238Z"
-fingerprint: 977f82da3a357196003a8b8ba3c67f23d51e05e67e125b6acc25a4d604d811d4
+revision: f5619e53d4eabebf1a7aa7f58a657c03cf3d5583
+updated_at: "2026-09-26T16:03:47.710Z"
+fingerprint: ed725d1dd1435ad5bafb4299fb6babca855fc558b8f247f35bbff424c7ba6990
 source:
   - path: "src/infra/store/graph.js"
 apis:
