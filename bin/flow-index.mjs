@@ -117,6 +117,10 @@ function usageOf(line, name) {
     if (/^(\+\+|--)/.test(tail)) return 'write';
     if (/^[-+*/%]?=(?!=)/.test(tail)) return 'write';
     if (/^\[[^\]]*\][ \t]*=(?!=)/.test(tail)) return 'write';
+    // 清空数组的惯用写法 x.length = 0 也是**复位**。
+    // 实测 retry.js 用它清 deadLetters，被误报「未纳入复位」。
+    if (/^[.]length[ \t]*=(?!=)/.test(tail)) return 'write';
+    // 同样：x.clear() 之外，x.pop/shift/splice 等也已在 MUTATING 内。
     for (const m of MUTATING) {
       if (new RegExp('^[.]' + m + '[(]').test(tail)) return 'write';
     }
@@ -281,13 +285,21 @@ for (const s of stores) {
     });
   }
   if (!s.resetCovered && s.writeCount > 0) {
+    // 世代号类变量（lastGeneration）是**派生缓存**：复位函数把它设为
+    // 「图当前的世代」而非常量，语义上等价于复位（下次 ensureFresh 会重建）。
+    // 实测这类被误报 4 次，故单列一档并降级为 info，不计入 warning。
+    const generationLike = /generation/i.test(s.name);
     diagnostics.push({
-      level: s.resetDeclared ? 'warning' : 'error',
-      code: s.resetDeclared ? 'store/reset-missing' : 'store/no-reset-function',
+      level: generationLike ? 'info' : (s.resetDeclared ? 'warning' : 'error'),
+      code: generationLike
+        ? 'store/reset-by-generation'
+        : (s.resetDeclared ? 'store/reset-missing' : 'store/no-reset-function'),
       subject: s.id,
-      message: s.resetDeclared
-        ? '文件有 __reset 但未覆盖该变量：跨 run 残留会使结果取决于此前跑过什么'
-        : '文件无 __reset 且该变量被写入：状态无法复位',
+      message: generationLike
+        ? '派生缓存（世代号）：由 __reset 或 ensureFresh 重建，非泄漏'
+        : (s.resetDeclared
+          ? '文件有 __reset 但未覆盖该变量：跨 run 残留会使结果取决于此前跑过什么'
+          : '文件无 __reset 且该变量被写入：状态无法复位'),
       at: s.file + ':' + s.line,
     });
   }
@@ -509,6 +521,7 @@ const index = {
     diagnostics: {
       error: diagnostics.filter((x) => x.level === 'error').length,
       warning: diagnostics.filter((x) => x.level === 'warning').length,
+      info: diagnostics.filter((x) => x.level === 'info').length,
     },
   },
   stores,

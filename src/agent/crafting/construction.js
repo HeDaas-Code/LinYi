@@ -13,8 +13,10 @@ import * as graph from '../../infra/store/graph.js';
 import * as clock from '../../runtime/clock.js';
 import * as recorder from '../../observer/recorder/index.js';
 import { createJobQueue } from './_jobs.js';
-
-const STRUCTURE_TYPE = 'town.building.structure';
+// 建筑结构的图类型与 id 前缀**不在这里声明**：
+// town/building/structure.js 是唯一契约来源。此前本文件自行声明了同名 TYPE 却用
+// 不同的 id 前缀（structure:）与 data 形状，写出的节点在 structure 模块里查不到。
+import * as structureStore from '../../town/building/structure.js';
 const jobs = createJobQueue();
 
 function assertAgentId(agentId) {
@@ -67,10 +69,14 @@ export function tick(input = {}) {
   return jobs.advance(n, (job) => {
     const out = job.payload.output ?? {};
     const buildingId = (typeof out.buildingId === 'string' && out.buildingId !== '') ? out.buildingId : 'building_' + job.id;
-    const structure = graph.write({
-      id: 'structure:' + buildingId,
-      type: STRUCTURE_TYPE,
-      data: { buildingId, name: out.name ?? buildingId, builtBy: job.agentId, builtAtTick: clock.now().tick, integrity: 100 },
+    // 走 structure 模块的契约：同一 id 前缀、同一 data 形状（含 demolished），
+    // 这样本模块建成的房子才能被 structure.list/query 查到。
+    const structure = structureStore.construct({
+      id: buildingId,
+      kind: 'crafted',
+      name: out.name ?? buildingId,
+      builtBy: job.agentId,
+      builtTick: clock.now().tick,
     });
     const log = recorder.actionLog.record({
       tick: clock.now().tick,
@@ -78,7 +84,12 @@ export function tick(input = {}) {
       action: 'build:' + job.recipeId,
       outcome: { buildingId, completedAtTick: clock.now().tick },
     });
-    return { structure, log, completedAtTick: clock.now().tick };
+    // 返回图节点（含规范 id 与 data），与合并前的返回形状保持一致：
+    // 调用方读 done[0].structure.id / .data，而不是直接拿 construct 的快照。
+    // 此前本模块自行 graph.write 并返回写入结果，故带 structure: 前缀；
+    // 现在 id 由 structure 契约决定（town:building:），返回值改为读回该节点。
+    const node = graph.read(structureStore.nodeId(buildingId));
+    return { structure: node, log, completedAtTick: clock.now().tick };
   });
 }
 

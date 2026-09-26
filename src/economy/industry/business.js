@@ -38,8 +38,15 @@ function save(businessId, data) {
 }
 
 /**
- * 创办企业：创始人 + 名称 + 行业 + 初始资本。为企业开一个 ledger 账户承载资本。
- * @param {{ founderId: string, name?: string, industry?: string, capital?: number, tick?: number }} input
+ * 创办企业：创始人 + 名称 + 行业 + 初始资本。
+ *
+ * **货币守恒**：企业账户的初始余额有两个来源，二者互斥——
+ *  - `capitalFrom` 给出资人账户 id：企业账户**从 0 开立**，再把 capital 真实转进来。
+ *    这是居民自行创办时必须走的路径（钱来自其自有账户，总量不变）。
+ *  - 不给 `capitalFrom`：账户直接以 capital 开立（凭空注入），仅供测试与初始引导。
+ * 曾经的 bug：调用方既把本金转给供应池、又让这里 open(balance: capital) 开等额账户，
+ * 等于双倍记账，货币总量因此不守恒。
+ * @param {{ founderId: string, name?: string, industry?: string, capital?: number, tick?: number, capitalFrom?: string }} input
  * @returns {object} 企业快照
  */
 export function found(input = {}) {
@@ -47,9 +54,15 @@ export function found(input = {}) {
   const name = (typeof input?.name === 'string' && input.name.trim() !== '') ? input.name : '未命名企业';
   const industry = (typeof input?.industry === 'string' && input.industry.trim() !== '') ? input.industry : 'general';
   const capital = validNum(input?.capital, 100);
+  const capitalFrom = (typeof input?.capitalFrom === 'string' && input.capitalFrom !== '') ? input.capitalFrom : null;
 
   const businessId = identity.next('biz');
-  const account = ledger.account.open({ ownerId: businessId, balance: capital });
+  const account = ledger.account.open({ ownerId: businessId, balance: capitalFrom === null ? capital : 0 });
+  if (capitalFrom !== null && capital > 0) {
+    ledger.transaction.recorder.post({
+      from: capitalFrom, to: account.accountId, amount: capital,
+      ref: 'found_capital', memo: '创办资本' });
+  }
   const biz = {
     businessId,
     founderId,

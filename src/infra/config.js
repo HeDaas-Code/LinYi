@@ -79,6 +79,10 @@ export const DEFAULTS = Object.freeze({
   rawPrice: 1,
   wage: 3,
   goodsDemandPerCapita: 0.12,
+  // 消费保留额：居民账户超过此额度的「闲钱」才转化为商品需求。
+  // 需求因此由**真实财富分布**内生决定，市场容量不再是固定常数——
+  // 这是企业出生能跨种子分化（涌现）的前提。
+  consumptionReserve: 400,
   priceVolatility: 0.4,
   residentEnergyUse: 0.2,
   energyRegen: 20,
@@ -103,7 +107,12 @@ export const DEFAULTS = Object.freeze({
   traitMutateRate: 0.02,
   // 批次2-B 智能体记忆 / 预演 / 决策解释（t47）
   // P1：行动空间已从 4 种扩到 12 种，窗口 4 会把社交/求偶类行动永久挤出（等于又替居民做了选择）。
-  pruneK: 6,
+  // 候选修剪上限。**必须与 shortlist 的带宽匹配**，否则后面的闸门会把
+  // 前面刚放进来的候选又切掉（实测：shortlist(12) 之后 prune(k=6) 仍只留 6 个，
+  // build 被 craft 挤掉，60 tick 小局里 built=0、action-log 无建造记录）。
+  // 12 = 骨架 4（eat/drink/rest/forage）+ 发展 4（found/socialize/court/accept）
+  //      + 生产/交换 4（craft/build/work/trade）。
+  pruneK: 12,
   simNoise: 0.5,
   semanticMaxEntries: 64,
   semanticLimit: 3,

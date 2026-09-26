@@ -8,10 +8,22 @@
 
 import * as graph from '../../infra/store/graph.js';
 
-const TYPE = 'town.building.structure';
+// 本模块是图类型 'town.building.structure' 的**唯一契约来源**。
+// 曾经 agent/crafting/construction.js 也各自声明了一份同名常量，并用不同的 id 前缀
+// （structure: vs town:building:）与不同的 data 形状写入同一类型，导致：
+//   1) construction 建成的房子永远不出现在本模块的 list/query 结果里（id 前缀不同）；
+//   2) construction 写的节点没有 demolished 字段，会被空值判断漏掉；
+//   3) 改一处契约必然漏另一处。
+// 现在 construction 必须 import 本模块的 TYPE 与 nodeId，不再自行声明。
+export const TYPE = 'town.building.structure';
 const PREFIX = 'town:building:';
 
-function nodeId(id) {
+/**
+ * 图节点 id 的唯一构造入口。construction 必须用它，否则写入的节点本模块查不到。
+ * @param {string} id
+ * @returns {string}
+ */
+export function nodeId(id) {
   return PREFIX + id;
 }
 
@@ -27,7 +39,7 @@ function clone(value) {
 
 /**
  * 建造一栋建筑。
- * @param {{ id: string, kind?: string, zoneId?: string|null, capacity?: number, function?: string, builtTick?: number }} input
+ * @param {{ id: string, kind?: string, name?: string, zoneId?: string|null, capacity?: number, function?: string, builtTick?: number, builtBy?: string|null }} input
  * @returns {object} 建筑快照
  */
 export function construct(input = {}) {
@@ -36,10 +48,16 @@ export function construct(input = {}) {
   const building = {
     id: input.id,
     kind,
+    // name：合并契约前由 construction 自带（居民给建筑起的名字）。
+    // 合并时若丢弃，建造日志里就只剩 id，丢失居民行为信息。
+    name: typeof input.name === 'string' && input.name !== '' ? input.name : input.id,
     zoneId: input.zoneId === undefined ? null : input.zoneId,
     capacity: typeof input.capacity === 'number' && Number.isInteger(input.capacity) && input.capacity >= 0 ? input.capacity : 0,
     function: typeof input.function === 'string' && input.function !== '' ? input.function : kind,
     builtTick: typeof input.builtTick === 'number' && Number.isInteger(input.builtTick) ? input.builtTick : null,
+    // builtBy：由居民自行建造时记录建造者，便于追溯「这栋房子是谁建的」。
+    // 此前 construction 用独立形状写入，该信息只能留在那个查不到的节点里。
+    builtBy: typeof input.builtBy === 'string' && input.builtBy !== '' ? input.builtBy : null,
     demolished: false,
   };
   graph.write({ id: nodeId(input.id), type: TYPE, data: building });

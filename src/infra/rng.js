@@ -6,8 +6,9 @@
  * 使生存事件、特质采样、探索结算等随机行为可回放。
  */
 
+// 曾有一个 `seeded` 标记，但 next()/int()/float() 从不读取它，
+// 属于「只写不读」的死状态，已删除（见 bin/flow-index.mjs 的 store/never-read 诊断）。
 let state = 0x9e3779b9 >>> 0;
-let seeded = false;
 
 /** 字符串 → 32 位无符号整数哈希（xmur3 风格）。 */
 function hashSeed(str) {
@@ -42,7 +43,6 @@ export function seed(seedValue) {
   const str = String(seedValue);
   state = hashSeed(str);
   gen = mulberry32(state);
-  seeded = true;
   return seedValue;
 }
 
@@ -107,5 +107,4 @@ export function shuffle(arr) {
 export function __reset() {
   state = 0x9e3779b9 >>> 0;
   gen = mulberry32(state);
-  seeded = false;
 }

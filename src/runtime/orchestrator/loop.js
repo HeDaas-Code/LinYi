@@ -56,6 +56,9 @@ const SURVIVAL_ACTIONS = Object.freeze(['eat', 'drink', 'forage', 'rest']);
 const DYNAMIC_BASE_SCORE = Object.freeze({
   craft: 0.9, build: 0.8, write: 0.7, work: 1.0, trade: 0.8, socialize: 0.7, court: 0.85, accept: 1.1,
   expedition: 0.75,
+  // found：居民自己创办企业。基准分低于 work（1.0），因为创办是**机会性**行为——
+  // 有资本且无事可做时才值得做，不应压过日常谋生。
+  found: 0.6,
 });
 
 /**
@@ -420,8 +423,31 @@ function scoreAction(candidate, ctx = {}) {
   const thirsty = need === 'water' && level >= threshold;
   if (candidate?.action === 'eat' && hungry) score += 2;
   if (candidate?.action === 'drink' && thirsty) score += 2;
-  if (candidate?.action === 'forage' && !hungry && !thirsty) score += (1.2 + scarcity) * poolFactor;
+  // 采集与进食的分工：**有货先吃，无货才采**。
+  // 演化过程（两次都错，记录以免重犯）：
+  //  a) 原式 `!hungry && !thirsty` 才给采集加成 → 语义倒挂：越饿越不采，
+  //     只剩基础分 0.2，居民改选 eat（+2）却无货可扣，形成空转死循环；
+  //  b) 去掉条件并对饥饿额外 +1.5 → 过度矫正：口渴时也去采集而非喝水，
+  //     实测 step 测试期望 drink 却得到 forage（236/237 失败）。
+  // 正确语义：库存还有货时，eat/drink 应该赢（先解决当下）；
+  // 库存见底时，forage 才该赢（否则 eat/drink 是空操作）。
+  if (candidate?.action === 'forage') {
+    score += (1.2 + scarcity) * poolFactor;
+    // 只有**库存见底**时才让采集压过进食——此时进食已是空操作。
+    const stockEmpty = ctx.foodEmpty === true || ctx.waterEmpty === true;
+    if (stockEmpty) score += 1.8 * poolFactor;
+  }
   if (candidate?.action === 'rest' && !hungry && !thirsty) score += 0.5;
+  // 上工的收益是**工资**，而工资买不到食物——食物只能靠采集获得。
+  // 实测教训：招募机制上线后 work 从 19 次涨到 178 次，同一批人不再去采集，
+  // forage 从 380 次崩到 47 次，t45 全镇 35 人饿死（基线 50 人全活）。
+  // 因此把「上工」的吸引力绑定到**食水是否充裕**：自家库里有粮，才值得去挣工资。
+  // 这不是禁止上工（居民仍可自选），而是让优先级的排序符合生存直觉。
+  if (candidate?.action === 'work') {
+    const stockOk = clampUnit(ctx.perCapitaStock === undefined ? 1 : ctx.perCapitaStock / 2.5, 0);
+    // 库存充裕 → 保留全额；库存告急 → 大幅降权，让 forage/eat 胜出。
+    score = score * stockOk - (1 - stockOk) * 3;
+  }
   // 探索：**风险调整后的期望值**，而不是单看收益。
   // 实测教训（P3 第一次接入）：初版给 loot*0.18（最多 +1.2）+ 稀缺加成 1.5，
   // 叠加基础分 0.75 后达 ~3.4，远超 craft 的 0.9 → 探索 442 次而 craft 由 478 掉到 300、
@@ -430,6 +456,46 @@ function scoreAction(candidate, ctx = {}) {
   // 现在按期望净收益打分：离家越久、风险越高，代价越大；
   // 只有当"预期收获 - 风险代价"为正时才可能胜过日常劳动。
   // 设定上探索就该是**偶发**行为——居民不该天天往废墟跑。
+  // 创办企业（D2）：必须有**真实的经济动机**，否则它永远赢不过 eat/drink。
+  // 实测：只给基准分 0.6 时 found 一次都没被选中，businesses 恒为 0，
+  // 整个产业闭环（goodsProduced / wages / businessRevenue）全为 0。
+  // 动机 = 预期利润：本地商品售价越高、自己越缺钱、且没有在职工作，越值得盘铺子。
+  // 这与 expedition 同一思路——按**期望净收益**打分，而不是给固定加成。
+  if (candidate?.action === 'found') {
+    if (ctx.canFound !== true || ctx.marketRoom === false) { score -= 10; }
+    else {
+      const goodsPrice = typeof ctx.goodsPrice === 'number' ? ctx.goodsPrice : 8;
+      const wage = typeof ctx.wage === 'number' ? ctx.wage : 3;
+      const startCapital = typeof ctx.foundCapital === 'number' ? ctx.foundCapital : 60;
+      const balance = typeof ctx.balance === 'number' ? ctx.balance : 0;
+      // 开铺子的直接收益：不必再给人打工，自己拿全部产出；
+      // 用商品售价与工资的差额作为「做老板 vs 打工」的收益差。
+      const ownerPremium = Math.max(0, goodsPrice - wage) * 0.25;
+      // 机会成本：本金占其资产的比例越高越犹豫（不愿把全部积蓄押上）。
+      const commitment = balance > 0 ? startCapital / balance : 1;
+      const reluctance = clampUnit(commitment, 0) * 1.2;
+      // 只有在**没有在职**时创办才划算（有工作就先干活）。
+      const employedPenalty = ctx.employed === true ? 1.5 : 0;
+      // **创办不能与生存竞争**：这是「新行动挤占既有行为」的第 9 次复发。
+      // 实测 seed2：开局第一 tick 就有 48 次 found（50 人几乎全部创业），
+      // 本金被集体抽走，t11 食物已见底、t41 归零，随后 forage 全程为 0，
+      // 全镇饿死——而基线 forage 380 次、50 人全活。
+      // 根因：ownerPremium(1.0) 远高于 forage 的基础分(0.2)，而此处不看库存。
+      // 因此用与 work 相同的**生存优先闸**：只有自家食水充裕才谈创业。
+      const stockOk = clampUnit((ctx.perCapitaStock === undefined ? 1 : ctx.perCapitaStock) / 2.5, 0);
+      score += (ownerPremium - reluctance - employedPenalty) * stockOk;
+      // 库存告急时明确压到生存行动之下（不是禁止，是排序）。
+      if (stockOk < 0.5) score -= 2;
+      // 市场空位越多越值得开：这是「机会」的直接度量。
+      // 实测：仅靠 ownerPremium 时 found 在与 craft/build/work/trade/socialize/court
+      // 争 6 个席位时因基础分最低（0.6）永远垫底，biz 恒为 0、涌现消失。
+      // 让空位成为真实收益项：空位多说明需求未满足，开铺子真能赚到钱。
+      const slots = typeof ctx.marketSlots === 'number' ? ctx.marketSlots : 1;
+      const active = typeof ctx.activeBusinesses === 'number' ? ctx.activeBusinesses : 0;
+      const roomRatio = clampUnit((slots - active) / Math.max(1, slots), 0);
+      score += roomRatio * 1.2;
+    }
+  }
   if (candidate?.action === 'expedition') {
     const loot = typeof ctx.expeditionLoot === 'number' ? ctx.expeditionLoot : 0;
     const risk = clampUnit(ctx.expeditionRisk, 0);
@@ -450,7 +516,7 @@ function scoreAction(candidate, ctx = {}) {
   // 非生存行动仍会被性格/行动模拟的加成推上首位（实测 pruneK=6 整镇饿死）。
   // 因此门必须在**最终决定分数**上再施加一次，生存优先才成立。
   if (ctx.survivalGate === true) {
-    const NON_SURVIVAL = ['craft', 'build', 'write', 'work', 'trade', 'socialize', 'court', 'accept', 'expedition'];
+    const NON_SURVIVAL = ['craft', 'build', 'write', 'work', 'trade', 'socialize', 'court', 'accept', 'expedition', 'found'];
     if (NON_SURVIVAL.includes(candidate?.action)) score -= 5;
     if (candidate?.action === 'rest') score -= 1;
     // 采集优先**仅限尚未挨饿时**：若已饿/渴，eat/drink 的 +2 必须压过采集。
@@ -501,6 +567,15 @@ function refreshCandidates(agentId, tick, cfg) {
     expeditionViable: state.expeditionViable === true,
     expeditionRisk: state.expeditionRisk,
     expeditionLoot: state.expeditionLoot,
+    // 创办企业的准入（D2）：只看够不够本，由 candidateStateFor 给出。
+    // 漏传这两个字段会让 found 规则恒为 null，候选从未生成——
+    // 实测表现为 found 一次都没被选中、businesses 恒为 0，而评分侧的探针从不触发。
+    canFound: state.canFound === true,
+    foundCapital: state.foundCapital,
+    // 市场空位同样是**候选准入**：没有空位时不应该把 found 摆到居民面前。
+    // 漏传 marketRoom 会让容量约束形同虚设——实测 42 家企业挤在只容得下 1 家的
+    // 市场里，破产 655 次、成本 42946 而收入仅 8686。
+    marketRoom: state.marketRoom !== false,
   }, { attributeRandom: cfg.actionSpaceAttribution === true });
 
   // 整批替换（单次 graph.write）：逐候选 add() 会触发逐次 graph.read 深拷贝，
@@ -522,7 +597,18 @@ function societyEffectsHasLiteracy() {
 function decide(agentId, tick, percepts, cfg = {}) {
   refreshCandidates(agentId, tick, cfg);
   const pressure = survival.needs.pressure.scorer.score({ agentId });
-  const anticipations = agent.anticipation.pool.selector.shortlist(agentId, { limit: 6 });
+  // limit 6 → 10：生存骨架固定占 4 席（由 selector/pruner 保送），
+  // 另留 6 席给动态行动。
+  // 实测：limit=6 时动态行动只剩 2 席，found/craft/build/work/trade 争不过来；
+  // 而 found 又是企业涌现的唯一入口，被切掉就 biz=0。
+  // 这不是放松生存保护——骨架名额已由豁免保证，加大 limit 只是扩大选择面。
+  // limit 10 的分账：3 个刚需骨架（eat/drink/forage）+ 1 个 rest
+  // + 4 个发展席位（found/socialize/court/accept）由 selector/pruner 保送，
+  // 其余（craft/build/write/work/trade/expedition）争剩下的 2 席。
+  // 实测教训：席位不足时 build 会被 craft 挤掉（60 tick 小局里 built=0，
+  // action-log 无建造记录）。生产类行动应共享预算，故提到 12：
+  // 骨架 4 + 发展 4 + 生产/交换 4，让 craft/build/work/trade 都有机会。
+  const anticipations = agent.anticipation.pool.selector.shortlist(agentId, { limit: 12 });
   if (anticipations.length === 0) return null;
   const memories = agent.memory.episodic.recaller.recall(agentId, { limit: 3 });
 
@@ -621,6 +707,7 @@ function decide(agentId, tick, percepts, cfg = {}) {
   const agentState = stage2.candidateStateFor(agentId, tick);
   const origScore = new Map(anticipations.map((a) => [a.id, a.score]));
   const candidates = window.map((a) => ({ id: a.id, action: a.action, score: origScore.get(a.id) ?? 0 }));
+
   const choice = agent.decision.selector.choose({
     candidates,
     context: { dominantNeed: need },
@@ -632,10 +719,24 @@ function decide(agentId, tick, percepts, cfg = {}) {
       survivalGate,
       foodEmpty,
       waterEmpty,
+      perCapitaStock,
       forageAvailable,
       expeditionRisk: agentState.expeditionRisk,
       expeditionLoot: agentState.expeditionLoot,
       expeditionHours: agentState.expeditionHours,
+      // 创办企业的经济动机（D2）：是否够本、手头余额、商品售价与工资。
+      // 这些都是**事实**，动机的权衡在 scoreAction 里做——不在候选生成侧替居民决定。
+      canFound: agentState.canFound,
+      foundCapital: agentState.foundCapital,
+      marketRoom: agentState.marketRoom,
+      marketSlots: agentState.marketSlots,
+      activeBusinesses: agentState.activeBusinesses,
+      balance: agentState.balance,
+      employed: agentState.employed,
+      goodsPrice: (() => {
+        try { return economy.market.price.query('goods').price; } catch { return 8; }
+      })(),
+      wage: cfg.wage,
     }) + agent.persona.personality.evaluate(agentId, candidate.action)
       + (simBy.get(candidate.id) ?? 0),
   });
@@ -1192,6 +1293,13 @@ export function reset() {
   mortality.clear();
   foragePool = null;
   currentSeed = 'default';
+  // LAYA 紧迫度缓存只在 step() 内按 tick 清空；若上一局最后一 tick 的缓存留着，
+  // 下一局第一 tick 的 prefetch 之前会先读到上一局的紧迫度（跨 run 泄漏）。
+  layaUrgencyCache.clear();
+  // 存活人口缓存：只复位了世代号而没复位值，
+  // 使 reset 后首次 alivePopulation() 在世代号不匹配前可能返回上一局的人数。
+  _alivePopGeneration = -1;
+  _alivePopValue = 0;
 }
 
 /**

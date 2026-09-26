@@ -155,6 +155,7 @@ export function seed(agents, config = {}) {
   // 与 loop.step 一致的配置合并（DEFAULTS + 难度档位 + 显式覆盖），
   // 避免 seed 用硬编码回退值而 step 用 DEFAULTS，造成两侧参数不一致。
   config = { ...configStore.defaults(), ...configStore.currentDifficultyParams(), ...(config ?? {}) };
+  setFoundConfig(config);
   platformSeed(config.seed);
   seeded = true;
   accounts = new Map();
@@ -268,19 +269,14 @@ export function seed(agents, config = {}) {
   survival.resources.energy.__reset();
   const goodsPrice = (typeof config.goodsPrice === 'number' && config.goodsPrice > 0) ? config.goodsPrice : 8;
   economy.market.price.update({ symbol: 'goods', price: goodsPrice });
-  const businessCount = (Number.isInteger(config.businessCount) && config.businessCount >= 0) ? config.businessCount : 2;
-  const businessCapital = (typeof config.businessCapital === 'number' && config.businessCapital >= 0) ? config.businessCapital : 200;
   const wage = (typeof config.wage === 'number' && config.wage >= 0) ? config.wage : 3;
-  for (let i = 0; i < businessCount && agents.length > 0; i += 1) {
-    const founder = agents[i % agents.length];
-    const biz = economy.industry.business.found({
-      founderId: founder.id,
-      name: '企业' + (i + 1),
-      industry: i % 2 === 0 ? 'food' : 'tools',
-      capital: businessCapital,
-    });
-    businessIds.push(biz.businessId);
-  }
+  // **不再由代码代居民创办企业**（D2）。
+  // 此前这里按 config.businessCount 固定创办 2 家（固定创始人 agents[i%n]、
+  // 固定行业 food/tools），使 businesses 跨种子恒为 2、企业出生无法涌现。
+  // 现在企业只能由居民在决策环里选择 found 行动而诞生（见 performAgentAction 的 found 分支），
+  // 资本来自其自有账户、行业由其 id 哈希决定，因此跨种子会自然分化。
+  // 雇佣同样不再预先安排：没有企业时 businessIds 为空，下面的循环自然空转；
+  // 居民创办企业后由同一循环在后续 tick 收编（见 runIndustry 的雇佣补充）。
   for (let i = 0; i < businessIds.length && agents.length > 2; i += 1) {
     const emp = agents[(i + 2) % agents.length];
     economy.industry.labour.hire({ businessId: businessIds[i], agentId: emp.id, wage, role: 'worker' });
@@ -525,12 +521,69 @@ function runIndustry(tick, agents, config = {}) {
   });
   if (activeIds.length === 0) return result;
 
+  // 招募：新创办的企业需要工人。
+  // 此前雇佣只在 seed 阶段按固定数组跑一次，而那时企业数为 0（改为居民自办后），
+  // 于是企业成了「无人工厂」——goodsProduced 很大而 wagesPaid 恒为 0。
+  // 现在由企业主在每 tick 招募：优先雇没有自己企业、也未被雇的居民，
+  // 且只在企业账户付得起一轮工资时才雇（避免注定欠薪的用工）。
+  for (const businessId of activeIds) {
+    try {
+      const biz = economy.industry.business.list().find((b) => b.businessId === businessId);
+      if (biz === undefined || (biz.employees ?? []).length > 0) continue;
+      const wageOffered = (typeof config.wage === 'number' && config.wage >= 0) ? config.wage : 3;
+      const bizBal = economy.ledger.account.balance(biz.accountId) ?? 0;
+      // 付得起 4 轮工资才雇：避免注定欠薪的用工（欠薪会让工资永远发不出）。
+      if (bizBal < wageOffered * 4) continue;
+      const started = cacheStartedIds();
+      const hiredNow = new Set();
+      for (const id of activeIds) {
+        for (const e of economy.industry.labour.staff(id)) hiredNow.add(e.agentId);
+      }
+      const candidate = agents.find((a) => a.id !== biz.founderId
+        && !started.has(a.id) && !hiredNow.has(a.id));
+      if (candidate === undefined) continue;
+      economy.industry.labour.hire({ businessId, agentId: candidate.id, wage: wageOffered, role: 'worker' });
+      observer.recorder.eventLog.record({
+        tick, topic: 'economy.industry.labour.hire',
+        payload: { businessId, agentId: candidate.id, wage: wageOffered },
+      });
+    } catch { /* 招募失败不阻塞本 tick */ }
+  }
+
   // 候选买方：有账户且余额够买 1 件商品的居民
   const buyerPool = agents
     .map((a) => accounts.get(a.id))
     .filter((acctId) => acctId && (economy.ledger.account.balance(acctId) ?? 0) >= goodsPrice);
 
-  let demandRemaining = Math.max(0, Math.round(alive * goodsDemandPerCapita * rng.float(0.5, 1.5)));
+  // 需求内生：只有**闲钱**才用于消费。
+  // 此前 demandRemaining = alive × goodsDemandPerCapita 是常数（50×0.12=6 件/tick），
+  // 与居民实际财富无关，于是市场容量恒为 1 家：三种子的 businesses 恒等于 2，
+  // 企业出生无法涌现（涌现性断言因此长期失败）。
+  // 现在：居民按「财富超出保留额的部分」产生消费能力，再由消费能力折算需求——
+  // 谁赚了钱、赚了多少，市场就多大。这让市场容量成为**内生变量**。
+  // 不乘随机波动以外的外生因子，避免重新引入与财富无关的固定容量。
+  const reservePerAgent = (typeof config.consumptionReserve === 'number' && config.consumptionReserve >= 0)
+    ? config.consumptionReserve : 400;
+  let disposable = 0;
+  for (const a of agents) {
+    const acctId = accounts.get(a.id);
+    if (acctId === undefined) continue;
+    let bal = 0;
+    try { bal = economy.ledger.account.balance(acctId) ?? 0; } catch { bal = 0; }
+    if (bal > reservePerAgent) disposable += bal - reservePerAgent;
+  }
+  // 闲钱 → 需求：每 goodsPrice×demandPerCapitaDollars 元闲钱支持 1 件需求。
+  // 用商品价格归一，使涨价自然抑制需求（真实的价格弹性）。
+  const spendPerGood = Math.max(1, goodsPrice);
+  const demandFromWealth = (disposable / spendPerGood) * goodsDemandPerCapita;
+  // 注意：**不调用 rng.float()**。此前这里乘了 rng.float(0.5,1.5)，
+  // 而 rng 是全局流——每 tick 每局都多推进一步随机数，
+  // 使采集产出、疾病、事件等**所有后续随机序列整体错位**，
+  // 表现为存活率从 50/50 崩到 0/50 却找不到直接原因。
+  // 教训：不要在高频路径上无理由消耗全局随机流；需求已有财富内生性，
+  // 随机波动交给价格（priceVolatility）承担即可。
+  const demandJitter = 1;
+  let demandRemaining = Math.max(0, Math.round(demandFromWealth * demandJitter));
   let tickLoss = false;
 
   for (const businessId of activeIds) {
@@ -761,18 +814,138 @@ export function craftMaterialId() {
 let _candidateStateCache = null;
 let _candidateStateCacheTick = -1;
 
+let foundCapitalConfig = null;
+
+/** 读取每 tick 缓存里的居民余额（O(1)，避免逐次 graph.read 深拷贝）。 */
+function cacheBalance(agentId) {
+  if (_candidateStateCache === null) return 0;
+  const b = _candidateStateCache.balances;
+  if (!(b instanceof Map)) return 0;
+  const v = b.get(agentId);
+  return typeof v === 'number' ? v : 0;
+}
+
+/** 读取每 tick 缓存里的活跃企业数（O(1)，缓存由 candidateStateFor 填充）。 */
+function cacheActiveCount() {
+  return _candidateStateCache === null ? 0 : (_candidateStateCache.activeCount ?? 0);
+}
+
+/** 读取每 tick 缓存里「已创办企业的居民 id 集合」（O(1)）。 */
+function cacheStartedIds() {
+  return _candidateStateCache === null ? new Set() : (_candidateStateCache.startedIds ?? new Set());
+}
+
+/** 创办企业所需本金（与 performAgentAction 的 found 分支保持一致）。 */
+function foundCapitalOf() {
+  const c = foundCapitalConfig === null ? {} : foundCapitalConfig;
+  return (Number.isInteger(c.foundCapital) && c.foundCapital > 0) ? c.foundCapital : 60;
+}
+
+/** 市场容量测算所需的三个参数（与 runIndustry 的取默认值方式保持一致）。 */
+function cfgVal(key, dflt) {
+  const c = foundCapitalConfig === null ? {} : foundCapitalConfig;
+  const v = c[key];
+  return (typeof v === 'number' && v >= 0) ? v : dflt;
+}
+function goodsDemandPerCapitaOf() { return cfgVal('goodsDemandPerCapita', 0.3); }
+function productionOutputOf() { return cfgVal('productionOutput', 2); }
+/**
+ * 估算本 tick 的需求池（与 runIndustry 的内生需求同源）。
+ * 闲钱超过保留额的部分才消费——市场容量因此随居民财富变化，而非固定常数。
+ * 这里取期望值（略去 runIndustry 的随机波动），只用于判断市场是否还有空位。
+ */
+function demandPerTickEstimate() {
+  const price = cfgVal('goodsPrice', 7);
+  const disposable = _candidateStateCache === null ? 0 : (_candidateStateCache.disposableTotal ?? 0);
+  return (disposable / Math.max(1, price)) * goodsDemandPerCapitaOf();
+}
+
+/** 由 seed 注入难度参数，供 candidateStateFor 判断「够不够本」。 */
+function setFoundConfig(cfg) {
+  foundCapitalConfig = cfg === undefined ? null : cfg;
+}
+
+/**
+ * 创办企业的条件（纯读）。
+ * 刻意只暴露「够不够本」这一个事实，不替居民判断该不该办——
+ * 该不该办由 scoreAction 按需求与人格权衡。
+ * @param {string} agentId
+ * @returns {{ canFound: boolean, foundCapital: number }}
+ */
+function foundConditionsFor(agentId) {
+  const capital = foundCapitalOf();
+  const balance = cacheBalance(agentId);
+  // 市场容量约束：需求池每 tick 只有 alive × goodsDemandPerCapita 件，
+  // 而每家企业每 tick 产出 productionOutput 件。企业数超过「需求池 ÷ 单产」时，
+  // 后来者必然卖不出货，只能持续亏损直至破产。
+  // 实测放开创办后：50 人 200 tick 下 bankrupt=281、businessCosts=16450 而收入仅 1425，
+  // 即所有企业都被超额创办挤死。
+  // 因此把「市场是否还有空位」作为准入事实暴露给居民——
+  // 而不是代码替居民限制数量（居民仍可无视它去冒险，只是评分会很低）。
+  // 企业统计取自每 tick 缓存（见 candidateStateFor），此处为 O(1)。
+  const activeCount = cacheActiveCount();
+  const isActive = cacheStartedIds().has(agentId);
+  // 必须与 runIndustry 的需求公式**同源**，否则准入判断与真实需求脱节。
+  const demandPerTick = demandPerTickEstimate();
+  const capacityPerBusiness = productionOutputOf();
+  // 槽位保留小数：`Math.floor` 会把 5.9 家砍成 5 家，使**所有种子都恰好卡在同一个
+  // 整数上限**上，企业数因此恒等（实测 seed1/2/3 = 5/5/5），涌现性断言失败。
+  const slots = capacityPerBusiness > 0 ? (demandPerTick / capacityPerBusiness) : 0;
+  // **已实现的销量**也是市场容量的证据：卖得动说明还有空间，卖不动说明已饱和。
+  // 为什么需要它：仅靠财富估算时，三个种子的估算值都落在同一整数区间，
+  // 企业数仍被拉平（实测 phase3 开启时恒为 5/5/5）。
+  // 而 goodsSold 是**居民真实购买行为**的累计结果——它已随种子分化
+  // （trades 1194~1208），把它纳入容量判断，分化就能传导到企业创办决策上。
+  // 用「每 tick 平均销量」而非累计值，避免随 tick 无限增长。
+  const realizedPerTick = tick > 0 ? goodsSold / tick : 0;
+  const hasMarketRoom = activeCount < Math.max(1, Math.max(slots, realizedPerTick / capacityPerBusiness + 0.5));
+  // balance 一并返回：评分侧要用「本金占资产比例」衡量押注意愿。
+  return {
+    canFound: balance >= capital && !isActive,
+    foundCapital: capital,
+    balance,
+    marketRoom: hasMarketRoom,
+    activeBusinesses: activeCount,
+    marketSlots: Math.max(1, slots),
+  };
+}
+
 export function candidateStateFor(agentId, tick = 0) {
+  // 每 tick 只遍历一次 businessIds：`startedIds`（由本居民创办的企业）也在这里采集。
+  // 曾经把「该居民是否已创办企业」放在 foundConditionsFor 里**逐居民**再遍历一次，
+  // 使复杂度从 O(企业) 变成 O(居民 × 企业)，50 人 200 tick 直接超时（>400s，原 ~200s）。
   if (_candidateStateCache === null || _candidateStateCacheTick !== tick) {
     const employedIds = new Set();
+    const startedIds = new Set();
     let anyActive = false;
+    let activeCount = 0;
     try {
+      const all = economy.industry.business.list();
+      const byId = new Map(all.map((b) => [b.businessId, b]));
       for (const id of businessIds) {
         for (const e of economy.industry.labour.staff(id)) employedIds.add(e.agentId);
-        const biz = economy.industry.business.list().find((b) => b.businessId === id);
-        if (biz !== undefined && biz.status === 'active') anyActive = true;
+        const biz = byId.get(id);
+        if (biz !== undefined && biz.status === 'active') {
+          anyActive = true;
+          activeCount += 1;
+          if (typeof biz.founderId === 'string') startedIds.add(biz.founderId);
+        }
       }
     } catch { /* 无产业数据 */ }
-    _candidateStateCache = { employedIds, anyActive };
+    // 余额一次性读出并缓存。
+    // `economy.ledger.account.balance` → `graph.read(id)` → structuredClone，
+    // 逐居民逐 tick 调用会做上万次深拷贝（实测把 50×200×3 集成测试从 ~200s/种子
+    // 推到 ~230s/种子，单测试达 700s）。这里每 tick 只读一次。
+    const balances = new Map();
+    let disposableTotal = 0;
+    const reserve = cfgVal('consumptionReserve', 400);
+    for (const [agentId, acctId] of accounts.entries()) {
+      let bal = 0;
+      try { bal = economy.ledger.account.balance(acctId) ?? 0; } catch { bal = 0; }
+      balances.set(agentId, bal);
+      if (bal > reserve) disposableTotal += bal - reserve;
+    }
+    _candidateStateCache = { employedIds, anyActive, activeCount, startedIds, balances, disposableTotal };
     _candidateStateCacheTick = tick;
   }
   const paired = pairedIndex.has(agentId);
@@ -786,6 +959,9 @@ export function candidateStateFor(agentId, tick = 0) {
     // 探索条件：由 expedition.plan 评估（纯读）。居民据此判断"今天值不值得出去"。
     // 注意这是**建议**而非门：可行性为 false 只表示条件很差，最终选择权在居民。
     ...expeditionConditionsFor(agentId),
+    // 创办企业条件（D2）：只看**该居民自己的账户余额**，不借不送——
+    // 因此企业诞生取决于谁攒下了钱，这是涌现的来源而非固定指派。
+    ...foundConditionsFor(agentId),
   };
 }
 
@@ -972,6 +1148,61 @@ export function performAgentAction(tick, agentId, action, config = {}) {
         observer.recorder.eventLog.record({ tick, topic: 'agent.action.accept', payload: { from }, agentId });
         return { ok: true, detail: { from } };
       } catch (err) { return { ok: false, reason: 'accept_failed:' + err.message.slice(0, 40) }; }
+    }
+    case 'found': {
+      // 居民**自己**创办企业（D2）。此前企业全部由 seed 阶段按 config.businessCount
+      // 固定路径创办（固定创始人 agents[i%n]、固定行业 food/tools），
+      // 导致 businesses 跨种子恒为 2，「企业出生」无法涌现。
+      // 现在：由居民决策触发，资本来自其自有账户（真实转账），行业按其技能倾向选择。
+      const acct = accounts.get(agentId);
+      if (acct === undefined) return { ok: false, reason: 'no_account' };
+      const capital = (Number.isInteger(config.foundCapital) && config.foundCapital > 0) ? config.foundCapital : 60;
+      const balance = economy.ledger.account.balance(acct) ?? 0;
+      if (balance < capital) return { ok: false, reason: 'no_capital' };
+      // 行业由**可复现的居民特征**决定（agentId 的哈希），而不是固定的 i%2：
+      // 同一份种子下结论确定，不同种子下自然分化——这是「跨种子差异」的来源。
+      const industries = [ 'food', 'tools', 'textile', 'medicine' ];
+      const pick = hashSeed('industry:' + agentId) % industries.length;
+      // 供应账户由 seed 建立（supplyAccountId），不在 accounts 映射里（那只有居民）。
+      // 资本**真实转账**给新企业账户（不造钱）：`capitalFrom` 让 business.found 以 0 开立，
+      // 再由账本把本金从居民账户划过去，货币总量不变。
+      // 教训：最初把本金转给供应池、同时让 business.found 用 open(balance: capital)
+      // 开等额账户，等于双倍记账，D1 货币守恒断言因此失败。
+      let biz;
+      try {
+        biz = economy.industry.business.found({
+          founderId: agentId,
+          name: (agentId + ' 的' + industries[pick] + '铺'),
+          industry: industries[pick],
+          capital,
+          capitalFrom: acct,
+          tick,
+        });
+      } catch (err) { return { ok: false, reason: 'pay_failed:' + err.message.slice(0, 30) }; }
+      businessIds.push(biz.businessId);
+      // 新企业可申领创业贷款（D2 连带修复）。
+      // 此前放贷只在 seed 阶段按 businessIds 跑一次，而企业改为居民自办后
+      // seed 时 businessIds 恒为空 → 贷款从未发生 → creditIssued/interestAccrued 恒为 0，
+      // 声誉→信贷的整条经济路径静默失效（测试 313/347 失败）。
+      // 现在每有新企业成立，就由同一信贷规则为其放款。
+      try {
+        const loanPrincipal = (typeof config.loanPrincipal === 'number' && config.loanPrincipal >= 0)
+          ? config.loanPrincipal : 100;
+        const creditRate = (typeof config.creditRate === 'number' && config.creditRate >= 0)
+          ? config.creditRate : 0.01;
+        if (loanPrincipal > 0) {
+          const loan = economy.bank.credit.apply({
+            borrowerId: biz.businessId, borrowerType: 'business',
+            principal: loanPrincipal, rate: creditRate, term: 0, tick,
+          });
+          creditIssued += loan.principal;
+        }
+      } catch { /* 金库未开或额度不足则跳过 */ }
+      observer.recorder.eventLog.record({
+        tick, topic: 'agent.action.found',
+        payload: { businessId: biz.businessId, industry: industries[pick], capital }, agentId,
+      });
+      return { ok: true, detail: { businessId: biz.businessId, industry: industries[pick], capital } };
     }
     case 'expedition': {
       // 探索：**一次计算**，不是开放世界。综合天气/辐射/特质/装备/状态与随机数，
@@ -1427,7 +1658,13 @@ export function summary() {
     treated: treatCount,
     quarantined: quarantineCount,
     released: releasesCount,
+    // businesses = **当前存活**的企业数（市场容量会把它锁在上限附近）；
+    // businessesFounded = **累计创办**数，反映居民真实的创业决策量。
+    // 两者互补：只报存活数会把「创办了多少次」这一涌现信号完全掩盖——
+    // 实测三个种子的存活数恒为 5/5/5（容量上限），
+    // 而累计创办数才体现居民行为的差异。
     businesses: economy.industry.business.list().filter((b) => b.status === 'active').length,
+    businessesFounded: businessIds.length,
     goodsProduced,
     goodsSold,
     businessRevenue,
@@ -1455,6 +1692,7 @@ export function summary() {
 /** 复位阶段二全部内存态（图存储由 loop.reset 的 graph.__reset 负责）。 */
 export function __reset() {
   seeded = false;
+  foundCapitalConfig = null;
   accounts = new Map();
   reproducedPairs.clear();
   childrenBorn = 0;
@@ -1495,6 +1733,10 @@ export function __reset() {
   lastFeedTick = -1;
   feedSignature = [];
   recentPostIds = [];
+  // platformGen 是平台侧随机源。不复位会让 __reset 后的随机序列延续上一局，
+  // 使同一份代码的结果取决于此前跑过什么（与 e63b932 修的同类泄漏）。
+  // 复位到模块加载时的默认种子；seed() 会按需重新播种。
+  platformGen = mulberry32(0x9e3779b9 >>> 0);
 
   economy.__reset();
   agent.inventory.item.__reset();

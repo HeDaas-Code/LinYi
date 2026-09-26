@@ -9,8 +9,9 @@
 
 import * as worldState from '../world-state.js';
 
+// lastApplied 曾在 actions() 里写入后无人读取（返回值才是调用方拿到的结果），
+// 属于「只写不读」的死状态，已删除（见 bin/flow-index.mjs 的 store/never-read 诊断）。
 let opSeq = 0;
-let lastApplied = [];
 
 function clone(value) {
   return value === undefined ? undefined : structuredClone(value);
@@ -72,12 +73,10 @@ export function actions(resolved, opts = {}) {
     if (typeof opts.onApplied === 'function') opts.onApplied(record, worldState);
     applied.push(record);
   }
-  lastApplied = applied;
   return applied.map(clone);
 }
 
 /** 复位行动执行状态（测试用）。 */
 export function __reset() {
   opSeq = 0;
-  lastApplied = [];
 }

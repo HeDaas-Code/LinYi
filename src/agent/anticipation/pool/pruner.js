@@ -103,7 +103,26 @@ export function prune(agentId, candidates, options = {}) {
     const bid = String(b.id ?? '');
     return aid < bid ? -1 : aid > bid ? 1 : 0;
   });
-  return scored.slice(0, Math.min(k, scored.length));
+  // **生存骨架免疫修剪**（第 9 次「新行动挤占既有行为」的修复）。
+  // 实测证据链（逐步排除后确证）：
+  //   1) 加入 found 后，t1 候选窗口变成 [craft,build,expedition,write,found,drink]，
+  //      eat/forage 被挤出前 K（探针直接读出）；
+  //   2) 全镇因此不再采集，t25 食水双双归零，此后 forage=0 永不恢复，
+  //      seed1 全灭、seed2 全灭（基线 t13 也见底过，但靠 forage=43 恢复并稳定 148-150）。
+  // 关键事实：**forage 是唯一创造库存的行动**，eat/drink 只消费库存。
+  // 生存骨架的基础分（0.2~0.3）天然低于动态行动（craft 0.9 / work 1.0 / found 0.6），
+  // 纯分数截断必然把它们排掉。因此骨架先行保送，动态行动再填满 k 席。
+  const SURVIVAL = ['eat', 'drink', 'rest', 'forage'];
+  const reserved = scored.filter((c) => SURVIVAL.includes(c.action));
+  const others = scored.filter((c) => !SURVIVAL.includes(c.action));
+  // 发展行动同样保留名额（与 selector.shortlist 一致）。
+  // 实测：只豁免生存骨架时，found 在 shortlist 进了、却在 prune 被切，
+  // 两级闸必须同时豁免，否则窗口里仍看不到 found（biz 恒为 0）。
+  const DEVELOPMENT = ['found', 'socialize', 'court', 'accept'];
+  const devPicked = others.filter((c) => DEVELOPMENT.includes(c.action)).slice(0, DEVELOPMENT.length);
+  const restOthers = others.filter((c) => !devPicked.includes(c));
+  const room = Math.max(0, Math.min(k, scored.length) - reserved.length - devPicked.length);
+  return [...reserved, ...devPicked, ...restOthers.slice(0, room)];
 }
 
 /** 复位底层候选存储（测试用）。 */

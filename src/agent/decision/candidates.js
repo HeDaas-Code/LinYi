@@ -14,6 +14,15 @@ const RULES = Object.freeze({
   build: (s) => (s.hasBuildingMaterial ? '背包材料够盖一座谷仓' : null),
   write: (s) => (s.literate ? '已识字，可以写书记录避难所历史' : null),
   work: (s) => (s.employed && s.businessActive ? '受雇于企业，上工可产出商品' : null),
+  // 创办企业：有足够自有资本即可（D2）。
+  // 此前企业由 seed 阶段按 config.businessCount 固定创办，居民无从选择，
+  // 导致「企业出生」不是涌现的。现在它是居民的一个**机会性**选项。
+  // 两个条件是**并列**的：够本 + 市场还有空位。
+  // 只看够本会让居民一窝蜂开铺子，而需求池只能养活 1 家（50 人 × 0.12 ÷ 单产 4），
+  // 后来者必然持续亏损直至破产——实测破产 655 次。
+  found: (s) => (s.canFound && s.marketRoom !== false
+    ? '手头有 ' + Math.round(s.foundCapital ?? 0) + ' 本金，且市场尚有空位，可以盘一间铺子'
+    : null),
   trade: (s) => (s.hasSurplus ? '背包有余粮，可以卖掉换钱' : null),
   socialize: (s) => (s.hasPeer ? '附近有其他居民，可以交谈' : null),
   court: (s) => (s.eligibleMate && s.hasPeer ? '有合适的对象，可以求偶' : null),
@@ -39,6 +48,9 @@ const BASE_SCORE = Object.freeze({
   // 探索基础分略低于日常劳动：它应该是在"资源紧张"或"有余力"时才被选中，
   // 而不是无脑优先。风险与收益的具体权衡在 scoreAction 里按需叠加。
   expedition: 0.75,
+  // 创办企业是**机会性**行为：低于日常劳动（1.0），
+  // 只有在生计有余力时才应被选中，不应压过谋生。
+  found: 0.6,
 });
 
 const ALL_ACTIONS = Object.freeze(['eat', 'drink', 'rest', 'forage', ...Object.keys(RULES)]);

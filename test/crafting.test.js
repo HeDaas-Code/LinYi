@@ -5,6 +5,7 @@ import { graph, identity, rng, pubsub } from '../src/infra/index.js';
 import { clock } from '../src/runtime/index.js';
 import { recorder } from '../src/observer/index.js';
 import { inventory, crafting } from '../src/agent/index.js';
+import { building } from '../src/town/index.js';
 
 const { item, backpack } = inventory;
 const { recipe, workbench, construction, writing } = crafting;
@@ -192,10 +193,18 @@ test('construction: build 扣材料，tick 完成后写入结构并记录日志'
   clock.tick();
   const done = construction.tick();
   assert.equal(done.length, 1);
-  assert.equal(done[0].structure.id, 'structure:barn');
+  // 契约已统一到 town/building/structure.js：
+  //   id 前缀 town:building:（此前 construction 自用 structure:，导致建的房子在
+  //   structure 模块里查不到）；data 形状也统一（不再有 integrity 字段）。
+  // 同时必须能被 structure 模块查到——这才是合并契约要保证的事。
+  assert.equal(done[0].structure.id, 'town:building:barn');
   assert.equal(done[0].structure.data.name, '谷仓');
   assert.equal(done[0].structure.data.builtBy, 'a1');
-  assert.equal(graph.read('structure:barn').data.integrity, 100);
+  assert.equal(done[0].structure.data.demolished, false);
+  const listed = building.structure.query();
+  assert.ok(listed.some((b) => b.id === 'barn'),
+    'construction 建成的房子必须出现在 building.structure.query() 里');
+  assert.equal(graph.read('town:building:barn').data.kind, 'crafted');
   assert.equal(recorder.actionLog.list().length, 1);
 });
 

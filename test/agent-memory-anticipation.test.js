@@ -73,9 +73,28 @@ test('pruner.prune：裁剪到前 K（降序）', () => {
     { id: 'a1:rest', action: 'rest', score: 0.2 },
     { id: 'a1:forage', action: 'forage', score: 0.2 },
   ];
+  // 契约变更：生存骨架（eat/drink/rest/forage）**免疫修剪**，
+  // 因为它们是唯一能补货/维生的行动，而基础分天然低于动态行动。
+  // 实测教训：加入 found 后骨架被挤出前 K，全镇不再采集，t25 食水归零后
+  // 永不恢复，seed1/seed2 全灭（基线靠 forage=43 恢复并稳定 148-150）。
+  // 因此 k=2 时会得到全部 4 个骨架项，而不是被截到 2 个。
   const out = pruner.prune('a1', candidates, { k: 2, dominantNeed: 'food', level: 0.6, threshold: 0.4, tags: [] });
-  assert.equal(out.length, 2);
-  assert.equal(out[0].action, 'eat');
+  assert.equal(out.length, 4, '生存骨架应全部保留（免疫修剪）');
+  assert.ok(out.every((c) => ['eat', 'drink', 'rest', 'forage'].includes(c.action)),
+    '保留的应全部是生存骨架');
+  assert.equal(out[0].action, 'eat', '骨架内部仍按分数降序');
+});
+
+test('pruner.prune：非生存候选仍裁剪到 k（骨架之外）', () => {
+  const candidates = [
+    { id: 'a1:craft', action: 'craft', score: 0.9 },
+    { id: 'a1:build', action: 'build', score: 0.8 },
+    { id: 'a1:write', action: 'write', score: 0.7 },
+    { id: 'a1:trade', action: 'trade', score: 0.6 },
+  ];
+  const out = pruner.prune('a1', candidates, { k: 2, dominantNeed: 'food', level: 0.1, threshold: 0.4, tags: [] });
+  assert.equal(out.length, 2, '无骨架时仍按 k 裁剪');
+  assert.equal(out[0].action, 'craft');
 });
 
 // ---- 行动模拟 ----

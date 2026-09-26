@@ -123,14 +123,32 @@ test('涌现性: 50 居民 × 200 tick × 3 种子关键经济字段跨种子差
     // 生存率成为真实变量，改为 ≥0.96 —— 仍能约束系统不崩溃，但不再奖励资源过剩。
     const rate = survivalRate(report);
     assert.ok(rate >= 0.96, '默认参数下存活率应 ≥0.96（实测 ' + rate.toFixed(2) + '）');
-    rows.push({ seed, businesses: s.businesses, goodsProduced: s.goodsProduced, wagesPaid: s.wagesPaid, bankruptcies: s.bankruptcies, trades: s.trades });
+    rows.push({
+      seed,
+      businesses: s.businesses,
+      businessesFounded: s.businessesFounded,
+      goodsProduced: s.goodsProduced,
+      wagesPaid: s.wagesPaid,
+      bankruptcies: s.bankruptcies,
+      trades: s.trades,
+    });
   }
 
-  // 全部五项都应跨种子分化。这些差异来自居民的自主行为（上工/交易/制作）经由
-  // 真实账本传导到企业盈亏，进而决定破产与否——企业**会因经营失败而消亡**。
-  // 注：企业仍由 bootstrap 创办（config.businessCount），「居民自行创办企业」
-  // 尚未接入行动空间；分化来自经营结果而非创办决策，这一点是已知边界。
-  assert.ok(varied(rows.map((r) => r.businesses)), 'businesses 应跨种子出现差异');
+  // 分化断言。契约已随 D2 更新：企业**不再由 bootstrap 按 config.businessCount 创办**，
+  // 而是居民在决策环里选择 found 行动诞生（资本来自其自有账户、行业由 id 哈希决定）。
+  // 因此衡量涌现的指标从「当前存活数」改为**企业生命周期的两个维度**：
+  //   businessesFounded = 累计创办次数（居民创业决策的多少）
+  //   bankruptcies      = 破产次数（经营失败导致消亡）
+  // 为什么不用 businesses（当前存活）：市场容量（需求池 ÷ 单产）把它锁在上限，
+  // 实测三种子恒为 5/5/5，会把真实的创办差异完全掩盖。
+  // 实测累计创办 87/68/81、破产 82/63/76 —— 分化来自居民自主行为，
+  // 经由真实账本传导到企业盈亏，进而决定存亡。
+  assert.ok(varied(rows.map((r) => r.businessesFounded)),
+    'businessesFounded 应跨种子出现差异（居民创业决策量）');
+  assert.ok(rows.every((r) => r.businessesFounded > 0),
+    '应有居民自主创办的企业');
+  assert.ok(rows.every((r) => r.businesses > 0),
+    '应始终有存活的企业（市场不会被完全放弃）');
   assert.ok(varied(rows.map((r) => r.goodsProduced)), 'goodsProduced 应跨种子出现差异');
   assert.ok(varied(rows.map((r) => r.wagesPaid)), 'wagesPaid 应跨种子出现差异');
   assert.ok(varied(rows.map((r) => r.bankruptcies)), 'bankruptcies 应跨种子出现差异');
