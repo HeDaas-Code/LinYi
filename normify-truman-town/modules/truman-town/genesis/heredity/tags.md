@@ -11,7 +11,7 @@ description:
       Randomly samples 50 tags from 100 parental tags for the child.
       
 revision: 02dffcd347b42bfde4f8a766a3a77cff7de9c286
-updated_at: "2026-09-25T10:17:35.034Z"
+updated_at: "2026-09-26T02:15:12.888Z"
 fingerprint: c8922df0e187d0c2bd125b85feec177b2bc86232fb902107792c122eae8731bc
 source:
   - path: "src/genesis/heredity/tags.js"
@@ -37,4 +37,6 @@ apis:
 deps:
   - kind: call
     to: truman-town.agent.traits.inherit
+  - kind: call
+    to: truman-town.genesis.tag-pool
 ---

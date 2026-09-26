@@ -163,13 +163,13 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "root_uid": "d440391b"
       }
     ],
-    "compiled_at": "2026-09-26T01:50:17.545Z",
+    "compiled_at": "2026-09-26T02:20:20.552Z",
     "stats": {
       "tree_count": 1,
-      "module_count": 231,
-      "leaf_count": 162,
-      "api_count": 375,
-      "dep_count": 359,
+      "module_count": 232,
+      "leaf_count": 163,
+      "api_count": 380,
+      "dep_count": 362,
       "cross_tree_dep_count": 0,
       "max_depth": 5,
       "layout_count": 69,
@@ -201,9 +201,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "updated_at": "2026-09-22T04:32:53Z",
       "fingerprint": "pending",
       "aggregate": {
-        "descendant_count": 230,
+        "descendant_count": 231,
         "own_api_count": 0,
-        "inherited_api_count": 375,
+        "inherited_api_count": 380,
         "dep_out": 0,
         "dep_in": 0
       }
@@ -6136,9 +6136,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "updated_at": "2026-09-22T04:32:53Z",
       "fingerprint": "pending",
       "aggregate": {
-        "descendant_count": 8,
+        "descendant_count": 9,
         "own_api_count": 0,
-        "inherited_api_count": 11,
+        "inherited_api_count": 16,
         "dep_out": 0,
         "dep_in": 0
       }
@@ -6252,7 +6252,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         }
       ],
       "revision": "02dffcd347b42bfde4f8a766a3a77cff7de9c286",
-      "updated_at": "2026-09-25T10:17:35.033Z",
+      "updated_at": "2026-09-26T02:15:14.376Z",
       "fingerprint": "27e8c6edfe0c11ef1ce3357b3b5c026a582504e1a821ae306ff9e0ebd08196ad",
       "apis": [
         {
@@ -6279,13 +6279,18 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "kind": "call",
           "to": "truman-town.agent.traits.tagset",
           "cross_tree": false
+        },
+        {
+          "kind": "call",
+          "to": "truman-town.genesis.tag-pool",
+          "cross_tree": false
         }
       ],
       "aggregate": {
         "descendant_count": 0,
         "own_api_count": 2,
         "inherited_api_count": 0,
-        "dep_out": 1,
+        "dep_out": 2,
         "dep_in": 0
       }
     },
@@ -6336,7 +6341,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         }
       ],
       "revision": "02dffcd347b42bfde4f8a766a3a77cff7de9c286",
-      "updated_at": "2026-09-25T10:17:35.034Z",
+      "updated_at": "2026-09-26T02:15:13.410Z",
       "fingerprint": "139d70b9c303b9045231b4cc60fdaa51f252d4e52c3a74570aa91bd332f3d690",
       "apis": [
         {
@@ -6354,13 +6359,18 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "kind": "call",
           "to": "truman-town.ai.prompt.agent",
           "cross_tree": false
+        },
+        {
+          "kind": "call",
+          "to": "truman-town.genesis.tag-pool",
+          "cross_tree": false
         }
       ],
       "aggregate": {
         "descendant_count": 0,
         "own_api_count": 1,
         "inherited_api_count": 0,
-        "dep_out": 1,
+        "dep_out": 2,
         "dep_in": 0
       }
     },
@@ -6384,7 +6394,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         }
       ],
       "revision": "02dffcd347b42bfde4f8a766a3a77cff7de9c286",
-      "updated_at": "2026-09-25T10:17:35.034Z",
+      "updated_at": "2026-09-26T02:15:12.888Z",
       "fingerprint": "c8922df0e187d0c2bd125b85feec177b2bc86232fb902107792c122eae8731bc",
       "apis": [
         {
@@ -6411,13 +6421,18 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "kind": "call",
           "to": "truman-town.agent.traits.inherit",
           "cross_tree": false
+        },
+        {
+          "kind": "call",
+          "to": "truman-town.genesis.tag-pool",
+          "cross_tree": false
         }
       ],
       "aggregate": {
         "descendant_count": 0,
         "own_api_count": 2,
         "inherited_api_count": 0,
-        "dep_out": 1,
+        "dep_out": 2,
         "dep_in": 1
       }
     },
@@ -6481,6 +6496,88 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "inherited_api_count": 0,
         "dep_out": 2,
         "dep_in": 0
+      }
+    },
+    "truman-town.genesis.tag-pool": {
+      "uid": "a7f3c21e",
+      "id": "truman-town.genesis.tag-pool",
+      "parent": "truman-town.genesis",
+      "tree": "truman-town",
+      "depth": 3,
+      "tags": [
+        "genesis",
+        "traits",
+        "data"
+      ],
+      "name": {
+        "zh": "特质标签池",
+        "en": "Trait Tag Pool"
+      },
+      "description": {
+        "zh": "50 条特质标签的取值池：12 个维度 / 55 个候选值。每位居民持有一条 50 标签串；子代的 50 标签由父母双方共 100 标签中随机取用组成。零依赖纯数据模块，是遗传与提示词组装共同的事实来源。\n",
+        "en": "Value pool for the 50-trait tag string: 12 dimensions, 55 candidate values. Each resident holds one 50-tag string; offspring tags are randomly composed from the parents 100 tags. Zero-dependency pure-data module, shared source of truth for heredity and prompt assembly.\n"
+      },
+      "source": [
+        {
+          "path": "src/genesis/tag-pool.js"
+        }
+      ],
+      "revision": "1fe29bb1e2491f51b484e2e2e047f8c23b95cfc4",
+      "updated_at": "2026-09-26T10:15:00Z",
+      "fingerprint": "c33f8e1c48831920ce68a6ebbcaf8408a28633d44a85dd9d2856186323e4106d",
+      "apis": [
+        {
+          "protocol": "rpc",
+          "path": "genesis.tag-pool.makeKey",
+          "description": {
+            "zh": "按维度与取值拼出标签 key。\n",
+            "en": "Builds a tag key from dimension and value.\n"
+          },
+          "key": "rpc:genesis.tag-pool.makeKey"
+        },
+        {
+          "protocol": "rpc",
+          "path": "genesis.tag-pool.dimensionOf",
+          "description": {
+            "zh": "由标签 key 反查所属维度。\n",
+            "en": "Resolves the dimension a tag key belongs to.\n"
+          },
+          "key": "rpc:genesis.tag-pool.dimensionOf"
+        },
+        {
+          "protocol": "rpc",
+          "path": "genesis.tag-pool.candidates",
+          "description": {
+            "zh": "列出候选标签，可按维度过滤。\n",
+            "en": "Lists candidate tags, optionally filtered by dimension.\n"
+          },
+          "key": "rpc:genesis.tag-pool.candidates"
+        },
+        {
+          "protocol": "rpc",
+          "path": "genesis.tag-pool.label",
+          "description": {
+            "zh": "返回标签的可读名。\n",
+            "en": "Returns the human-readable label of a tag key.\n"
+          },
+          "key": "rpc:genesis.tag-pool.label"
+        },
+        {
+          "protocol": "rpc",
+          "path": "genesis.tag-pool.stats",
+          "description": {
+            "zh": "返回池子规模统计（维度数 / 候选数 / 标签数）。\n",
+            "en": "Returns pool size statistics (dimensions, candidates, tags).\n"
+          },
+          "key": "rpc:genesis.tag-pool.stats"
+        }
+      ],
+      "aggregate": {
+        "descendant_count": 0,
+        "own_api_count": 5,
+        "inherited_api_count": 0,
+        "dep_out": 0,
+        "dep_in": 3
       }
     },
     "truman-town.genesis.world-factory": {
@@ -6588,9 +6685,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/infra/config.js"
         }
       ],
-      "revision": "45f6c8b7b8ba210fcd94506b2097c8e601dd1382",
-      "updated_at": "2026-09-26T01:40:46.602Z",
-      "fingerprint": "bf063e4d4c7df5b198094571c5997c1918ed15394e400e452ed252ec114c0035",
+      "revision": "1fe29bb1e2491f51b484e2e2e047f8c23b95cfc4",
+      "updated_at": "2026-09-26T02:17:15.020Z",
+      "fingerprint": "e53f54cac4fd964f49ad65e1bf8eb24a5d11db6ddc13f04a41b5940cae2ebb8c",
       "apis": [
         {
           "protocol": "rpc",
@@ -8149,9 +8246,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/runtime/orchestrator/loop.js"
         }
       ],
-      "revision": "45f6c8b7b8ba210fcd94506b2097c8e601dd1382",
-      "updated_at": "2026-09-26T01:47:12.144Z",
-      "fingerprint": "67618bde515dc7d3325f08dca8adbe46d23d88ba94f38ad70d88a1a89a3b978d",
+      "revision": "1fe29bb1e2491f51b484e2e2e047f8c23b95cfc4",
+      "updated_at": "2026-09-26T02:17:15.020Z",
+      "fingerprint": "7aab25f51f7945c4186e5017973b252d90fc5da5bbc28375d61f3c0718e5869d",
       "apis": [
         {
           "protocol": "rpc",
@@ -8629,9 +8726,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/runtime/orchestrator/_stage2.js"
         }
       ],
-      "revision": "45f6c8b7b8ba210fcd94506b2097c8e601dd1382",
-      "updated_at": "2026-09-26T01:47:11.884Z",
-      "fingerprint": "52f3c1372061cd041d760fedf6d65a7b2a30515feb037c3b1bf08811a12be21b",
+      "revision": "1fe29bb1e2491f51b484e2e2e047f8c23b95cfc4",
+      "updated_at": "2026-09-26T02:17:15.021Z",
+      "fingerprint": "bba976d0c3f2a94ea03c05f952fccfb7e328b482a9ecbd0d81044a5a3454ec54",
       "apis": [
         {
           "protocol": "rpc",
@@ -13008,6 +13105,11 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
     "rpc:genesis.heredity.tags.validate": "truman-town.genesis.heredity.tags",
     "rpc:genesis.renewal.evaluate": "truman-town.genesis.renewal",
     "rpc:genesis.renewal.replace": "truman-town.genesis.renewal",
+    "rpc:genesis.tag-pool.candidates": "truman-town.genesis.tag-pool",
+    "rpc:genesis.tag-pool.dimensionOf": "truman-town.genesis.tag-pool",
+    "rpc:genesis.tag-pool.label": "truman-town.genesis.tag-pool",
+    "rpc:genesis.tag-pool.makeKey": "truman-town.genesis.tag-pool",
+    "rpc:genesis.tag-pool.stats": "truman-town.genesis.tag-pool",
     "rpc:genesis.world_factory.create_agents": "truman-town.genesis.world-factory",
     "rpc:genesis.world_factory.create_town": "truman-town.genesis.world-factory",
     "rpc:infra.config.currentDifficultyParams": "truman-town.infra.config",
@@ -14190,14 +14292,32 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "cross_tree": false
     },
     {
+      "from": "truman-town.genesis.agent-factory.template",
+      "to": "truman-town.genesis.tag-pool",
+      "kind": "call",
+      "cross_tree": false
+    },
+    {
       "from": "truman-town.genesis.heredity.prompt",
       "to": "truman-town.ai.prompt.agent",
       "kind": "call",
       "cross_tree": false
     },
     {
+      "from": "truman-town.genesis.heredity.prompt",
+      "to": "truman-town.genesis.tag-pool",
+      "kind": "call",
+      "cross_tree": false
+    },
+    {
       "from": "truman-town.genesis.heredity.tags",
       "to": "truman-town.agent.traits.inherit",
+      "kind": "call",
+      "cross_tree": false
+    },
+    {
+      "from": "truman-town.genesis.heredity.tags",
+      "to": "truman-town.genesis.tag-pool",
       "kind": "call",
       "cross_tree": false
     },
@@ -15943,19 +16063,21 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
     "truman-town.ai": {
       "schema_version": 1,
       "id": "truman-town.ai",
-      "updated_at": "2026-09-22T05:09:08.636Z",
+      "updated_at": "2026-09-26T02:19:39.163Z",
       "mode": "grid",
       "max_columns": 2,
       "reading": {
-        "zh": "LLM 网关与提示词构建是底座，思维、对话与记忆向量在上层，安全护栏贯穿始终。",
-        "en": "LLM gateway and prompt builder form the base; thought, speech and memory sit above; guard runs throughout."
+        "zh": "LLM 网关与提示词构建是底座；思维、决策与对话在上层消费它们，记忆提供跨 tick 上下文，LAYA 承担快速直觉判断，安全护栏贯穿始终。",
+        "en": "LLM gateway and prompt builder form the base; thought, decision and speech consume them above, memory supplies cross-tick context, LAYA handles fast intuitive calls, and guard runs throughout."
       },
       "order": [
         "truman-town.ai.llm",
         "truman-town.ai.prompt",
         "truman-town.ai.thought",
+        "truman-town.ai.decide",
         "truman-town.ai.speech",
         "truman-town.ai.memory",
+        "truman-town.ai.laya",
         "truman-town.ai.guard"
       ]
     },
@@ -16226,14 +16348,15 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
     "truman-town.genesis": {
       "schema_version": 1,
       "id": "truman-town.genesis",
-      "updated_at": "2026-09-22T05:09:08.593Z",
+      "updated_at": "2026-09-26T02:19:38.951Z",
       "mode": "grid",
       "max_columns": 2,
       "reading": {
-        "zh": "从世界与智能体工厂出发，经遗传系统产生新提示词与新智能体，再驱动小镇更新。",
-        "en": "From world/agent factories through heredity to new prompts and agents, then town renewal."
+        "zh": "标签池是遗传的事实来源，世界与智能体工厂负责初次生成，遗传系统在代际之间传递并重组标签，最后驱动小镇更新。",
+        "en": "The tag pool is the source of truth for heredity; world and agent factories build the first generation, heredity transmits and recombines tags across generations, and renewal keeps the town running."
       },
       "order": [
+        "truman-town.genesis.tag-pool",
         "truman-town.genesis.world-factory",
         "truman-town.genesis.agent-factory",
         "truman-town.genesis.heredity",

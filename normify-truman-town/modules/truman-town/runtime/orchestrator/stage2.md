@@ -6,11 +6,13 @@ name: {zh: "第二阶段编排", en: "Phase-2 Orchestration"}
 description:
   zh: >
       阶段二世界推进：产业/经济/制作队列推进、居民自选行动的实际执行（performAgentAction，含 socialize/court/accept 与由居民双向决策产生的婚配，以及居民自主创办企业的 found），并在企业成立后为其招募工人与放发创业贷款；另含社会与家庭汇总、疾病分诊等。
+      
   en: >
       Phase-2 world advance: industry/economy/crafting queues, execution of agent-chosen actions, and post-founding recruitment plus start-up credit for firms; also social and family rollups and disease triage.
-revision: 45f6c8b7b8ba210fcd94506b2097c8e601dd1382
-updated_at: "2026-09-26T01:47:11.884Z"
-fingerprint: 52f3c1372061cd041d760fedf6d65a7b2a30515feb037c3b1bf08811a12be21b
+      
+revision: 1fe29bb1e2491f51b484e2e2e047f8c23b95cfc4
+updated_at: "2026-09-26T02:17:15.021Z"
+fingerprint: bba976d0c3f2a94ea03c05f952fccfb7e328b482a9ecbd0d81044a5a3454ec54
 source:
   - path: "src/runtime/orchestrator/_stage2.js"
 apis:

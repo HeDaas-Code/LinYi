@@ -11,7 +11,7 @@ description:
       Assembles child traits, family context and town worldview into a new agent prompt.
       
 revision: 02dffcd347b42bfde4f8a766a3a77cff7de9c286
-updated_at: "2026-09-25T10:17:35.034Z"
+updated_at: "2026-09-26T02:15:13.410Z"
 fingerprint: 139d70b9c303b9045231b4cc60fdaa51f252d4e52c3a74570aa91bd332f3d690
 source:
   - path: "src/genesis/heredity/prompt.js"
@@ -28,4 +28,6 @@ apis:
 deps:
   - kind: call
     to: truman-town.ai.prompt.agent
+  - kind: call
+    to: truman-town.genesis.tag-pool
 ---

@@ -1,14 +1,15 @@
 {
   "schema_version": 1,
   "id": "truman-town.genesis",
-  "updated_at": "2026-09-22T05:09:08.593Z",
+  "updated_at": "2026-09-26T02:19:38.951Z",
   "mode": "grid",
   "max_columns": 2,
   "reading": {
-    "zh": "从世界与智能体工厂出发，经遗传系统产生新提示词与新智能体，再驱动小镇更新。",
-    "en": "From world/agent factories through heredity to new prompts and agents, then town renewal."
+    "zh": "标签池是遗传的事实来源，世界与智能体工厂负责初次生成，遗传系统在代际之间传递并重组标签，最后驱动小镇更新。",
+    "en": "The tag pool is the source of truth for heredity; world and agent factories build the first generation, heredity transmits and recombines tags across generations, and renewal keeps the town running."
   },
   "order": [
+    "truman-town.genesis.tag-pool",
     "truman-town.genesis.world-factory",
     "truman-town.genesis.agent-factory",
     "truman-town.genesis.heredity",

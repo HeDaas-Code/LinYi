@@ -1,19 +1,21 @@
 {
   "schema_version": 1,
   "id": "truman-town.ai",
-  "updated_at": "2026-09-22T05:09:08.636Z",
+  "updated_at": "2026-09-26T02:19:39.163Z",
   "mode": "grid",
   "max_columns": 2,
   "reading": {
-    "zh": "LLM 网关与提示词构建是底座，思维、对话与记忆向量在上层，安全护栏贯穿始终。",
-    "en": "LLM gateway and prompt builder form the base; thought, speech and memory sit above; guard runs throughout."
+    "zh": "LLM 网关与提示词构建是底座；思维、决策与对话在上层消费它们，记忆提供跨 tick 上下文，LAYA 承担快速直觉判断，安全护栏贯穿始终。",
+    "en": "LLM gateway and prompt builder form the base; thought, decision and speech consume them above, memory supplies cross-tick context, LAYA handles fast intuitive calls, and guard runs throughout."
   },
   "order": [
     "truman-town.ai.llm",
     "truman-town.ai.prompt",
     "truman-town.ai.thought",
+    "truman-town.ai.decide",
     "truman-town.ai.speech",
     "truman-town.ai.memory",
+    "truman-town.ai.laya",
     "truman-town.ai.guard"
   ]
 }
