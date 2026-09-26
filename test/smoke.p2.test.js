@@ -31,9 +31,14 @@ function survivalTable(report) {
   return table;
 }
 
-test('phase2 冒烟：4 居民跑 15 tick，家庭/经济/制作/居住/健康全链路 + 日志 + 存活时长', async () => {
+test('phase2 冒烟：4 居民跑 30 tick，家庭/经济/制作/居住/健康全链路 + 日志 + 存活时长', async () => {
   loop.reset();
-  const report = await loop.run({ phase2: true, ticks: 15, seed: 42, agentCount: 4 });
+  // 15 → 30 tick：识字已改为**个人化**（社会有识字供给时，成年居民中 literacyShare
+  // 比例识字，默认 0.4），不再是「有教师则全体识字」。4 人局里识字者仅 2 人，
+  // 且前 15 tick 城镇尚处早期短缺（threatened 为真时窗口收缩为生存骨架），
+  // 写书被生存行动压制 —— 实测 15 tick write=0、30 tick write=2、60 tick write=5。
+  // 写书是**城镇稳定后**才出现的行动，15 tick 的预算已不足以观察全链路。
+  const report = await loop.run({ phase2: true, ticks: 30, seed: 42, agentCount: 4 });
 
   // 1) 至少 4 名居民 + 产生子代（恋爱与后代）
   const agents = registry.lookup({ type: 'agent' });
@@ -87,7 +92,7 @@ test('phase2 冒烟：4 居民跑 15 tick，家庭/经济/制作/居住/健康�
   }
 
   // 7) 世界状态持续变化：tick 推进 + 资源衰减 + 居民增长
-  assert.equal(report.world.tick, 15, '世界 tick 应推进到 15');
+  assert.equal(report.world.tick, 30, '世界 tick 应推进到 30');
   assert.ok(report.resources.water.stockpile < 100, '水源应随 tick 衰减');
   assert.ok(report.resources.food.stockpile > 0 && report.resources.food.stockpile <= 100, '食物应被采集补充并夹在 (0, capacity] 内');
   assert.ok(Object.keys(report.world.agents ?? {}).length > 4, '世界居民应随子代增长');
@@ -101,7 +106,7 @@ test('phase2 冒烟：4 居民跑 15 tick，家庭/经济/制作/居住/健康�
   }
   const founders = Object.values(table).filter((r) => r.bornTick === 0);
   assert.equal(founders.length, 4, '初始 4 居民 bornTick=0');
-  for (const f of founders) assert.equal(f.survivedTicks, 15, '初始居民存活时长应=15');
+  for (const f of founders) assert.equal(f.survivedTicks, 30, '初始居民存活时长应=30');
   console.log('[smoke.p2] 存活时长记录: ' + JSON.stringify(table));
 });
 

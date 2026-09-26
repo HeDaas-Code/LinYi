@@ -608,11 +608,42 @@ function agentHash01(agentId) {
  *
  * 因此拆成两层：
  *   1) 供给层：社会是否存在识字供给（教师在职）—— 沿用 literacyRate > 0 判定；
- *   2) 个人层：供给存在时，成年居民中按 id 确定性哈希分出 literacyShare 比例。
+ *   2) 个人层：供给存在时，按 literacyShare 决定识字**人数**，再按 id 哈希排序
+ *      挑出具体是谁。
  * 修正前是**全局布尔**：literacyRate > 0 即全体识字，于是「写书」要么人人可做、
  * 要么无人可做，个体差异被完全抹平。
+ *
+ * 个人层为什么用**名次**而不是逐个哈希阈值：小规模局里阈值法会全军覆没。
+ * 实测 3 人 60 tick 与 4 人 15 tick 的冒烟局中，3 人皆落在 0.4 阈值之上
+ * （概率 (0.6)^3 ≈ 22%），识字者为零 → 写书行动直接消失，两个冒烟测试失败。
+ * 名次法保证「有识字供给时至少 1 人识字」，同时保留个体差异。
  */
+let literateSet = null;
+
+/** 每 tick 计算识字者集合：供给存在时取 ceil(share × N) 人（至少 1 人）。 */
+function computeLiterateSet(agentIds, cfg = {}) {
+  const eff = agent.role.society.activeEffects();
+  const rate = Number(eff?.effects?.literacyRate ?? 0);
+  if (!Number.isFinite(rate) || rate <= 0) { literateSet = new Set(); return literateSet; }
+  const share = Number.isFinite(cfg.literacyShare) && cfg.literacyShare >= 0
+    ? Math.min(1, cfg.literacyShare)
+    : 0.4;
+  if (share <= 0) { literateSet = new Set(); return literateSet; }
+  const ids = Array.from(agentIds);
+  if (share >= 1) { literateSet = new Set(ids); return literateSet; }
+  const count = Math.max(1, Math.ceil(share * ids.length));
+  const ranked = ids.slice().sort((a, b) => {
+    const ha = agentHash01(a);
+    const hb = agentHash01(b);
+    if (ha !== hb) return ha - hb;
+    return String(a) < String(b) ? -1 : String(a) > String(b) ? 1 : 0;
+  });
+  literateSet = new Set(ranked.slice(0, count));
+  return literateSet;
+}
+
 function isLiterate(agentId, cfg = {}) {
+  if (literateSet !== null) return literateSet.has(agentId);
   const eff = agent.role.society.activeEffects();
   const rate = Number(eff?.effects?.literacyRate ?? 0);
   if (!Number.isFinite(rate) || rate <= 0) return false;
@@ -736,6 +767,26 @@ function decide(agentId, tick, percepts, cfg = {}) {
     tags: [need ?? 'sustenance'],
   }, { limit: cfg.semanticLimit ?? 3 });
 
+  // **习惯偏置（D1）**：把召回的记忆真正接进打分，而不只是记进日志。
+  // 每条语义记忆的 tags 是 [所采取的行动, 当时的主导需求]（见本文件语义记忆写入处），
+  // 因此「为当前这个需求，我过去反复选了哪个行动」可以从标签直接统计出来。
+  // 这就是习惯：经历过之后，同样的处境会略微偏向自己惯用的应对方式。
+  // 偏置**有界且只抬正分**（见下方 scoreFn），因此不会颠倒量级差异
+  // —— 0.3 的生存行动即使 +25% 也仍低于 0.9 的生产行动，
+  // 这条约束是刻意的：记忆应塑造「怎么做」，不应否决「必须做」。
+  const habitCounts = new Map();
+  let habitTotal = 0;
+  {
+    const actionNames = new Set(agent.decision.candidates.actions());
+    for (const m of semanticMemories) {
+      for (const tag of (m.tags ?? [])) {
+        if (!actionNames.has(tag)) continue;
+        habitCounts.set(tag, (habitCounts.get(tag) ?? 0) + 1);
+        habitTotal += 1;
+      }
+    }
+  }
+
   // P2：采集可及性（0..1）＝池余量 / 池容量。池空时采集奖励归零，避免"采不到还去采"的空转。
   const poolCap = Math.max(1, foragePoolCapacityOf(cfg));
   const forageAvailable = Math.max(0, Math.min(1, (foragePool ?? 0) / poolCap));
@@ -748,34 +799,42 @@ function decide(agentId, tick, percepts, cfg = {}) {
   const choice = agent.decision.selector.choose({
     candidates,
     context: { dominantNeed: need },
-    scoreFn: (candidate) => scoreAction(candidate, {
-      dominantNeed: need,
-      dominantLevel: needLevel,
-      dominantScarcity: needScarcity,
-      eatThreshold: cfg.eatThreshold,
-      survivalGate,
-      foodEmpty,
-      waterEmpty,
-      perCapitaStock,
-      forageAvailable,
-      expeditionRisk: agentState.expeditionRisk,
-      expeditionLoot: agentState.expeditionLoot,
-      expeditionHours: agentState.expeditionHours,
-      // 创办企业的经济动机（D2）：是否够本、手头余额、商品售价与工资。
-      // 这些都是**事实**，动机的权衡在 scoreAction 里做——不在候选生成侧替居民决定。
-      canFound: agentState.canFound,
-      foundCapital: agentState.foundCapital,
-      marketRoom: agentState.marketRoom,
-      marketSlots: agentState.marketSlots,
-      activeBusinesses: agentState.activeBusinesses,
-      balance: agentState.balance,
-      employed: agentState.employed,
-      goodsPrice: (() => {
-        try { return economy.market.price.query('goods').price; } catch { return 8; }
-      })(),
-      wage: cfg.wage,
-    }) + agent.persona.personality.evaluate(agentId, candidate.action)
-      + (simBy.get(candidate.id) ?? 0),
+    scoreFn: (candidate) => {
+      let base = scoreAction(candidate, {
+        dominantNeed: need,
+        dominantLevel: needLevel,
+        dominantScarcity: needScarcity,
+        eatThreshold: cfg.eatThreshold,
+        survivalGate,
+        foodEmpty,
+        waterEmpty,
+        perCapitaStock,
+        forageAvailable,
+        expeditionRisk: agentState.expeditionRisk,
+        expeditionLoot: agentState.expeditionLoot,
+        expeditionHours: agentState.expeditionHours,
+        // 创办企业的经济动机（D2）：是否够本、手头余额、商品售价与工资。
+        // 这些都是**事实**，动机的权衡在 scoreAction 里做——不在候选生成侧替居民决定。
+        canFound: agentState.canFound,
+        foundCapital: agentState.foundCapital,
+        marketRoom: agentState.marketRoom,
+        marketSlots: agentState.marketSlots,
+        activeBusinesses: agentState.activeBusinesses,
+        balance: agentState.balance,
+        employed: agentState.employed,
+        goodsPrice: (() => {
+          try { return economy.market.price.query('goods').price; } catch { return 8; }
+        })(),
+        wage: cfg.wage,
+      }) + agent.persona.personality.evaluate(agentId, candidate.action)
+        + (simBy.get(candidate.id) ?? 0);
+      // 习惯偏置：只抬正分（负分代表「此刻不该做」，不该被习惯翻案）。
+      if (habitTotal > 0 && base > 0) {
+        const ratio = (habitCounts.get(candidate.action) ?? 0) / habitTotal;
+        if (ratio > 0) base *= 1 + 0.25 * ratio;
+      }
+      return base;
+    },
   });
   if (choice === null) return null;
 
@@ -1116,6 +1175,9 @@ export async function step(config = {}) {
   // 调用（实测单次约 18s，全量 50×200 不可行），其余居民走确定性路径。
   const llmDecide = cfg.llmDecideEnabled === true && (tick % (cfg.llmDecideEveryTicks ?? 1) === 0);
   let llmCalls = 0;
+  // 识字者集合按 tick 统一计算：识字人数取决于全城人口，不是单人属性，
+  // 因此必须在这里（能看到全部居民的位置）算一次，而不是在 decide 里逐个判断。
+  computeLiterateSet(agentRecords.map((r) => r.id), cfg);
   for (const record of agentRecords) {
     const agentId = record.id;
     const decision = decide(agentId, tick, inbox[agentId] ?? [], cfg);
@@ -1337,6 +1399,7 @@ export function reset() {
   // 使 reset 后首次 alivePopulation() 在世代号不匹配前可能返回上一局的人数。
   _alivePopGeneration = -1;
   _alivePopValue = 0;
+  literateSet = null;
 }
 
 /**

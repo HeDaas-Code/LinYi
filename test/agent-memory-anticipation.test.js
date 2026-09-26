@@ -166,3 +166,44 @@ test('50×200：存活无回退 + 每次决策含解释 + 语义记忆已写入'
   const sem = semantic.list('agent_000000000001');
   assert.ok(sem.length > 0, '语义记忆应已按决策落盘');
 });
+test('D1 记忆接线：语义记忆真实影响行动选择（A/B 同种子对照）', async () => {
+  // 契约：语义记忆不只是写进日志的装饰，必须进入打分。
+  // 做法：同种子、同参数跑两遍，只把召回上限 semanticLimit 设为 0（召回为空
+  // → 习惯偏置为 0），断言两次的行动分布出现差异。
+  // 若记忆重新变回「只记不用」，两次分布会逐字节相同，本测试即失败。
+  const distOf = (report) => {
+    const d = {};
+    for (const st of (report.steps ?? [])) {
+      for (const dec of (st.decisions ?? [])) d[dec.action] = (d[dec.action] ?? 0) + 1;
+    }
+    return d;
+  };
+  loop.reset();
+  const withMemory = await loop.run({ ticks: 60, seed: 11, agentCount: 12, phase2: true });
+  loop.reset();
+  const withoutMemory = await loop.run({ ticks: 60, seed: 11, agentCount: 12, phase2: true, semanticLimit: 0 });
+
+  const a = distOf(withMemory);
+  const b = distOf(withoutMemory);
+  const actions = new Set([...Object.keys(a), ...Object.keys(b)]);
+  let differing = 0;
+  for (const act of actions) {
+    if ((a[act] ?? 0) !== (b[act] ?? 0)) differing += 1;
+  }
+  assert.ok(differing > 0,
+    '关闭记忆召回后行动分布应发生变化（否则记忆未参与决策）：有记忆='
+    + JSON.stringify(a) + ' 无记忆=' + JSON.stringify(b));
+
+  // 两次都必须在默认参数下存活，记忆接线不得以生存为代价。
+  const aliveOf = (report) => {
+    const wa = report.world.agents ?? {};
+    let n = 0;
+    for (const id of report.agents.map((x) => x.id)) {
+      const rec = wa[id];
+      if (rec && rec.alive !== false) n += 1;
+    }
+    return n;
+  };
+  assert.equal(aliveOf(withMemory), 12, '有记忆时 12 人应全部存活');
+  assert.equal(aliveOf(withoutMemory), 12, '无记忆时 12 人应全部存活');
+});
