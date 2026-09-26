@@ -106,7 +106,12 @@ export function store(agentId, entry, options = {}) {
   ensureFresh();
   const memoryId = typeof entry?.id === 'string' && entry.id.trim() !== '' ? entry.id : identity.next('sem');
   const normalized = normalizeEntry({ ...entry }, memoryId, agentId);
-  graph.write({ id: nodeId(memoryId), type: TYPE, data: normalized });
+  // 默认写图存储（跨模块可查、可持久化）；高频主循环传入 persist:false，
+  // 只保留内存索引 —— 见 loop.js 调用点的说明：图里每多一个节点，
+  // 所有 read({ type }) 全量查询都要为它付出代价。
+  if (options.persist !== false) {
+    graph.write({ id: nodeId(memoryId), type: TYPE, data: normalized });
+  }
   if (!byAgent.has(agentId)) byAgent.set(agentId, []);
   const arr = byAgent.get(agentId);
   arr.push(normalized);

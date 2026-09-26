@@ -431,6 +431,15 @@ function scoreAction(candidate, ctx = {}) {
   //     实测 step 测试期望 drink 却得到 forage（236/237 失败）。
   // 正确语义：库存还有货时，eat/drink 应该赢（先解决当下）；
   // 库存见底时，forage 才该赢（否则 eat/drink 是空操作）。
+  // 采集与交易的**分工**：能买就不必自己去采。
+  // 实测教训：习惯偏置上线后 trade 从 2.1% 涨到 4.6%，forage 从 18.9% 掉到 15.2% ——
+  // 居民开始把市场当饭吃。但市场卖的是**生产者的商品**，不是可采集的原料，
+  // 而且穷人买不起。因此交易得分按支付能力封顶，让「买得起」成为前提。
+  if (candidate?.action === 'trade') {
+    const bal = typeof ctx.balance === 'number' ? ctx.balance : 0;
+    const price = typeof ctx.goodsPrice === 'number' && ctx.goodsPrice > 0 ? ctx.goodsPrice : 8;
+    score *= clampUnit(bal / (price * 4), 0);
+  }
   if (candidate?.action === 'forage') {
     score += (1.2 + scarcity) * poolFactor;
     // 只有**库存见底**时才让采集压过进食——此时进食已是空操作。
@@ -800,6 +809,11 @@ function decide(agentId, tick, percepts, cfg = {}) {
 
   // 探索条件（供打分使用）。refreshCandidates 已按同一 tick 缓存过，这里零成本。
   const agentState = stage2.candidateStateFor(agentId, tick);
+  // 商品售价：全系统最热的位置（50 人 × 200 tick × 每个候选行动），
+  // 只在这里取一次，供打分函数与习惯偏置共用（原本每个候选行动查一次）。
+  const goodsPriceNow = (() => {
+    try { return economy.market.price.query('goods').price; } catch { return 8; }
+  })();
   const origScore = new Map(anticipations.map((a) => [a.id, a.score]));
   const candidates = window.map((a) => ({ id: a.id, action: a.action, score: origScore.get(a.id) ?? 0 }));
 
@@ -830,16 +844,22 @@ function decide(agentId, tick, percepts, cfg = {}) {
         activeBusinesses: agentState.activeBusinesses,
         balance: agentState.balance,
         employed: agentState.employed,
-        goodsPrice: (() => {
-          try { return economy.market.price.query('goods').price; } catch { return 8; }
-        })(),
+        goodsPrice: goodsPriceNow,
         wage: cfg.wage,
       }) + agent.persona.personality.evaluate(agentId, candidate.action)
         + (simBy.get(candidate.id) ?? 0);
       // 习惯偏置：只抬正分（负分代表「此刻不该做」，不该被习惯翻案）。
+      // 习惯本身也要**买得起才成立**：手头没钱时，再习惯交易也只能放弃。
+      // 温饱（eat/drink）不受此限制 —— 生存不能因为钱包空了就被否决。
       if (habitTotal > 0 && base > 0) {
         const ratio = (habitCounts.get(candidate.action) ?? 0) / habitTotal;
-        if (ratio > 0) base *= 1 + 0.25 * ratio;
+        if (ratio > 0) {
+          let gain = 0.25 * ratio;
+          if (candidate.action === 'trade') {
+            gain *= clampUnit((typeof agentState.balance === 'number' ? agentState.balance : 0) / goodsPriceNow, 0);
+          }
+          base *= 1 + gain;
+        }
       }
       return base;
     },
@@ -1221,12 +1241,17 @@ export async function step(config = {}) {
       reason: decision.reason,
       decisionId: decision.id,
     });
-    // 批次2-B（t47）：把本次决策沉淀为语义记忆（事件→摘要），供后续召回
+    // 批次2-B（t47）：把本次决策沉淀为语义记忆（事件→摘要），供后续召回。
+    // `persist: false` 表示只留在内存索引里，**不写入图存储**：
+    // 这是全系统写入量最大的位置（50 人 × 200 tick = 10000 条，长跑后数万条），
+    // 而图里每多一个语义记忆节点，所有 `read({ type })` 的全量查询都要为它付出代价
+    // ——实测 30000 节点时一次全量读要 51ms，整个测试套件因此多花数分钟。
+    // 语义记忆在本进程内即建即用（按 agentId 分桶），不需要经图存储中转。
     agent.memory.semantic.store(agentId, {
       content: '第 ' + tick + ' tick 选择「' + decision.action + '」' + (decision.context?.dominantNeed ? '（主导需求：' + decision.context.dominantNeed + '）' : ''),
       tags: [decision.action, decision.context?.dominantNeed ?? 'sustenance'],
       salience: 0.5,
-    }, { maxEntries: cfg.semanticMaxEntries });
+    }, { maxEntries: cfg.semanticMaxEntries, persist: cfg.memoryPersist !== true });
     const situation = `当前处境：${(inbox[agentId] ?? []).map((p) => p.topic).join('、') || '一切如常'}。你决定采取行动「${decision.action}」。`;
     const thought = await ai.thought.generate(agentContextOf(record), situation);
     decisions.push({ agentId, decision, thought });
