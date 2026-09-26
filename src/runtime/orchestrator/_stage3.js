@@ -340,14 +340,37 @@ async function runCivilization(tick, agents, config) {
  * @param {{ tick: number, agents: Array<{ id: string }>, config?: object }} input
  * @returns {Promise<object>}
  */
-export async function tick({ tick, agents, config = {} }) {
-  return {
-    politics: runPolitics(tick, agents),
-    culture: runCulture(tick, agents),
-    psyche: runPsyche(tick, agents, config),
-    tech: runTech(tick, agents, config),
-    civilization: await runCivilization(tick, agents, config),
-  };
+const TICK_STEPS = Object.freeze([
+  { id: 'politics', label: '派系与立法', run: (c) => runPolitics(c.tick, c.agents) },
+  { id: 'culture', label: '文化与仪式', run: (c) => runCulture(c.tick, c.agents) },
+  { id: 'psyche', label: '心理与崩溃', run: (c) => runPsyche(c.tick, c.agents, c.config) },
+  { id: 'tech', label: '科技与研究', run: (c) => runTech(c.tick, c.agents, c.config) },
+  { id: 'civilization', label: '文明与遗产', run: (c) => runCivilization(c.tick, c.agents, c.config) },
+]);
+
+/**
+ * 第三阶段的可分步序列（异步：遗产描述走 LLM）。
+ * 与 `tick()` 共用同一份步骤定义，顺序即返回对象的键顺序。
+ * @param {{ tick: number, agents: Array<{ id: string }>, config?: object }} input
+ */
+export async function* tickSequence(input = {}) {
+  const ctx = { tick: input.tick, agents: input.agents, config: input.config ?? {} };
+  for (let i = 0; i < TICK_STEPS.length; i += 1) {
+    const stepDef = TICK_STEPS[i];
+    const value = await stepDef.run(ctx);
+    yield { id: stepDef.id, label: stepDef.label, index: i, total: TICK_STEPS.length, value };
+  }
+}
+
+/**
+ * 推进一个 tick 的第三阶段流程（批处理：一次跑完全部子系统）。
+ * @param {{ tick: number, agents: Array<{ id: string }>, config?: object }} input
+ * @returns {Promise<object>}
+ */
+export async function tick(input) {
+  const out = {};
+  for await (const unit of tickSequence(input)) out[unit.id] = unit.value;
+  return out;
 }
 
 /** 第三阶段累计摘要（供 loop.run 报告与观测）。 */

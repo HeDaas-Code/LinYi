@@ -1171,7 +1171,20 @@ function runTraitDrift(tick, cfg) {
  * @param {object} [config] 与 DEFAULT_CONFIG 合并的运行参数
  * @returns {Promise<object>} 本 tick 摘要
  */
-export async function step(config = {}) {
+/**
+ * 挂机节拍器用的**阶段序列**：把一个 tick 摊成若干可观测、可分别节流的单元。
+ *
+ * 为什么需要它：一次 `step()` 在 50 人规模下约 1.4 秒；若只按 tick 节流，
+ * 观察者要么全程看不到中间态，要么被迫整段等待。拆成阶段后，每个阶段结束时
+ * 都能向外界报告进度，也因此能对每个阶段单独限速。
+ *
+ * 顺序即 `step()` 的执行顺序，两者共用这一份定义，不可各自维护。
+ *
+ * @param {object} config 与 step 同参
+ */
+export async function* tickSequence(config = {}) {
+  const unit = (id, detail, value) => ({ id, detail: detail ?? null, value: value === undefined ? null : value });
+
   const cfg = { ...DEFAULT_CONFIG, ...configStore.currentDifficultyParams(), ...(config ?? {}) };
   const tick = clock.tick().tick;
   // 人口可能在上个 tick 因出生/死亡变化：先失效缓存再算采集池容量/再生。
@@ -1179,13 +1192,16 @@ export async function step(config = {}) {
 
   // 0) 世界采集池再生（每 tick 补充可采集总量）
   regenForagePool(cfg);
+  yield unit('regen', null);
 
   // 1) survival：衰减 / 需求增长 / 突发事件
   const eventPercepts = runSurvival(tick, cfg);
+  yield unit('survival', { events: eventPercepts.length });
 
   // 2) perception：事件转 percept 并分发给智能体
   const percepts = perception.collect(eventPercepts);
   const inbox = perception.route(percepts);
+  yield unit('perceive', { percepts: percepts.length });
 
   // 2.5) LAYA 语义紧迫度预取（可选通路，默认关闭）
   // 它不是决定者，只是压力分的语义分量（15%）；服务不可用时静默回退。
@@ -1255,9 +1271,11 @@ export async function step(config = {}) {
     const situation = `当前处境：${(inbox[agentId] ?? []).map((p) => p.topic).join('、') || '一切如常'}。你决定采取行动「${decision.action}」。`;
     const thought = await ai.thought.generate(agentContextOf(record), situation);
     decisions.push({ agentId, decision, thought });
+    yield unit('decide', { agentId, action: decision.action, done: decisions.length, of: agentRecords.length });
   }
 
   // 4) dispatch：行动落到 world-state + 观察者行为日志 + 情景记忆
+  let dispatched = 0;
   for (const { agentId, decision, thought } of decisions) {
     // D0：非生存行动由居民自己发起（调用真实模块）；生存行动沿用 effectFor。
     const performed = DYNAMIC_BASE_SCORE[decision.action] !== undefined
@@ -1291,6 +1309,8 @@ export async function step(config = {}) {
       salience: 0.5,
       tags: ['thought', String(decision.action)],
     });
+    dispatched += 1;
+    yield unit('dispatch', { agentId, action: decision.action, done: dispatched, of: decisions.length });
   }
 
   // 4.5) 死亡：饥饿/口渴持续 → 健康下降 → 死亡（移出 registry + 写 observer）
@@ -1302,28 +1322,36 @@ export async function step(config = {}) {
   // 4.6) 批次2-A：自然衰老（老年死亡）+ 特质漂移（与 needs 致死并存）
   runLifecycle(tick, cfg);
   runTraitDrift(tick, cfg);
+  yield unit('lifecycle', null);
 
   // 5) world-state 快照
   syncWorldState(tick, cfg);
+  yield unit('snapshot', null);
 
   // 6) 第二阶段：家庭/经济/制作/居住/健康（被主循环驱动并写 observer）
   let phase2Summary = null;
   if (cfg.phase2) {
-    phase2Summary = stage2.tick({
-      tick,
-      agents: agentRecords,
-      config: cfg,
-      spawnChild: (child) => registerAgent({
-        id: child.id, name: child.name, persona: '避难所新生儿',
-        food: 0.2, water: 0.2, candidates: DEFAULT_ACTIONS,
-      }),
+    const spawnChild = (child) => registerAgent({
+      id: child.id, name: child.name, persona: '避难所新生儿',
+      food: 0.2, water: 0.2, candidates: DEFAULT_ACTIONS,
     });
+    // 第二阶段逐子系统 yield：市场/产业/健康等各自要跑几十毫秒到数秒，
+    // 整段 yield 出去等于把观察者冻住。这里把十一子系统拆成十一步。
+    phase2Summary = {};
+    for (const unit2 of stage2.tickSequence({ tick, agents: agentRecords, config: cfg, spawnChild })) {
+      phase2Summary[unit2.id] = unit2.value;
+      yield unit('phase2:' + unit2.id, { label: unit2.label, index: unit2.index, total: unit2.total });
+    }
   }
 
   // 7) 第三阶段：治理/文化/心理/科技/遗产（被主循环驱动并写 observer）
   let phase3Summary = null;
   if (cfg.phase3) {
-    phase3Summary = await stage3.tick({ tick, agents: agentRecords, config: cfg });
+    phase3Summary = {};
+    for await (const unit3 of stage3.tickSequence({ tick, agents: agentRecords, config: cfg })) {
+      phase3Summary[unit3.id] = unit3.value;
+      yield unit('phase3:' + unit3.id, { label: unit3.label, index: unit3.index, total: unit3.total });
+    }
   }
 
   // 8) 生存危机检测 + 生存目标更新（每 tick 末尾，snapshot 可读）
@@ -1332,7 +1360,7 @@ export async function step(config = {}) {
   worldState.set('survival.crisis', crisisState);
   worldState.set('survival.goal', goalState);
 
-  return {
+  const summary = {
     tick,
     eventCount: eventPercepts.length,
     decisions: decisions.map((d) => ({
@@ -1345,8 +1373,21 @@ export async function step(config = {}) {
     ...(phase2Summary === null ? {} : { phase2: phase2Summary }),
     ...(phase3Summary === null ? {} : { phase3: phase3Summary }),
   };
+  yield unit('done', null, summary);
+  return summary;
 }
 
+/**
+ * 推进一个 tick（与 `tickSequence` 共用同一份步骤定义）。
+ * 批处理 / 测试走这条路径；挂机节拍器走 `tickSequence` 逐步推进。
+ * @param {object} config
+ * @returns {Promise<object>}
+ */
+export async function step(config = {}) {
+  let last = null;
+  for await (const unit of tickSequence(config)) last = unit;
+  return last === null ? {} : last.value;
+}
 /** 复位全部共享状态（graph/rng/identity/clock/world-state/registry/needs/recorder）。 */
 export function reset() {
   invalidateAlivePopulation();

@@ -1134,8 +1134,12 @@ export function performAgentAction(tick, agentId, action, config = {}) {
       } catch (err) { return { ok: false, reason: 'write_failed:' + err.message.slice(0, 40) }; }
     }
     case 'work': {
+      // 性能修正：原写法把 business.list()（全量物化全部企业节点）放进 find 的谓词内，
+      // 构成 O(企业数²) 次全量读取 —— 实测 dispatch 因此占整个 tick 的 66.3%。
+      // 每 tick 只物化一次即可；语义不变：仍取第一个「活跃且雇用了本人」的企业。
+      const allBiz = economy.industry.business.list();
       const biz = businessIds.find((id) => {
-        const b = economy.industry.business.list().find((x) => x.businessId === id);
+        const b = allBiz.find((x) => x.businessId === id);
         return b !== undefined && b.status === 'active'
           && economy.industry.labour.staff(id).some((e) => e.agentId === agentId);
       });
@@ -1769,25 +1773,49 @@ function rescaleReserves(population, config = {}) {
  * @param {{ tick: number, agents: Array<{ id: string }>, config?: object, spawnChild: (child: object) => object }} input
  * @returns {object}
  */
-export function tick({ tick, agents, config = {}, spawnChild }) {
-  settledAgentIds = agents.map((a) => a.id);
+const TICK_STEPS = Object.freeze([
+  { id: 'procreation', label: '生育与家族', run: (c) => runProcreation(c.tick, c.agents, c.spawnChild, c.config) },
+  // P1：行动空间开启时，社交边**只**由居民的 socialize 行动产生。
+  // 这条硬编码的相似度建边（内部固定用 agents[0]）会让社交结构对行动空间完全不敏感。
+  { id: 'similarityBonding', label: '相似度建边', run: (c) => (c.config.actionSpaceEnabled === false ? runSimilarityBonding(c.tick, c.agents, c.config) : { bonds: 0, pair: null, gated: true }) },
+  { id: 'market', label: '市场撮合', run: (c) => runMarket(c.tick, c.agents, c.config) },
+  { id: 'industry', label: '产业与企业', run: (c) => runIndustry(c.tick, c.agents, c.config) },
+  { id: 'fiscal', label: '税收与信贷', run: (c) => runFiscal(c.tick, c.agents, c.config) },
+  { id: 'crafting', label: '制作与建造', run: (c) => runCrafting(c.tick, c.agents) },
+  { id: 'shelter', label: '居所修缮', run: (c) => runShelterRepair(c.config) },
+  { id: 'residence', label: '居住分配', run: (c) => runResidence(c.tick, c.agents, c.config) },
+  { id: 'health', label: '健康与疫情', run: (c) => runHealth(c.tick, c.agents, c.config) },
+  { id: 'platform', label: '社交平台', run: (c) => runPlatform(c.tick, c.agents, c.config) },
+  { id: 'community', label: '社区发现', run: (c) => runCommunity(c.tick, c.agents, c.config) },
+]);
+
+/**
+ * 第二阶段的可分步序列：每完成一个子系统就 yield 一次进度。
+ * 挂机节拍器靠它把「一个 tick」摊成若干可观测的小步；批处理 `tick()` 靠它保持单一事实来源。
+ * 步骤顺序 = 返回对象的键顺序，两者不可各自维护。
+ * @param {{ tick: number, agents: Array<{ id: string }>, config?: object, spawnChild: (child: object) => object }} input
+ */
+export function* tickSequence(input = {}) {
+  const ctx = { tick: input.tick, agents: input.agents, config: input.config ?? {}, spawnChild: input.spawnChild };
+  settledAgentIds = ctx.agents.map((a) => a.id);
   _candidateStateCache = null;
-  rescaleReserves(agents.length, config);
-  return {
-    procreation: runProcreation(tick, agents, spawnChild, config),
-    // P1：行动空间开启时，社交边**只**由居民的 socialize 行动产生。
-    // 这条硬编码的相似度建边（内部固定用 agents[0]）会让社交结构对行动空间完全不敏感。
-    similarityBonding: config.actionSpaceEnabled === false ? runSimilarityBonding(tick, agents, config) : { bonds: 0, pair: null, gated: true },
-    market: runMarket(tick, agents, config),
-    industry: runIndustry(tick, agents, config),
-    fiscal: runFiscal(tick, agents, config),
-    crafting: runCrafting(tick, agents),
-    shelter: runShelterRepair(config),
-    residence: runResidence(tick, agents, config),
-    health: runHealth(tick, agents, config),
-    platform: runPlatform(tick, agents, config),
-    community: runCommunity(tick, agents, config),
-  };
+  rescaleReserves(ctx.agents.length, ctx.config);
+  for (let i = 0; i < TICK_STEPS.length; i += 1) {
+    const stepDef = TICK_STEPS[i];
+    const value = stepDef.run(ctx);
+    yield { id: stepDef.id, label: stepDef.label, index: i, total: TICK_STEPS.length, value };
+  }
+}
+
+/**
+ * 推进一个 tick 的第二阶段流程（批处理：一次跑完全部子系统）。
+ * @param {{ tick: number, agents: Array<{ id: string }>, config?: object, spawnChild: (child: object) => object }} input
+ * @returns {object}
+ */
+export function tick(input) {
+  const out = {};
+  for (const unit of tickSequence(input)) out[unit.id] = unit.value;
+  return out;
 }
 
 /** 批次2-D：社区发现（每 N tick 重算，避免每 tick 全量重算拖慢长跑）。 */
