@@ -1044,7 +1044,14 @@ export function performAgentAction(tick, agentId, action, config = {}) {
           content: '第 ' + tick + ' 天，由 ' + agentId + ' 记录。',
           tick,
         });
-        observer.recorder.eventLog.record({ tick, topic: 'agent.action.write.started', payload: { bookId: rec?.bookId ?? null }, agentId });
+        // 契约修正：bookId 在**完稿时**才由 item.define 生成，发起时并不存在，
+        // 原写法 `rec?.bookId ?? null` 因此恒为 null（write_book 返回的是 job，字段名是 jobId）。
+        // 发起事件应记录 pending job 的真实身份与内容，完稿事件再补 bookId。
+        observer.recorder.eventLog.record({
+          tick, topic: 'agent.action.write.started',
+          payload: { jobId: rec?.jobId ?? null, title: '避难所纪事', content: '第 ' + tick + ' 天，由 ' + agentId + ' 记录。' },
+          agentId,
+        });
         return { ok: true, detail: rec };
       } catch (err) { return { ok: false, reason: 'write_failed:' + err.message.slice(0, 40) }; }
     }
@@ -1286,6 +1293,23 @@ function runCrafting(tick, agents) {
   const writeDone = agent.crafting.writing.tick();
   craftCount += craftDone.length;
   buildCount += buildDone.length;
+  // 完稿事件：bookId 此刻才真实存在（见 writing.tick 内 item.define）。
+  // 此前只有发起事件且 bookId 恒为 null，观察者无法把「谁写了什么书」串起来。
+  for (const w of writeDone) {
+    try {
+      observer.recorder.eventLog.record({
+        tick, topic: 'agent.action.write.completed',
+        payload: {
+          bookId: w?.book?.id ?? null,
+          title: w?.book?.properties?.title ?? null,
+          content: w?.book?.properties?.content ?? null,
+          author: w?.book?.properties?.author ?? null,
+          completedAtTick: w?.completedAtTick ?? tick,
+        },
+        agentId: w?.book?.properties?.author ?? null,
+      });
+    } catch { /* 事件写入失败不阻塞推进 */ }
+  }
   result.crafted = craftDone.length;
   result.built = buildDone.length;
   result.wrote = writeDone.length;
@@ -1540,7 +1564,13 @@ function runPlatform(tick, agents, config = {}) {
     if (recentPostIds.length > 40) recentPostIds.shift();
     postCount += 1;
     result.posts += 1;
-    observer.recorder.eventLog.record({ tick, topic: 'social.platform.post', payload: { postId: post.postId, authorId, context: sit.context }, agentId: authorId });
+    // 契约修正：payload 原先不含 content，观察者只能看到「谁在什么处境下发帖」，
+    // 看不到**说了什么** —— 编年志里社交内容整体不可见。补上 content 与 salience。
+    observer.recorder.eventLog.record({
+      tick, topic: 'social.platform.post',
+      payload: { postId: post.postId, authorId, context: sit.context, content: sit.content, salience: sit.salience },
+      agentId: authorId,
+    });
   }
 
   // 2) 回复：近期帖子被居民回复（首次被回复使作者声誉上升，避免刷回复灌声誉）

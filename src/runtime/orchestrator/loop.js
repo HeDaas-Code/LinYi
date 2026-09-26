@@ -556,7 +556,7 @@ function refreshCandidates(agentId, tick, cfg) {
     actionSpaceEnabled: cfg.actionSpaceEnabled !== false,
     hasWorkbenchMaterial: held >= 2,
     hasBuildingMaterial: held >= 3,
-    literate: societyEffectsHasLiteracy(),
+    literate: isLiterate(agentId, cfg),
     employed: state.employed,
     businessActive: state.businessActive,
     hasSurplus: surplusItems > 2,
@@ -587,7 +587,44 @@ function refreshCandidates(agentId, tick, cfg) {
   return planned;
 }
 
-/** 识字判定：教师角色提供 literacyRate，长期有效即认为成人识字。 */
+/** 居民 id 的确定性 [0,1) 哈希（用于把社会层面的**比例**落到个人）。 */
+function agentHash01(agentId) {
+  let h = 2166136261 >>> 0;
+  const s = String(agentId);
+  for (let i = 0; i < s.length; i += 1) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return (h >>> 8) / 16777216;
+}
+
+/**
+ * 识字判定：**社会供给 × 个人分化**。
+ *
+ * 教师角色提供 literacyRate —— 但它是社会层面的**能力系数**（当前值 0.05，
+ * 在 civilization.tech.research 里以 `literacyRate * 4` 作为连续加成使用），
+ * 并不是人口比例。若直接拿它当比例，50 人里只有 2~3 人识字，
+ * 实测三种子 200 tick 内 write 全部为 0 —— 「写书」这一行动实际灭绝。
+ *
+ * 因此拆成两层：
+ *   1) 供给层：社会是否存在识字供给（教师在职）—— 沿用 literacyRate > 0 判定；
+ *   2) 个人层：供给存在时，成年居民中按 id 确定性哈希分出 literacyShare 比例。
+ * 修正前是**全局布尔**：literacyRate > 0 即全体识字，于是「写书」要么人人可做、
+ * 要么无人可做，个体差异被完全抹平。
+ */
+function isLiterate(agentId, cfg = {}) {
+  const eff = agent.role.society.activeEffects();
+  const rate = Number(eff?.effects?.literacyRate ?? 0);
+  if (!Number.isFinite(rate) || rate <= 0) return false;
+  const share = Number.isFinite(cfg.literacyShare) && cfg.literacyShare >= 0
+    ? Math.min(1, cfg.literacyShare)
+    : 0.4;
+  if (share <= 0) return false;
+  if (share >= 1) return true;
+  return agentHash01(agentId) < share;
+}
+
+/** 社会层面是否已有识字供给（供需要整体判断的调用方使用）。 */
 function societyEffectsHasLiteracy() {
   const eff = agent.role.society.activeEffects();
   return (eff?.effects?.literacyRate ?? 0) > 0;

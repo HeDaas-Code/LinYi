@@ -113,6 +113,11 @@ export const DEFAULTS = Object.freeze({
   // 12 = 骨架 4（eat/drink/rest/forage）+ 发展 4（found/socialize/court/accept）
   //      + 生产/交换 4（craft/build/work/trade）。
   pruneK: 12,
+  // 识字个人化：社会存在识字供给（教师在职）时，成年居民中实际识字的比例。
+  // 为什么不直接用 society.teacher 的 literacyRate：那是**能力系数**（0.05，
+  // 在 tech.research 里以 *4 作连续加成），不是人口比例；直接当比例会让
+  // 50 人里仅 2~3 人识字，实测三种子 write 恒为 0（写书行动灭绝）。
+  literacyShare: 0.4,
   simNoise: 0.5,
   semanticMaxEntries: 64,
   semanticLimit: 3,
