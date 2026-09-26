@@ -4,14 +4,14 @@
   "stats": {
     "files": 192,
     "modules": 49,
-    "stores": 153,
+    "stores": 154,
     "graphTypes": 42,
     "worldKeys": 11,
     "filesWithReset": 107,
     "byKind": {
       "set": 8,
       "map": 34,
-      "number": 64,
+      "number": 65,
       "expr": 7,
       "string": 4,
       "null": 18,
@@ -1148,7 +1148,7 @@
       "id": "infra.config.currentDifficultyId",
       "module": "infra.config",
       "file": "src/infra/config.js",
-      "line": 275,
+      "line": 282,
       "name": "currentDifficultyId",
       "keyword": "let",
       "kind": "string",
@@ -3082,7 +3082,7 @@
       "id": "runtime.orchestrator._stage2._candidateStateCache",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 814,
+      "line": 892,
       "name": "_candidateStateCache",
       "keyword": "let",
       "kind": "null",
@@ -3117,7 +3117,7 @@
       "id": "runtime.orchestrator._stage2._candidateStateCacheTick",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 815,
+      "line": 893,
       "name": "_candidateStateCacheTick",
       "keyword": "let",
       "kind": "number",
@@ -3146,7 +3146,7 @@
       "id": "runtime.orchestrator._stage2.foundCapitalConfig",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 817,
+      "line": 895,
       "name": "foundCapitalConfig",
       "keyword": "let",
       "kind": "null",
@@ -3170,6 +3170,34 @@
       ],
       "exported": false,
       "rawLine": "let foundCapitalConfig = null;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.reserveScalePop",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 1740,
+      "name": "reserveScalePop",
+      "keyword": "let",
+      "kind": "number",
+      "init": "-1",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "rescaleReserves"
+      ],
+      "readers": [
+        "rescaleReserves"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let reserveScalePop = -1;"
     },
     {
       "id": "runtime.orchestrator._stage3.seeded",
@@ -4244,7 +4272,7 @@
       "id": "runtime.orchestrator.loop.literateSet",
       "module": "runtime.orchestrator.loop",
       "file": "src/runtime/orchestrator/loop.js",
-      "line": 621,
+      "line": 628,
       "name": "literateSet",
       "keyword": "let",
       "kind": "null",
@@ -4273,7 +4301,7 @@
       "id": "runtime.orchestrator.loop.mortality",
       "module": "runtime.orchestrator.loop",
       "file": "src/runtime/orchestrator/loop.js",
-      "line": 1032,
+      "line": 1040,
       "name": "mortality",
       "keyword": "const",
       "kind": "map",

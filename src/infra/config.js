@@ -121,6 +121,13 @@ export const DEFAULTS = Object.freeze({
   simNoise: 0.5,
   semanticMaxEntries: 64,
   semanticLimit: 3,
+  // 生育上限（每次运行）。此前在 _stage2 里硬编码为 2，导致任何一次运行
+  // 最多出生 2 人、家族永远停在两代，「三代未遗失固化为家族特质」不可达。
+  // 实测 50×200 tick 单种子：上限 8 → 人口 58、最大第 1 代、0 个家族有特质；
+  // 上限 24 → 人口 74、最大第 3 代、1 个家族固化特质；
+  // 上限 60 → 人口 98、最大第 5 代、8 个家族固化特质。三者存活均 100%。
+  // 取 24：让「三代固化」在**标准 200 tick 局**里就可观测，同时人口只增约五成。
+  maxChildrenPerRun: 24,
   scheduleEnabled: true,
   scheduleLength: 12,
   careerEnabled: true,
@@ -388,6 +395,7 @@ const RULES = {
   simNoise: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
   semanticMaxEntries: (v) => (isPosInt(v) ? true : '必须是正整数'),
   semanticLimit: (v) => (isNonNegInt(v) ? true : '必须是非负整数'),
+  maxChildrenPerRun: (v) => (isNonNegInt(v) ? true : '必须是非负整数'),
   scheduleEnabled: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
   scheduleLength: (v) => (isPosInt(v) ? true : '必须是正整数'),
   careerEnabled: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),

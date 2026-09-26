@@ -10,8 +10,8 @@ description:
   en: >
       Creates, looks up and dissolves families.
       
-revision: 1c7c3d69497e4bcdd67b1e32a59bd6bdbfdc92f5
-updated_at: "2026-09-24T04:00:14.039Z"
+revision: 9f0996005124054052fc61d9ec3f762219e92a2c
+updated_at: "2026-09-26T05:45:37.199Z"
 fingerprint: a90fcc189cec8083cdf18c7f49727d4e3064b4412cef8948e64892571a960fd9
 source:
   - path: "src/social/family/registry.js"

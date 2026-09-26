@@ -444,7 +444,12 @@ function scoreAction(candidate, ctx = {}) {
   // 因此把「上工」的吸引力绑定到**食水是否充裕**：自家库里有粮，才值得去挣工资。
   // 这不是禁止上工（居民仍可自选），而是让优先级的排序符合生存直觉。
   if (candidate?.action === 'work') {
-    const stockOk = clampUnit(ctx.perCapitaStock === undefined ? 1 : ctx.perCapitaStock / 2.5, 0);
+    // 参照量取**设计储备水平**（initialReservePerCapita），不再写死 2.5。
+    // 写死的后果：人口一涨，人均库存被容量天花板压低，这个闸门就把一座
+    // 零死亡的正常小镇判成「余粮不足」，work 从 24.7% 掉到 0.8% 几近灭绝。
+    const ref = typeof ctx.reserveRefPerCapita === 'number' && ctx.reserveRefPerCapita > 0
+      ? ctx.reserveRefPerCapita : 2.5;
+    const stockOk = clampUnit(ctx.perCapitaStock === undefined ? 1 : ctx.perCapitaStock / ref, 0);
     // 库存充裕 → 保留全额；库存告急 → 大幅降权，让 forage/eat 胜出。
     score = score * stockOk - (1 - stockOk) * 3;
   }
@@ -482,7 +487,9 @@ function scoreAction(candidate, ctx = {}) {
       // 全镇饿死——而基线 forage 380 次、50 人全活。
       // 根因：ownerPremium(1.0) 远高于 forage 的基础分(0.2)，而此处不看库存。
       // 因此用与 work 相同的**生存优先闸**：只有自家食水充裕才谈创业。
-      const stockOk = clampUnit((ctx.perCapitaStock === undefined ? 1 : ctx.perCapitaStock) / 2.5, 0);
+      const ref = typeof ctx.reserveRefPerCapita === 'number' && ctx.reserveRefPerCapita > 0
+        ? ctx.reserveRefPerCapita : 2.5;
+      const stockOk = clampUnit((ctx.perCapitaStock === undefined ? 1 : ctx.perCapitaStock) / ref, 0);
       score += (ownerPremium - reluctance - employedPenalty) * stockOk;
       // 库存告急时明确压到生存行动之下（不是禁止，是排序）。
       if (stockOk < 0.5) score -= 2;
@@ -809,6 +816,7 @@ function decide(agentId, tick, percepts, cfg = {}) {
         foodEmpty,
         waterEmpty,
         perCapitaStock,
+        reserveRefPerCapita: cfg.initialReservePerCapita,
         forageAvailable,
         expeditionRisk: agentState.expeditionRisk,
         expeditionLoot: agentState.expeditionLoot,

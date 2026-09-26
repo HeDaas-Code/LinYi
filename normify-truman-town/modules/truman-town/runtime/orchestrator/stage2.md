@@ -10,9 +10,9 @@ description:
   en: >
       Phase-2 world advance: industry/economy/crafting queues, execution of agent-chosen actions, and post-founding recruitment plus start-up credit for firms; also social and family rollups and disease triage.
       
-revision: 1639a6c056539210e6b26211bac5fd8b42cbc3a4
-updated_at: "2026-09-26T03:35:10.007Z"
-fingerprint: 1265a6488ce60ea58a25aff4e1d92f60b59a33d4769f8cdb188992a9fa8f6d83
+revision: 9f0996005124054052fc61d9ec3f762219e92a2c
+updated_at: "2026-09-26T05:45:37.198Z"
+fingerprint: a5188dd2ad9fa41e4d6bb7d5f1fce5e91181c89b9477a9bd2a21938fb3379a98
 source:
   - path: "src/runtime/orchestrator/_stage2.js"
 apis:
@@ -84,6 +84,33 @@ deps:
     to: truman-town.agent.decision.candidates
   - kind: call
     to: truman-town.infra.config
+  - kind: call
+    to: truman-town.social.family.registry
+    label: {zh: "家族登记与成员归属", en: "Family registry"}
+  - kind: call
+    to: truman-town.social.family.lineage
+    label: {zh: "登记谱系与代际", en: "Register lineage + generation"}
+  - kind: call
+    to: truman-town.social.family.chronicle
+    label: {zh: "写家族编年", en: "Append family chronicle"}
+  - kind: call
+    to: truman-town.social.family.trait.detector
+    label: {zh: "三代未遗失检测", en: "Detect 3-generation survival"}
+  - kind: call
+    to: truman-town.social.family.trait.enforcer
+    label: {zh: "固化家族特质（上限 5）", en: "Fix family traits (max 5)"}
+  - kind: call
+    to: truman-town.social.procreation.offspring
+    label: {zh: "生成子代并继承特质", en: "Spawn offspring with traits"}
+  - kind: dataflow
+    to: truman-town.agent.traits.tagset.store
+    label: {zh: "读成员标签做代际判定", en: "Read tags per generation"}
+  - kind: call
+    to: truman-town.survival.resources.food
+    label: {zh: "按人口重算储备上限", en: "Rescale food capacity"}
+  - kind: call
+    to: truman-town.survival.resources.water
+    label: {zh: "按人口重算储备上限", en: "Rescale water capacity"}
 ---
 
 D0：阶段二承载「居民自选行动」的真实执行路径。

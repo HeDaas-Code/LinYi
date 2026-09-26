@@ -374,9 +374,62 @@ function bootstrapFamilies(agents, config = {}) {
   return { families: created };
 }
 
+/** 取某居民的标签键集合（无标签集时为空数组）。 */
+function tagKeysOf(agentId) {
+  try {
+    const ts = agent.traits.tagset.store.get(agentId);
+    return (ts?.tags ?? []).map((t) => t.key);
+  } catch { return []; }
+}
+
+/**
+ * 三代未遗失 → 固化为家族特质（最多 5 个）。
+ *
+ * 修复前这条链路**完全没接进运行时**：detector 与 enforcer 只有单元测试，
+ * 没有任何调用点，于是「三代未遗失即固化为家族特质」从未发生过（实测各家族
+ * 特质数恒为 0）；offspring.request 虽然接受 familyTraits 参数，
+ * runProcreation 却从不传 —— 即使固化过也不会遗传给后代。
+ *
+ * 代际标签取自 registry 的 generation 映射（create/addMember 维护），
+ * 而不是 lineage 节点：入赘/外嫁的配偶不会出现在 lineage 的 familyId 分组里，
+ * 用它当第 0 代会漏掉一半祖先。
+ */
+function fixedFamilyTraits(familyId, tick) {
+  const fam = social.family.registry.lookup({ familyId });
+  const existing = social.family.trait.enforcer.list(familyId).map((t) => t.key);
+  if (!fam) return existing;
+  const gens = fam.generation ?? {};
+  const ordered = Object.keys(gens)
+    .map(Number)
+    .sort((a, b) => a - b)
+    .map((g) => (gens[g] ?? []).flatMap((id) => tagKeysOf(id)));
+  if (ordered.length < 3) return existing;
+  let survived = [];
+  try {
+    survived = social.family.trait.detector.detect(ordered)
+      .filter((r) => r.survived)
+      .map((r) => r.tagKey);
+  } catch { return existing; }
+  if (survived.length === 0) return existing;
+  const merged = [...new Set([...existing, ...survived])].slice(0, social.family.trait.enforcer.limit());
+  if (merged.length === existing.length) return existing;
+  social.family.trait.enforcer.set({ familyId, traits: merged });
+  observer.recorder.eventLog.record({
+    tick,
+    topic: 'social.family.trait.fixed',
+    payload: { familyId, traits: merged, generation: ordered.length },
+  });
+  return merged;
+}
+
 /** 生育：找最契合的一对 → 恋爱 → 子代 → 谱系 → 注册进主循环。 */
 function runProcreation(tick, agents, spawnChild, config = {}) {
-  const maxChildren = 2;
+  // 上限可配：此前硬编码为 2，于是**每次运行最多出生 2 人**，
+  // 家族永远停在「一对夫妻 + 两个孩子」，第二代（更不用说第三代）不可能出现，
+  // 「三代未遗失固化为家族特质」这条设计因此不可达。
+  const maxChildren = Number.isFinite(config.maxChildrenPerRun) && config.maxChildrenPerRun >= 0
+    ? config.maxChildrenPerRun
+    : 8;
   const result = { childId: null, parents: null, familyId: null };
   if (childrenBorn >= maxChildren || agents.length < 2) return result;
 
@@ -403,21 +456,41 @@ function runProcreation(tick, agents, spawnChild, config = {}) {
 
   childrenBorn += 1;
   // 批次2-D：家族登记（registry 成为 lineage 的上层组织）+ 编年史 + 关系边
-  const fam = social.family.registry.create({
-    name: '家族' + childrenBorn,
-    founder: pair.a,
-    members: [pair.a, pair.b],
-    generation: { 0: [pair.a, pair.b] },
-    tick,
-  });
-  const familyId = fam.familyId;
+  //
+  // 修复：此前**每出生一个孩子就新建一个家族**，且代际硬编码为 {0:[夫妻]}、
+  // 孩子固定记为第 1 代。于是每个家族永远只有两代、只生一个孩子，
+  // 「三代未遗失」的判定条件在结构上就不可达（实测各家族代数恒为 {0:…,1:…}）。
+  // 现在：任一方已属某家族时，子代**并入该家族**并记为父代代际 + 1。
+  const lineA = social.family.lineage.trace({ agentId: pair.a });
+  const lineB = social.family.lineage.trace({ agentId: pair.b });
+  const parentFamily = lineA?.familyId ?? lineB?.familyId ?? null;
+  const childGeneration = Math.max(lineA?.generation ?? 0, lineB?.generation ?? 0) + 1;
+
+  let familyId;
+  if (parentFamily !== null) {
+    familyId = parentFamily;
+    social.family.registry.addMember({ familyId, memberId: pair.a, generation: lineA?.generation ?? 0 });
+    social.family.registry.addMember({ familyId, memberId: pair.b, generation: lineB?.generation ?? 0 });
+  } else {
+    const fam = social.family.registry.create({
+      name: '家族' + childrenBorn,
+      founder: pair.a,
+      members: [pair.a, pair.b],
+      generation: { 0: [pair.a, pair.b] },
+      tick,
+    });
+    familyId = fam.familyId;
+  }
+  // 生育**之前**结算家族特质：此时家族已有的代际是完整的历史，
+  // 新生的这一代要继承的是「上一代为止已固化的特质」。
+  const familyTraits = fixedFamilyTraits(familyId, tick);
   const child = social.procreation.offspring.request({
-    a: pair.a, b: pair.b, familyId, name: '新生儿' + familyId,
+    a: pair.a, b: pair.b, familyId, familyTraits, name: '新生儿' + familyId,
   });
   social.family.lineage.register({
-    agentId: child.id, familyId, parents: [pair.a, pair.b], generation: 1,
+    agentId: child.id, familyId, parents: [pair.a, pair.b], generation: childGeneration,
   });
-  social.family.registry.addMember({ familyId, memberId: child.id, generation: 1 });
+  social.family.registry.addMember({ familyId, memberId: child.id, generation: childGeneration });
   social.family.chronicle.append({ familyId, event: 'founding', tick, actor: pair.a, detail: { spouse: pair.b } });
   social.family.chronicle.append({ familyId, event: 'birth', tick, actor: child.id, detail: { parents: [pair.a, pair.b] } });
   social.graph.edges.create({ a: pair.a, b: pair.b, type: 'romance', weight: 1, note: '婚配' });
@@ -438,7 +511,12 @@ function runProcreation(tick, agents, spawnChild, config = {}) {
   observer.recorder.eventLog.record({
     tick,
     topic: 'social.procreation',
-    payload: { a: pair.a, b: pair.b, childId: child.id, familyId, similarity: sim.similarity },
+    payload: {
+      a: pair.a, b: pair.b, childId: child.id, familyId,
+      similarity: sim.similarity,
+      generation: childGeneration,
+      familyTraits: familyTraits.map((t) => (typeof t === 'string' ? t : t.key)),
+    },
   });
 
   result.childId = child.id;
@@ -1659,6 +1737,33 @@ function runPlatform(tick, agents, config = {}) {
   return result;
 }
 
+let reserveScalePop = -1;
+
+/**
+ * 人口变化时按人均容量重算避难所储备上限。
+ *
+ * 修复：储备容量此前**只在播种期按初始人口算一次**（capacity = 4 × 50 = 200），
+ * 之后小镇生育长大也不再重算。于是人口涨到 74 时人均容量从 4 掉到 2.7，
+ * 库存长期顶在天花板上（实测人均库存被压在 1.9~2.0 而不是 4），
+ * 而 scoreAction 对 work/found 的「自家有粮才谈发展」闸门以固定人均 2.5 为参照 ——
+ * 小镇明明零死亡却被人为判定为「余粮不足」，work 从 24.7% 掉到 0.8%、几近灭绝。
+ *
+ * 这里只上调**容量**，不动库存：天花板抬高后能积到多少，仍由小镇自己的采集
+ * 与生产决定。直接补库存等于凭空发粮，会掩盖真实的稀缺。
+ */
+function rescaleReserves(population, config = {}) {
+  const n = Math.max(1, population);
+  if (n === reserveScalePop) return;
+  reserveScalePop = n;
+  const capacityPerCapita = (typeof config.reserveCapacityPerCapita === 'number' && config.reserveCapacityPerCapita >= 0)
+    ? config.reserveCapacityPerCapita : 4;
+  const capacity = Math.max(100, Math.round(capacityPerCapita * n));
+  try {
+    survival.resources.food.configure({ capacity });
+    survival.resources.water.configure({ capacity });
+  } catch { /* 资源未初始化则跳过 */ }
+}
+
 /**
  * 推进一个 tick 的第二阶段流程。
  * @param {{ tick: number, agents: Array<{ id: string }>, config?: object, spawnChild: (child: object) => object }} input
@@ -1667,6 +1772,7 @@ function runPlatform(tick, agents, config = {}) {
 export function tick({ tick, agents, config = {}, spawnChild }) {
   settledAgentIds = agents.map((a) => a.id);
   _candidateStateCache = null;
+  rescaleReserves(agents.length, config);
   return {
     procreation: runProcreation(tick, agents, spawnChild, config),
     // P1：行动空间开启时，社交边**只**由居民的 socialize 行动产生。
@@ -1763,6 +1869,7 @@ export function __reset() {
   settledAgentIds = [];
   _candidateStateCache = null;
   _candidateStateCacheTick = -1;
+  reserveScalePop = -1;
   pendingCourts.clear();
   pairedIndex.clear();
   tradeCount = 0;

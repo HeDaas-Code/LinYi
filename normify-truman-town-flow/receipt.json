@@ -2,7 +2,7 @@
   "schema_version": 1,
   "ok": true,
   "project": "normify-truman-town-flow",
-  "compiled_at": "2026-09-26T03:35:55.062Z",
+  "compiled_at": "2026-09-26T05:46:29.936Z",
   "stats": {
     "tree_count": 1,
     "module_count": 323,
@@ -26,7 +26,7 @@
   },
   "artifacts": {
     "tree.json": {
-      "sha256": "2c60d1dd2aa3406ea9eb86a9aaef99900d9e79bbc40274f1256b1488a6c64f41",
+      "sha256": "ed59cf4a0aa9355d7f508ed2742973b6b3166e9d9b690ffe9f73da8baf961836",
       "bytes": 988215
     },
     "outline.md": {
@@ -38,7 +38,7 @@
       "bytes": 86388
     },
     "receipt.json": {
-      "sha256": "91e6fc0b0cd46881c1cd3c8f0c7d7b3fea7c4881bda4fcbc94936b614efe6152",
+      "sha256": "6280ac867a38b46314635679e6af6a7d094df5a5bdae3723eba5be5c5528edb3",
       "bytes": 1017
     }
   }

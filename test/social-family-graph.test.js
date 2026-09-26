@@ -5,6 +5,8 @@ import * as graph from '../src/infra/store/graph.js';
 import * as identity from '../src/infra/identity.js';
 import * as rng from '../src/infra/rng.js';
 import * as social from '../src/social/index.js';
+import * as agent from '../src/agent/index.js';
+import * as observer from '../src/observer/index.js';
 import { loop } from '../src/runtime/index.js';
 
 const { registry, chronicle, lineage } = social.family;
@@ -177,3 +179,74 @@ test('集成：50 居民 × 200 tick × 3 种子存活率不失衡 + 跨种子�
   assert.ok(diverged >= 2, '至少 2 个字段跨种子分叉，实际 ' + JSON.stringify(metrics));
 });
 
+
+test('家族特质：三代未遗失 → 固化为家族特质并遗传给后代（运行时接通）', async () => {
+  // 契约（用户规格原文）：家族连续三代未遗失某特质，该特质即固定为家族特质，
+  // 最多 5 个。
+  //
+  // 修复前这条链路**完全没接进运行时**：detector 与 enforcer 只有单元测试，
+  // 没有任何调用点（各家族特质数恒为 0）；offspring.request 虽接受 familyTraits
+  // 参数，runProcreation 却从不传。同时生育上限硬编码为 2、每胎都新建家族、
+  // 代际硬编码 —— 结构上根本不可能出现第三代。
+  //
+  // 本测试是端到端锁：真跑主循环，断言第三代确实出现、特质确实固化、
+  // 且固化后的特质确实进入后代标签集。
+  loop.reset();
+  const report = await loop.run({ agentCount: 50, ticks: 200, seed: 1, phase2: true });
+
+  // ① 人口因生育增长，且全体存活（生育不得以生存为代价）
+  const world = report.world.agents ?? {};
+  const all = Object.keys(world);
+  assert.ok(all.length > 50, '世界人口应因生育增长，实际 ' + all.length);
+  const dead = all.filter((id) => world[id] && world[id].alive === false);
+  assert.equal(dead.length, 0, '不应有居民死亡：' + JSON.stringify(dead.slice(0, 5)));
+
+  // ② 出现第三代：否则「三代未遗失」在设计上不可达
+  const fams = social.family.registry.list();
+  let maxGen = 0;
+  for (const f of fams) {
+    const gens = Object.keys(social.family.lineage.generation({ familyId: f.familyId })).map(Number);
+    if (gens.length > 0) maxGen = Math.max(maxGen, ...gens);
+  }
+  assert.ok(maxGen >= 3, '家族应至少繁衍到第 3 代，实际最大代际=' + maxGen);
+
+  // ③ 有家族固化了特质，且不超过 5 个、全部来自该家族成员的真实标签
+  const withTraits = fams
+    .map((f) => ({ familyId: f.familyId, traits: social.family.trait.enforcer.list(f.familyId) }))
+    .filter((x) => x.traits.length > 0);
+  assert.ok(withTraits.length >= 1,
+    '应至少有一个家族固化特质（三代未遗失），实际 0；家族数=' + fams.length);
+  for (const f of withTraits) {
+    assert.ok(f.traits.length <= social.family.trait.enforcer.limit(),
+      '家族特质不得超过 5 个：' + JSON.stringify(f.traits.map((t) => t.key)));
+    const memberKeys = new Set();
+    for (const g of Object.values(social.family.registry.lookup({ familyId: f.familyId }).generation ?? {})) {
+      for (const id of g) {
+        for (const t of (agent.traits.tagset.store.get(id)?.tags ?? [])) memberKeys.add(t.key);
+      }
+    }
+    for (const t of f.traits) {
+      assert.ok(memberKeys.has(t.key),
+        '固化特质应来自家族成员的真实标签：' + t.key);
+    }
+  }
+
+  // ④ 固化后的特质确实遗传：存在携带家族特质的后代
+  const inherited = [];
+  for (const f of withTraits) {
+    const keys = new Set(f.traits.map((t) => t.key));
+    const gens = social.family.registry.lookup({ familyId: f.familyId }).generation ?? {};
+    const deepest = Math.max(...Object.keys(gens).map(Number));
+    for (const id of (gens[deepest] ?? [])) {
+      const own = (agent.traits.tagset.store.get(id)?.tags ?? []).map((t) => t.key);
+      const hit = own.filter((k) => keys.has(k));
+      if (hit.length > 0) inherited.push({ id, hit });
+    }
+  }
+  assert.ok(inherited.length >= 1,
+    '固化后的家族特质应出现在后代标签集里，实际 0 例：' + JSON.stringify(withTraits.map((f) => f.traits.map((t) => t.key))));
+
+  // ⑤ 观察者能看到「特质固化」这件事
+  const fixedEvents = observer.recorder.eventLog.list().filter((n) => n.data.topic === 'social.family.trait.fixed');
+  assert.ok(fixedEvents.length >= 1, '特质固化应写 observer 事件');
+});

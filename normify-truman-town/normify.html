@@ -163,13 +163,13 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "root_uid": "d440391b"
       }
     ],
-    "compiled_at": "2026-09-26T03:35:54.260Z",
+    "compiled_at": "2026-09-26T05:46:29.040Z",
     "stats": {
       "tree_count": 1,
       "module_count": 232,
       "leaf_count": 163,
       "api_count": 380,
-      "dep_count": 361,
+      "dep_count": 370,
       "cross_tree_dep_count": 0,
       "max_depth": 5,
       "layout_count": 69,
@@ -2997,7 +2997,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "own_api_count": 2,
         "inherited_api_count": 0,
         "dep_out": 1,
-        "dep_in": 7
+        "dep_in": 8
       }
     },
     "truman-town.ai": {
@@ -6691,9 +6691,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/infra/config.js"
         }
       ],
-      "revision": "1fe29bb1e2491f51b484e2e2e047f8c23b95cfc4",
-      "updated_at": "2026-09-26T02:17:15.020Z",
-      "fingerprint": "e53f54cac4fd964f49ad65e1bf8eb24a5d11db6ddc13f04a41b5940cae2ebb8c",
+      "revision": "9f0996005124054052fc61d9ec3f762219e92a2c",
+      "updated_at": "2026-09-26T05:45:37.198Z",
+      "fingerprint": "5c4bb5b7de0fadd194582edd8d2b4cb743972b8dbbd60e940e1494f069e8e373",
       "apis": [
         {
           "protocol": "rpc",
@@ -8252,9 +8252,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/runtime/orchestrator/loop.js"
         }
       ],
-      "revision": "1639a6c056539210e6b26211bac5fd8b42cbc3a4",
-      "updated_at": "2026-09-26T03:35:10.006Z",
-      "fingerprint": "2b62f3883af57730c5c0cba5917d217538ee4b861e0cc02178657c39919b6866",
+      "revision": "9f0996005124054052fc61d9ec3f762219e92a2c",
+      "updated_at": "2026-09-26T05:45:37.198Z",
+      "fingerprint": "d073756917be8ce4465cf2ba322768d69294d72509df86e3bd857c1949b69e81",
       "apis": [
         {
           "protocol": "rpc",
@@ -8732,9 +8732,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/runtime/orchestrator/_stage2.js"
         }
       ],
-      "revision": "1639a6c056539210e6b26211bac5fd8b42cbc3a4",
-      "updated_at": "2026-09-26T03:35:10.007Z",
-      "fingerprint": "1265a6488ce60ea58a25aff4e1d92f60b59a33d4769f8cdb188992a9fa8f6d83",
+      "revision": "9f0996005124054052fc61d9ec3f762219e92a2c",
+      "updated_at": "2026-09-26T05:45:37.198Z",
+      "fingerprint": "a5188dd2ad9fa41e4d6bb7d5f1fce5e91181c89b9477a9bd2a21938fb3379a98",
       "apis": [
         {
           "protocol": "rpc",
@@ -8837,13 +8837,94 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "kind": "call",
           "to": "truman-town.infra.config",
           "cross_tree": false
+        },
+        {
+          "kind": "call",
+          "to": "truman-town.social.family.registry",
+          "label": {
+            "zh": "家族登记与成员归属",
+            "en": "Family registry"
+          },
+          "cross_tree": false
+        },
+        {
+          "kind": "call",
+          "to": "truman-town.social.family.lineage",
+          "label": {
+            "zh": "登记谱系与代际",
+            "en": "Register lineage + generation"
+          },
+          "cross_tree": false
+        },
+        {
+          "kind": "call",
+          "to": "truman-town.social.family.chronicle",
+          "label": {
+            "zh": "写家族编年",
+            "en": "Append family chronicle"
+          },
+          "cross_tree": false
+        },
+        {
+          "kind": "call",
+          "to": "truman-town.social.family.trait.detector",
+          "label": {
+            "zh": "三代未遗失检测",
+            "en": "Detect 3-generation survival"
+          },
+          "cross_tree": false
+        },
+        {
+          "kind": "call",
+          "to": "truman-town.social.family.trait.enforcer",
+          "label": {
+            "zh": "固化家族特质（上限 5）",
+            "en": "Fix family traits (max 5)"
+          },
+          "cross_tree": false
+        },
+        {
+          "kind": "call",
+          "to": "truman-town.social.procreation.offspring",
+          "label": {
+            "zh": "生成子代并继承特质",
+            "en": "Spawn offspring with traits"
+          },
+          "cross_tree": false
+        },
+        {
+          "kind": "dataflow",
+          "to": "truman-town.agent.traits.tagset.store",
+          "label": {
+            "zh": "读成员标签做代际判定",
+            "en": "Read tags per generation"
+          },
+          "cross_tree": false
+        },
+        {
+          "kind": "call",
+          "to": "truman-town.survival.resources.food",
+          "label": {
+            "zh": "按人口重算储备上限",
+            "en": "Rescale food capacity"
+          },
+          "cross_tree": false
+        },
+        {
+          "kind": "call",
+          "to": "truman-town.survival.resources.water",
+          "label": {
+            "zh": "按人口重算储备上限",
+            "en": "Rescale water capacity"
+          },
+          "cross_tree": false
         }
       ],
       "aggregate": {
         "descendant_count": 0,
         "own_api_count": 5,
         "inherited_api_count": 0,
-        "dep_out": 11,
+        "dep_out": 20,
         "dep_in": 1
       }
     },
@@ -9354,7 +9435,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "own_api_count": 2,
         "inherited_api_count": 0,
         "dep_out": 1,
-        "dep_in": 0
+        "dep_in": 1
       }
     },
     "truman-town.social.family.inherit": {
@@ -9563,8 +9644,8 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/social/family/lineage.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T07:57:42.689Z",
+      "revision": "9f0996005124054052fc61d9ec3f762219e92a2c",
+      "updated_at": "2026-09-26T05:45:37.199Z",
       "fingerprint": "b344c01655d5b93ae1e18b1ace5880d8e2fe3cee898b7ad4971b74f154f10273",
       "apis": [
         {
@@ -9602,7 +9683,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "own_api_count": 2,
         "inherited_api_count": 0,
         "dep_out": 1,
-        "dep_in": 5
+        "dep_in": 6
       }
     },
     "truman-town.social.family.registry": {
@@ -9624,8 +9705,8 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/social/family/registry.js"
         }
       ],
-      "revision": "1c7c3d69497e4bcdd67b1e32a59bd6bdbfdc92f5",
-      "updated_at": "2026-09-24T04:00:14.039Z",
+      "revision": "9f0996005124054052fc61d9ec3f762219e92a2c",
+      "updated_at": "2026-09-26T05:45:37.199Z",
       "fingerprint": "a90fcc189cec8083cdf18c7f49727d4e3064b4412cef8948e64892571a960fd9",
       "apis": [
         {
@@ -9661,7 +9742,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "own_api_count": 3,
         "inherited_api_count": 0,
         "dep_out": 0,
-        "dep_in": 1
+        "dep_in": 2
       }
     },
     "truman-town.social.family.trait": {
@@ -9726,8 +9807,8 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/social/family/trait/detector.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T07:57:42.689Z",
+      "revision": "9f0996005124054052fc61d9ec3f762219e92a2c",
+      "updated_at": "2026-09-26T05:45:37.198Z",
       "fingerprint": "2d0eeffdd00957ddeee7628c686dc4cd25b38c309ba4d502fbb5946bf82c959f",
       "apis": [
         {
@@ -9765,7 +9846,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "own_api_count": 2,
         "inherited_api_count": 0,
         "dep_out": 1,
-        "dep_in": 1
+        "dep_in": 2
       }
     },
     "truman-town.social.family.trait.enforcer": {
@@ -9787,8 +9868,8 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
           "path": "src/social/family/trait/enforcer.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T07:57:42.689Z",
+      "revision": "9f0996005124054052fc61d9ec3f762219e92a2c",
+      "updated_at": "2026-09-26T05:45:37.199Z",
       "fingerprint": "7b8daa6903e5066f35a510d8d043c0c91c3f26bb97d966d56eea7790bf118b0d",
       "apis": [
         {
@@ -9835,7 +9916,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "own_api_count": 2,
         "inherited_api_count": 0,
         "dep_out": 2,
-        "dep_in": 1
+        "dep_in": 2
       }
     },
     "truman-town.social.graph": {
@@ -10623,7 +10704,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "own_api_count": 2,
         "inherited_api_count": 0,
         "dep_out": 5,
-        "dep_in": 1
+        "dep_in": 2
       }
     },
     "truman-town.social.relationship": {
@@ -12159,7 +12240,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "own_api_count": 3,
         "inherited_api_count": 0,
         "dep_out": 0,
-        "dep_in": 5
+        "dep_in": 6
       }
     },
     "truman-town.survival.resources.medical": {
@@ -12277,7 +12358,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
         "own_api_count": 3,
         "inherited_api_count": 0,
         "dep_out": 0,
-        "dep_in": 3
+        "dep_in": 4
       }
     },
     "truman-town.survival.shelter": {
@@ -14934,6 +15015,16 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
     },
     {
       "from": "truman-town.runtime.orchestrator.stage2",
+      "to": "truman-town.agent.traits.tagset.store",
+      "kind": "dataflow",
+      "cross_tree": false,
+      "label": {
+        "zh": "读成员标签做代际判定",
+        "en": "Read tags per generation"
+      }
+    },
+    {
+      "from": "truman-town.runtime.orchestrator.stage2",
       "to": "truman-town.economy.bank.credit",
       "kind": "call",
       "cross_tree": false
@@ -14985,6 +15076,86 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px
       "to": "truman-town.runtime.world-state",
       "kind": "call",
       "cross_tree": false
+    },
+    {
+      "from": "truman-town.runtime.orchestrator.stage2",
+      "to": "truman-town.social.family.chronicle",
+      "kind": "call",
+      "cross_tree": false,
+      "label": {
+        "zh": "写家族编年",
+        "en": "Append family chronicle"
+      }
+    },
+    {
+      "from": "truman-town.runtime.orchestrator.stage2",
+      "to": "truman-town.social.family.lineage",
+      "kind": "call",
+      "cross_tree": false,
+      "label": {
+        "zh": "登记谱系与代际",
+        "en": "Register lineage + generation"
+      }
+    },
+    {
+      "from": "truman-town.runtime.orchestrator.stage2",
+      "to": "truman-town.social.family.registry",
+      "kind": "call",
+      "cross_tree": false,
+      "label": {
+        "zh": "家族登记与成员归属",
+        "en": "Family registry"
+      }
+    },
+    {
+      "from": "truman-town.runtime.orchestrator.stage2",
+      "to": "truman-town.social.family.trait.detector",
+      "kind": "call",
+      "cross_tree": false,
+      "label": {
+        "zh": "三代未遗失检测",
+        "en": "Detect 3-generation survival"
+      }
+    },
+    {
+      "from": "truman-town.runtime.orchestrator.stage2",
+      "to": "truman-town.social.family.trait.enforcer",
+      "kind": "call",
+      "cross_tree": false,
+      "label": {
+        "zh": "固化家族特质（上限 5）",
+        "en": "Fix family traits (max 5)"
+      }
+    },
+    {
+      "from": "truman-town.runtime.orchestrator.stage2",
+      "to": "truman-town.social.procreation.offspring",
+      "kind": "call",
+      "cross_tree": false,
+      "label": {
+        "zh": "生成子代并继承特质",
+        "en": "Spawn offspring with traits"
+      }
+    },
+    {
+      "from": "truman-town.runtime.orchestrator.stage2",
+      "to": "truman-town.survival.resources.food",
+      "kind": "call",
+      "cross_tree": false,
+      "label": {
+        "zh": "按人口重算储备上限",
+        "en": "Rescale food capacity"
+      }
+    },
+    {
+      "from": "truman-town.runtime.orchestrator.stage2",
+      "to": "truman-town.survival.resources.water",
+      "kind": "call",
+      "cross_tree": false,
+      "label": {
+        "zh": "按人口重算储备上限",
+        "en": "Rescale water capacity"
+      }
     },
     {
       "from": "truman-town.social.culture.meme",
