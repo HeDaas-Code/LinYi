@@ -1479,8 +1479,15 @@ function decide(agentId, tick, percepts, cfg = {}, poolView = null) {
     observer.recorder.eventLog.record({ tick, topic: 'agent.goal.' + tr.type, agentId, payload: tr });
   }
   const goalSuggestion = goalPlan.suggestion;
-  const goalBonusFor = (action) => (goalSuggestion !== null && action === goalSuggestion.action)
-    ? goalSuggestion.weight : 0;
+  const goalBonusFor = (action) => {
+    if (goalSuggestion === null || action !== goalSuggestion.action) return 0;
+    // 写作是识字居民的独立创造机会；目标链可以跨 tick 延续，不能用完整
+    // goalWeight 长期压住 write，导致 phase2 在稳定小镇里没有著作产出。
+    if (candidates.some((c) => c.action === 'write')) {
+      return Math.min(goalSuggestion.weight, 0.1);
+    }
+    return goalSuggestion.weight;
+  };
   // 商品售价：全系统最热的位置（50 人 × 200 tick × 每个候选行动），
   // 只在这里取一次，供打分函数与习惯偏置共用（原本每个候选行动查一次）。
   const goodsPriceNow = (() => {
@@ -1499,11 +1506,12 @@ function decide(agentId, tick, percepts, cfg = {}, poolView = null) {
     : 0;
   const outcomeHalfLife = Number.isInteger(cfg.outcomeEvidenceHalfLife) && cfg.outcomeEvidenceHalfLife > 0
     ? cfg.outcomeEvidenceHalfLife : 200;
-  const outcomeBiasFor = (action) => (outcomeWeight > 0
-    ? agent.decision.outcomeModel.bias({
+  const outcomeBiasFor = (action) => {
+    if (outcomeWeight <= 0 || (cfg.phase3 !== true && SURVIVAL_ACTIONS.includes(action))) return 0;
+    return agent.decision.outcomeModel.bias({
       agentId, action, need, tick, weight: outcomeWeight, halfLife: outcomeHalfLife,
-    })
-    : 0);
+    });
+  };
 
   // t14：继承偏好的读取器。异常时返回 0（偏好缺失不该让决策崩溃）。
   const preferenceBiasFor = (action) => {

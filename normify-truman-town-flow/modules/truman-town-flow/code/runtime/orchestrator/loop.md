@@ -10,10 +10,11 @@ description:
   en: >
       Code module src/runtime/orchestrator/loop.js as a data-flow endpoint.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-27T01:43:24.455Z"
-fingerprint: pending
-source: []
+revision: 57cad8dd17468fde02f68983adfde10c1f47ad8d
+updated_at: "2026-09-28T02:45:00Z"
+fingerprint: 9b8e797f222cfc93e0d3394a432694a69603b70800b7c738652b2478a7c2cc5e
+source:
+  - path: "src/runtime/orchestrator/loop.js"
 apis: []
 deps:
   - kind: dataflow
