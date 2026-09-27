@@ -333,6 +333,11 @@ PER_TICK_MS=207.5  UNITS_PER_TICK=145
 - [2026-09-27 21:22] [工作记录] t14建立有来源且可失真的遗产继承链 — t14完成：新增relic artifact/discover与legacy skill/preference/trace链，旧文明遗物可有来源、被误读/丢弃，交接注入下一代技能/研究前提/有界偏好，常态有界考古且能力可失传。test/legacy-inheritance 17/17；同条件偏好干预得分差精确0.4，遗产开关对照动作分布分叉；回归148/148和127/127、flow-index error0。明确未接线：stonework craftBonus尚不参与评分；genesis.renewal.replace传heritage被execute忽略但主循环不走该路径。已报告loop内存snapshot不恢复时钟，需独立与持久化快照语义核对。
 - [2026-09-27 21:24] [工作记录] t14遗产继承闭环完成并记录未接线边界 — t14新增有来源、可误读/丢弃的relic与技能/研究前提/有界偏好继承，支持考古与失传；17/17定向、148/148及127/127回归通过，机制级偏好得分差0.4。同条件遗产开关改变动作分布。stonework craftBonus尚未接入评分；genesis.renewal.replace的heritage参数被execute忽略但当前主循环不走该路径。另待核对loop内存快照是否影响t10反事实：t14报告__restore不还原时钟，已请求runtime工程师验证可达影响。
 - [2026-09-27 23:11] [工作记录] t26部分完成F1/F4但保留为failed并拆出两类回归 — t26未通过全部验收，正式状态failed(partial)，但F1三层社交饥饿与F4拒绝原因漂移已修复：公平响应目标、目标让位、自适应声誉门槛、沉默超时拒绝，旧原因统一为no_pending_interaction；seed42互动由0接受/0边变为1接受/1边，60tick为7接受/8边。未通过项：smoke.p2写书/企业启动失败已证明与t26无关；自适应门槛使decision-closure消融由21/24变21/25，需t28处理且不能简单关闭门槛。t28暂受失败依赖和共享路径冲突阻塞。
+- [2026-09-27 23:54] [工作记录] 首次整理提交LinYi修复与派生证据 — 已将当前已落地的runtime/decision/social/persistence修复、测试、Normify派生物、flow-index、报告与PROJECT_MEMORY提交到Git commit d58db4e；排除了.agent-teams运行日志和tmp scratch。提交不等于整体验收完成：t6仍未最终通过，t26为partial，t28/t29仍待后续收口，未宣称全量测试通过。
+- [2026-09-27 23:57] [工作记录] t26最终收口为failed partial并锁定F1/F4 — t26 attempt2正式failed(partial)：F1三层修复与F4原因统一已锁定并验证（social-interaction15/15，persona-lifecycle+action-contract23/23，12人20tick产生accepted与互惠边）；smoke.p2写书断言由字节还原、量级和完稿时机三证据确认是范围外既有缺陷；组合测试另有共享状态隔离问题，未归因t26。t28仍被AgentTeams原依赖图阻止领取，后续需先修依赖调度再启动目标规划求偶让位修复。
+- [2026-09-28 00:27] [工作记录] opena6对抗验收needs_revision而非通过 — opena6/gpt-6-astra重启t6验收已完成取证但判定needs_revision：fast274/274、model17/17、perf15/15、persistence25/25、社会文明7/7、实验16/16、flow-index6/6通过；integration209/211，结果学习/目标规划导致出生21 vs25，phase2缺write_book action-log；smoke:p3 CLI仍读旧字段，long层超时，Normify有hot-log reset warning。验收期间live重写Normify派生物，不能与初始快照混称。已要求成员正式提交failed终态与结构化finding，未宣称整体通过。
+- [2026-09-28 01:23] [工作记录] 中断后重构任务图并建立t30到t31串行链 — 手动中断后团队可恢复：旧t28/t29取消以释放共享范围，t26保留不可变failed(partial)；新增t30修复目标规划出生回归（不依赖t26，保留结果学习与craft/trade，至少3 seeds），新增t31依赖t30处理smoke.p3现行字段、smoke.p2 write_book可达链和缺clock存档API拒绝。已确认t31保持pending，不越过t30领取或改代码。
+- [2026-09-28 01:34] [工作记录] 停止Team模式并形成新会话调试交接 — 已归档linyi-deepseek-repair并停止Team模式；t30正式failed且未改代码，seed3/5/11的20人60tick分别birth19/19/16、craft109/101/101、trade183/190/194、deaths均0，唯一失败为decision-closure结果学习消融21 vs25。已形成新会话调试交接：先逐tick定位结果学习出生链第一处分叉，再修smoke.p3 CLI旧字段、smoke.p2 write_book可达链、hot-log reset warning和long超时；每项先最小复现、再生产修复、再定向测试，最后冻结快照验收。
 
 ## 经验教训 Lessons Learned
 
@@ -888,6 +893,9 @@ t12 只测了 40 人 × 60 tick 就声称存活一致 → 小规模从未被覆�
    要么在最低层拒绝（restoreRun 抛），要么在最高层统一拒绝（API 400，现状）。
 - [2026-09-27 21:28] [经验教训] loop局部快照不含时钟但完整恢复路径成对还原 — 实测loop.__snapshot/__restore单独调用会恢复loop提交边界但不恢复clock；但全仓无直接调用者，state全量存档路径总是恢复clock与loop，t10反事实使用persistence.saveRun/restoreRun且时钟一致，因此不是当前可达反事实缺陷。唯一潜伏风险是缺clock但含loop的损坏存档：restoreRun validation标missing而不抛，API层拒绝400；建议锁定恰缺一个core section时API拒绝，并说明loop API是section级快照。避免无证据扩大为时钟恢复修复。
 - [2026-09-27 21:30] [经验教训] loop局部快照时钟缺失在当前完整恢复路径不可达 — 已验证loop.__snapshot/__restore单独使用会留下clock与committedTick不一致，但全仓无直接调用者；t10反事实走persistence.saveRun/restoreRun，完整section路径会成对恢复且clock一致，因此无需反事实时钟修复。潜伏条件是损坏存档缺clock但含loop：restore validation报告missing，API返回400拒绝。已建t29待t28后补单core缺失拒绝测试和section快照边界说明。
+- [2026-09-28 00:39] [经验教训] 失败任务终态不可伪改，需拆分依赖与共享范围 — 已确认t26为不可变failed(partial)，不能伪标completed解除t28依赖；t28领取被失败依赖阻塞，且t29与其共享loop.js。smoke.p2进一步证实企业创建4个但后续破产剩1个，真正缺口是可达且完成的write_book链路，可能与t28决策候选路径重叠，不能并发新建重叠修复。
+- [2026-09-28 01:11] [经验教训] 运行中团队无法重构重叠任务图 — 尝试把t28从不可变failed t26依赖中解耦时，AgentTeams拒绝：t28与t29已有共享inScope（含loop.js及相关测试），运行中团队只允许有限pending任务更新，不能删除/重划任务或创建重叠repair；t26终态也不可变，无法伪标completed。当前需要在团队生命周期允许的计划编辑窗口重构依赖，或结束旧团队后按用户明确意图建立新计划，不能用重试绕过依赖。
+- [2026-09-28 01:12] [经验教训] 运行中AgentTeams无法解耦失败依赖与重叠范围 — 实测重构失败：t26是不可变failed，t28依赖t26无法领取或接管；t28与t29存在共享inScope，运行中团队拒绝删除/重划任务和创建重叠repair。不能伪标completed或用重试绕过；后续必须在可编辑计划窗口把t28改依赖已完成基线、将t29串行化后再启动。
 
 ## 行动指南 Action Guide
 
@@ -1105,3 +1113,7 @@ business.list() = store.listBusinesses().map(n => n.data)，每调一次全量�
 - [2026-09-27 20:23] [行动指南] 最终对抗验收使用只读快照并比对live — t6失败后采用验证工程师确认的方法：修复任务期间不必全局冻结源码；最终重跑时复制只读快照并记录文件哈希，在快照内跑完整分层，结束逐文件比较快照与live。若live在验收期间变化，结论只对快照身份成立，必须再跑最终重验。前置需t13/t26/t27/t28全部完成。
 - [2026-09-27 23:33] [行动指南] 网关失败后先重试验证已落地修复再推进依赖链 — decision-engineer此前502且无未完成attempt，不作为代码结论；已重新唤起t26 attempt2，仅核验F1/F4已落地修复，不回退自适应门槛或扩大范围。t28继续保留多种子诊断，暂不改代码；t29因共享loop.js路径后置，避免并发编辑。后续应先让t26正式收口，再串行解除t28/t29依赖。
 - [2026-09-27 23:48] [行动指南] 及时收口长期in_progress任务并区分部分完成 — 发现t26 attempt2长期停在in_progress，已要求成员立即提交正式终态；收口要求包含F1/F4验收证据，若smoke.p2确认范围外必须标注failed(partial)，不得以未提交状态阻塞t28。未把成员未提交当作代码结论。
+- [2026-09-28 00:14] [行动指南] LinYi修复尚未完成，后续继续收口验收与Git提交 — 截至当前状态，项目工作未结束：t6全链路验收failed，t26 failed(partial)，t28目标规划修复、t29存档边界测试、t17 Normify收口仍pending。最新Git提交d58db4e之后PROJECT_MEMORY.md有未提交改动，且工作区含AgentTeams运行日志与tmp scratch；不得把它们误认为已提交。后续先处理依赖调度与修复任务，最终钉快照重跑t6，再更新结构证据并择净提交。
+- [2026-09-28 00:19] [行动指南] 失败任务已切换opena6并重新启动 — 按用户要求，使用已确认可用的open a6/gpt-6-astra（reasoning_effort=default）新增两个重启成员：opena6-social-repair与opena6-verification-restart。t26以attempt3重启并保留既有F1/F4成果，t6以attempt2重启并要求只读快照/哈希分层验收；t28/t29为pending而非failed，暂未重启。
+- [2026-09-28 00:33] [行动指南] opena6继续修复目标出生退化并等待smoke最小路径 — t28已转交opena6-social-repair继续修复目标规划导致出生减少，要求选择性让位完整求偶链、保留结果学习与craft/trade收益，至少3 seed验证出生/死亡。smoke.p2的write_book/企业启动问题因与t28测试路径重叠暂未新建任务，已要求opena6-verification先给最小修复路径；修复后先定向测试再重跑对抗验收，不能把needs_revision当通过。
+- [2026-09-28 00:50] [行动指南] 按四类阻塞顺序重构LinYi修复路径 — 当前已确认问题分为任务图阻塞、目标规划导致出生下降、smoke.p2/p3契约缺陷、验收证据不稳定四类；推荐顺序为重构依赖→修求偶链选择性让位→修p2写书可达链与p3 CLI旧字段→处理hot-log warning/长测→冻结源码并重跑t6→最后刷新Normify和Git。不得伪标t26完成、不得只改断言或调低权重掩盖因果、不得在源码变化期间做最终验收。

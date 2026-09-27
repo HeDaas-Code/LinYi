@@ -355,6 +355,7 @@ export function plan(agentId, tick, state, cfg = {}, contract, doomed = null) {
     return { plan: current, suggestion: null, transitions };
   }
 
+
   // ---- 回退重规划：当前步骤不可执行时，退回**最早的未完成且可执行**的步骤 ----
   let step = template.steps[current.stepIndex];
   if (!stepAdmissible(step, state, contract, doomed)) {

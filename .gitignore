@@ -11,3 +11,8 @@ reports/bench-tuned.md
 
 # flow-index 重新生成的临时产物
 flow-index.regen.json
+
+# local agent orchestration state
+.agent-teams/
+tmp/
+tmp-*.mjs

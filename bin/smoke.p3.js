@@ -61,14 +61,17 @@ console.log('  replayId=' + replay.replayId + ' 区间=[' + replay.fromTick + ',
 const decisions = observer.recorder.decisionLog.list();
 const anchor = decisions.find((n) => n.data && n.data.agentId && Number.isInteger(n.data.tick));
 if (anchor) {
-  const cmp = observer.experiment.counterfactual.compare({
-    agentId: anchor.data.agentId,
-    tick: anchor.data.tick,
+  const pivot = observer.experiment.counterfactual.anchorPivotFor({ decisionId: anchor.id });
+  const cmp = await observer.experiment.counterfactual.compare({
+    agentId: pivot.agentId,
+    tick: pivot.pivotTick,
     alternative: { action: 'rest', confidence: 0.9 },
   });
   console.log('--- 观察者反事实 ---');
   console.log('  ' + cmp.branchId + ' tick=' + cmp.tick + ' 原决策=' + JSON.stringify(cmp.original) + ' 备选=' + JSON.stringify(cmp.alternative));
-  console.log('  原评分=' + cmp.originalScore.toFixed(4) + ' 备选评分=' + cmp.alternativeScore.toFixed(4) + ' 分歧=' + cmp.diverged + ' 下游证据=' + cmp.downstream.length + ' 条');
+  console.log('  替换行动=' + cmp.pivotDivergence.branchAction + ' 分歧=' + cmp.diverged
+    + ' 首个下游分歧=' + JSON.stringify(cmp.firstDivergence)
+    + ' 行动分布变化=' + cmp.consequence.actionsChanged.join('、'));
 }
 console.log('');
 
