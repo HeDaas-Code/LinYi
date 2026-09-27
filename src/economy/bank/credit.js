@@ -172,3 +172,27 @@ export function markDefault(input = {}) {
 export function __reset() {
   treasuryAccountId = null;
 }
+
+// ---- 持久化：金库账户引用必须进存档 ----
+
+/**
+ * 导出金库账户 id。
+ *
+ * 这是**缓存型的单例引用**：不入档则恢复后首次信用操作会尝试重新开户，
+ * 而图里已存在同名金库账户，导致重复开户 / 余额错位。
+ */
+export function __snapshot() {
+  return { treasuryAccountId };
+}
+
+/**
+ * 恢复金库账户 id。
+ * @param {{treasuryAccountId?: string|null}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('credit.__restore: 状态必须为对象');
+  }
+  treasuryAccountId = typeof data.treasuryAccountId === 'string' && data.treasuryAccountId !== '' ? data.treasuryAccountId : null;
+  return { treasuryAccountId };
+}

@@ -110,3 +110,69 @@ test('phase2 未开启时主循环行为不变（不触发阶段二）', async (
   assert.equal(report.phase2, undefined, 'phase2 关闭时不应有阶段二摘要');
   assert.equal(report.steps.every((s) => s.phase2 === undefined), true);
 });
+
+/**
+ * t19 回归：**候选准入门不得静默清空动态行动**。
+ *
+ * 症状与根因（t16 观测到的集成失败，t19 复现并归因）：
+ *   src/agent/decision/candidates.js 把候选准入交给 action-contract 的 preconditionOf，
+ *   并用 `try { pre = preconditionOf(...) } catch { pre = { ok: false } }` 兜底。
+ *   于是**契约一旦不可用**（抛错、或该导出尚不存在），catch 会把「程序错误」当成
+ *   「前置条件不满足」，静默移除全部动态行动（court/accept/build/craft/write/work/found/trade），
+ *   只剩 eat/drink/rest/forage 生存骨架。
+ *   后果：生育链断裂（court/accept 不存在 → childrenBorn=0）、建造/制作/写书不再写
+ *   action-log，但**主循环照常运行、生存与复位用例照常通过**——故障只在下游以
+ *   「应产生子代」这类含糊断言暴露，排查代价极高（t16 花了大量时间才排除运行时与决策闭环）。
+ *
+ * 本用例把因果前移到上游：直接断言**门后的行动确实出现在候选集里**。
+ * 准入一旦再次被静默清空，这里立刻失败并点名是准入门的问题，
+ * 而不是让人从「没有子代」倒推。实测该机制可精确复现 t16 的 3 条失败。
+ */
+test('phase2 候选准入：契约前置条件门不得静默吞掉社交/建造/制作行动', async () => {
+  loop.reset();
+  const report = await loop.run({ phase2: true, ticks: 60, seed: 42, agentCount: 3 });
+
+  // 候选集：决策日志的 options 记录了每个居民**当时看到的**全部选项。
+  const offered = new Set();
+  const chosen = new Set();
+  for (const n of observer.recorder.decisionLog.list()) {
+    for (const o of (n.data.options ?? [])) offered.add(o.action);
+    chosen.add(n.data.decision);
+  }
+
+  // 生存骨架永远可选，不能作为「准入门健康」的证据——它恰恰是故障时唯一剩下的东西。
+  const skeleton = ['eat', 'drink', 'rest', 'forage'];
+  const gated = ['court', 'accept', 'build', 'craft'];
+  const missing = gated.filter((a) => !offered.has(a));
+  const nonSkeleton = [...offered].filter((a) => !skeleton.includes(a)).sort();
+  assert.deepEqual(
+    missing,
+    [],
+    '候选准入门静默清空了动态行动 ' + JSON.stringify(missing)
+      + '；本次仅见到动态行动 ' + JSON.stringify(nonSkeleton)
+      + '。检查 src/agent/decision/candidates.js 的 preconditionOf 门：'
+      + '它的 catch 会把「契约不可用（抛错/未导出）」当成「前置条件不满足」，'
+      + '从而静默移除全部动态行动，只剩生存骨架。',
+  );
+
+  // t21：把「准入门健康」从**间接**证据（"碰巧见到了动态行动"）升级为**直接**证据
+  // （"整局没有任何契约故障"）。两者都要，因为前者可能因别的机制碰巧通过，
+  // 而后者只有在契约真的没坏时才成立。
+  // 这条断言把 t16 那类故障的暴露点从"几百 tick 后的下游行为断言"提前到**本次运行结束**，
+  // 且故障一旦发生会直接点名是哪个行动的哪个 require 坏了。
+  const faults = agent.decision.candidates.contractFaultSummary();
+  assert.equal(
+    faults.clean,
+    true,
+    '本次运行出现契约故障（候选准入会把它们静默过滤成"条件不满足"）：'
+      + JSON.stringify(agent.decision.candidates.contractFaults()),
+  );
+
+  // 门健康 ⇒ 生育链与建造/制作链必须真的走通（这正是 t16 失败的可见症状）。
+  assert.ok(chosen.has('court'), '应有居民选择求偶（court）');
+  assert.ok(chosen.has('accept'), '应有居民接受求偶（accept）');
+  assert.ok(report.phase2.summary.childrenBorn >= 1, '生育链走通后应有子代');
+  const actions = actionKinds();
+  assert.ok(actions.includes('build'), '建造行为应写 action-log');
+  assert.ok(actions.includes('craft'), '制作行为应写 action-log');
+});

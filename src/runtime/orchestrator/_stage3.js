@@ -43,6 +43,9 @@ let researchesCompleted = 0;
 let techsLost = 0;
 let collapses = 0;
 let restarts = 0;
+// t5：代际交接计数与最近一次交接（旧世代是否真的被隔离、下一代是否真的诞生）。
+let handovers = 0;
+let lastHandover = null;
 
 function avgPressure(agents) {
   if (agents.length === 0) return 0;
@@ -68,6 +71,7 @@ export function seed(agents, config = {}) {
   lawsEnacted = 0; conflictsResolved = 0; ritualsHeld = 0; normsViolated = 0; memesMutated = 0;
   breakdowns = 0; recoveries = 0; copings = 0;
   researchesStarted = 0; researchesCompleted = 0; techsLost = 0; collapses = 0; restarts = 0;
+  handovers = 0; lastHandover = null;
 
   const ids = agents.map((a) => a.id);
   if (ids.length < 2) {
@@ -260,9 +264,16 @@ function runTech(tick, agents, config = {}) {
   return result;
 }
 
-/** 文明：崩溃检测 → 确认 → 遗产图谱+描述 → 重启注入下一代。 */
-async function runCivilization(tick, agents, config) {
-  const result = { collapsed: false, legacy: null, restart: null };
+/**
+ * 文明：崩溃检测 → 确认 → 遗产图谱+描述 → **隔离旧世代并交棒下一代** → 注入遗产。
+ *
+ * @param {number} tick
+ * @param {Array<{ id: string }>} agents
+ * @param {object} config
+ * @param {Function|null} [handover] 代际交接回调（由 loop 注入；见 loop.runGenerationHandover）
+ */
+async function runCivilization(tick, agents, config, handover = null) {
+  const result = { collapsed: false, legacy: null, restart: null, handover: null };
   const population = agents.length;
   const food = survival.resources.food.query();
   const water = survival.resources.water.query();
@@ -317,19 +328,38 @@ async function runCivilization(tick, agents, config) {
     const facts = civilization.legacy.summary.extractor.extract({ graph });
     const summary = await civilization.legacy.summary.writer.generate({ extract: facts });
 
+    // t5：重启必须真的隔离旧状态并交棒给下一代。
+    // 修复前这里恒传 reset=null（生产代码从不设置 config.restartReset），
+    // 于是「重启沙盒」完全没有发生：同一批居民继续活着、世代号不变、没有下一代。
+    //   - config.restartReset 仍优先（显式注入的复位回调，宿主/测试可覆盖）；
+    //   - 否则用 loop 注入的 handover：隔离旧世代 + 用居民工厂真实创建下一代；
+    //   - config.restartHandover === false 可显式关闭交接（对照实验用，必须显式）。
+    const explicitReset = typeof config.restartReset === 'function' ? config.restartReset : null;
+    const useHandover = explicitReset === null
+      && config.restartHandover !== false
+      && typeof handover === 'function';
+    let handoverResult = null;
+    const resetCb = explicitReset !== null
+      ? () => explicitReset({ tick, civilizationId: prevCivId })
+      : (useHandover
+        ? () => { handoverResult = handover({ tick, heritage: { graph, facts, summary } }); return handoverResult; }
+        : null);
+
     const restarted = await civilization.restart.execute({
       tick,
-      reset: typeof config.restartReset === 'function' ? config.restartReset : null,
+      reset: resetCb,
       civilizationId: prevCivId,
       nextCivilizationId: nextCivId,
       graph,
       summary,
     });
     restarts += 1;
+    if (handoverResult !== null) { handovers += 1; lastHandover = handoverResult; }
 
     result.collapsed = true;
     result.legacy = { graph, facts, summary };
     result.restart = restarted;
+    result.handover = handoverResult;
   }
 
   return result;
@@ -345,7 +375,7 @@ const TICK_STEPS = Object.freeze([
   { id: 'culture', label: '文化与仪式', run: (c) => runCulture(c.tick, c.agents) },
   { id: 'psyche', label: '心理与崩溃', run: (c) => runPsyche(c.tick, c.agents, c.config) },
   { id: 'tech', label: '科技与研究', run: (c) => runTech(c.tick, c.agents, c.config) },
-  { id: 'civilization', label: '文明与遗产', run: (c) => runCivilization(c.tick, c.agents, c.config) },
+  { id: 'civilization', label: '文明与遗产', run: (c) => runCivilization(c.tick, c.agents, c.config, c.handover ?? null) },
 ]);
 
 /**
@@ -354,7 +384,12 @@ const TICK_STEPS = Object.freeze([
  * @param {{ tick: number, agents: Array<{ id: string }>, config?: object }} input
  */
 export async function* tickSequence(input = {}) {
-  const ctx = { tick: input.tick, agents: input.agents, config: input.config ?? {} };
+  const ctx = {
+    tick: input.tick,
+    agents: input.agents,
+    config: input.config ?? {},
+    handover: typeof input.handover === 'function' ? input.handover : null,
+  };
   for (let i = 0; i < TICK_STEPS.length; i += 1) {
     const stepDef = TICK_STEPS[i];
     const value = await stepDef.run(ctx);
@@ -391,6 +426,8 @@ export function summary() {
     firstCollapse,
     collapses,
     restarts,
+    handovers,
+    lastHandover,
   };
 }
 
@@ -404,10 +441,78 @@ export function __reset() {
   lawsEnacted = 0; conflictsResolved = 0; ritualsHeld = 0; normsViolated = 0; memesMutated = 0;
   breakdowns = 0; recoveries = 0; copings = 0;
   researchesStarted = 0; researchesCompleted = 0; techsLost = 0; collapses = 0; restarts = 0;
+  handovers = 0; lastHandover = null;
 
   agent.psyche.trauma.__reset();
   agent.psyche.coping.__reset();
   agent.psyche.break.__reset();
   civilization.tech.tree.__reset();
   civilization.tech.research.__reset();
+}
+
+// ---- 持久化：阶段三模块级状态必须进存档 ----
+// 阵营 / 法令 / 冲突 / 仪式 / 模因 / 崩溃计数都是逐 tick 推进的治理-文化状态。
+// 不入档则恢复后治理从「无阵营、无法令、无冲突」重来，文明反馈链断裂。
+
+export function __snapshot() {
+  return {
+    seeded,
+    factionA: factionA === null ? null : structuredClone(factionA),
+    factionB: factionB === null ? null : structuredClone(factionB),
+    allied, lawId, lawEnforced,
+    conflictId, conflictResolved,
+    normViolated, memeMutated,
+    collapseHandled,
+    firstCollapse: firstCollapse === null ? null : structuredClone(firstCollapse),
+    scarceTicks,
+    lawsEnacted, conflictsResolved, ritualsHeld, normsViolated, memesMutated,
+    breakdowns, recoveries, copings,
+    researchesStarted, researchesCompleted, techsLost, collapses, restarts,
+    handovers,
+    lastHandover: lastHandover === null ? null : structuredClone(lastHandover),
+  };
+}
+
+/**
+ * 恢复阶段三状态（整体替换）。
+ * @param {object} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('stage3.__restore: 状态必须为对象');
+  }
+  const d = data;
+  seeded = d.seeded === true;
+  factionA = (d.factionA === null || d.factionA === undefined) ? null : structuredClone(d.factionA);
+  factionB = (d.factionB === null || d.factionB === undefined) ? null : structuredClone(d.factionB);
+  allied = d.allied === true;
+  lawId = typeof d.lawId === 'string' ? d.lawId : null;
+  lawEnforced = d.lawEnforced === true;
+  conflictId = typeof d.conflictId === 'string' ? d.conflictId : null;
+  conflictResolved = d.conflictResolved === true;
+  normViolated = d.normViolated === true;
+  memeMutated = d.memeMutated === true;
+  collapseHandled = d.collapseHandled === true;
+  firstCollapse = (d.firstCollapse === null || d.firstCollapse === undefined) ? null : structuredClone(d.firstCollapse);
+  scarceTicks = Number.isInteger(d.scarceTicks) ? d.scarceTicks : 0;
+  lawsEnacted = intOr3(d.lawsEnacted);
+  conflictsResolved = intOr3(d.conflictsResolved);
+  ritualsHeld = intOr3(d.ritualsHeld);
+  normsViolated = intOr3(d.normsViolated);
+  memesMutated = intOr3(d.memesMutated);
+  breakdowns = intOr3(d.breakdowns);
+  recoveries = intOr3(d.recoveries);
+  copings = intOr3(d.copings);
+  researchesStarted = intOr3(d.researchesStarted);
+  researchesCompleted = intOr3(d.researchesCompleted);
+  techsLost = intOr3(d.techsLost);
+  collapses = intOr3(d.collapses);
+  restarts = intOr3(d.restarts);
+  handovers = intOr3(d.handovers);
+  lastHandover = (d.lastHandover === null || d.lastHandover === undefined) ? null : structuredClone(d.lastHandover);
+  return { seeded, lawsEnacted, collapses, handovers };
+}
+
+function intOr3(v) {
+  return Number.isInteger(v) && v >= 0 ? v : 0;
 }

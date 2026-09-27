@@ -79,3 +79,41 @@ export function __reset() {
   taskSeq = 0;
   tasks.clear();
 }
+
+// ---- 持久化：逻辑时间必须进存档 ----
+
+/**
+ * 导出可序列化的时钟状态。
+ *
+ * tick 是整个沙盘的唯一逻辑时钟，若恢复时不还原它，续跑会从 0 重新计时：
+ * 周期任务（schedule）的相位全错，年龄/税收/社区重算等「按 tick 取模」的
+ * 判定会在恢复后回到开局相位。tasks 本身是**进程内回调**（函数不可序列化），
+ * 因此只记录其描述（id/interval/offset）供诊断，恢复时由模块各自重新注册。
+ */
+export function __snapshot() {
+  return {
+    tick: currentTick,
+    taskSeq,
+    tasks: [...tasks.entries()].map(([id, t]) => ({ id, interval: t.interval, offset: t.offset })),
+  };
+}
+
+/**
+ * 恢复时钟状态。tick 必须为非负整数；tasks 不被还原（回调不可序列化），
+ * 由持有者（loop/模块）在恢复后重新 schedule。
+ * @param {{tick?: number, taskSeq?: number}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('clock.__restore: 状态必须为对象');
+  }
+  const t = data.tick;
+  if (t !== undefined && (!Number.isInteger(t) || t < 0)) {
+    throw new TypeError('clock.__restore: tick 必须为非负整数');
+  }
+  currentTick = Number.isInteger(t) ? t : 0;
+  startedAt = null;
+  taskSeq = Number.isInteger(data.taskSeq) && data.taskSeq >= 0 ? data.taskSeq : 0;
+  tasks.clear();
+  return snapshot();
+}

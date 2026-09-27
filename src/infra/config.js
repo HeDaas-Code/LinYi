@@ -120,7 +120,21 @@ export const DEFAULTS = Object.freeze({
   literacyShare: 0.4,
   simNoise: 0.5,
   semanticMaxEntries: 64,
+  // D03：状态-行动-结果估计（有界）。默认开启——它是有界偏置，不是决定者。
+  // 权重刻意小于生存/人格项，不能颠倒量级差异；证据过期由 halfLife 控制。
+  outcomeLearningEnabled: true,
+  outcomeLearningWeight: 0.3,
+  outcomeEvidenceHalfLife: 200,
+  // D02：执行结果（成本收益/失败原因）写入情景与语义记忆。
+  outcomeMemoryEnabled: true,
+  // t12：短期目标与多步计划。默认开启——目标是**有界倾向**（见 goalWeight），不是命令。
+  goalPlanningEnabled: true,
+  goalWeight: 0.35,
+  goalMaxAttempts: 8,
+  goalCooldownTicks: 12,
   semanticLimit: 3,
+  // 语义记忆是否落图存储（默认 false，见 loop.js 的性能取舍说明）。
+  memoryPersist: false,
   // 生育上限（每次运行）。此前在 _stage2 里硬编码为 2，导致任何一次运行
   // 最多出生 2 人、家族永远停在两代，「三代未遗失固化为家族特质」不可达。
   // 实测 50×200 tick 单种子：上限 8 → 人口 58、最大第 1 代、0 个家族有特质；
@@ -128,6 +142,12 @@ export const DEFAULTS = Object.freeze({
   // 上限 60 → 人口 98、最大第 5 代、8 个家族固化特质。三者存活均 100%。
   // 取 24：让「三代固化」在**标准 200 tick 局**里就可观测，同时人口只增约五成。
   maxChildrenPerRun: 24,
+  // t5：文明重启的真实交接。默认开启——"重启"必须真的隔离旧世代并创建下一代，
+  // 否则崩溃之后同一批居民继续活着，世代号不变，重启只是写了一条日志。
+  // 关闭时必须显式传 restartHandover:false（用于对照实验）。
+  restartHandover: true,
+  // 下一代使用的居民工厂模板 id（见 genesis.agentFactory.template）。
+  restartTemplateId: 'native',
   scheduleEnabled: true,
   scheduleLength: 12,
   careerEnabled: true,
@@ -313,6 +333,32 @@ export function currentDifficultyParams() {
 }
 
 
+/**
+ * 导出难度档位选择（运行配置的一部分）。
+ *
+ * 档位决定 needGrowth / 采集池 / 储备等运行参数，若不随存档恢复，
+ * 续跑会用「默认档」继续一个在「严酷档」下进行的局——参数静默错位。
+ */
+export function __snapshot() {
+  return { difficultyId: currentDifficultyId };
+}
+
+/**
+ * 恢复难度档位。
+ * @param {{difficultyId?: string}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('config.__restore: 状态必须为对象');
+  }
+  const id = data.difficultyId;
+  if (id !== undefined && !DIFFICULTY_PRESETS[id]) {
+    throw new RangeError('config.__restore: 未知难度档位「' + String(id) + '」');
+  }
+  if (id !== undefined) currentDifficultyId = id;
+  return { difficultyId: currentDifficultyId };
+}
+
 // ---- 校验 ----
 
 function isNum(v) {
@@ -393,9 +439,22 @@ const RULES = {
   traitMutateRate: (v) => (isUnit(v) ? true : '必须是 [0,1] 区间数值'),
   pruneK: (v) => (isPosInt(v) ? true : '必须是正整数'),
   simNoise: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
+  outcomeLearningEnabled: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
+  outcomeLearningWeight: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
+  outcomeEvidenceHalfLife: (v) => (isPosInt(v) ? true : '必须是正整数'),
+  outcomeMemoryEnabled: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
+  goalPlanningEnabled: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
+  goalWeight: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
+  goalMaxAttempts: (v) => (isPosInt(v) ? true : '必须是正整数'),
+  goalCooldownTicks: (v) => (isNonNegInt(v) ? true : '必须是非负整数'),
   semanticMaxEntries: (v) => (isPosInt(v) ? true : '必须是正整数'),
   semanticLimit: (v) => (isNonNegInt(v) ? true : '必须是非负整数'),
+  // 语义记忆是否落图存储。布尔语义必须显式（此前 loop 用 !== true 判断，
+  // 导致默认落图、true 反而不落图，语义完全反向）。
+  memoryPersist: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
   maxChildrenPerRun: (v) => (isNonNegInt(v) ? true : '必须是非负整数'),
+  restartHandover: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
+  restartTemplateId: (v) => (typeof v === 'string' && v.trim() !== '' ? true : '必须是非空字符串'),
   scheduleEnabled: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
   scheduleLength: (v) => (isPosInt(v) ? true : '必须是正整数'),
   careerEnabled: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),

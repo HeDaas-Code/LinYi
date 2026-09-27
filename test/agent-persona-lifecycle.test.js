@@ -178,7 +178,10 @@ test('similarity: compare 对称 + neighbors 排除自身 + 边界', () => {
 
 test('wiring: 6 模块被主循环真实调用（决策日志 + 事件流证据）', async () => {
   loop.reset();
-  const report = await loop.run({ phase2: true, ticks: 20, seed: 42, agentCount: 12 });
+  // t13：社交边现在只在「请求被**接受**」时产生（双向事实），
+  // 20 tick 的窗口里回应还没发生，社交结构断言会落空。
+  // 60 tick 足以让"请求 → 回应 → 建边"这条链走完。
+  const report = await loop.run({ phase2: true, ticks: 60, seed: 42, agentCount: 12 });
 
   // identity/lifecycle：世界状态含年龄/阶段/身份
   for (const a of report.agents) {
@@ -206,8 +209,14 @@ test('wiring: 6 模块被主循环真实调用（决策日志 + 事件流证据�
   // 导致行动空间 4→9 时社交结构逐字节不变）。断言改为验证「社交边来自决策」。
   const socializeActs = observer.recorder.eventLog.list().filter((n) => n.data.topic === 'agent.action.socialize');
   assert.ok(socializeActs.length >= 1, '居民应产生 socialize 行动事件');
+  // t13 契约变更：socialize 不再**单方面**建边。
+  // 现在社交边由「结构化请求 → 对方接受」这条双向事实产生；
+  // 未被回应的请求只留下待决互动，不写关系（这正是本任务要修的单向互动）。
+  const acceptedSocial = observer.recorder.eventLog.list()
+    .filter((n) => n.data.topic === 'social.interaction.accepted' && n.data.payload?.type === 'socialize');
+  assert.ok(acceptedSocial.length >= 1, '长跑中应出现被接受的社交请求（否则双向闭环没有跑通）');
   const friendshipEdges = social.graph.edges.list().filter((e) => e.type === 'friendship');
-  assert.ok(friendshipEdges.length >= 1, 'socialize 行动应建立 friendship 社交边');
+  assert.ok(friendshipEdges.length >= 1, '被接受的 socialize 应建立 friendship 社交边');
 });
 
 test('integration: 默认 50×200×3 种子存活率 1.00 且跨种子分叉', async () => {

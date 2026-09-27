@@ -130,3 +130,21 @@ export function diff(prev, next) {
 export function __reset() {
   world = {};
 }
+
+// ---- 持久化：世界快照必须进存档 ----
+
+/** 导出当前世界状态深拷贝（与 snapshot 同语义，供存档统一采集接口调用）。 */
+export function __snapshot() {
+  return snapshot();
+}
+
+/**
+ * 恢复世界状态（整体替换）。
+ * @param {object} data
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object' || Array.isArray(data)) {
+    throw new TypeError('world_state.__restore: 状态必须为普通对象');
+  }
+  return restore(data);
+}

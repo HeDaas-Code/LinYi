@@ -11,7 +11,7 @@ description:
       Code module src/runtime/orchestrator/dispatch.js as a data-flow endpoint.
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T17:26:48.777Z"
+updated_at: "2026-09-27T01:43:24.455Z"
 fingerprint: pending
 source: []
 apis: []
@@ -20,8 +20,4 @@ deps:
     to: truman-town-flow.state.area.runtime.op-seq-17675579
     to_api: "rpc:op-seq-17675579:write-normalizeDecision"
     label: {zh: "写 opSeq", en: "write opSeq"}
-  - kind: dataflow
-    to: truman-town-flow.state.area.runtime.last-applied-c2ce2986
-    to_api: "rpc:last-applied-c2ce2986:write-actions"
-    label: {zh: "写 lastApplied", en: "write lastApplied"}
 ---

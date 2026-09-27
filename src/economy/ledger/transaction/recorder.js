@@ -78,3 +78,27 @@ export function receipt(txId) {
 export function __reset() {
   seq = 0;
 }
+
+// ---- 持久化：流水序号必须进存档 ----
+
+/**
+ * 导出流水序号。
+ *
+ * 序号参与流水节点 id（tx.${seq}）。不入档则恢复后从 0 重新发号，
+ * 新流水会**覆盖**存档中已有的同 id 节点，静默丢失历史交易。
+ */
+export function __snapshot() {
+  return { seq };
+}
+
+/**
+ * 恢复流水序号。
+ * @param {{seq?: number}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('recorder.__restore: 状态必须为对象');
+  }
+  seq = Number.isInteger(data.seq) && data.seq >= 0 ? data.seq : 0;
+  return { seq };
+}

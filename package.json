@@ -6,11 +6,18 @@
   "description": "LinYi 号避难所自治沙盘（楚门小镇）最小闭环 MVP",
   "scripts": {
     "test": "node --test",
+    "test:fast": "node bin/test-layers.mjs --run fast",
+    "test:integration": "node bin/test-layers.mjs --run integration",
+    "test:long": "node bin/test-layers.mjs --run long",
+    "test:model": "node bin/test-layers.mjs --run model",
+    "test:perf": "node bin/test-layers.mjs --run perf",
+    "test:layers": "node bin/test-layers.mjs",
     "start": "node bin/server.js",
     "smoke": "node bin/smoke.js",
     "smoke:p2": "node bin/smoke.p2.js",
     "smoke:p3": "node bin/smoke.p3.js",
-    "bench": "node bin/bench.js"
+    "bench": "node bin/bench.js",
+    "perf:stages": "node bin/stage-timing.mjs --agents 20 --ticks 60"
   },
   "engines": {
     "node": ">=18"

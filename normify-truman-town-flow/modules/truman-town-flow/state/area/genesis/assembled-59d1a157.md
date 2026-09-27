@@ -11,7 +11,7 @@ description:
       map declared at src/genesis/agent-factory/assemble.js:21; writers=1, readers=4
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T17:26:33.450Z"
+updated_at: "2026-09-27T01:42:54.967Z"
 fingerprint: pending
 source: []
 apis:

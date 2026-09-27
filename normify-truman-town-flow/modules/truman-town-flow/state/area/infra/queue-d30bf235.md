@@ -5,13 +5,13 @@ parent: truman-town-flow.state.area.infra
 name: {zh: "queue", en: "queue"}
 description:
   zh: >
-      map 类型，声明于 src/infra/events/retry.js:20。写入方 2 个、读取方 4 个；已纳入复位。
+      map 类型，声明于 src/infra/events/retry.js:20。写入方 3 个、读取方 6 个；已纳入复位。
       
   en: >
-      map declared at src/infra/events/retry.js:20; writers=2, readers=4
+      map declared at src/infra/events/retry.js:20; writers=3, readers=6
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T17:26:35.160Z"
+updated_at: "2026-09-27T01:42:54.967Z"
 fingerprint: pending
 source: []
 apis:
@@ -32,6 +32,15 @@ apis:
           
       en: >
           writer run
+          
+  - protocol: rpc
+    path: "queue-d30bf235:write-__restore"
+    description:
+      zh: >
+          写入方 __restore（src/infra/events/retry.js）
+          
+      en: >
+          writer __restore
           
   - protocol: rpc
     path: "queue-d30bf235:read-enqueue"
@@ -69,6 +78,24 @@ apis:
       en: >
           reader getStats
           
+  - protocol: rpc
+    path: "queue-d30bf235:read-__snapshot"
+    description:
+      zh: >
+          读取方 __snapshot
+          
+      en: >
+          reader __snapshot
+          
+  - protocol: rpc
+    path: "queue-d30bf235:read-__restore"
+    description:
+      zh: >
+          读取方 __restore
+          
+      en: >
+          reader __restore
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.code.infra.events.retry
@@ -85,5 +112,13 @@ deps:
   - kind: dataflow
     to: truman-town-flow.code.ai.laya
     from_api: "rpc:queue-d30bf235:read-getStats"
+    label: {zh: "读 queue", en: "read queue"}
+  - kind: dataflow
+    to: truman-town-flow.code.agent.crafting.recipe
+    from_api: "rpc:queue-d30bf235:read-__snapshot"
+    label: {zh: "读 queue", en: "read queue"}
+  - kind: dataflow
+    to: truman-town-flow.code.agent.crafting.recipe
+    from_api: "rpc:queue-d30bf235:read-__restore"
     label: {zh: "读 queue", en: "read queue"}
 ---

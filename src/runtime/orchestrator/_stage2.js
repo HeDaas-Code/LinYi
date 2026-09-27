@@ -25,9 +25,12 @@ const RESIDENCE_ID = 'dorm_a';
 const SYMBOL = 'food';
 
 // 独立于全局 rng 的平台随机源：社交平台消费自有随机流，避免扰动既有经济/生存分叉。
-function mulberry32(a) {
+// onAdvance 回调把闭包累加器同步到 platformGenState——存档要的是**流位置**，
+// 不只是种子；没有这个回调，恢复后平台随机序列会从头重放。
+function mulberry32(a, onAdvance) {
   return function () {
     a |= 0; a = (a + 0x6d2b79f5) | 0;
+    if (onAdvance !== undefined) onAdvance(a);
     let t = Math.imul(a ^ (a >>> 15), 1 | a);
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
@@ -43,9 +46,16 @@ function hashSeed(str) {
   h = Math.imul(h ^ (h >>> 13), 3266489909);
   return (h ^ (h >>> 16)) >>> 0;
 }
-let platformGen = mulberry32(0x9e3779b9 >>> 0);
+let platformGenState = 0x9e3779b9 >>> 0;
+let platformGen = mulberry32(platformGenState, (a) => { platformGenState = a; });
 function platformSeed(seedValue) {
-  platformGen = mulberry32(hashSeed('platform:' + String(seedValue ?? 0)));
+  platformGenState = hashSeed('platform:' + String(seedValue ?? 0));
+  platformGen = mulberry32(platformGenState, (a) => { platformGenState = a; });
+}
+function platformGenState_() { return platformGenState >>> 0; }
+function platformGenRestore_(pos) {
+  platformGenState = Number.isInteger(pos) ? (pos >>> 0) : 0x9e3779b9 >>> 0;
+  platformGen = mulberry32(platformGenState, (a) => { platformGenState = a; });
 }
 function prFloat(min, max) {
   return min + platformGen() * (max - min);
@@ -1023,7 +1033,13 @@ export function candidateStateFor(agentId, tick = 0) {
       balances.set(agentId, bal);
       if (bal > reserve) disposableTotal += bal - reserve;
     }
-    _candidateStateCache = { employedIds, anyActive, activeCount, startedIds, balances, disposableTotal };
+    // t11：供应池余额同样每 tick 只读一次（贸易的共享额度，见 action-contract 的 contention）。
+    let supplyPoolBalance = 0;
+    try {
+      supplyPoolBalance = (typeof supplyAccountId === 'string' && supplyAccountId !== '')
+        ? (economy.ledger.account.balance(supplyAccountId) ?? 0) : 0;
+    } catch { supplyPoolBalance = 0; }
+    _candidateStateCache = { employedIds, anyActive, activeCount, startedIds, balances, disposableTotal, supplyPoolBalance };
     _candidateStateCacheTick = tick;
   }
   const paired = pairedIndex.has(agentId);
@@ -1033,13 +1049,39 @@ export function candidateStateFor(agentId, tick = 0) {
     businessActive: _candidateStateCache.anyActive,
     paired,
     eligibleMate: !paired && settledAgentIds.some((id) => id !== agentId && !pairedIndex.has(id)),
-    hasPendingCourt: !paired && (pendingCourts.get(agentId) ?? []).length > 0,
+    // t26（F1）：hasPendingCourt 是**兼容字段**，它的唯一生产消费者是 goals.js 的
+    // 「让位于一次性机会窗口」规则——那条规则的语义是"有人正在等我答复，
+    // 错过这个 tick 就永远错过"。t13 之前只有表白需要答复，所以它叫 court；
+    // t13 之后待答复的还有 socialize/request，而**机会窗口的性质完全相同**。
+    //
+    // 修复前它只认表白，于是待决 socialize 的收件人不会让位：计划步骤
+    // （0.9 + goalWeight 0.35 = 1.25）稳稳压过 accept/reject（1.05），
+    // 实测 seed42/20tick/12 人：全城只发生 3 次回应，4 条 socialize 全部永久 pending。
+    // 也就是说 F1 的"饿死"有**两层**原因：挑选层（courts 独占，已修）与
+    // 让位层（机会窗口只认 court，这里修）。
+    //
+    // 严格语义保留在 hasPendingCourtStrict 里，需要"真的有一条待决表白"的消费者用它。
+    hasPendingCourt: !paired && hasOneShotOpportunity(agentId, tick),
+    hasPendingCourtStrict: !paired && pendingCourtsOf(agentId).length > 0,
+    // t13：待回应互动的**真实**来源是互动记录（结构化事实），不再是 pendingCourts 这个
+    // 只服务于表白的内存队列。accept/reject 都必须能看见它。
+    ...interactionConditionsFor(agentId),
     // 探索条件：由 expedition.plan 评估（纯读）。居民据此判断"今天值不值得出去"。
     // 注意这是**建议**而非门：可行性为 false 只表示条件很差，最终选择权在居民。
     ...expeditionConditionsFor(agentId),
     // 创办企业条件（D2）：只看**该居民自己的账户余额**，不借不送——
     // 因此企业诞生取决于谁攒下了钱，这是涌现的来源而非固定指派。
     ...foundConditionsFor(agentId),
+    // t11：候选准入所需的前置条件状态（与 action-contract 的 requires 同源）。
+    // 执行器会在已有进行中任务时拒绝（already_crafting / already_building /
+    // already_writing），而候选侧此前不知道这件事——实测 40 人 × 60 tick 中
+    // write 被选中 131 次、115 次以 already_writing 失败（88% 空转）。
+    pendingCraft: pendingFor(agent.crafting.workbench.executor, agentId),
+    pendingBuild: pendingFor(agent.crafting.construction, agentId),
+    pendingWrite: pendingFor(agent.crafting.writing, agentId),
+    hasAccount: accounts.has(agentId),
+    hasItemCatalog: itemIds.wood !== undefined && itemIds.wood !== null,
+    supplyPoolBalance: _candidateStateCache.supplyPoolBalance,
   };
 }
 
@@ -1048,6 +1090,100 @@ export function candidateStateFor(agentId, tick = 0) {
  * 把生存状态、特质、装备、天气与辐射都交给 expedition.plan，
  * 让「外出探索」成为一个有信息依据的候选，而不是随机出现。
  */
+/**
+ * t13：把**互动记录**里的真实状态暴露给决策层。
+ *
+ * 关键点：这里的每个布尔值都来自 interaction 的结构化记录，
+ * 而不是"有没有人提过这事"的模糊判断。因此 accept/reject/fulfill/violate
+ * 只有在**真实存在待决互动或未结承诺**时才会成为候选——不会凭空出现。
+ *
+ * @param {string} agentId
+ * @returns {{ hasPendingInteraction: boolean, pendingInteractionCount: number,
+ *             hasOpenPromise: boolean, canFulfillPromise: boolean }}
+ */
+/**
+ * t26：回应等待上限（tick）。挑选（pickResponseTarget）与让位（hasOneShotOpportunity）
+ * 必须用**同一个数**，否则会出现「让位了但挑不到它」或「挑得到但永远不让位」的半吊子状态。
+ * cfg 缺省时回落到配置存储——candidateStateFor 是从 goals.js 那条只传 (agentId, tick)
+ * 的调用链上被调用的，那里拿不到 cfg。
+ */
+function responseMaxWaitTicks(cfg) {
+  let raw = cfg && Number.isInteger(cfg.responseMaxWaitTicks) && cfg.responseMaxWaitTicks > 0
+    ? cfg.responseMaxWaitTicks
+    : undefined;
+  if (raw === undefined) {
+    try { raw = configStore.get('responseMaxWaitTicks'); } catch { raw = undefined; }
+  }
+  return Number.isInteger(raw) && raw > 0 ? raw : 3;
+}
+
+/**
+ * t26（F1）：是否存在**一次性机会窗口**——即「有人正在等我答复，错过这个 tick 就永远错过」。
+ *
+ * 这个判定的唯一生产消费者是 goals.js 的让位规则（它读的就是 hasPendingCourt 这个兼容字段）。
+ * 判据分两类，刻意不对称：
+ * - **表白**（court）：立刻让位。它是 t12 已经验证过的关键窗口（不让位则求偶永不闭环、生育链断裂），
+ *   且表白本身稀少，让位的代价小。
+ * - **其他互动**（socialize/request/...）：只有**等过上限**才让位。
+ *   这是刻意的取舍：让位会掐掉本 tick 的计划加分，而 socialize 很常见，
+ *   一有请求就让位会把计划链打断——实测 4 人 30 tick 的冒烟里 write_book 直接消失。
+ *   等过上限才让位，既把等待**限住**，又让常见情形下的计划照常推进。
+ *
+ * @param {string} agentId
+ * @param {number} tick
+ * @returns {boolean}
+ */
+function hasOneShotOpportunity(agentId, tick) {
+  const inbox = pendingInteractionsOf(agentId);
+  if (inbox.length === 0) return false;
+  if (inbox.some((r) => r.type === 'court')) return true;
+  const maxWait = responseMaxWaitTicks();
+  return inbox.some((r) => tick - (Number.isInteger(r.tick) ? r.tick : tick) >= maxWait);
+}
+
+/** 某人收到的**全部**待决互动（t26：机会窗口判定的真值来源）。 */
+function pendingInteractionsOf(agentId) {
+  try {
+    return social.interaction.pendingFor(agentId);
+  } catch {
+    return [];
+  }
+}
+
+/** 某人收到的待决**表白**（供 hasPendingCourtStrict 使用，真值来自互动记录）。 */
+function pendingCourtsOf(agentId) {
+  try {
+    return social.interaction.pendingFor(agentId).filter((r) => r.type === 'court');
+  } catch { return []; }
+}
+
+function interactionConditionsFor(agentId) {
+  let pending = [];
+  let open = [];
+  try { pending = social.interaction.pendingFor(agentId); } catch { pending = []; }
+  try { open = social.interaction.openPromises(agentId); } catch { open = []; }
+  // 能否兑现：承诺的物品在背包里够不够（与 fulfillPromise 的交割条件同源）。
+  let canFulfill = false;
+  if (open.length > 0) {
+    const p = open[0];
+    const what = p?.terms?.what ?? 'food';
+    const amount = Number.isInteger(p?.terms?.amount) && p.terms.amount > 0 ? p.terms.amount : 1;
+    const id = shipmentItemId(what);
+    if (id !== null) {
+      try {
+        const bag = agent.inventory.backpack.list({ agentId }).items ?? {};
+        canFulfill = (bag[id] ?? 0) >= amount;
+      } catch { canFulfill = false; }
+    }
+  }
+  return {
+    hasPendingInteraction: pending.length > 0,
+    pendingInteractionCount: pending.length,
+    hasOpenPromise: open.length > 0,
+    canFulfillPromise: canFulfill,
+  };
+}
+
 function expeditionConditionsFor(agentId) {
   try {
     const needs = survival.needs.meter.query({ agentId }).needs;
@@ -1201,42 +1337,111 @@ export function performAgentAction(tick, agentId, action, config = {}) {
       } catch (err) { return { ok: false, reason: 'trade_failed:' + err.message.slice(0, 40) }; }
     }
     case 'socialize': {
+      // t13：社交是**双向请求**，不再是"我对你 +0.05 友谊"的单方面写入。
+      // 发起只产生一条 pending 互动记录；接收方在它自己的 tick 里 accept/reject。
+      // 只有被接受才写友谊、才建边、才影响声誉——这是"自然人不会替别人答应"的硬约束。
       const peer = pickPeer(agentId);
       if (peer === null) return { ok: false, reason: 'no_peer' };
-      social.relationship.friendship.update({ a: agentId, b: peer, delta: 0.05, note: 'tick ' + tick });
-      // P1：社交边由居民**自己的社交行动**产生。此前边只由代码的相似度建边产生，
-      // 导致行动空间 4→9 时社交结构逐字节不变（见 reports/laya-evaluation.md 同源审计）。
-      social.graph.edges.create({ a: agentId, b: peer, type: 'friendship', weight: 0.2, note: 'socialize' });
-      observer.recorder.eventLog.record({ tick, topic: 'agent.action.socialize', payload: { peer }, agentId });
-      return { ok: true, detail: { peer } };
+      const proposed = social.interaction.propose({
+        type: 'socialize', from: agentId, to: peer, tick,
+        terms: { kind: 'companionship' },
+        // 自然语言是可选渲染：给了也只是存证，判定完全走结构化 claims。
+        naturalLanguage: typeof config.utterance === 'string' ? config.utterance : null,
+      });
+      if (proposed.ok !== true) return { ok: false, reason: proposed.reason ?? 'socialize_rejected' };
+      observer.recorder.eventLog.record({ tick, topic: 'agent.action.socialize',
+        payload: { peer, interactionId: proposed.interactionId }, agentId });
+      return { ok: true, detail: { peer, interactionId: proposed.interactionId, awaiting: 'response' } };
     }
     case 'court': {
       if (pairedIndex.has(agentId)) return { ok: false, reason: 'already_paired' };
       const peer = pickMate(agentId);
       if (peer === null) return { ok: false, reason: 'no_eligible_mate' };
-      try {
-        social.relationship.romance.propose({ from: agentId, to: peer });
-        const list = pendingCourts.get(peer) ?? [];
-        if (!list.includes(agentId)) list.push(agentId);
-        pendingCourts.set(peer, list);
-        observer.recorder.eventLog.record({ tick, topic: 'agent.action.court', payload: { peer }, agentId });
-        return { ok: true, detail: { peer } };
-      } catch (err) { return { ok: false, reason: 'court_failed:' + err.message.slice(0, 40) }; }
+      const proposed = social.interaction.propose({
+        type: 'court', from: agentId, to: peer, tick,
+        terms: { kind: 'romance' },
+        // 表白必须建立在**真实依据**上：只声明可直接核实的事实（同住避难所、双方均未婚）。
+        // 事实门会逐条核实；核不实的声明不写关系、不写声誉，只记进 rejectedClaims。
+        claims: [
+          // 关于**对方**的声明必须带 subject：缺省 subject 是声明者本人，
+          // 拿自己的职业去核对"对方是商人"会把真话判成假话（初版即此缺陷，实测 27 条声明全被拒）。
+          { key: 'role.career', subject: peer,
+            value: (() => { try { return agent.role.career.current(peer)?.occupation ?? null; } catch { return null; } })() },
+        ].filter((c) => typeof c.value === 'string' && c.value !== ''),
+      });
+      if (proposed.ok !== true) return { ok: false, reason: proposed.reason ?? 'court_rejected' };
+      observer.recorder.eventLog.record({ tick, topic: 'agent.action.court',
+        payload: { peer, interactionId: proposed.interactionId }, agentId });
+      return { ok: true, detail: { peer, interactionId: proposed.interactionId, awaiting: 'response' } };
     }
-    case 'accept': {
-      // P1：接受表白是**被追求方自己的决策**，而非代码自动完成配对。
-      if (pairedIndex.has(agentId)) return { ok: false, reason: 'already_paired' };
-      const list = pendingCourts.get(agentId) ?? [];
-      if (list.length === 0) return { ok: false, reason: 'no_pending_court' };
-      const from = list[list.length - 1];
-      try {
-        social.relationship.romance.accept({ from, to: agentId });
-        pairedIndex.set(agentId, from);
-        pairedIndex.set(from, agentId);
+    case 'promise': {
+      // t13：承诺 —— 结构化记录"我欠你什么、多少、什么时候算到期"。
+      // 这是履约/违约与信任变化的**唯一前置事实**：没有它，违约无从谈起。
+      const peer = pickPeer(agentId);
+      if (peer === null) return { ok: false, reason: 'no_peer' };
+      const terms = promiseTermsFor(agentId, config);
+      const what = terms.what;
+      const amount = terms.amount;
+      const dueTick = tick + (Number.isInteger(config.promiseDueTicks) && config.promiseDueTicks > 0 ? config.promiseDueTicks : 10);
+      const proposed = social.interaction.propose({
+        type: 'promise', from: agentId, to: peer, tick,
+        terms: { what, amount, dueTick },
+      });
+      if (proposed.ok !== true) return { ok: false, reason: proposed.reason ?? 'promise_rejected' };
+      // 承诺方**自己**也要能看到"我欠了什么"——否则履约无从主动发生。
+      return { ok: true, detail: { peer, interactionId: proposed.interactionId, what, amount, dueTick } };
+    }
+    case 'fulfill':
+    case 'violate': {
+      // t13：结算一条**真实存在且仍开放**的承诺。承诺的 id 必须来自交互记录，
+      // 不能凭空生成——这是"违约/履约必须指向真实承诺"的硬约束。
+      const own = social.interaction.openPromises(agentId);
+      const due = own
+        .filter((p) => p.type === 'promise' && p.status === 'open')
+        .sort((a, b) => a.interactionId.localeCompare(b.interactionId));
+      if (due.length === 0) return { ok: false, reason: 'no_open_promise' };
+      const target = typeof config.promiseId === 'string'
+        ? (due.find((p) => p.interactionId === config.promiseId) ?? null)
+        : due[0];
+      if (target === null) return { ok: false, reason: 'not_your_open_promise' };
+      let settled;
+      if (action === 'fulfill') {
+        // 履约要有**实质**：真的把东西交出去（背包里没有就做不到）。
+        settled = fulfillPromise(agentId, target, tick);
+      } else {
+        settled = social.interaction.propose({
+          type: 'violate', from: agentId, to: target.to, tick, promiseId: target.interactionId,
+        });
+      }
+      if (settled.ok !== true) return { ok: false, reason: settled.reason ?? (action + '_failed') };
+      observer.recorder.eventLog.record({ tick, topic: 'agent.action.' + action,
+        payload: { promiseId: target.interactionId, peer: target.to }, agentId });
+      return { ok: true, detail: { promiseId: target.interactionId, peer: target.to } };
+    }
+    case 'accept':
+    case 'reject': {
+      // t13：**接收方自己的决策**——接受或拒绝都写进同一个状态机。
+      // 修复前只有 accept 而没有 reject：被表白者除了答应没有别的选项，
+      // 这不是双向互动，是"代码替人做主"。
+      if (action === 'accept' && pairedIndex.has(agentId)) return { ok: false, reason: 'already_paired' };
+      const inbox = social.interaction.pendingFor(agentId);
+      if (inbox.length === 0) return { ok: false, reason: 'no_pending_interaction' };
+      const target = pickResponseTarget(inbox, tick, config);
+      const wantAccept = action === 'accept';
+      const accept = decideResponse(agentId, target, tick, wantAccept, config);
+      const responded = social.interaction.respond({
+        interactionId: target.interactionId, respondent: agentId, accept, tick,
+      });
+      if (responded.ok !== true) return { ok: false, reason: responded.reason ?? 'respond_failed' };
+      if (accept && target.type === 'court') {
+        pairedIndex.set(agentId, target.from);
+        pairedIndex.set(target.from, agentId);
         pendingCourts.delete(agentId);
-        observer.recorder.eventLog.record({ tick, topic: 'agent.action.accept', payload: { from }, agentId });
-        return { ok: true, detail: { from } };
-      } catch (err) { return { ok: false, reason: 'accept_failed:' + err.message.slice(0, 40) }; }
+      }
+      observer.recorder.eventLog.record({ tick,
+        topic: accept ? 'agent.action.accept' : 'agent.action.reject',
+        payload: { from: target.from, type: target.type, interactionId: target.interactionId }, agentId });
+      return { ok: true, detail: { from: target.from, type: target.type, accepted: accept, interactionId: target.interactionId } };
     }
     case 'found': {
       // 居民**自己**创办企业（D2）。此前企业全部由 seed 阶段按 config.businessCount
@@ -1363,6 +1568,204 @@ function pickPeer(agentId) {
 
 function pendingFor(queue, agentId) {
   return queue.pending().some((j) => j.agentId === agentId);
+}
+
+/**
+ * t13：接收方的回应决策——**接受或拒绝是接收方自己的判断**，不是发起方说了算。
+ *
+ * 判定依据全部来自**世界事实**（facts 目录），不引入随机数：
+ * - 已配对 → 拒绝（不能重婚）。
+ * - 双方关系强度（友谊/信任）足够 → 接受。
+ * - 对方声誉过低（失信/劣迹）→ 拒绝；声誉是"我凭什么信你"的可查依据。
+ * - 结构化请求（request/promise）若带 claim，必须**全部证实**才接受；
+ *   未证实的声明一律拒绝——这就是"自然语言必须过世界事实校验"的落点。
+ *
+ * @param {string} agentId 接收方
+ * @param {object} interaction 待决互动
+ * @param {number} tick
+ * @param {boolean} wantAccept 该居民**自己选择**的动作（accept/reject）
+ * @returns {boolean} 最终是否接受
+ */
+/**
+ * t26（F1）：从待回应互动里挑一条来回应——**公平且有界等待**。
+ *
+ * 修复前这里写的是：
+ *   const courts = inbox.filter(r => r.type === 'court');
+ *   const pool = courts.length > 0 ? courts : inbox;
+ *   const target = pool[pool.length - 1];
+ * 两个缺陷叠在一起，让 socialize 在生产中**永久饿死**：
+ * 1) **独占**：只要队列里有一条表白（court），inbox 里的 socialize 就完全不参与挑选。
+ *    实测 seed42 / 20 tick / 12 人：4 条 socialize 全部永久 pending（最久的等了 8 tick），
+ *    0 条被接受、friendship 边 0 条——「社交」这个动作等于空转。
+ * 2) **LIFO**：取 pool[length-1] 是取最新的一条，后到的插队让先到的永远排不上。
+ *
+ * 新规则分两级，保证「紧要的事优先，但没有谁能无限期占着队」：
+ * - 第一级：等待已达 maxWaitTicks（默认 3）的互动里，取**等得最久**的一条。
+ *   等待因此是**有界**的：任何一条互动最多被压后 maxWaitTicks 个 tick。
+ * - 第二级：还没到等待上限时，表白（court）优先于其他请求，同类里取**最早**的一条。
+ *
+ * 注意：这里只决定"回应哪一条"，不决定"答应还是拒绝"——后者仍是接收方自己的
+ * 判断（decideResponse）。公平调度与自主决定是两件事，不要混在一起。
+ *
+ * @param {Array<object>} inbox 该居民收到的待决互动
+ * @param {number} tick
+ * @param {object} cfg
+ * @returns {object} 被选中的互动记录
+ */
+function pickResponseTarget(inbox, tick, cfg = {}) {
+  const maxWait = responseMaxWaitTicks(cfg);
+  const waited = (r) => Math.max(0, tick - (Number.isInteger(r.tick) ? r.tick : tick));
+  // 等得最久的排前面；同等待时长用 id 定序，保证同种子可复现。
+  const byLongestWait = (a, b) => (waited(b) - waited(a)) || String(a.interactionId).localeCompare(String(b.interactionId));
+
+  const overdue = inbox.filter((r) => waited(r) >= maxWait).sort(byLongestWait);
+  if (overdue.length > 0) return overdue[0];
+
+  const courts = inbox.filter((r) => r.type === 'court').sort(byLongestWait);
+  if (courts.length > 0) return courts[0];
+
+  return inbox.slice().sort(byLongestWait)[0];
+}
+
+function decideResponse(agentId, interaction, tick, wantAccept, cfg = {}) {
+  // 居民自己选的是 reject：尊重其选择，但**拒绝也要留下可查的理由**。
+  if (!wantAccept) return false;
+  if (pairedIndex.has(agentId)) return false;
+  // 结构化声明必须全部证实：有未证实声明就直接否决（这是事实校验门的执行点）。
+  if (Array.isArray(interaction.rejectedClaims) && interaction.rejectedClaims.length > 0) return false;
+  const from = interaction.from;
+  let trustAB = 0.5;
+  try { trustAB = social.interaction.trust({ holder: agentId, other: from }).trust; } catch { trustAB = 0.5; }
+  let friend = 0;
+  try { friend = social.relationship.friendship.strength({ a: agentId, b: from }); } catch { friend = 0; }
+  let rep = 50;
+  try { rep = social.reputation.query({ agentId: from })?.score ?? 50; } catch { rep = 50; }
+  // 门槛写成常量而非魔法数字：低于此声誉/信任的人得不到答应。
+  const minTrust = typeof cfg.responseMinTrust === 'number' ? cfg.responseMinTrust : 0.35;
+  if (rep < reputationFloor(cfg)) return false;
+  return trustAB >= minTrust || friend >= 0.2;
+}
+
+/**
+ * t26（F1 的第三层）：声誉门槛必须**随人群水平自适应**，不能是一个绝对常数。
+ *
+ * 为什么：reputation 自己的 distrusted 边界是 30，于是这里原本写死 30。
+ * 但声誉是一个会被**别的系统**推动的量——经济侧的破产（每案 -5）实测把
+ * seed42/20tick/12 人压到全员 21 上下（12 人里 11 人在 21~22，只有 1 人 100）。
+ * 此时绝对门槛 30 会让**所有人**的社交请求一律被拒：
+ * 实测那条唯一被回应的 socialize 正是死在 rep=21.15 < 30 上。
+ * 那不是「社会冷漠」，而是社交门槛被一个与社交无关的系统钉死——
+ * 与 F1 的 courts 独占是同一类缺陷：**管道存在，但永远走不通**。
+ *
+ * 规则（两级取更宽者）：
+ * - 绝对门槛 responseMinReputation（默认 30）：在健康社会里照常生效，
+ *   回答「这个人是不是真的劣迹斑斑」。
+ * - 相对门槛 人群均值 × responseReputationRatio（默认 0.6）：回答
+ *   「这个人在同代人里是不是垫底」。全城低迷时它自动放宽，
+ *   因此「谁值得回应」重新由**相对位置**决定，而不是由时间/经济周期决定。
+ * 取 min() 意味着相对门槛只会放宽、永远不会比绝对门槛更严——
+ * 这是刻意的：这条规则要解决的是「全员被误杀」，不是「让社会更挑剔」。
+ *
+ * @param {object} cfg
+ * @returns {number} 本 tick 生效的声誉下限
+ */
+function reputationFloor(cfg = {}) {
+  const absolute = typeof cfg.responseMinReputation === 'number' ? cfg.responseMinReputation : 30;
+  const ratio = typeof cfg.responseReputationRatio === 'number' ? cfg.responseReputationRatio : 0.6;
+  if (!(ratio > 0)) return absolute;
+  try {
+    const scores = social.reputation.list().map((r) => r.score).filter((s) => Number.isFinite(s));
+    if (scores.length === 0) return absolute;
+    const mean = scores.reduce((s, v) => s + v, 0) / scores.length;
+    return Math.min(absolute, mean * ratio);
+  } catch {
+    // 声誉不可用时**回落到绝对门槛**（保守：宁可严一点，也不凭空放行）。
+    return absolute;
+  }
+}
+
+/**
+ * t13：履约要**有实质**——真的把承诺的东西交出去。
+ *
+ * 修复前不存在履约概念，所以"承诺"不可能产生任何真实后果。
+ * 这里先做背包里的实物交割（有则扣、无则做不到），再走 interaction 的结算，
+ * 由 applyConsequence 写关系、声誉与关系边。
+ *
+ * @param {string} agentId 承诺方
+ * @param {object} promise 开放承诺记录
+ * @param {number} tick
+ * @returns {object} 结算结果
+ */
+function fulfillPromise(agentId, promise, tick) {
+  const terms = promise.terms ?? {};
+  const what = typeof terms.what === 'string' && terms.what !== '' ? terms.what : 'food';
+  const amount = Number.isInteger(terms.amount) && terms.amount > 0 ? terms.amount : 1;
+  const itemId = shipmentItemId(what);
+  let delivered = false;
+  if (itemId !== null) {
+    try {
+      const bag = agent.inventory.backpack.list({ agentId }).items ?? {};
+      if ((bag[itemId] ?? 0) >= amount) {
+        agent.inventory.backpack.remove({ agentId, itemId, quantity: amount });
+        agent.inventory.backpack.add({ agentId: promise.to, itemId, quantity: amount });
+        delivered = true;
+      }
+    } catch { delivered = false; }
+  }
+  if (!delivered) {
+    // 交不出东西就不是履约——宁可让它保持开放（到期后自然违约），
+    // 也不写一条"假的履约"进社会事实。这是 t13 最核心的诚实性约束。
+    return { ok: false, reason: 'cannot_deliver' };
+  }
+  return social.interaction.propose({
+    type: 'fulfill', from: agentId, to: promise.to, tick, promiseId: promise.interactionId,
+    terms: { what, amount, delivered: true },
+  });
+}
+
+/**
+ * t13：承诺什么，由**居民手里真的有什么**决定——不许诺自己拿不出的东西。
+ *
+ * 取背包里数量最多的**产出品**（不含制作原料），承诺 1 件。
+ * 这是"承诺可兑现"的前提：默认许一个自己没有的物名，会让 fulfill 永远不可行、
+ * violate 变成唯一出路（实测固定 'food' 时履约 0 次、违约成为必然而非选择）。
+ *
+ * @param {string} agentId
+ * @returns {{ what: string, amount: number }}
+ */
+function promiseTermsFor(agentId, cfg = {}) {
+  if (typeof cfg.promiseWhat === 'string' && cfg.promiseWhat !== '') {
+    return { what: cfg.promiseWhat, amount: Number.isInteger(cfg.promiseAmount) && cfg.promiseAmount > 0 ? cfg.promiseAmount : 1 };
+  }
+  let best = null;
+  try {
+    const woodId = itemIds.wood ?? null;
+    const bag = agent.inventory.backpack.list({ agentId }).items ?? {};
+    const catalog = new Map(agent.inventory.item.query().map((i) => [i.id, i]));
+    for (const [id, n] of Object.entries(bag)) {
+      if (!Number.isFinite(n) || n <= 0) continue;
+      // 制作原料不作为承诺物：它随时会被 craft/build 吃掉，注定违约。
+      if (id === woodId) continue;
+      const rec = catalog.get(id);
+      if (rec === undefined) continue;
+      if (best === null || n > best.n) best = { id, n, name: rec.name };
+    }
+  } catch { best = null; }
+  if (best === null) return { what: 'wood', amount: 1 };
+  return { what: best.name, amount: 1 };
+}
+
+/** 承诺物品名 → 目录里的真实物品 id（对不上就返回 null，不猜测）。 */
+function shipmentItemId(name) {
+  try {
+    const hit = itemCatalog().find((i) => i.name === name || i.id === name);
+    return hit === undefined ? null : hit.id;
+  } catch { return null; }
+}
+
+/** 物品目录读取（可能与 item 模块解耦，便于测试注入）。 */
+function itemCatalog() {
+  return agent.inventory.item.query();
 }
 
 /** 制作队列推进：只推进已由居民 **自己发起** 的任务（发起见 performAgentAction）。 */
@@ -1787,6 +2190,9 @@ const TICK_STEPS = Object.freeze([
   { id: 'health', label: '健康与疫情', run: (c) => runHealth(c.tick, c.agents, c.config) },
   { id: 'platform', label: '社交平台', run: (c) => runPlatform(c.tick, c.agents, c.config) },
   { id: 'community', label: '社区发现', run: (c) => runCommunity(c.tick, c.agents, c.config) },
+  // t13：到期承诺的结算必须**每 tick 发生一次**。它把「承诺」从一次性记录变成
+  // 有期限的社会契约——过期未交付即违约，并产生关系与声誉后果。
+  { id: 'obligations', label: '承诺结算', run: (c) => runObligationSettlement(c.tick) },
 ]);
 
 /**
@@ -1816,6 +2222,41 @@ export function tick(input) {
   const out = {};
   for (const unit of tickSequence(input)) out[unit.id] = unit.value;
   return out;
+}
+
+/**
+ * t13：结算到期未交付的承诺（违约）。
+ *
+ * 放在阶段二末尾而不是决策阶段：结算的对象是**已经发生的事实**
+ *（期限已过且没交货），不应受本 tick 的决策影响，也不该占用居民的行动机会。
+ * 返回计数以便主循环把它计入 summary 与观测。
+ */
+function runObligationSettlement(tick) {
+  const out = social.interaction.settleOverdue({ tick });
+  // t26（F1）：待决互动的**有限等待**。t13 只给了接收方否决权，没给「不回应」后果，
+  // 于是请求可以永久挂着（实测 4 条 socialize 到跑完都没人答复）。
+  // 沉默即拒绝：超时未答复落成 rejected（不建关系/不涨声誉），等待因此**有界**。
+  const stale = social.interaction.settleStaleResponses({ tick, maxWait: responseSilenceTicks() });
+  // 不另设计数器：违约的**权威计数**在 interaction.stats().violated 里。
+  // 再存一份就又是一处需要入档、会与事实漂移的影子状态。
+  return { overdue: out.overdue.length, items: out.overdue, timedOut: stale.count };
+}
+
+/**
+ * t26：回应沉默的上限（tick）。超过这个等待还没有答复，就按「没答应」结案。
+ * 取与 promiseDueTicks 同量级（默认 10）：
+ * 别人的请求和你欠的承诺一样，都该在十个 tick 内有个说法。
+ * 必须**大于** responseMaxWaitTicks（3，优先级老化点），
+ * 否则「等超时就更优先」这条规则永远来不及生效。
+ */
+function responseSilenceTicks(cfg) {
+  let raw = cfg && Number.isInteger(cfg.responseSilenceTicks) && cfg.responseSilenceTicks > 0
+    ? cfg.responseSilenceTicks
+    : undefined;
+  if (raw === undefined) {
+    try { raw = configStore.get('responseSilenceTicks'); } catch { raw = undefined; }
+  }
+  return Number.isInteger(raw) && raw > 0 ? raw : 10;
 }
 
 /** 批次2-D：社区发现（每 N tick 重算，避免每 tick 全量重算拖慢长跑）。 */
@@ -1934,7 +2375,11 @@ export function __reset() {
   // platformGen 是平台侧随机源。不复位会让 __reset 后的随机序列延续上一局，
   // 使同一份代码的结果取决于此前跑过什么（与 e63b932 修的同类泄漏）。
   // 复位到模块加载时的默认种子；seed() 会按需重新播种。
-  platformGen = mulberry32(0x9e3779b9 >>> 0);
+  // 这里**直接赋值**而不是调用 platformGenRestore_：复位点的可见性本身是契约的
+  // 一部分——静态索引（bin/flow-index.mjs）只认复位函数体内的写入，藏在辅助函数
+  // 后面的复位会被报成 store/reset-missing，让真正的残留缺陷淹没在噪声里。
+  platformGenState = 0x9e3779b9 >>> 0;
+  platformGen = mulberry32(platformGenState, (a) => { platformGenState = a; });
 
   economy.__reset();
   agent.inventory.item.__reset();
@@ -1945,4 +2390,117 @@ export function __reset() {
   agent.crafting.writing.__reset();
   survival.health.disease.__reset();
   survival.health.epidemic.__reset();
+}
+
+// ---- 持久化：阶段二模块级状态必须进存档 ----
+// 这些变量决定「谁能工作 / 谁和谁配对 / 已生几胎 / 企业盈亏 / 社区快照相位 /
+// 平台随机流」——全部是逐 tick 累积的仿真状态，只存在于内存。
+// 不入档则恢复后阶段二从「未播种」重来：账户重建、配对清空、生育上限复位、
+// 企业统计归零，续跑与连续运行必然分叉。
+
+export function __snapshot() {
+  return {
+    seeded,
+    platformGen: platformGenState_(),
+    accounts: [...accounts.entries()],
+    settledAgentIds: [...settledAgentIds],
+    pendingCourts: [...pendingCourts.entries()].map(([k, v]) => [k, [...v]]),
+    pairedIndex: [...pairedIndex.entries()],
+    reproducedPairs: [...reproducedPairs],
+    childrenBorn,
+    itemIds: { ...itemIds },
+    tradeCount, craftCount, buildCount, treatCount, quarantineCount, releasesCount,
+    businessIds: [...businessIds],
+    goodsProduced, wagesPaid, bankruptcies, creditIssued, interestAccrued,
+    taxCollected, taxRedistributed,
+    supplyAccountId,
+    goodsSold, businessRevenue, businessCosts,
+    residentEnergyUsed, industryEnergyUsed, lossTicks,
+    lastCommunityTick,
+    communitySnapshot: communitySnapshot === null ? null : structuredClone(communitySnapshot),
+    postCount, replyCount, reactCount,
+    reputationTriageSwaps, reputationTriageTreatedScore,
+    lastFeedTick,
+    feedSignature: [...feedSignature],
+    recentPostIds: [...recentPostIds],
+    foundCapitalConfig: foundCapitalConfig === null ? null : structuredClone(foundCapitalConfig),
+    reserveScalePop,
+  };
+}
+
+/**
+ * 恢复阶段二状态（整体替换）。
+ *
+ * 派生缓存（_candidateStateCache / _candidateStateCacheTick）**故意不还原**：
+ * 它按 tick 判定有效期，恢复后 tick 已推进，首次读取会自然重建。
+ * platformGen 的流位置必须还原，否则平台侧随机序列（发帖/回复/点赞）
+ * 会与连续运行错位。
+ * @param {object} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('stage2.__restore: 状态必须为对象');
+  }
+  const d = data;
+  seeded = d.seeded === true;
+  platformGenRestore_(d.platformGen);
+  accounts = new Map(Array.isArray(d.accounts) ? d.accounts : []);
+  settledAgentIds = Array.isArray(d.settledAgentIds) ? [...d.settledAgentIds] : [];
+  pendingCourts.clear();
+  for (const pair of (Array.isArray(d.pendingCourts) ? d.pendingCourts : [])) {
+    if (Array.isArray(pair) && pair.length >= 2) pendingCourts.set(pair[0], new Set(pair[1] ?? []));
+  }
+  pairedIndex.clear();
+  for (const pair of (Array.isArray(d.pairedIndex) ? d.pairedIndex : [])) {
+    if (Array.isArray(pair) && pair.length >= 2) pairedIndex.set(pair[0], pair[1]);
+  }
+  reproducedPairs.clear();
+  for (const k of (Array.isArray(d.reproducedPairs) ? d.reproducedPairs : [])) reproducedPairs.add(k);
+  childrenBorn = intOr(d.childrenBorn, 0);
+  itemIds = (d.itemIds && typeof d.itemIds === 'object') ? { ...d.itemIds } : {};
+  tradeCount = intOr(d.tradeCount, 0);
+  craftCount = intOr(d.craftCount, 0);
+  buildCount = intOr(d.buildCount, 0);
+  treatCount = intOr(d.treatCount, 0);
+  quarantineCount = intOr(d.quarantineCount, 0);
+  releasesCount = intOr(d.releasesCount, 0);
+  businessIds = Array.isArray(d.businessIds) ? [...d.businessIds] : [];
+  goodsProduced = intOr(d.goodsProduced, 0);
+  wagesPaid = numOr(d.wagesPaid, 0);
+  bankruptcies = intOr(d.bankruptcies, 0);
+  creditIssued = numOr(d.creditIssued, 0);
+  interestAccrued = numOr(d.interestAccrued, 0);
+  taxCollected = numOr(d.taxCollected, 0);
+  taxRedistributed = numOr(d.taxRedistributed, 0);
+  supplyAccountId = typeof d.supplyAccountId === 'string' ? d.supplyAccountId : null;
+  goodsSold = numOr(d.goodsSold, 0);
+  businessRevenue = numOr(d.businessRevenue, 0);
+  businessCosts = numOr(d.businessCosts, 0);
+  residentEnergyUsed = numOr(d.residentEnergyUsed, 0);
+  industryEnergyUsed = numOr(d.industryEnergyUsed, 0);
+  lossTicks = intOr(d.lossTicks, 0);
+  lastCommunityTick = intOr(d.lastCommunityTick, -1);
+  communitySnapshot = (d.communitySnapshot === null || d.communitySnapshot === undefined) ? null : structuredClone(d.communitySnapshot);
+  postCount = intOr(d.postCount, 0);
+  replyCount = intOr(d.replyCount, 0);
+  reactCount = intOr(d.reactCount, 0);
+  reputationTriageSwaps = intOr(d.reputationTriageSwaps, 0);
+  reputationTriageTreatedScore = numOr(d.reputationTriageTreatedScore, 0);
+  lastFeedTick = intOr(d.lastFeedTick, -1);
+  feedSignature = Array.isArray(d.feedSignature) ? [...d.feedSignature] : [];
+  recentPostIds = Array.isArray(d.recentPostIds) ? [...d.recentPostIds] : [];
+  foundCapitalConfig = (d.foundCapitalConfig === null || d.foundCapitalConfig === undefined) ? null : structuredClone(d.foundCapitalConfig);
+  reserveScalePop = intOr(d.reserveScalePop, -1);
+  // 派生缓存主动作废：tick 已推进，旧候选快照不再可信。
+  _candidateStateCache = null;
+  _candidateStateCacheTick = -1;
+  return { seeded, childrenBorn, accounts: accounts.size };
+}
+
+function intOr(v, dflt) {
+  return Number.isInteger(v) ? v : dflt;
+}
+
+function numOr(v, dflt) {
+  return (typeof v === 'number' && Number.isFinite(v)) ? v : dflt;
 }

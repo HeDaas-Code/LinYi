@@ -45,3 +45,34 @@ export function update(input = {}) {
 export function __reset() {
   prices.clear();
 }
+
+// ---- 持久化：已发现价格必须进存档 ----
+
+/**
+ * 导出价格表。
+ *
+ * 价格由撮合结果**逐步发现**（update 回写成交价），是市场状态而非配置。
+ * 不入档则恢复后全部 symbol 无价（quote 返回 null），供需与破产判定
+ * 会在续跑开头重新「从零发现」，与连续运行不同。
+ */
+export function __snapshot() {
+  return { prices: [...prices.entries()] };
+}
+
+/**
+ * 恢复价格表（整体替换）。
+ * @param {{prices?: Array<[string, number]>}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('price.__restore: 状态必须为对象');
+  }
+  prices.clear();
+  const list = Array.isArray(data.prices) ? data.prices : [];
+  for (const pair of list) {
+    if (!Array.isArray(pair) || pair.length < 2) continue;
+    const [symbol, value] = pair;
+    if (typeof symbol === 'string' && symbol !== '' && Number.isFinite(value)) prices.set(symbol, value);
+  }
+  return { prices: prices.size };
+}

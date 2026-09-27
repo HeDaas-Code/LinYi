@@ -5,13 +5,13 @@ parent: truman-town-flow.state.area.runtime
 name: {zh: "_alivePopValue", en: "_alivePopValue"}
 description:
   zh: >
-      number 类型，声明于 src/runtime/orchestrator/loop.js:157。写入方 1 个、读取方 1 个；**未纳入复位**（跨 run 可能残留）。
+      number 类型，声明于 src/runtime/orchestrator/loop.js:185。写入方 1 个、读取方 1 个；已纳入复位。
       
   en: >
-      number declared at src/runtime/orchestrator/loop.js:157; writers=1, readers=1
+      number declared at src/runtime/orchestrator/loop.js:185; writers=1, readers=1
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T17:26:42.543Z"
+updated_at: "2026-09-27T01:43:12.668Z"
 fingerprint: pending
 source: []
 apis:

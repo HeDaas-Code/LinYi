@@ -11,7 +11,7 @@ description:
       Code module src/infra/rng.js as a data-flow endpoint.
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T17:26:46.551Z"
+updated_at: "2026-09-27T01:43:20.282Z"
 fingerprint: pending
 source: []
 apis: []
@@ -21,9 +21,9 @@ deps:
     to_api: "rpc:state-b04accf5:write-seed"
     label: {zh: "写 state", en: "write state"}
   - kind: dataflow
-    to: truman-town-flow.state.area.infra.seeded-228e1d9c
-    to_api: "rpc:seeded-228e1d9c:write-seed"
-    label: {zh: "写 seeded", en: "write seeded"}
+    to: truman-town-flow.state.area.infra.gen-state-28bc6a9f
+    to_api: "rpc:gen-state-28bc6a9f:write-seed"
+    label: {zh: "写 genState", en: "write genState"}
   - kind: dataflow
     to: truman-town-flow.state.area.infra.gen-3a5a94ca
     to_api: "rpc:gen-3a5a94ca:write-seed"

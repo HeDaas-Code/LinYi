@@ -112,3 +112,24 @@ export function redistribute(input = {}) {
 export function __reset() {
   poolAccountId = null;
 }
+
+// ---- 持久化：税收池账户引用必须进存档 ----
+
+/**
+ * 导出税收池账户 id（与金库同理：不入档会在续跑时重复开户）。
+ */
+export function __snapshot() {
+  return { poolAccountId };
+}
+
+/**
+ * 恢复税收池账户 id。
+ * @param {{poolAccountId?: string|null}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('tax.__restore: 状态必须为对象');
+  }
+  poolAccountId = typeof data.poolAccountId === 'string' && data.poolAccountId !== '' ? data.poolAccountId : null;
+  return { poolAccountId };
+}

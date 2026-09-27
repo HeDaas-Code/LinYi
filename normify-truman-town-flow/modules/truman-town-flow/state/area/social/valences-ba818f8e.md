@@ -11,7 +11,7 @@ description:
       set declared at src/social/culture/norms.js:21; writers=0, readers=1
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T17:26:42.543Z"
+updated_at: "2026-09-27T01:43:16.417Z"
 fingerprint: pending
 source: []
 apis:

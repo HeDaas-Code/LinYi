@@ -5,13 +5,13 @@ parent: truman-town-flow.state.area.runtime
 name: {zh: "pendingCourts", en: "pendingCourts"}
 description:
   zh: >
-      map 类型，声明于 src/runtime/orchestrator/_stage2.js:73。写入方 1 个、读取方 2 个；已纳入复位。
+      map 类型，声明于 src/runtime/orchestrator/_stage2.js:83。写入方 2 个、读取方 3 个；已纳入复位。
       
   en: >
-      map declared at src/runtime/orchestrator/_stage2.js:73; writers=1, readers=2
+      map declared at src/runtime/orchestrator/_stage2.js:83; writers=2, readers=3
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T17:26:38.768Z"
+updated_at: "2026-09-27T01:43:01.640Z"
 fingerprint: pending
 source: []
 apis:
@@ -23,6 +23,15 @@ apis:
           
       en: >
           writer performAgentAction
+          
+  - protocol: rpc
+    path: "pending-courts-3dc80871:write-__restore"
+    description:
+      zh: >
+          写入方 __restore（src/runtime/orchestrator/_stage2.js）
+          
+      en: >
+          writer __restore
           
   - protocol: rpc
     path: "pending-courts-3dc80871:read-candidateStateFor"
@@ -42,6 +51,15 @@ apis:
       en: >
           reader performAgentAction
           
+  - protocol: rpc
+    path: "pending-courts-3dc80871:read-__snapshot"
+    description:
+      zh: >
+          读取方 __snapshot
+          
+      en: >
+          reader __snapshot
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.code.runtime.orchestrator.stage2
@@ -50,5 +68,9 @@ deps:
   - kind: dataflow
     to: truman-town-flow.code.runtime.orchestrator.stage2
     from_api: "rpc:pending-courts-3dc80871:read-performAgentAction"
+    label: {zh: "读 pendingCourts", en: "read pendingCourts"}
+  - kind: dataflow
+    to: truman-town-flow.code.agent.crafting.recipe
+    from_api: "rpc:pending-courts-3dc80871:read-__snapshot"
     label: {zh: "读 pendingCourts", en: "read pendingCourts"}
 ---

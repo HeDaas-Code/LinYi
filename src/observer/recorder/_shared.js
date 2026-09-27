@@ -17,3 +17,28 @@ export function nextSeq() {
 export function __resetSeq() {
   seq = 0;
 }
+
+// ---- 持久化：日志写入序号必须进存档 ----
+
+/**
+ * 导出日志序号。
+ *
+ * 序号参与日志节点 id（obs.event.<序号> / obs.decision.<序号> ...）。
+ * 不入档则恢复后从 1 重新发号，新日志会**覆盖**存档中已有的同 id 节点，
+ * 审计与编年志历史被静默截断。
+ */
+export function __snapshot() {
+  return { seq };
+}
+
+/**
+ * 恢复日志序号。
+ * @param {{seq?: number}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('recorder.__restore: 状态必须为对象');
+  }
+  seq = Number.isInteger(data.seq) && data.seq >= 0 ? data.seq : 0;
+  return { seq };
+}

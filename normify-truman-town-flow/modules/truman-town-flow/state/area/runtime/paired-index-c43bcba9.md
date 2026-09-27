@@ -5,13 +5,13 @@ parent: truman-town-flow.state.area.runtime
 name: {zh: "pairedIndex", en: "pairedIndex"}
 description:
   zh: >
-      map 类型，声明于 src/runtime/orchestrator/_stage2.js:74。写入方 1 个、读取方 5 个；已纳入复位。
+      map 类型，声明于 src/runtime/orchestrator/_stage2.js:84。写入方 2 个、读取方 6 个；已纳入复位。
       
   en: >
-      map declared at src/runtime/orchestrator/_stage2.js:74; writers=1, readers=5
+      map declared at src/runtime/orchestrator/_stage2.js:84; writers=2, readers=6
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T17:26:36.897Z"
+updated_at: "2026-09-27T01:43:01.640Z"
 fingerprint: pending
 source: []
 apis:
@@ -23,6 +23,15 @@ apis:
           
       en: >
           writer performAgentAction
+          
+  - protocol: rpc
+    path: "paired-index-c43bcba9:write-__restore"
+    description:
+      zh: >
+          写入方 __restore（src/runtime/orchestrator/_stage2.js）
+          
+      en: >
+          writer __restore
           
   - protocol: rpc
     path: "paired-index-c43bcba9:read-runProcreation"
@@ -69,6 +78,15 @@ apis:
       en: >
           reader pickMate
           
+  - protocol: rpc
+    path: "paired-index-c43bcba9:read-__snapshot"
+    description:
+      zh: >
+          读取方 __snapshot
+          
+      en: >
+          reader __snapshot
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.code.runtime.orchestrator.stage2
@@ -89,5 +107,9 @@ deps:
   - kind: dataflow
     to: truman-town-flow.code.runtime.orchestrator.stage2
     from_api: "rpc:paired-index-c43bcba9:read-pickMate"
+    label: {zh: "读 pairedIndex", en: "read pairedIndex"}
+  - kind: dataflow
+    to: truman-town-flow.code.agent.crafting.recipe
+    from_api: "rpc:paired-index-c43bcba9:read-__snapshot"
     label: {zh: "读 pairedIndex", en: "read pairedIndex"}
 ---

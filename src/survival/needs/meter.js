@@ -107,6 +107,44 @@ export function query(input = {}) {
 }
 
 /** 复位全部居民需求（测试用）。 */
+/**
+ * 导出全部居民需求状态。
+ *
+ * needs 直接决定决策（进食阈值、生存门、压力评分），且是**跨 tick 累积**的
+ * （饥饿是慢慢涨上来的）。不入档则恢复后全城需求归零——续跑的居民瞬间
+ * 「不饿不渴」，与连续运行的结果完全分叉。
+ */
+export function __snapshot() {
+  return {
+    residents: [...residents.entries()].map(([agentId, st]) => ({
+      agentId,
+      needs: { ...st.needs },
+      updatedAt: st.updatedAt,
+    })),
+  };
+}
+
+/**
+ * 恢复居民需求状态（整体替换）。
+ * @param {{residents?: Array<object>}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('meter.__restore: 状态必须为对象');
+  }
+  residents.clear();
+  const list = Array.isArray(data.residents) ? data.residents : [];
+  for (const rec of list) {
+    if (typeof rec?.agentId !== 'string' || rec.agentId === '') continue;
+    residents.set(rec.agentId, {
+      needs: { ...DEFAULT_NEEDS, ...(rec.needs ?? {}) },
+      updatedAt: Number.isFinite(rec.updatedAt) ? rec.updatedAt : 0,
+    });
+  }
+  return { residents: residents.size };
+}
+
+/** 复位（测试用）。 */
 export function __reset() {
   residents.clear();
 }

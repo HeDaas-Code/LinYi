@@ -171,3 +171,42 @@ export function list() {
 export function __reset() {
   residents.clear();
 }
+
+// ---- 持久化：居民健康与疾病必须进存档 ----
+
+/**
+ * 导出居民健康档案（health + 疾病列表）。
+ *
+ * health 是**跨 tick 累积**的：饥饿持续导致 health 下降，恢复期又缓慢回升。
+ * 不入档则恢复后所有人 health=100（默认），濒死状态与疾病进程全部丢失，
+ * 死亡率与因果链随之失真。
+ */
+export function __snapshot() {
+  return {
+    residents: [...residents.entries()].map(([agentId, st]) => ({
+      agentId,
+      health: st.health,
+      diseases: structuredClone(st.diseases ?? []),
+    })),
+  };
+}
+
+/**
+ * 恢复居民健康档案（整体替换）。
+ * @param {{residents?: Array<object>}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('disease.__restore: 状态必须为对象');
+  }
+  residents.clear();
+  const list = Array.isArray(data.residents) ? data.residents : [];
+  for (const rec of list) {
+    if (typeof rec?.agentId !== 'string' || rec.agentId === '') continue;
+    residents.set(rec.agentId, {
+      health: Number.isFinite(rec.health) ? rec.health : DEFAULT_HEALTH,
+      diseases: Array.isArray(rec.diseases) ? structuredClone(rec.diseases) : [],
+    });
+  }
+  return { residents: residents.size };
+}

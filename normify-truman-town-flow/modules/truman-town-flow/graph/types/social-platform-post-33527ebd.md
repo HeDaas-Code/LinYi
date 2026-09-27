@@ -5,9 +5,9 @@ parent: truman-town-flow.graph.types
 name: {zh: "social.platform.post", en: "social.platform.post"}
 description:
   zh: >
-      声明于 undefined:undefined。生产者 1 个，消费者 4 个。
+      声明于 undefined:undefined。生产者 1 个，消费者 5 个。
   en: >
-      Declared at undefined:undefined; producers=1, consumers=4
+      Declared at undefined:undefined; producers=1, consumers=5
 revision: "0000000000000000000000000000000000000000"
 updated_at: "2026-01-01T00:00:00Z"
 fingerprint: pending
@@ -48,4 +48,11 @@ apis:
           消费者 src/social/platform/feeds.js
       en: >
           consumer src/social/platform/feeds.js
+  - protocol: rpc
+    path: "social-platform-post-33527ebd:read.src_social_platform_posts_js"
+    description:
+      zh: >
+          消费者 src/social/platform/posts.js
+      en: >
+          consumer src/social/platform/posts.js
 ---

@@ -144,6 +144,37 @@ export function complete(input = {}) {
   return { techId: input.techId, researchers: [...rec.researchers], unlocked };
 }
 
+/**
+ * 改派进行中研究的负责人（t5：文明重启的世代交接）。
+ *
+ * 为什么必须有这个入口：研究任务在 start 时把负责人 id **记死在记录里**，
+ * progress 每 tick 用 rec.researchers[0] 作为行为主体写 action-log。
+ * 文明重启把旧世代封存后，若不改派，被封存的居民会继续"隔着世代"推进研究——
+ * 实测：交接后 tick 2/3 的 action-log 仍以已封存的 agent_...001 为行为主体。
+ * 那既不是历史，也不是新世代的行为，是跨世代的状态泄漏。
+ *
+ * @param {{ techId: string, researchers: string[], tick?: number }} input
+ * @returns {object} 改派后的任务快照
+ */
+export function reassign(input = {}) {
+  const rec = active.get(input?.techId);
+  if (rec === undefined) {
+    throw new Error('research.reassign: 无进行中的研究 "' + String(input?.techId) + '"');
+  }
+  const researchers = assertResearchers(input?.researchers);
+  if (researchers.length === 0) {
+    throw new TypeError('research.reassign: researchers 不能为空数组');
+  }
+  const previous = [...rec.researchers];
+  rec.researchers = researchers;
+  eventLog.record({
+    tick: Number.isInteger(input?.tick) ? input.tick : 0,
+    topic: 'civilization.tech.research.reassign',
+    payload: { techId: rec.techId, previous, researchers: [...researchers] },
+  });
+  return snapshot(rec);
+}
+
 /** 查看全部活跃研究任务（辅助方法）。 */
 export function pending() {
   return [...active.values()].map(snapshot);
@@ -152,4 +183,48 @@ export function pending() {
 /** 复位研究任务队列（测试用）。 */
 export function __reset() {
   active.clear();
+}
+
+// ---- 持久化：进行中的研究必须进存档 ----
+
+/**
+ * 导出活跃研究任务。
+ *
+ * 研究进度是**逐 tick 累积**的（progress += 1），不入档则恢复后所有在研
+ * 项目凭空消失：科技永远不会突破，文明反馈链断裂。
+ */
+export function __snapshot() {
+  return {
+    active: [...active.entries()].map(([techId, rec]) => [techId, {
+      ...structuredClone(rec),
+      // researchers 内部是**数组**（见 start/assertResearchers 的赋值），
+      // 显式展开成数组，避免存档里出现 Set 之类的非 JSON 形状。
+      researchers: [...(rec.researchers ?? [])],
+    }]),
+  };
+}
+
+/**
+ * 恢复活跃研究任务（整体替换）。
+ * @param {{active?: Array}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('research.__restore: 状态必须为对象');
+  }
+  active.clear();
+  const list = Array.isArray(data.active) ? data.active : [];
+  for (const pair of list) {
+    if (!Array.isArray(pair) || pair.length < 2) continue;
+    const rec = pair[1];
+    if (typeof pair[0] !== 'string' || pair[0] === '' || rec === null || typeof rec !== 'object') continue;
+    // researchers 必须还原成**数组**，与 start()/assertResearchers 的存储形状一致。
+    // 还原成 Set 会静默破坏 progress()：它用 rec.researchers[0] 取主导研究者，
+    // 而 Set 没有下标，取值恒为 undefined → 研究者被降级成 'civilization'。
+    const researchers = Array.isArray(rec.researchers)
+      ? rec.researchers.slice()
+      : (rec.researchers instanceof Set ? [...rec.researchers] : []);
+    active.set(pair[0], { ...structuredClone(rec), researchers });
+  }
+  return { active: active.size };
 }

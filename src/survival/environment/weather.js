@@ -67,6 +67,32 @@ export function __reset() {
   current = null;
 }
 
+// ---- 持久化：当前天气必须进存档 ----
+
+/**
+ * 导出当前天气状态。
+ *
+ * 天气（severity / shelterStress / daysLeft）影响需求增长与避难所压力，
+ * 且 daysLeft 是**跨 tick 倒计时**。不入档则恢复后天气回到「未初始化」，
+ * 下一次 forecast 会重掷一个新天气：续跑与连续运行的天气轨迹分叉。
+ * current=null 表示「尚未预报」，必须与「某个具体天气」区分保留。
+ */
+export function __snapshot() {
+  return { current: current === null ? null : structuredClone(current) };
+}
+
+/**
+ * 恢复当前天气（null 表示未初始化）。
+ * @param {{current?: object|null}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('weather.__restore: 状态必须为对象');
+  }
+  current = (data.current === null || data.current === undefined) ? null : structuredClone(data.current);
+  return { current: current === null ? null : current.kind };
+}
+
 /**
  * 预报当前天气。若尚未初始化或已到期，则推进到一个新天气。
  * @param {{ tick?: number, force?: boolean }} [input]

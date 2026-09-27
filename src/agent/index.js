@@ -20,6 +20,11 @@ import * as decisionContext from './decision/context.js';
 import * as decisionSelector from './decision/selector.js';
 import * as explainer from './decision/explainer.js';
 import * as candidates from './decision/candidates.js';
+import * as actionContract from './decision/action-contract.js';
+import * as outcomeModel from './decision/outcome-model.js';
+import * as executionOutcome from './decision/execution-outcome.js';
+import * as contention from './decision/contention.js';
+import * as goals from './decision/goals.js';
 import * as episodicStore from './memory/episodic/store.js';
 import * as episodicRecaller from './memory/episodic/recaller.js';
 import * as semantic from './memory/semantic.js';
@@ -65,6 +70,12 @@ export const decision = {
   selector: decisionSelector,
   explainer,
   candidates,
+  // D01/D03/D04：共享行动契约、有界结果估计、执行结果归一化。
+  contract: actionContract,
+  outcomeModel,
+  executionOutcome,
+  contention,
+  goals,
 };
 
 export const memory = {

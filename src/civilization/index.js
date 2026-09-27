@@ -9,6 +9,7 @@
 export * as legacy from './legacy/index.js';
 export * as collapse from './collapse/index.js';
 export * as tech from './tech/index.js';
+export * as relic from './relic/index.js';
 import * as restart from './restart.js';
 
 export { restart };

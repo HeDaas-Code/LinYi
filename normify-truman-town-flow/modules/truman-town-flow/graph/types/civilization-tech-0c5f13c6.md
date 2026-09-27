@@ -5,9 +5,9 @@ parent: truman-town-flow.graph.types
 name: {zh: "civilization.tech", en: "civilization.tech"}
 description:
   zh: >
-      声明于 undefined:undefined。生产者 1 个，消费者 6 个。
+      声明于 undefined:undefined。生产者 1 个，消费者 7 个。
   en: >
-      Declared at undefined:undefined; producers=1, consumers=6
+      Declared at undefined:undefined; producers=1, consumers=7
 revision: "0000000000000000000000000000000000000000"
 updated_at: "2026-01-01T00:00:00Z"
 fingerprint: pending
@@ -56,10 +56,10 @@ apis:
       en: >
           consumer src/runtime/orchestrator/_stage3.js
   - protocol: rpc
-    path: "civilization-tech-0c5f13c6:read.src_survival_resources_energy_js"
+    path: "civilization-tech-0c5f13c6:read.src_runtime_orchestrator_loop_js"
     description:
       zh: >
-          消费者 src/survival/resources/energy.js
+          消费者 src/runtime/orchestrator/loop.js
       en: >
-          consumer src/survival/resources/energy.js
+          consumer src/runtime/orchestrator/loop.js
 ---

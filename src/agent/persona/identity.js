@@ -11,7 +11,9 @@
 import * as worldState from '../../runtime/world-state.js';
 import * as registry from '../../runtime/registry.js';
 
-const IDENTITY_FIELDS = ['name', 'persona', 'familyId', 'parents', 'spouseId', 'factionId', 'socialTags', 'age', 'stage', 'bornTick'];
+// generation 是代际身份（第几代居民）：文明重启交接后由 registerAgent 写入，
+// 使「这一代是第几代」在身份面上可查，而不只存在于 family.lineage。
+const IDENTITY_FIELDS = ['name', 'persona', 'familyId', 'parents', 'spouseId', 'factionId', 'socialTags', 'age', 'stage', 'bornTick', 'generation'];
 
 function assertAgentId(agentId) {
   if (typeof agentId !== 'string' || agentId.trim() === '') {
@@ -41,6 +43,8 @@ export function describe(agentId) {
     age: typeof ws.age === 'number' ? ws.age : null,
     stage: ws.stage ?? null,
     bornTick: ws.bornTick ?? null,
+    generation: Number.isInteger(ws.generation) ? ws.generation
+      : (Number.isInteger(data.generation) ? data.generation : null),
     alive: ws.alive !== false,
     deathTick: ws.deathTick ?? null,
   };

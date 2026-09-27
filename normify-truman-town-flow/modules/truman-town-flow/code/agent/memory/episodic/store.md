@@ -11,14 +11,14 @@ description:
       Code module src/agent/memory/episodic/store.js as a data-flow endpoint.
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T17:26:44.509Z"
+updated_at: "2026-09-27T01:43:16.417Z"
 fingerprint: pending
 source: []
 apis: []
 deps:
   - kind: dataflow
     to: truman-town-flow.state.area.agent.by-agent-86ec5f42
-    to_api: "rpc:by-agent-86ec5f42:write-ensureFresh"
+    to_api: "rpc:by-agent-86ec5f42:write-rebuildFromGraph"
     label: {zh: "写 byAgent", en: "write byAgent"}
   - kind: dataflow
     to: truman-town-flow.state.area.agent.by-agent-86ec5f42
@@ -30,7 +30,7 @@ deps:
     label: {zh: "写 lastGeneration", en: "write lastGeneration"}
   - kind: dataflow
     to: truman-town-flow.state.area.agent.by-agent-eca3003b
-    to_api: "rpc:by-agent-eca3003b:write-ensureFresh"
+    to_api: "rpc:by-agent-eca3003b:write-rebuildFromGraph"
     label: {zh: "写 byAgent", en: "write byAgent"}
   - kind: dataflow
     to: truman-town-flow.state.area.agent.last-generation-4f7f9071
@@ -38,7 +38,7 @@ deps:
     label: {zh: "写 lastGeneration", en: "write lastGeneration"}
   - kind: dataflow
     to: truman-town-flow.state.area.agent.events-by-agent-63e338fd
-    to_api: "rpc:events-by-agent-63e338fd:write-ensureFresh"
+    to_api: "rpc:events-by-agent-63e338fd:write-rebuildFromGraph"
     label: {zh: "写 eventsByAgent", en: "write eventsByAgent"}
   - kind: dataflow
     to: truman-town-flow.state.area.agent.last-generation-a00b5dfa
@@ -54,7 +54,7 @@ deps:
     label: {zh: "写 byType", en: "write byType"}
   - kind: dataflow
     to: truman-town-flow.state.area.social.by-id-fde1e42c
-    to_api: "rpc:by-id-fde1e42c:write-ensureFresh"
+    to_api: "rpc:by-id-fde1e42c:write-rebuildFromGraph"
     label: {zh: "写 byId", en: "write byId"}
   - kind: dataflow
     to: truman-town-flow.state.area.social.last-generation-b243beda
@@ -62,7 +62,7 @@ deps:
     label: {zh: "写 lastGeneration", en: "write lastGeneration"}
   - kind: dataflow
     to: truman-town-flow.state.area.social.by-agent-2dd1f55b
-    to_api: "rpc:by-agent-2dd1f55b:write-ensureFresh"
+    to_api: "rpc:by-agent-2dd1f55b:write-rebuildFromGraph"
     label: {zh: "写 byAgent", en: "write byAgent"}
   - kind: dataflow
     to: truman-town-flow.state.area.social.last-generation-a3b1fa91

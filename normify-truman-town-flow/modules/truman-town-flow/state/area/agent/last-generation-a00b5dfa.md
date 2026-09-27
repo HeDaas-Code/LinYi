@@ -5,13 +5,13 @@ parent: truman-town-flow.state.area.agent
 name: {zh: "lastGeneration", en: "lastGeneration"}
 description:
   zh: >
-      number 类型，声明于 src/agent/psyche/trauma.js:26。写入方 1 个、读取方 1 个；已纳入复位。
+      number 类型，声明于 src/agent/psyche/trauma.js:26。写入方 2 个、读取方 1 个；已纳入复位。
       
   en: >
-      number declared at src/agent/psyche/trauma.js:26; writers=1, readers=1
+      number declared at src/agent/psyche/trauma.js:26; writers=2, readers=1
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T17:26:31.618Z"
+updated_at: "2026-09-27T01:42:51.765Z"
 fingerprint: pending
 source: []
 apis:
@@ -23,6 +23,15 @@ apis:
           
       en: >
           writer ensureFresh
+          
+  - protocol: rpc
+    path: "last-generation-a00b5dfa:write-__restore"
+    description:
+      zh: >
+          写入方 __restore（src/agent/psyche/trauma.js）
+          
+      en: >
+          writer __restore
           
   - protocol: rpc
     path: "last-generation-a00b5dfa:read-ensureFresh"

@@ -95,3 +95,33 @@ export function count() {
 export function __reset() {
   entities.clear();
 }
+
+// ---- 持久化：实体注册表必须进存档 ----
+
+/**
+ * 导出全部已登记实体（深拷贝）。
+ *
+ * 注意：agent 类型实体同时也写入 graph（供跨模块按 type 查询），但 registry
+ * 才是主循环 `registry.lookup({type:'agent'})` 的事实来源。两者必须一并还原，
+ * 否则恢复后主循环看到的人口与图里的居民会不一致。
+ */
+export function __snapshot() {
+  return { entities: clone([...entities.values()]) };
+}
+
+/**
+ * 恢复实体注册表（整体替换，非合并）。
+ * @param {{entities?: Array<object>}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('registry.__restore: 状态必须为对象');
+  }
+  const list = Array.isArray(data.entities) ? data.entities : [];
+  entities.clear();
+  for (const rec of list) {
+    const entity = normalize(rec);
+    entities.set(entity.id, entity);
+  }
+  return { count: entities.size };
+}

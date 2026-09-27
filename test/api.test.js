@@ -101,3 +101,46 @@ test('http: 端到端 start/step/world/agent/pause 经 HTTP 服务', async () =>
     await new Promise((resolve) => server.close(resolve));
   }
 });
+
+test('control: start 幂等，不重复 spawn、不重置 tick', () => {
+  fresh();
+  const a = control.start({});
+  const b = control.start({});
+  assert.equal(a.agentCount, 3);
+  assert.equal(b.agentCount, 3);
+  assert.equal(b.tick, 0);
+  assert.equal(loop.snapshot().agents.length, 3);
+});
+
+test('control: paused 时 step 拒绝推进（409），start 恢复后可继续', async () => {
+  fresh();
+  control.start({});
+  control.pause();
+  await assert.rejects(() => control.step({ eventProbability: 0 }), (e) => e.status === 409);
+  assert.equal(loop.snapshot().tick, 0, 'pause 期间不得推进 tick');
+  assert.equal(control.start({}).phase, 'running');
+  const res = await control.step({ eventProbability: 0 });
+  assert.equal(res.tick, 1);
+});
+
+test('control: 并发 step 被互斥拒绝（409），首个仍成功提交', async () => {
+  fresh();
+  control.start({});
+  const first = control.step({ eventProbability: 0 });
+  await assert.rejects(() => control.step({ eventProbability: 0 }), (e) => e.status === 409);
+  const res = await first;
+  assert.equal(res.tick, 1);
+  assert.equal(res.committedTick, 1);
+  assert.equal(res.inFlight, false);
+});
+
+test('control: step 完成后提交边界闭合，committedTick 与 tick 一致', async () => {
+  fresh();
+  control.start({});
+  const res = await control.step({ eventProbability: 0 });
+  assert.equal(res.committedTick, res.tick);
+  assert.equal(res.inFlight, false);
+  assert.equal(res.stageFailure, null);
+});
+
+function _unusedLastLine() { return "});"; }

@@ -153,3 +153,51 @@ export function capacity(input = {}) {
 export function __reset() {
   backpacks.clear();
 }
+
+// ---- 持久化：背包必须进存档 ----
+
+/**
+ * 导出全部背包。
+ *
+ * 背包是居民持有的材料/产物（制作与建造的输入）。不入档则恢复后所有人
+ * 两手空空：craft/build 因缺料永久失败，经济链在续跑开头断裂。
+ */
+export function __snapshot() {
+  return {
+    // items 内部是 Map，必须转成 entries 数组：存档要能 JSON 序列化，
+    // 而 JSON 往返会把 Map 变成 {}（静默丢光背包内容）。
+    backpacks: [...backpacks.entries()].map(([agentId, bp]) => ({
+      agentId,
+      items: [...bp.items.entries()],
+      capacity: bp.capacity,
+      maxWeight: bp.maxWeight,
+    })),
+  };
+}
+
+/**
+ * 恢复全部背包（整体替换）。
+ * @param {{backpacks?: Array<object>}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('backpack.__restore: 状态必须为对象');
+  }
+  backpacks.clear();
+  const list = Array.isArray(data.backpacks) ? data.backpacks : [];
+  for (const rec of list) {
+    if (typeof rec?.agentId !== 'string' || rec.agentId === '') continue;
+    // 还原成 load() 期望的形状：{ items: Map, capacity, maxWeight }。
+    // 直接存 plain object 会让 list()/totalCount() 调 .entries() 时抛 TypeError。
+    const items = new Map();
+    for (const pair of (Array.isArray(rec.items) ? rec.items : [])) {
+      if (Array.isArray(pair) && pair.length >= 2 && typeof pair[0] === 'string') items.set(pair[0], pair[1]);
+    }
+    backpacks.set(rec.agentId, {
+      items,
+      capacity: Number.isInteger(rec.capacity) ? rec.capacity : DEFAULT_CAPACITY,
+      maxWeight: (typeof rec.maxWeight === 'number' && Number.isFinite(rec.maxWeight)) ? rec.maxWeight : null,
+    });
+  }
+  return { backpacks: backpacks.size };
+}

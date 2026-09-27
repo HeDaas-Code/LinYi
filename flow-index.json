@@ -2,26 +2,26 @@
   "schemaVersion": 1,
   "generatedFrom": "bin/flow-index.mjs",
   "stats": {
-    "files": 192,
-    "modules": 49,
-    "stores": 154,
-    "graphTypes": 42,
-    "worldKeys": 11,
-    "filesWithReset": 107,
+    "files": 213,
+    "modules": 58,
+    "stores": 208,
+    "graphTypes": 48,
+    "worldKeys": 15,
+    "filesWithReset": 124,
     "byKind": {
       "set": 8,
-      "map": 34,
-      "number": 65,
-      "expr": 7,
+      "map": 44,
+      "number": 81,
+      "null": 34,
+      "flag": 15,
+      "expr": 10,
       "string": 4,
-      "null": 18,
-      "array": 7,
-      "flag": 9,
-      "object": 2
+      "array": 9,
+      "object": 3
     },
     "diagnostics": {
       "error": 0,
-      "warning": 0,
+      "warning": 1,
       "info": 3
     }
   },
@@ -67,19 +67,24 @@
         "__reset"
       ],
       "writers": [
-        "define"
+        "define",
+        "__restore"
       ],
       "readers": [
         "query",
-        "learn"
+        "learn",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 2,
+      "writeCount": 2,
+      "readCount": 4,
       "exportedTouchers": [
         "define",
         "query",
         "learn",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "const recipes = new Map();"
@@ -99,18 +104,23 @@
         "__reset"
       ],
       "writers": [
-        "learn"
+        "learn",
+        "__restore"
       ],
       "readers": [
         "learn",
-        "isLearned"
+        "isLearned",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 2,
+      "writeCount": 2,
+      "readCount": 4,
       "exportedTouchers": [
         "learn",
         "isLearned",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "const learned = new Map();"
@@ -129,18 +139,482 @@
       "resetFunctions": [
         "__reset"
       ],
-      "writers": [],
-      "readers": [
-        "define"
+      "writers": [
+        "__restore"
       ],
-      "writeCount": 0,
-      "readCount": 1,
+      "readers": [
+        "define",
+        "__snapshot",
+        "__restore"
+      ],
+      "writeCount": 1,
+      "readCount": 3,
       "exportedTouchers": [
         "define",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let seq = 0;"
+    },
+    {
+      "id": "agent.decision.candidates.faultLedger",
+      "module": "agent.decision.candidates",
+      "file": "src/agent/decision/candidates.js",
+      "line": 54,
+      "name": "faultLedger",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "noteContractFault"
+      ],
+      "readers": [
+        "noteContractFault",
+        "contractFaults",
+        "contractFaultSummary"
+      ],
+      "writeCount": 1,
+      "readCount": 3,
+      "exportedTouchers": [
+        "contractFaults",
+        "contractFaultSummary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const faultLedger = new Map();"
+    },
+    {
+      "id": "agent.decision.candidates.faultTotal",
+      "module": "agent.decision.candidates",
+      "file": "src/agent/decision/candidates.js",
+      "line": 57,
+      "name": "faultTotal",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "noteContractFault"
+      ],
+      "readers": [
+        "contractFaultSummary"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "contractFaultSummary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let faultTotal = 0;"
+    },
+    {
+      "id": "agent.decision.candidates.faultOverflow",
+      "module": "agent.decision.candidates",
+      "file": "src/agent/decision/candidates.js",
+      "line": 60,
+      "name": "faultOverflow",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "noteContractFault"
+      ],
+      "readers": [
+        "contractFaultSummary"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "contractFaultSummary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let faultOverflow = 0;"
+    },
+    {
+      "id": "agent.decision.candidates.faultReportFailures",
+      "module": "agent.decision.candidates",
+      "file": "src/agent/decision/candidates.js",
+      "line": 63,
+      "name": "faultReportFailures",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "noteContractFault"
+      ],
+      "readers": [
+        "contractFaultSummary"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "contractFaultSummary",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let faultReportFailures = 0;"
+    },
+    {
+      "id": "agent.decision.contention.pools",
+      "module": "agent.decision.contention",
+      "file": "src/agent/decision/contention.js",
+      "line": 31,
+      "name": "pools",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "open",
+        "__restore"
+      ],
+      "readers": [
+        "remaining",
+        "reserve",
+        "view",
+        "snapshot",
+        "__snapshot",
+        "__restore"
+      ],
+      "writeCount": 2,
+      "readCount": 6,
+      "exportedTouchers": [
+        "open",
+        "remaining",
+        "reserve",
+        "view",
+        "snapshot",
+        "__snapshot",
+        "__restore",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const pools = new Map();"
+    },
+    {
+      "id": "agent.decision.contention.currentTick",
+      "module": "agent.decision.contention",
+      "file": "src/agent/decision/contention.js",
+      "line": 32,
+      "name": "currentTick",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "open",
+        "__restore"
+      ],
+      "readers": [
+        "tickOf",
+        "__snapshot",
+        "__restore"
+      ],
+      "writeCount": 2,
+      "readCount": 3,
+      "exportedTouchers": [
+        "open",
+        "tickOf",
+        "__snapshot",
+        "__restore",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let currentTick = null;"
+    },
+    {
+      "id": "agent.decision.contention.opened",
+      "module": "agent.decision.contention",
+      "file": "src/agent/decision/contention.js",
+      "line": 33,
+      "name": "opened",
+      "keyword": "let",
+      "kind": "flag",
+      "init": "false",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "open",
+        "__restore"
+      ],
+      "readers": [
+        "isOpen",
+        "__snapshot",
+        "__restore"
+      ],
+      "writeCount": 2,
+      "readCount": 3,
+      "exportedTouchers": [
+        "open",
+        "isOpen",
+        "__snapshot",
+        "__restore",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let opened = false;"
+    },
+    {
+      "id": "agent.decision.goals.plans",
+      "module": "agent.decision.goals",
+      "file": "src/agent/decision/goals.js",
+      "line": 112,
+      "name": "plans",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "select",
+        "abandon",
+        "plan",
+        "observe",
+        "prune",
+        "__restore"
+      ],
+      "readers": [
+        "plan",
+        "observe",
+        "active",
+        "prune",
+        "summary",
+        "__snapshot",
+        "__restore"
+      ],
+      "writeCount": 6,
+      "readCount": 7,
+      "exportedTouchers": [
+        "plan",
+        "observe",
+        "active",
+        "prune",
+        "summary",
+        "__snapshot",
+        "__restore",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const plans = new Map();"
+    },
+    {
+      "id": "agent.decision.goals.cooldown",
+      "module": "agent.decision.goals",
+      "file": "src/agent/decision/goals.js",
+      "line": 114,
+      "name": "cooldown",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "abandon",
+        "prune",
+        "__restore"
+      ],
+      "readers": [
+        "select",
+        "abandon",
+        "plan",
+        "prune",
+        "__snapshot",
+        "__restore"
+      ],
+      "writeCount": 3,
+      "readCount": 6,
+      "exportedTouchers": [
+        "plan",
+        "prune",
+        "__snapshot",
+        "__restore",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const cooldown = new Map();"
+    },
+    {
+      "id": "agent.decision.outcome-model.table",
+      "module": "agent.decision.outcome-model",
+      "file": "src/agent/decision/outcome-model.js",
+      "line": 33,
+      "name": "table",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "touch",
+        "observe",
+        "__restore"
+      ],
+      "readers": [
+        "observe",
+        "estimate",
+        "size",
+        "stats",
+        "snapshot",
+        "__snapshot",
+        "__restore"
+      ],
+      "writeCount": 3,
+      "readCount": 7,
+      "exportedTouchers": [
+        "observe",
+        "estimate",
+        "size",
+        "stats",
+        "snapshot",
+        "__reset",
+        "__snapshot",
+        "__restore"
+      ],
+      "exported": false,
+      "rawLine": "const table = new Map();"
+    },
+    {
+      "id": "agent.decision.outcome-model.lru",
+      "module": "agent.decision.outcome-model",
+      "file": "src/agent/decision/outcome-model.js",
+      "line": 35,
+      "name": "lru",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "touch",
+        "__restore"
+      ],
+      "readers": [
+        "touch",
+        "__snapshot",
+        "__restore"
+      ],
+      "writeCount": 2,
+      "readCount": 3,
+      "exportedTouchers": [
+        "__reset",
+        "__snapshot",
+        "__restore"
+      ],
+      "exported": false,
+      "rawLine": "const lru = new Map();"
+    },
+    {
+      "id": "agent.decision.outcome-model.lruSeq",
+      "module": "agent.decision.outcome-model",
+      "file": "src/agent/decision/outcome-model.js",
+      "line": 36,
+      "name": "lruSeq",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "touch",
+        "__restore"
+      ],
+      "readers": [
+        "touch",
+        "__snapshot"
+      ],
+      "writeCount": 2,
+      "readCount": 2,
+      "exportedTouchers": [
+        "__reset",
+        "__snapshot",
+        "__restore"
+      ],
+      "exported": false,
+      "rawLine": "let lruSeq = 0;"
+    },
+    {
+      "id": "agent.decision.outcome-model.observations",
+      "module": "agent.decision.outcome-model",
+      "file": "src/agent/decision/outcome-model.js",
+      "line": 37,
+      "name": "observations",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "observe",
+        "__restore"
+      ],
+      "readers": [
+        "stats",
+        "__snapshot",
+        "__restore"
+      ],
+      "writeCount": 2,
+      "readCount": 3,
+      "exportedTouchers": [
+        "observe",
+        "stats",
+        "__reset",
+        "__snapshot",
+        "__restore"
+      ],
+      "exported": false,
+      "rawLine": "let observations = 0;"
     },
     {
       "id": "agent.inventory.backpack.backpacks",
@@ -157,15 +631,20 @@
         "__reset"
       ],
       "writers": [
-        "load"
+        "load",
+        "__restore"
       ],
       "readers": [
-        "load"
+        "load",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 1,
+      "writeCount": 2,
+      "readCount": 3,
       "exportedTouchers": [
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "const backpacks = new Map();"
@@ -185,17 +664,22 @@
         "__reset"
       ],
       "writers": [
-        "define"
+        "define",
+        "__restore"
       ],
       "readers": [
-        "query"
+        "query",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 1,
+      "writeCount": 2,
+      "readCount": 3,
       "exportedTouchers": [
         "define",
         "query",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "const items = new Map();"
@@ -204,7 +688,7 @@
       "id": "agent.memory.episodic.store.byAgent",
       "module": "agent.memory.episodic.store",
       "file": "src/agent/memory/episodic/store.js",
-      "line": 22,
+      "line": 34,
       "name": "byAgent",
       "keyword": "const",
       "kind": "map",
@@ -215,32 +699,185 @@
         "__reset"
       ],
       "writers": [
-        "ensureFresh",
+        "rebuildFromGraph",
+        "__restore",
         "write"
       ],
       "readers": [
-        "write",
-        "tag",
-        "list",
-        "_rawList"
-      ],
-      "writeCount": 2,
-      "readCount": 4,
-      "exportedTouchers": [
+        "rebuildFromGraph",
+        "__snapshot",
+        "__restore",
+        "enforceLimit",
         "write",
         "tag",
         "list",
         "_rawList",
-        "__reset"
+        "stats"
+      ],
+      "writeCount": 3,
+      "readCount": 9,
+      "exportedTouchers": [
+        "__snapshot",
+        "__restore",
+        "write",
+        "tag",
+        "list",
+        "_rawList",
+        "__reset",
+        "stats"
       ],
       "exported": false,
       "rawLine": "const byAgent = new Map();"
     },
     {
+      "id": "agent.memory.episodic.store.archive",
+      "module": "agent.memory.episodic.store",
+      "file": "src/agent/memory/episodic/store.js",
+      "line": 41,
+      "name": "archive",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "__restore",
+        "pushArchive"
+      ],
+      "readers": [
+        "__snapshot",
+        "__restore",
+        "pushArchive",
+        "archived",
+        "lookup",
+        "stats"
+      ],
+      "writeCount": 2,
+      "readCount": 6,
+      "exportedTouchers": [
+        "__snapshot",
+        "__restore",
+        "__reset",
+        "archived",
+        "lookup",
+        "stats"
+      ],
+      "exported": false,
+      "rawLine": "const archive = new Map();"
+    },
+    {
+      "id": "agent.memory.episodic.store.evicted",
+      "module": "agent.memory.episodic.store",
+      "file": "src/agent/memory/episodic/store.js",
+      "line": 44,
+      "name": "evicted",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "__restore",
+        "pushArchive"
+      ],
+      "readers": [
+        "__snapshot",
+        "lookup",
+        "stats"
+      ],
+      "writeCount": 2,
+      "readCount": 3,
+      "exportedTouchers": [
+        "__snapshot",
+        "__restore",
+        "__reset",
+        "lookup",
+        "stats"
+      ],
+      "exported": false,
+      "rawLine": "let evicted = 0;"
+    },
+    {
+      "id": "agent.memory.episodic.store.dropped",
+      "module": "agent.memory.episodic.store",
+      "file": "src/agent/memory/episodic/store.js",
+      "line": 45,
+      "name": "dropped",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "__restore",
+        "pushArchive"
+      ],
+      "readers": [
+        "__snapshot",
+        "stats"
+      ],
+      "writeCount": 2,
+      "readCount": 2,
+      "exportedTouchers": [
+        "__snapshot",
+        "__restore",
+        "__reset",
+        "stats"
+      ],
+      "exported": false,
+      "rawLine": "let dropped = 0;"
+    },
+    {
+      "id": "agent.memory.episodic.store.maxSeq",
+      "module": "agent.memory.episodic.store",
+      "file": "src/agent/memory/episodic/store.js",
+      "line": 47,
+      "name": "maxSeq",
+      "keyword": "let",
+      "kind": "number",
+      "init": "-1",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "__restore",
+        "pushArchive",
+        "write"
+      ],
+      "readers": [
+        "__snapshot",
+        "lookup",
+        "stats"
+      ],
+      "writeCount": 3,
+      "readCount": 3,
+      "exportedTouchers": [
+        "__snapshot",
+        "__restore",
+        "write",
+        "__reset",
+        "lookup",
+        "stats"
+      ],
+      "exported": false,
+      "rawLine": "let maxSeq = -1;"
+    },
+    {
       "id": "agent.memory.episodic.store.lastGeneration",
       "module": "agent.memory.episodic.store",
       "file": "src/agent/memory/episodic/store.js",
-      "line": 25,
+      "line": 50,
       "name": "lastGeneration",
       "keyword": "let",
       "kind": "number",
@@ -251,14 +888,17 @@
         "__reset"
       ],
       "writers": [
-        "ensureFresh"
+        "ensureFresh",
+        "__restore"
       ],
       "readers": [
         "ensureFresh"
       ],
-      "writeCount": 1,
+      "writeCount": 2,
       "readCount": 1,
-      "exportedTouchers": [],
+      "exportedTouchers": [
+        "__restore"
+      ],
       "exported": false,
       "rawLine": "let lastGeneration = -1;"
     },
@@ -277,21 +917,27 @@
         "__reset"
       ],
       "writers": [
-        "ensureFresh",
-        "store"
+        "rebuildFromGraph",
+        "store",
+        "__restore"
       ],
       "readers": [
+        "rebuildFromGraph",
         "store",
         "list",
-        "recall"
+        "recall",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 2,
-      "readCount": 3,
+      "writeCount": 3,
+      "readCount": 6,
       "exportedTouchers": [
         "store",
         "list",
         "recall",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "const byAgent = new Map();"
@@ -311,15 +957,17 @@
         "__reset"
       ],
       "writers": [
-        "ensureFresh"
+        "ensureFresh",
+        "__restore"
       ],
       "readers": [
         "ensureFresh"
       ],
-      "writeCount": 1,
+      "writeCount": 2,
       "readCount": 1,
       "exportedTouchers": [
-        "__reset"
+        "__reset",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let lastGeneration = -1;"
@@ -426,22 +1074,27 @@
       ],
       "writers": [
         "trigger",
-        "recover"
+        "recover",
+        "__restore"
       ],
       "readers": [
         "check",
         "trigger",
         "recover",
-        "decisionModifier"
+        "decisionModifier",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 2,
-      "readCount": 4,
+      "writeCount": 3,
+      "readCount": 6,
       "exportedTouchers": [
         "check",
         "trigger",
         "recover",
         "decisionModifier",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "const brokenAgents = new Set();"
@@ -461,17 +1114,22 @@
         "__reset"
       ],
       "writers": [
-        "execute"
+        "execute",
+        "__restore"
       ],
       "readers": [
-        "decisionWeights"
+        "decisionWeights",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 1,
+      "writeCount": 2,
+      "readCount": 3,
       "exportedTouchers": [
         "execute",
         "decisionWeights",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "const activeCoping = new Map();"
@@ -491,15 +1149,20 @@
         "__reset"
       ],
       "writers": [
-        "ensureFresh",
+        "rebuildFromGraph",
+        "__restore",
         "save"
       ],
       "readers": [
+        "__snapshot",
+        "__restore",
         "load"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 3,
       "exportedTouchers": [
+        "__snapshot",
+        "__restore",
         "__reset"
       ],
       "exported": false,
@@ -520,14 +1183,16 @@
         "__reset"
       ],
       "writers": [
-        "ensureFresh"
+        "ensureFresh",
+        "__restore"
       ],
       "readers": [
         "ensureFresh"
       ],
-      "writeCount": 1,
+      "writeCount": 2,
       "readCount": 1,
       "exportedTouchers": [
+        "__restore",
         "__reset"
       ],
       "exported": false,
@@ -824,7 +1489,7 @@
       "id": "api.control.phase",
       "module": "api.control",
       "file": "src/api/control.js",
-      "line": 24,
+      "line": 42,
       "name": "phase",
       "keyword": "let",
       "kind": "string",
@@ -836,21 +1501,124 @@
       ],
       "writers": [
         "start",
-        "pause"
+        "pause",
+        "stop",
+        "resume",
+        "step"
       ],
       "readers": [
         "status",
-        "start"
+        "start",
+        "currentPhase",
+        "resume",
+        "step"
       ],
-      "writeCount": 2,
-      "readCount": 2,
+      "writeCount": 5,
+      "readCount": 5,
       "exportedTouchers": [
         "start",
         "pause",
+        "currentPhase",
+        "stop",
+        "resume",
+        "step",
         "__reset"
       ],
       "exported": false,
       "rawLine": "let phase = 'idle';"
+    },
+    {
+      "id": "api.observer.lastSave",
+      "module": "api.observer",
+      "file": "src/api/observer.js",
+      "line": 57,
+      "name": "lastSave",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "saveRun"
+      ],
+      "readers": [
+        "persistenceStatus",
+        "saveRun"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "persistenceStatus",
+        "saveRun",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let lastSave = null;"
+    },
+    {
+      "id": "api.observer.lastRestore",
+      "module": "api.observer",
+      "file": "src/api/observer.js",
+      "line": 58,
+      "name": "lastRestore",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "restoreRun"
+      ],
+      "readers": [
+        "persistenceStatus"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "persistenceStatus",
+        "restoreRun",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let lastRestore = null;"
+    },
+    {
+      "id": "api.observer.lastSnapshot",
+      "module": "api.observer",
+      "file": "src/api/observer.js",
+      "line": 59,
+      "name": "lastSnapshot",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "saveRun"
+      ],
+      "readers": [
+        "persistenceStatus",
+        "restoreRun"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "persistenceStatus",
+        "saveRun",
+        "restoreRun",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let lastSnapshot = null;"
     },
     {
       "id": "civilization.tech.research.active",
@@ -868,22 +1636,29 @@
       ],
       "writers": [
         "start",
-        "complete"
+        "complete",
+        "__restore"
       ],
       "readers": [
         "start",
         "progress",
         "complete",
-        "pending"
+        "reassign",
+        "pending",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 2,
-      "readCount": 4,
+      "writeCount": 3,
+      "readCount": 7,
       "exportedTouchers": [
         "start",
         "progress",
         "complete",
+        "reassign",
         "pending",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "const active = new Map();"
@@ -933,20 +1708,25 @@
         "__reset"
       ],
       "writers": [
-        "open"
+        "open",
+        "__restore"
       ],
       "readers": [
         "open",
         "treasury",
-        "apply"
+        "apply",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 3,
+      "writeCount": 2,
+      "readCount": 5,
       "exportedTouchers": [
         "open",
         "treasury",
         "apply",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let treasuryAccountId = null;"
@@ -966,16 +1746,21 @@
         "__reset"
       ],
       "writers": [
-        "post"
+        "post",
+        "__restore"
       ],
       "readers": [
-        "post"
+        "post",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 1,
+      "writeCount": 2,
+      "readCount": 3,
       "exportedTouchers": [
         "post",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let seq = 0;"
@@ -1024,17 +1809,22 @@
         "__reset"
       ],
       "writers": [
-        "update"
+        "update",
+        "__restore"
       ],
       "readers": [
-        "quote"
+        "quote",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 1,
+      "writeCount": 2,
+      "readCount": 3,
       "exportedTouchers": [
         "quote",
         "update",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "const prices = new Map();"
@@ -1054,22 +1844,27 @@
         "__reset"
       ],
       "writers": [
-        "open"
+        "open",
+        "__restore"
       ],
       "readers": [
         "open",
         "poolBalance",
         "collect",
-        "redistribute"
+        "redistribute",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 4,
+      "writeCount": 2,
+      "readCount": 6,
       "exportedTouchers": [
         "open",
         "poolBalance",
         "collect",
         "redistribute",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let poolAccountId = null;"
@@ -1148,7 +1943,7 @@
       "id": "infra.config.currentDifficultyId",
       "module": "infra.config",
       "file": "src/infra/config.js",
-      "line": 282,
+      "line": 302,
       "name": "currentDifficultyId",
       "keyword": "let",
       "kind": "string",
@@ -1159,18 +1954,23 @@
         "__reset"
       ],
       "writers": [
-        "setDifficulty"
+        "setDifficulty",
+        "__restore"
       ],
       "readers": [
         "getDifficulty",
-        "currentDifficultyParams"
+        "currentDifficultyParams",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 2,
+      "writeCount": 2,
+      "readCount": 4,
       "exportedTouchers": [
         "getDifficulty",
         "setDifficulty",
         "currentDifficultyParams",
+        "__snapshot",
+        "__restore",
         "__reset"
       ],
       "exported": false,
@@ -1253,22 +2053,27 @@
       ],
       "writers": [
         "enqueue",
-        "run"
+        "run",
+        "__restore"
       ],
       "readers": [
         "enqueue",
         "run",
         "pending",
-        "getStats"
+        "getStats",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 2,
-      "readCount": 4,
+      "writeCount": 3,
+      "readCount": 6,
       "exportedTouchers": [
         "enqueue",
         "run",
         "pending",
         "getStats",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "const queue = new Map();"
@@ -1288,20 +2093,25 @@
         "__reset"
       ],
       "writers": [
-        "run"
+        "run",
+        "__restore"
       ],
       "readers": [
         "run",
         "dead",
-        "getStats"
+        "getStats",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 3,
+      "writeCount": 2,
+      "readCount": 5,
       "exportedTouchers": [
         "run",
         "dead",
         "getStats",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "const deadLetters = [];"
@@ -1320,19 +2130,24 @@
       "resetFunctions": [
         "__reset"
       ],
-      "writers": [],
+      "writers": [
+        "__restore"
+      ],
       "readers": [
         "enqueue",
         "run",
-        "getStats"
+        "getStats",
+        "__snapshot"
       ],
-      "writeCount": 0,
-      "readCount": 3,
+      "writeCount": 1,
+      "readCount": 4,
       "exportedTouchers": [
         "enqueue",
         "run",
         "getStats",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let stats = { enqueued: 0, delivered: 0, dropped: 0 };"
@@ -1352,16 +2167,21 @@
         "__reset"
       ],
       "writers": [
-        "next"
+        "next",
+        "__restore"
       ],
       "readers": [
-        "next"
+        "next",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 1,
+      "writeCount": 2,
+      "readCount": 3,
       "exportedTouchers": [
         "next",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let counter = 0;"
@@ -1381,49 +2201,93 @@
         "__reset"
       ],
       "writers": [
-        "seed"
+        "seed",
+        "__restore"
       ],
       "readers": [
-        "seed"
+        "seed",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 1,
+      "writeCount": 2,
+      "readCount": 3,
       "exportedTouchers": [
         "seed",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let state = 0x9e3779b9 >>> 0;"
     },
     {
-      "id": "infra.rng.gen",
+      "id": "infra.rng.genState",
       "module": "infra.rng",
       "file": "src/infra/rng.js",
-      "line": 35,
-      "name": "gen",
+      "line": 50,
+      "name": "genState",
       "keyword": "let",
       "kind": "expr",
-      "init": "mulberry32(state)",
+      "init": "state",
       "resetCovered": true,
       "resetDeclared": true,
       "resetFunctions": [
         "__reset"
       ],
       "writers": [
-        "seed"
+        "seed",
+        "__restore"
       ],
       "readers": [
-        "next"
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 1,
+      "writeCount": 2,
+      "readCount": 2,
+      "exportedTouchers": [
+        "seed",
+        "__reset",
+        "__snapshot",
+        "__restore"
+      ],
+      "exported": false,
+      "rawLine": "let genState = state;"
+    },
+    {
+      "id": "infra.rng.gen",
+      "module": "infra.rng",
+      "file": "src/infra/rng.js",
+      "line": 51,
+      "name": "gen",
+      "keyword": "let",
+      "kind": "expr",
+      "init": "mulberry32(state, (a) => { genState = a; })",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "__restore"
+      ],
+      "readers": [
+        "seed",
+        "next",
+        "__snapshot",
+        "__restore"
+      ],
+      "writeCount": 2,
+      "readCount": 4,
       "exportedTouchers": [
         "seed",
         "next",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
-      "rawLine": "let gen = mulberry32(state);"
+      "rawLine": "let gen = mulberry32(state, (a) => { genState = a; });"
     },
     {
       "id": "infra.store.graph.nodes",
@@ -1440,18 +2304,35 @@
         "__reset"
       ],
       "writers": [
-        "write"
+        "write",
+        "remove",
+        "trimOldest",
+        "__restore"
       ],
       "readers": [
         "write",
-        "read"
+        "read",
+        "remove",
+        "count",
+        "trimOldest",
+        "patch",
+        "peek",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 2,
+      "writeCount": 4,
+      "readCount": 9,
       "exportedTouchers": [
         "write",
         "read",
-        "__reset"
+        "remove",
+        "count",
+        "trimOldest",
+        "patch",
+        "peek",
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "const nodes = new Map();"
@@ -1471,18 +2352,30 @@
         "__reset"
       ],
       "writers": [
-        "write"
+        "write",
+        "remove",
+        "trimOldest",
+        "__restore"
       ],
       "readers": [
         "write",
-        "read"
+        "read",
+        "remove",
+        "count",
+        "trimOldest",
+        "ids"
       ],
-      "writeCount": 1,
-      "readCount": 2,
+      "writeCount": 4,
+      "readCount": 6,
       "exportedTouchers": [
         "write",
         "read",
-        "__reset"
+        "remove",
+        "count",
+        "trimOldest",
+        "ids",
+        "__reset",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "const byType = new Map();"
@@ -1501,18 +2394,63 @@
       "resetFunctions": [
         "__reset"
       ],
-      "writers": [],
-      "readers": [
-        "__generation"
+      "writers": [
+        "__restore"
       ],
-      "writeCount": 0,
-      "readCount": 1,
+      "readers": [
+        "__generation",
+        "__snapshot",
+        "__restore"
+      ],
+      "writeCount": 1,
+      "readCount": 3,
       "exportedTouchers": [
         "__reset",
-        "__generation"
+        "__generation",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let generation = 0;"
+    },
+    {
+      "id": "infra.store.hot-log.logs",
+      "module": "infra.store.hot-log",
+      "file": "src/infra/store/hot-log.js",
+      "line": 53,
+      "name": "logs",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": false,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "createLog"
+      ],
+      "readers": [
+        "createLog",
+        "configureRetention",
+        "logNames",
+        "stats",
+        "__snapshot",
+        "__restore"
+      ],
+      "writeCount": 1,
+      "readCount": 6,
+      "exportedTouchers": [
+        "createLog",
+        "configureRetention",
+        "logNames",
+        "stats",
+        "__snapshot",
+        "__restore",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const logs = new Map();"
     },
     {
       "id": "infra.store.vector.dim",
@@ -1653,16 +2591,21 @@
         "__resetSeq"
       ],
       "writers": [
-        "nextSeq"
+        "nextSeq",
+        "__restore"
       ],
       "readers": [
-        "nextSeq"
+        "nextSeq",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 1,
+      "writeCount": 2,
+      "readCount": 3,
       "exportedTouchers": [
         "nextSeq",
-        "__resetSeq"
+        "__resetSeq",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let seq = 0;"
@@ -1710,17 +2653,21 @@
         "__reset"
       ],
       "writers": [
-        "tick"
+        "tick",
+        "__restore"
       ],
       "readers": [
         "snapshot",
-        "tick"
+        "tick",
+        "__snapshot"
       ],
-      "writeCount": 1,
-      "readCount": 2,
+      "writeCount": 2,
+      "readCount": 3,
       "exportedTouchers": [
         "tick",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let currentTick = 0;"
@@ -1740,17 +2687,19 @@
         "__reset"
       ],
       "writers": [
-        "tick"
+        "tick",
+        "__restore"
       ],
       "readers": [
         "snapshot",
         "tick"
       ],
-      "writeCount": 1,
+      "writeCount": 2,
       "readCount": 2,
       "exportedTouchers": [
         "tick",
-        "__reset"
+        "__reset",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let startedAt = null;"
@@ -1769,15 +2718,20 @@
       "resetFunctions": [
         "__reset"
       ],
-      "writers": [],
-      "readers": [
-        "schedule"
+      "writers": [
+        "__restore"
       ],
-      "writeCount": 0,
-      "readCount": 1,
+      "readers": [
+        "schedule",
+        "__snapshot"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
       "exportedTouchers": [
         "schedule",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let taskSeq = 0;"
@@ -1797,56 +2751,99 @@
         "__reset"
       ],
       "writers": [
-        "schedule"
+        "schedule",
+        "__restore"
       ],
       "readers": [
         "tick",
-        "schedule"
+        "schedule",
+        "__snapshot"
       ],
-      "writeCount": 1,
-      "readCount": 2,
+      "writeCount": 2,
+      "readCount": 3,
       "exportedTouchers": [
         "tick",
         "schedule",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "const tasks = new Map();"
     },
     {
-      "id": "runtime.orchestrator._stage2.platformGen",
+      "id": "runtime.orchestrator._stage2.platformGenState",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 46,
-      "name": "platformGen",
+      "line": 49,
+      "name": "platformGenState",
       "keyword": "let",
-      "kind": "expr",
-      "init": "mulberry32(0x9e3779b9 >>> 0)",
+      "kind": "number",
+      "init": "0x9e3779b9 >>> 0",
       "resetCovered": true,
       "resetDeclared": true,
       "resetFunctions": [
         "__reset"
       ],
       "writers": [
-        "platformSeed"
+        "platformSeed",
+        "platformGenRestore_"
       ],
       "readers": [
-        "prFloat",
-        "prShuffle"
+        "platformGenState_",
+        "__snapshot"
       ],
-      "writeCount": 1,
+      "writeCount": 2,
       "readCount": 2,
       "exportedTouchers": [
-        "__reset"
+        "__reset",
+        "__snapshot"
       ],
       "exported": false,
-      "rawLine": "let platformGen = mulberry32(0x9e3779b9 >>> 0);"
+      "rawLine": "let platformGenState = 0x9e3779b9 >>> 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage2.platformGen",
+      "module": "runtime.orchestrator._stage2",
+      "file": "src/runtime/orchestrator/_stage2.js",
+      "line": 50,
+      "name": "platformGen",
+      "keyword": "let",
+      "kind": "expr",
+      "init": "mulberry32(platformGenState, (a) => { platformGenState = a; ",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "platformSeed",
+        "platformGenRestore_"
+      ],
+      "readers": [
+        "platformSeed",
+        "platformGenState_",
+        "platformGenRestore_",
+        "prFloat",
+        "prShuffle",
+        "__snapshot",
+        "__restore"
+      ],
+      "writeCount": 2,
+      "readCount": 7,
+      "exportedTouchers": [
+        "__reset",
+        "__snapshot",
+        "__restore"
+      ],
+      "exported": false,
+      "rawLine": "let platformGen = mulberry32(platformGenState, (a) => { platformGenState = a; });"
     },
     {
       "id": "runtime.orchestrator._stage2.seeded",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 63,
+      "line": 73,
       "name": "seeded",
       "keyword": "let",
       "kind": "flag",
@@ -1857,17 +2854,22 @@
         "__reset"
       ],
       "writers": [
-        "seed"
+        "seed",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 1,
+      "writeCount": 2,
+      "readCount": 3,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let seeded = false;"
@@ -1876,7 +2878,7 @@
       "id": "runtime.orchestrator._stage2.accounts",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 65,
+      "line": 75,
       "name": "accounts",
       "keyword": "let",
       "kind": "map",
@@ -1887,7 +2889,8 @@
         "__reset"
       ],
       "writers": [
-        "seed"
+        "seed",
+        "__restore"
       ],
       "readers": [
         "seed",
@@ -1897,15 +2900,19 @@
         "candidateStateFor",
         "performAgentAction",
         "agentIdByAccount",
-        "situationOf"
+        "situationOf",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 8,
+      "writeCount": 2,
+      "readCount": 10,
       "exportedTouchers": [
         "seed",
         "candidateStateFor",
         "performAgentAction",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let accounts = new Map();"
@@ -1914,7 +2921,7 @@
       "id": "runtime.orchestrator._stage2.settledAgentIds",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 67,
+      "line": 77,
       "name": "settledAgentIds",
       "keyword": "let",
       "kind": "array",
@@ -1925,19 +2932,21 @@
         "__reset"
       ],
       "writers": [
-        "tick"
+        "__restore"
       ],
       "readers": [
         "candidateStateFor",
         "pickMate",
-        "pickPeer"
+        "pickPeer",
+        "__snapshot"
       ],
       "writeCount": 1,
-      "readCount": 3,
+      "readCount": 4,
       "exportedTouchers": [
         "candidateStateFor",
-        "tick",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let settledAgentIds = [];"
@@ -1946,7 +2955,7 @@
       "id": "runtime.orchestrator._stage2.pendingCourts",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 73,
+      "line": 83,
       "name": "pendingCourts",
       "keyword": "const",
       "kind": "map",
@@ -1957,18 +2966,22 @@
         "__reset"
       ],
       "writers": [
-        "performAgentAction"
+        "performAgentAction",
+        "__restore"
       ],
       "readers": [
         "candidateStateFor",
-        "performAgentAction"
+        "pendingCourtsOf",
+        "__snapshot"
       ],
-      "writeCount": 1,
-      "readCount": 2,
+      "writeCount": 2,
+      "readCount": 3,
       "exportedTouchers": [
         "candidateStateFor",
         "performAgentAction",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "const pendingCourts = new Map();"
@@ -1977,7 +2990,7 @@
       "id": "runtime.orchestrator._stage2.pairedIndex",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 74,
+      "line": 84,
       "name": "pairedIndex",
       "keyword": "const",
       "kind": "map",
@@ -1988,21 +3001,26 @@
         "__reset"
       ],
       "writers": [
-        "performAgentAction"
+        "performAgentAction",
+        "__restore"
       ],
       "readers": [
         "runProcreation",
         "candidateStateFor",
         "expeditionConditionsFor",
         "performAgentAction",
-        "pickMate"
+        "pickMate",
+        "decideResponse",
+        "__snapshot"
       ],
-      "writeCount": 1,
-      "readCount": 5,
+      "writeCount": 2,
+      "readCount": 7,
       "exportedTouchers": [
         "candidateStateFor",
         "performAgentAction",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "const pairedIndex = new Map();"
@@ -2011,7 +3029,7 @@
       "id": "runtime.orchestrator._stage2.reproducedPairs",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 76,
+      "line": 86,
       "name": "reproducedPairs",
       "keyword": "const",
       "kind": "set",
@@ -2023,16 +3041,20 @@
       ],
       "writers": [
         "seed",
-        "runProcreation"
+        "runProcreation",
+        "__restore"
       ],
       "readers": [
-        "runProcreation"
+        "runProcreation",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "const reproducedPairs = new Set();"
@@ -2041,7 +3063,7 @@
       "id": "runtime.orchestrator._stage2.childrenBorn",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 77,
+      "line": 87,
       "name": "childrenBorn",
       "keyword": "let",
       "kind": "number",
@@ -2053,18 +3075,23 @@
       ],
       "writers": [
         "seed",
-        "runProcreation"
+        "runProcreation",
+        "__restore"
       ],
       "readers": [
         "runProcreation",
-        "summary"
+        "summary",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 2,
-      "readCount": 2,
+      "writeCount": 3,
+      "readCount": 4,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let childrenBorn = 0;"
@@ -2073,7 +3100,7 @@
       "id": "runtime.orchestrator._stage2.itemIds",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 79,
+      "line": 89,
       "name": "itemIds",
       "keyword": "let",
       "kind": "object",
@@ -2084,20 +3111,27 @@
         "__reset"
       ],
       "writers": [
-        "seed"
+        "seed",
+        "__restore"
       ],
       "readers": [
         "seed",
         "craftMaterialId",
-        "performAgentAction"
+        "candidateStateFor",
+        "performAgentAction",
+        "promiseTermsFor",
+        "__snapshot"
       ],
-      "writeCount": 1,
-      "readCount": 3,
+      "writeCount": 2,
+      "readCount": 6,
       "exportedTouchers": [
         "seed",
         "craftMaterialId",
+        "candidateStateFor",
         "performAgentAction",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let itemIds = {};"
@@ -2106,7 +3140,7 @@
       "id": "runtime.orchestrator._stage2.tradeCount",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 80,
+      "line": 90,
       "name": "tradeCount",
       "keyword": "let",
       "kind": "number",
@@ -2119,17 +3153,21 @@
       "writers": [
         "seed",
         "runMarket",
-        "runIndustry"
+        "runIndustry",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 3,
-      "readCount": 1,
+      "writeCount": 4,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let tradeCount = 0;"
@@ -2138,7 +3176,7 @@
       "id": "runtime.orchestrator._stage2.craftCount",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 81,
+      "line": 91,
       "name": "craftCount",
       "keyword": "let",
       "kind": "number",
@@ -2150,17 +3188,21 @@
       ],
       "writers": [
         "seed",
-        "runCrafting"
+        "runCrafting",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let craftCount = 0;"
@@ -2169,7 +3211,7 @@
       "id": "runtime.orchestrator._stage2.buildCount",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 82,
+      "line": 92,
       "name": "buildCount",
       "keyword": "let",
       "kind": "number",
@@ -2181,17 +3223,21 @@
       ],
       "writers": [
         "seed",
-        "runCrafting"
+        "runCrafting",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let buildCount = 0;"
@@ -2200,7 +3246,7 @@
       "id": "runtime.orchestrator._stage2.treatCount",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 83,
+      "line": 93,
       "name": "treatCount",
       "keyword": "let",
       "kind": "number",
@@ -2212,17 +3258,21 @@
       ],
       "writers": [
         "seed",
-        "runHealth"
+        "runHealth",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let treatCount = 0;"
@@ -2231,7 +3281,7 @@
       "id": "runtime.orchestrator._stage2.quarantineCount",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 84,
+      "line": 94,
       "name": "quarantineCount",
       "keyword": "let",
       "kind": "number",
@@ -2243,17 +3293,21 @@
       ],
       "writers": [
         "seed",
-        "runHealth"
+        "runHealth",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let quarantineCount = 0;"
@@ -2262,7 +3316,7 @@
       "id": "runtime.orchestrator._stage2.releasesCount",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 86,
+      "line": 96,
       "name": "releasesCount",
       "keyword": "let",
       "kind": "number",
@@ -2274,17 +3328,21 @@
       ],
       "writers": [
         "seed",
-        "runHealth"
+        "runHealth",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let releasesCount = 0;"
@@ -2293,7 +3351,7 @@
       "id": "runtime.orchestrator._stage2.businessIds",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 88,
+      "line": 98,
       "name": "businessIds",
       "keyword": "let",
       "kind": "array",
@@ -2305,23 +3363,27 @@
       ],
       "writers": [
         "seed",
-        "performAgentAction"
+        "performAgentAction",
+        "__restore"
       ],
       "readers": [
         "seed",
         "runIndustry",
         "candidateStateFor",
         "performAgentAction",
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 5,
+      "writeCount": 3,
+      "readCount": 6,
       "exportedTouchers": [
         "seed",
         "candidateStateFor",
         "performAgentAction",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let businessIds = [];"
@@ -2330,7 +3392,7 @@
       "id": "runtime.orchestrator._stage2.goodsProduced",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 89,
+      "line": 99,
       "name": "goodsProduced",
       "keyword": "let",
       "kind": "number",
@@ -2342,17 +3404,21 @@
       ],
       "writers": [
         "seed",
-        "runIndustry"
+        "runIndustry",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let goodsProduced = 0;"
@@ -2361,7 +3427,7 @@
       "id": "runtime.orchestrator._stage2.wagesPaid",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 90,
+      "line": 100,
       "name": "wagesPaid",
       "keyword": "let",
       "kind": "number",
@@ -2373,17 +3439,21 @@
       ],
       "writers": [
         "seed",
-        "runIndustry"
+        "runIndustry",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let wagesPaid = 0;"
@@ -2392,7 +3462,7 @@
       "id": "runtime.orchestrator._stage2.bankruptcies",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 91,
+      "line": 101,
       "name": "bankruptcies",
       "keyword": "let",
       "kind": "number",
@@ -2404,18 +3474,22 @@
       ],
       "writers": [
         "seed",
-        "runIndustry"
+        "runIndustry",
+        "__restore"
       ],
       "readers": [
         "runIndustry",
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 2,
+      "writeCount": 3,
+      "readCount": 3,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let bankruptcies = 0;"
@@ -2424,7 +3498,7 @@
       "id": "runtime.orchestrator._stage2.creditIssued",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 92,
+      "line": 102,
       "name": "creditIssued",
       "keyword": "let",
       "kind": "number",
@@ -2436,19 +3510,23 @@
       ],
       "writers": [
         "seed",
-        "performAgentAction"
+        "performAgentAction",
+        "__restore"
       ],
       "readers": [
         "runFiscal",
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 2,
+      "writeCount": 3,
+      "readCount": 3,
       "exportedTouchers": [
         "seed",
         "performAgentAction",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let creditIssued = 0;"
@@ -2457,7 +3535,7 @@
       "id": "runtime.orchestrator._stage2.interestAccrued",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 93,
+      "line": 103,
       "name": "interestAccrued",
       "keyword": "let",
       "kind": "number",
@@ -2469,18 +3547,22 @@
       ],
       "writers": [
         "seed",
-        "runFiscal"
+        "runFiscal",
+        "__restore"
       ],
       "readers": [
         "runFiscal",
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 2,
+      "writeCount": 3,
+      "readCount": 3,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let interestAccrued = 0;"
@@ -2489,7 +3571,7 @@
       "id": "runtime.orchestrator._stage2.taxCollected",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 94,
+      "line": 104,
       "name": "taxCollected",
       "keyword": "let",
       "kind": "number",
@@ -2501,18 +3583,22 @@
       ],
       "writers": [
         "seed",
-        "runFiscal"
+        "runFiscal",
+        "__restore"
       ],
       "readers": [
         "runFiscal",
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 2,
+      "writeCount": 3,
+      "readCount": 3,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let taxCollected = 0;"
@@ -2521,7 +3607,7 @@
       "id": "runtime.orchestrator._stage2.taxRedistributed",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 95,
+      "line": 105,
       "name": "taxRedistributed",
       "keyword": "let",
       "kind": "number",
@@ -2533,18 +3619,22 @@
       ],
       "writers": [
         "seed",
-        "runFiscal"
+        "runFiscal",
+        "__restore"
       ],
       "readers": [
         "runFiscal",
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 2,
+      "writeCount": 3,
+      "readCount": 3,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let taxRedistributed = 0;"
@@ -2553,7 +3643,7 @@
       "id": "runtime.orchestrator._stage2.supplyAccountId",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 97,
+      "line": 107,
       "name": "supplyAccountId",
       "keyword": "let",
       "kind": "null",
@@ -2564,21 +3654,27 @@
         "__reset"
       ],
       "writers": [
-        "seed"
+        "seed",
+        "__restore"
       ],
       "readers": [
         "runIndustry",
         "runFiscal",
-        "performAgentAction",
-        "summary"
-      ],
-      "writeCount": 1,
-      "readCount": 4,
-      "exportedTouchers": [
-        "seed",
+        "candidateStateFor",
         "performAgentAction",
         "summary",
-        "__reset"
+        "__snapshot"
+      ],
+      "writeCount": 2,
+      "readCount": 6,
+      "exportedTouchers": [
+        "seed",
+        "candidateStateFor",
+        "performAgentAction",
+        "summary",
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let supplyAccountId = null;"
@@ -2587,7 +3683,7 @@
       "id": "runtime.orchestrator._stage2.goodsSold",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 98,
+      "line": 108,
       "name": "goodsSold",
       "keyword": "let",
       "kind": "number",
@@ -2599,18 +3695,22 @@
       ],
       "writers": [
         "seed",
-        "runIndustry"
+        "runIndustry",
+        "__restore"
       ],
       "readers": [
         "foundConditionsFor",
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 2,
+      "writeCount": 3,
+      "readCount": 3,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let goodsSold = 0;"
@@ -2619,7 +3719,7 @@
       "id": "runtime.orchestrator._stage2.businessRevenue",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 99,
+      "line": 109,
       "name": "businessRevenue",
       "keyword": "let",
       "kind": "number",
@@ -2631,17 +3731,21 @@
       ],
       "writers": [
         "seed",
-        "runIndustry"
+        "runIndustry",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let businessRevenue = 0;"
@@ -2650,7 +3754,7 @@
       "id": "runtime.orchestrator._stage2.businessCosts",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 100,
+      "line": 110,
       "name": "businessCosts",
       "keyword": "let",
       "kind": "number",
@@ -2662,17 +3766,21 @@
       ],
       "writers": [
         "seed",
-        "runIndustry"
+        "runIndustry",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let businessCosts = 0;"
@@ -2681,7 +3789,7 @@
       "id": "runtime.orchestrator._stage2.residentEnergyUsed",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 101,
+      "line": 111,
       "name": "residentEnergyUsed",
       "keyword": "let",
       "kind": "number",
@@ -2693,17 +3801,21 @@
       ],
       "writers": [
         "seed",
-        "runIndustry"
+        "runIndustry",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let residentEnergyUsed = 0;"
@@ -2712,7 +3824,7 @@
       "id": "runtime.orchestrator._stage2.industryEnergyUsed",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 102,
+      "line": 112,
       "name": "industryEnergyUsed",
       "keyword": "let",
       "kind": "number",
@@ -2724,17 +3836,21 @@
       ],
       "writers": [
         "seed",
-        "runIndustry"
+        "runIndustry",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let industryEnergyUsed = 0;"
@@ -2743,7 +3859,7 @@
       "id": "runtime.orchestrator._stage2.lossTicks",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 103,
+      "line": 113,
       "name": "lossTicks",
       "keyword": "let",
       "kind": "number",
@@ -2755,17 +3871,21 @@
       ],
       "writers": [
         "seed",
-        "runIndustry"
+        "runIndustry",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let lossTicks = 0;"
@@ -2774,7 +3894,7 @@
       "id": "runtime.orchestrator._stage2.lastCommunityTick",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 105,
+      "line": 115,
       "name": "lastCommunityTick",
       "keyword": "let",
       "kind": "number",
@@ -2786,16 +3906,20 @@
       ],
       "writers": [
         "seed",
-        "runCommunity"
+        "runCommunity",
+        "__restore"
       ],
       "readers": [
-        "runCommunity"
+        "runCommunity",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let lastCommunityTick = -1;"
@@ -2804,7 +3928,7 @@
       "id": "runtime.orchestrator._stage2.communitySnapshot",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 106,
+      "line": 116,
       "name": "communitySnapshot",
       "keyword": "let",
       "kind": "null",
@@ -2816,17 +3940,21 @@
       ],
       "writers": [
         "seed",
-        "runCommunity"
+        "runCommunity",
+        "__restore"
       ],
       "readers": [
         "runPlatform",
-        "runCommunity"
+        "runCommunity",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 2,
+      "writeCount": 3,
+      "readCount": 3,
       "exportedTouchers": [
         "seed",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let communitySnapshot = null;"
@@ -2835,7 +3963,7 @@
       "id": "runtime.orchestrator._stage2.postCount",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 108,
+      "line": 118,
       "name": "postCount",
       "keyword": "let",
       "kind": "number",
@@ -2847,17 +3975,21 @@
       ],
       "writers": [
         "seed",
-        "runPlatform"
+        "runPlatform",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let postCount = 0;"
@@ -2866,7 +3998,7 @@
       "id": "runtime.orchestrator._stage2.replyCount",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 109,
+      "line": 119,
       "name": "replyCount",
       "keyword": "let",
       "kind": "number",
@@ -2878,17 +4010,21 @@
       ],
       "writers": [
         "seed",
-        "runPlatform"
+        "runPlatform",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let replyCount = 0;"
@@ -2897,7 +4033,7 @@
       "id": "runtime.orchestrator._stage2.reactCount",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 110,
+      "line": 120,
       "name": "reactCount",
       "keyword": "let",
       "kind": "number",
@@ -2909,17 +4045,21 @@
       ],
       "writers": [
         "seed",
-        "runPlatform"
+        "runPlatform",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let reactCount = 0;"
@@ -2928,7 +4068,7 @@
       "id": "runtime.orchestrator._stage2.reputationTriageSwaps",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 111,
+      "line": 121,
       "name": "reputationTriageSwaps",
       "keyword": "let",
       "kind": "number",
@@ -2940,17 +4080,21 @@
       ],
       "writers": [
         "seed",
-        "runHealth"
+        "runHealth",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let reputationTriageSwaps = 0;"
@@ -2959,7 +4103,7 @@
       "id": "runtime.orchestrator._stage2.reputationTriageTreatedScore",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 113,
+      "line": 123,
       "name": "reputationTriageTreatedScore",
       "keyword": "let",
       "kind": "number",
@@ -2971,17 +4115,21 @@
       ],
       "writers": [
         "seed",
-        "runHealth"
+        "runHealth",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let reputationTriageTreatedScore = 0;"
@@ -2990,7 +4138,7 @@
       "id": "runtime.orchestrator._stage2.lastFeedTick",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 114,
+      "line": 124,
       "name": "lastFeedTick",
       "keyword": "let",
       "kind": "number",
@@ -3002,16 +4150,20 @@
       ],
       "writers": [
         "seed",
-        "runPlatform"
+        "runPlatform",
+        "__restore"
       ],
       "readers": [
-        "runPlatform"
+        "runPlatform",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let lastFeedTick = -1;"
@@ -3020,7 +4172,7 @@
       "id": "runtime.orchestrator._stage2.feedSignature",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 115,
+      "line": 125,
       "name": "feedSignature",
       "keyword": "let",
       "kind": "array",
@@ -3032,18 +4184,22 @@
       ],
       "writers": [
         "seed",
-        "runPlatform"
+        "runPlatform",
+        "__restore"
       ],
       "readers": [
         "runPlatform",
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 2,
+      "writeCount": 3,
+      "readCount": 3,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let feedSignature = [];"
@@ -3052,7 +4208,7 @@
       "id": "runtime.orchestrator._stage2.recentPostIds",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 117,
+      "line": 127,
       "name": "recentPostIds",
       "keyword": "let",
       "kind": "array",
@@ -3064,16 +4220,20 @@
       ],
       "writers": [
         "seed",
-        "runPlatform"
+        "runPlatform",
+        "__restore"
       ],
       "readers": [
-        "runPlatform"
+        "runPlatform",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let recentPostIds = [];"
@@ -3082,7 +4242,7 @@
       "id": "runtime.orchestrator._stage2._candidateStateCache",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 892,
+      "line": 902,
       "name": "_candidateStateCache",
       "keyword": "let",
       "kind": "null",
@@ -3094,21 +4254,22 @@
       ],
       "writers": [
         "candidateStateFor",
-        "tick"
+        "__restore"
       ],
       "readers": [
         "cacheBalance",
         "cacheActiveCount",
         "cacheStartedIds",
         "demandPerTickEstimate",
-        "candidateStateFor"
+        "candidateStateFor",
+        "__restore"
       ],
       "writeCount": 2,
-      "readCount": 5,
+      "readCount": 6,
       "exportedTouchers": [
         "candidateStateFor",
-        "tick",
-        "__reset"
+        "__reset",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let _candidateStateCache = null;"
@@ -3117,7 +4278,7 @@
       "id": "runtime.orchestrator._stage2._candidateStateCacheTick",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 893,
+      "line": 903,
       "name": "_candidateStateCacheTick",
       "keyword": "let",
       "kind": "number",
@@ -3128,16 +4289,18 @@
         "__reset"
       ],
       "writers": [
-        "candidateStateFor"
+        "candidateStateFor",
+        "__restore"
       ],
       "readers": [
         "candidateStateFor"
       ],
-      "writeCount": 1,
+      "writeCount": 2,
       "readCount": 1,
       "exportedTouchers": [
         "candidateStateFor",
-        "__reset"
+        "__reset",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let _candidateStateCacheTick = -1;"
@@ -3146,7 +4309,7 @@
       "id": "runtime.orchestrator._stage2.foundCapitalConfig",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 895,
+      "line": 905,
       "name": "foundCapitalConfig",
       "keyword": "let",
       "kind": "null",
@@ -3157,16 +4320,20 @@
         "__reset"
       ],
       "writers": [
-        "setFoundConfig"
+        "setFoundConfig",
+        "__restore"
       ],
       "readers": [
         "foundCapitalOf",
-        "cfgVal"
+        "cfgVal",
+        "__snapshot"
       ],
-      "writeCount": 1,
-      "readCount": 2,
+      "writeCount": 2,
+      "readCount": 3,
       "exportedTouchers": [
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let foundCapitalConfig = null;"
@@ -3175,7 +4342,7 @@
       "id": "runtime.orchestrator._stage2.reserveScalePop",
       "module": "runtime.orchestrator._stage2",
       "file": "src/runtime/orchestrator/_stage2.js",
-      "line": 1740,
+      "line": 2147,
       "name": "reserveScalePop",
       "keyword": "let",
       "kind": "number",
@@ -3186,15 +4353,19 @@
         "__reset"
       ],
       "writers": [
-        "rescaleReserves"
+        "rescaleReserves",
+        "__restore"
       ],
       "readers": [
-        "rescaleReserves"
+        "rescaleReserves",
+        "__snapshot"
       ],
-      "writeCount": 1,
-      "readCount": 1,
+      "writeCount": 2,
+      "readCount": 2,
       "exportedTouchers": [
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let reserveScalePop = -1;"
@@ -3214,17 +4385,22 @@
         "__reset"
       ],
       "writers": [
-        "seed"
+        "seed",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 1,
+      "writeCount": 2,
+      "readCount": 3,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let seeded = false;"
@@ -3244,17 +4420,21 @@
         "__reset"
       ],
       "writers": [
-        "seed"
+        "seed",
+        "__restore"
       ],
       "readers": [
         "seed",
-        "runPolitics"
+        "runPolitics",
+        "__snapshot"
       ],
-      "writeCount": 1,
-      "readCount": 2,
+      "writeCount": 2,
+      "readCount": 3,
       "exportedTouchers": [
         "seed",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let factionA = null;"
@@ -3274,16 +4454,20 @@
         "__reset"
       ],
       "writers": [
-        "seed"
+        "seed",
+        "__restore"
       ],
       "readers": [
-        "runPolitics"
+        "runPolitics",
+        "__snapshot"
       ],
-      "writeCount": 1,
-      "readCount": 1,
+      "writeCount": 2,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let factionB = null;"
@@ -3304,16 +4488,20 @@
       ],
       "writers": [
         "seed",
-        "runPolitics"
+        "runPolitics",
+        "__restore"
       ],
       "readers": [
-        "runPolitics"
+        "runPolitics",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let allied = false;"
@@ -3333,16 +4521,20 @@
         "__reset"
       ],
       "writers": [
-        "seed"
+        "seed",
+        "__restore"
       ],
       "readers": [
-        "runPolitics"
+        "runPolitics",
+        "__snapshot"
       ],
-      "writeCount": 1,
-      "readCount": 1,
+      "writeCount": 2,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let lawId = null;"
@@ -3363,16 +4555,20 @@
       ],
       "writers": [
         "seed",
-        "runPolitics"
+        "runPolitics",
+        "__restore"
       ],
       "readers": [
-        "runPolitics"
+        "runPolitics",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let lawEnforced = false;"
@@ -3393,16 +4589,20 @@
       ],
       "writers": [
         "seed",
-        "runPolitics"
+        "runPolitics",
+        "__restore"
       ],
       "readers": [
-        "runPolitics"
+        "runPolitics",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let conflictId = null;"
@@ -3423,16 +4623,20 @@
       ],
       "writers": [
         "seed",
-        "runPolitics"
+        "runPolitics",
+        "__restore"
       ],
       "readers": [
-        "runPolitics"
+        "runPolitics",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let conflictResolved = false;"
@@ -3453,16 +4657,20 @@
       ],
       "writers": [
         "seed",
-        "runCulture"
+        "runCulture",
+        "__restore"
       ],
       "readers": [
-        "runCulture"
+        "runCulture",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let normViolated = false;"
@@ -3483,16 +4691,20 @@
       ],
       "writers": [
         "seed",
-        "runCulture"
+        "runCulture",
+        "__restore"
       ],
       "readers": [
-        "runCulture"
+        "runCulture",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let memeMutated = false;"
@@ -3513,16 +4725,20 @@
       ],
       "writers": [
         "seed",
-        "runCivilization"
+        "runCivilization",
+        "__restore"
       ],
       "readers": [
-        "runCivilization"
+        "runCivilization",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let collapseHandled = false;"
@@ -3543,17 +4759,21 @@
       ],
       "writers": [
         "seed",
-        "runCivilization"
+        "runCivilization",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let firstCollapse = null;"
@@ -3574,16 +4794,20 @@
       ],
       "writers": [
         "seed",
-        "runCivilization"
+        "runCivilization",
+        "__restore"
       ],
       "readers": [
-        "runCivilization"
+        "runCivilization",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let scarceTicks = 0;"
@@ -3604,17 +4828,22 @@
       ],
       "writers": [
         "seed",
-        "runPolitics"
+        "runPolitics",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 3,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let lawsEnacted = 0;"
@@ -3635,17 +4864,21 @@
       ],
       "writers": [
         "seed",
-        "runPolitics"
+        "runPolitics",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let conflictsResolved = 0;"
@@ -3666,17 +4899,21 @@
       ],
       "writers": [
         "seed",
-        "runCulture"
+        "runCulture",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let ritualsHeld = 0;"
@@ -3697,17 +4934,21 @@
       ],
       "writers": [
         "seed",
-        "runCulture"
+        "runCulture",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let normsViolated = 0;"
@@ -3728,17 +4969,21 @@
       ],
       "writers": [
         "seed",
-        "runCulture"
+        "runCulture",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let memesMutated = 0;"
@@ -3759,17 +5004,21 @@
       ],
       "writers": [
         "seed",
-        "runPsyche"
+        "runPsyche",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let breakdowns = 0;"
@@ -3790,17 +5039,21 @@
       ],
       "writers": [
         "seed",
-        "runPsyche"
+        "runPsyche",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let recoveries = 0;"
@@ -3821,17 +5074,21 @@
       ],
       "writers": [
         "seed",
-        "runPsyche"
+        "runPsyche",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let copings = 0;"
@@ -3852,17 +5109,21 @@
       ],
       "writers": [
         "seed",
-        "runTech"
+        "runTech",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let researchesStarted = 0;"
@@ -3883,17 +5144,21 @@
       ],
       "writers": [
         "seed",
-        "runTech"
+        "runTech",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let researchesCompleted = 0;"
@@ -3914,17 +5179,21 @@
       ],
       "writers": [
         "seed",
-        "runTech"
+        "runTech",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let techsLost = 0;"
@@ -3945,17 +5214,22 @@
       ],
       "writers": [
         "seed",
-        "runCivilization"
+        "runCivilization",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 3,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let collapses = 0;"
@@ -3976,20 +5250,95 @@
       ],
       "writers": [
         "seed",
-        "runCivilization"
+        "runCivilization",
+        "__restore"
       ],
       "readers": [
-        "summary"
+        "summary",
+        "__snapshot"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 2,
       "exportedTouchers": [
         "seed",
         "summary",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let restarts = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.handovers",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 47,
+      "name": "handovers",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runCivilization",
+        "__restore"
+      ],
+      "readers": [
+        "summary",
+        "__snapshot",
+        "__restore"
+      ],
+      "writeCount": 3,
+      "readCount": 3,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset",
+        "__snapshot",
+        "__restore"
+      ],
+      "exported": false,
+      "rawLine": "let handovers = 0;"
+    },
+    {
+      "id": "runtime.orchestrator._stage3.lastHandover",
+      "module": "runtime.orchestrator._stage3",
+      "file": "src/runtime/orchestrator/_stage3.js",
+      "line": 48,
+      "name": "lastHandover",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "seed",
+        "runCivilization",
+        "__restore"
+      ],
+      "readers": [
+        "summary",
+        "__snapshot"
+      ],
+      "writeCount": 3,
+      "readCount": 2,
+      "exportedTouchers": [
+        "seed",
+        "summary",
+        "__reset",
+        "__snapshot",
+        "__restore"
+      ],
+      "exported": false,
+      "rawLine": "let lastHandover = null;"
     },
     {
       "id": "runtime.orchestrator.cycle.phase",
@@ -4101,15 +5450,20 @@
         "__reset"
       ],
       "writers": [
-        "normalizeDecision"
+        "normalizeDecision",
+        "__restore"
       ],
       "readers": [
-        "normalizeDecision"
+        "normalizeDecision",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 1,
+      "writeCount": 2,
+      "readCount": 3,
       "exportedTouchers": [
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let opSeq = 0;"
@@ -4118,7 +5472,7 @@
       "id": "runtime.orchestrator.loop.layaUrgencyCache",
       "module": "runtime.orchestrator.loop",
       "file": "src/runtime/orchestrator/loop.js",
-      "line": 71,
+      "line": 87,
       "name": "layaUrgencyCache",
       "keyword": "const",
       "kind": "map",
@@ -4126,20 +5480,20 @@
       "resetCovered": true,
       "resetDeclared": true,
       "resetFunctions": [
+        "resetGenerations",
         "reset"
       ],
       "writers": [
         "prefetchLayaUrgency",
-        "step"
+        "__restore"
       ],
       "readers": [
-        "layaUrgencyFor",
-        "step"
+        "layaUrgencyFor"
       ],
       "writeCount": 2,
-      "readCount": 2,
+      "readCount": 1,
       "exportedTouchers": [
-        "step",
+        "__restore",
         "reset"
       ],
       "exported": false,
@@ -4149,7 +5503,7 @@
       "id": "runtime.orchestrator.loop.foragePool",
       "module": "runtime.orchestrator.loop",
       "file": "src/runtime/orchestrator/loop.js",
-      "line": 147,
+      "line": 171,
       "name": "foragePool",
       "keyword": "let",
       "kind": "null",
@@ -4157,25 +5511,32 @@
       "resetCovered": true,
       "resetDeclared": true,
       "resetFunctions": [
+        "resetGenerations",
         "reset"
       ],
       "writers": [
         "regenForagePool",
-        "effectFor"
+        "effectFor",
+        "__restore"
       ],
       "readers": [
         "foragePoolCapacityOf",
         "regenForagePool",
         "foragePoolRemaining",
         "scheduleOverride",
+        "contentionCapacities",
         "decide",
         "effectFor",
-        "syncWorldState"
+        "syncWorldState",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 2,
-      "readCount": 7,
+      "writeCount": 3,
+      "readCount": 10,
       "exportedTouchers": [
         "foragePoolRemaining",
+        "__snapshot",
+        "__restore",
         "reset"
       ],
       "exported": false,
@@ -4185,7 +5546,7 @@
       "id": "runtime.orchestrator.loop.currentSeed",
       "module": "runtime.orchestrator.loop",
       "file": "src/runtime/orchestrator/loop.js",
-      "line": 148,
+      "line": 172,
       "name": "currentSeed",
       "keyword": "let",
       "kind": "string",
@@ -4193,18 +5554,23 @@
       "resetCovered": true,
       "resetDeclared": true,
       "resetFunctions": [
+        "resetGenerations",
         "reset"
       ],
       "writers": [
+        "__restore",
         "run"
       ],
       "readers": [
         "seedAgentScheduleRoles",
-        "decide"
+        "decide",
+        "__snapshot"
       ],
-      "writeCount": 1,
-      "readCount": 2,
+      "writeCount": 2,
+      "readCount": 3,
       "exportedTouchers": [
+        "__snapshot",
+        "__restore",
         "reset",
         "run"
       ],
@@ -4212,10 +5578,237 @@
       "rawLine": "let currentSeed = 'default';"
     },
     {
+      "id": "runtime.orchestrator.loop.intervention",
+      "module": "runtime.orchestrator.loop",
+      "file": "src/runtime/orchestrator/loop.js",
+      "line": 185,
+      "name": "intervention",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "resetGenerations",
+        "reset"
+      ],
+      "writers": [
+        "setIntervention"
+      ],
+      "readers": [
+        "interventionStatus",
+        "applyIntervention"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "setIntervention",
+        "interventionStatus",
+        "reset"
+      ],
+      "exported": false,
+      "rawLine": "let intervention = null;"
+    },
+    {
+      "id": "runtime.orchestrator.loop.inFlight",
+      "module": "runtime.orchestrator.loop",
+      "file": "src/runtime/orchestrator/loop.js",
+      "line": 263,
+      "name": "inFlight",
+      "keyword": "let",
+      "kind": "flag",
+      "init": "false",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "resetGenerations",
+        "reset"
+      ],
+      "writers": [
+        "step",
+        "__restore",
+        "markRestored"
+      ],
+      "readers": [
+        "step",
+        "__snapshot",
+        "__restore",
+        "snapshot",
+        "markRestored",
+        "tickStatus"
+      ],
+      "writeCount": 3,
+      "readCount": 6,
+      "exportedTouchers": [
+        "step",
+        "__snapshot",
+        "__restore",
+        "reset",
+        "snapshot",
+        "markRestored",
+        "tickStatus"
+      ],
+      "exported": false,
+      "rawLine": "let inFlight = false;"
+    },
+    {
+      "id": "runtime.orchestrator.loop.committedTick",
+      "module": "runtime.orchestrator.loop",
+      "file": "src/runtime/orchestrator/loop.js",
+      "line": 264,
+      "name": "committedTick",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "resetGenerations",
+        "reset"
+      ],
+      "writers": [
+        "__restore",
+        "markRestored"
+      ],
+      "readers": [
+        "__snapshot",
+        "__restore",
+        "snapshot",
+        "markRestored",
+        "tickStatus"
+      ],
+      "writeCount": 2,
+      "readCount": 5,
+      "exportedTouchers": [
+        "__snapshot",
+        "__restore",
+        "reset",
+        "snapshot",
+        "markRestored",
+        "tickStatus"
+      ],
+      "exported": false,
+      "rawLine": "let committedTick = 0;"
+    },
+    {
+      "id": "runtime.orchestrator.loop.inFlightTick",
+      "module": "runtime.orchestrator.loop",
+      "file": "src/runtime/orchestrator/loop.js",
+      "line": 265,
+      "name": "inFlightTick",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "resetGenerations",
+        "reset"
+      ],
+      "writers": [
+        "__restore",
+        "markRestored"
+      ],
+      "readers": [
+        "step",
+        "__snapshot",
+        "tickStatus"
+      ],
+      "writeCount": 2,
+      "readCount": 3,
+      "exportedTouchers": [
+        "step",
+        "__snapshot",
+        "__restore",
+        "reset",
+        "markRestored",
+        "tickStatus"
+      ],
+      "exported": false,
+      "rawLine": "let inFlightTick = 0;"
+    },
+    {
+      "id": "runtime.orchestrator.loop.stageError",
+      "module": "runtime.orchestrator.loop",
+      "file": "src/runtime/orchestrator/loop.js",
+      "line": 266,
+      "name": "stageError",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "resetGenerations",
+        "reset"
+      ],
+      "writers": [
+        "step",
+        "__restore",
+        "markRestored"
+      ],
+      "readers": [
+        "step",
+        "__snapshot",
+        "snapshot",
+        "tickStatus"
+      ],
+      "writeCount": 3,
+      "readCount": 4,
+      "exportedTouchers": [
+        "step",
+        "__snapshot",
+        "__restore",
+        "reset",
+        "snapshot",
+        "markRestored",
+        "tickStatus"
+      ],
+      "exported": false,
+      "rawLine": "let stageError = null;"
+    },
+    {
+      "id": "runtime.orchestrator.loop.stageFailure",
+      "module": "runtime.orchestrator.loop",
+      "file": "src/runtime/orchestrator/loop.js",
+      "line": 267,
+      "name": "stageFailure",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "resetGenerations",
+        "reset"
+      ],
+      "writers": [
+        "__restore",
+        "markRestored"
+      ],
+      "readers": [
+        "__snapshot",
+        "snapshot",
+        "tickStatus"
+      ],
+      "writeCount": 2,
+      "readCount": 3,
+      "exportedTouchers": [
+        "__snapshot",
+        "__restore",
+        "reset",
+        "snapshot",
+        "markRestored",
+        "tickStatus"
+      ],
+      "exported": false,
+      "rawLine": "let stageFailure = null;"
+    },
+    {
       "id": "runtime.orchestrator.loop._alivePopGeneration",
       "module": "runtime.orchestrator.loop",
       "file": "src/runtime/orchestrator/loop.js",
-      "line": 159,
+      "line": 278,
       "name": "_alivePopGeneration",
       "keyword": "let",
       "kind": "number",
@@ -4223,6 +5816,7 @@
       "resetCovered": true,
       "resetDeclared": true,
       "resetFunctions": [
+        "resetGenerations",
         "reset"
       ],
       "writers": [
@@ -4244,7 +5838,7 @@
       "id": "runtime.orchestrator.loop._alivePopValue",
       "module": "runtime.orchestrator.loop",
       "file": "src/runtime/orchestrator/loop.js",
-      "line": 160,
+      "line": 279,
       "name": "_alivePopValue",
       "keyword": "let",
       "kind": "number",
@@ -4252,6 +5846,7 @@
       "resetCovered": true,
       "resetDeclared": true,
       "resetFunctions": [
+        "resetGenerations",
         "reset"
       ],
       "writers": [
@@ -4269,10 +5864,79 @@
       "rawLine": "let _alivePopValue = 0;"
     },
     {
+      "id": "runtime.orchestrator.loop.generationCount",
+      "module": "runtime.orchestrator.loop",
+      "file": "src/runtime/orchestrator/loop.js",
+      "line": 358,
+      "name": "generationCount",
+      "keyword": "let",
+      "kind": "number",
+      "init": "1",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "resetGenerations",
+        "reset"
+      ],
+      "writers": [
+        "runGenerationHandover",
+        "__restore"
+      ],
+      "readers": [
+        "registerAgent",
+        "runGenerationHandover",
+        "generationStatus",
+        "__snapshot",
+        "__restore"
+      ],
+      "writeCount": 2,
+      "readCount": 5,
+      "exportedTouchers": [
+        "generationStatus",
+        "__snapshot",
+        "__restore"
+      ],
+      "exported": false,
+      "rawLine": "let generationCount = 1;"
+    },
+    {
+      "id": "runtime.orchestrator.loop.sealedGenerations",
+      "module": "runtime.orchestrator.loop",
+      "file": "src/runtime/orchestrator/loop.js",
+      "line": 360,
+      "name": "sealedGenerations",
+      "keyword": "let",
+      "kind": "array",
+      "init": "[]",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "resetGenerations",
+        "reset"
+      ],
+      "writers": [
+        "runGenerationHandover",
+        "__restore"
+      ],
+      "readers": [
+        "generationStatus",
+        "__snapshot"
+      ],
+      "writeCount": 2,
+      "readCount": 2,
+      "exportedTouchers": [
+        "generationStatus",
+        "__snapshot",
+        "__restore"
+      ],
+      "exported": false,
+      "rawLine": "let sealedGenerations = [];"
+    },
+    {
       "id": "runtime.orchestrator.loop.literateSet",
       "module": "runtime.orchestrator.loop",
       "file": "src/runtime/orchestrator/loop.js",
-      "line": 628,
+      "line": 1288,
       "name": "literateSet",
       "keyword": "let",
       "kind": "null",
@@ -4280,18 +5944,24 @@
       "resetCovered": true,
       "resetDeclared": true,
       "resetFunctions": [
+        "resetGenerations",
         "reset"
       ],
       "writers": [
-        "computeLiterateSet"
+        "computeLiterateSet",
+        "__restore"
       ],
       "readers": [
         "computeLiterateSet",
-        "isLiterate"
+        "isLiterate",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 2,
+      "writeCount": 2,
+      "readCount": 4,
       "exportedTouchers": [
+        "__snapshot",
+        "__restore",
         "reset"
       ],
       "exported": false,
@@ -4301,7 +5971,7 @@
       "id": "runtime.orchestrator.loop.mortality",
       "module": "runtime.orchestrator.loop",
       "file": "src/runtime/orchestrator/loop.js",
-      "line": 1040,
+      "line": 1862,
       "name": "mortality",
       "keyword": "const",
       "kind": "map",
@@ -4309,21 +5979,552 @@
       "resetCovered": true,
       "resetDeclared": true,
       "resetFunctions": [
+        "resetGenerations",
         "reset"
       ],
       "writers": [
-        "runMortality"
+        "runGenerationHandover",
+        "runMortality",
+        "__restore"
       ],
       "readers": [
-        "runMortality"
+        "runMortality",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 3,
       "exportedTouchers": [
+        "__snapshot",
+        "__restore",
         "reset"
       ],
       "exported": false,
       "rawLine": "const mortality = new Map();"
+    },
+    {
+      "id": "runtime.orchestrator.metronome.cfg",
+      "module": "runtime.orchestrator.metronome",
+      "file": "src/runtime/orchestrator/metronome.js",
+      "line": 133,
+      "name": "cfg",
+      "keyword": "let",
+      "kind": "expr",
+      "init": "{",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [],
+      "readers": [
+        "configuredMsPerTick",
+        "speedValue",
+        "configure",
+        "pacing",
+        "autosaveStatus",
+        "autosave",
+        "waitUntilIdle",
+        "drive"
+      ],
+      "writeCount": 0,
+      "readCount": 8,
+      "exportedTouchers": [
+        "configuredMsPerTick",
+        "configure",
+        "pacing",
+        "autosaveStatus",
+        "autosave",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let cfg = {"
+    },
+    {
+      "id": "runtime.orchestrator.metronome.generation",
+      "module": "runtime.orchestrator.metronome",
+      "file": "src/runtime/orchestrator/metronome.js",
+      "line": 225,
+      "name": "generation",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "start"
+      ],
+      "readers": [
+        "waitUntilIdle",
+        "drive",
+        "start",
+        "status"
+      ],
+      "writeCount": 1,
+      "readCount": 4,
+      "exportedTouchers": [
+        "start",
+        "status",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let generation = 0;"
+    },
+    {
+      "id": "runtime.orchestrator.metronome.running",
+      "module": "runtime.orchestrator.metronome",
+      "file": "src/runtime/orchestrator/metronome.js",
+      "line": 226,
+      "name": "running",
+      "keyword": "let",
+      "kind": "flag",
+      "init": "false",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "drive",
+        "start"
+      ],
+      "readers": [
+        "start",
+        "pause",
+        "resume",
+        "stop",
+        "isStopping",
+        "status"
+      ],
+      "writeCount": 2,
+      "readCount": 6,
+      "exportedTouchers": [
+        "start",
+        "pause",
+        "resume",
+        "stop",
+        "isStopping",
+        "status",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let running = false;"
+    },
+    {
+      "id": "runtime.orchestrator.metronome.stopRequested",
+      "module": "runtime.orchestrator.metronome",
+      "file": "src/runtime/orchestrator/metronome.js",
+      "line": 227,
+      "name": "stopRequested",
+      "keyword": "let",
+      "kind": "flag",
+      "init": "false",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "drive",
+        "start",
+        "stop"
+      ],
+      "readers": [
+        "waitUntilIdle",
+        "drive",
+        "isStopping",
+        "status"
+      ],
+      "writeCount": 3,
+      "readCount": 4,
+      "exportedTouchers": [
+        "start",
+        "stop",
+        "isStopping",
+        "status",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let stopRequested = false;"
+    },
+    {
+      "id": "runtime.orchestrator.metronome.paused",
+      "module": "runtime.orchestrator.metronome",
+      "file": "src/runtime/orchestrator/metronome.js",
+      "line": 228,
+      "name": "paused",
+      "keyword": "let",
+      "kind": "flag",
+      "init": "false",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "drive",
+        "start",
+        "pause",
+        "resume"
+      ],
+      "readers": [
+        "waitUntilIdle",
+        "drive",
+        "status"
+      ],
+      "writeCount": 4,
+      "readCount": 3,
+      "exportedTouchers": [
+        "start",
+        "pause",
+        "resume",
+        "status",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let paused = false;"
+    },
+    {
+      "id": "runtime.orchestrator.metronome.drivePromise",
+      "module": "runtime.orchestrator.metronome",
+      "file": "src/runtime/orchestrator/metronome.js",
+      "line": 229,
+      "name": "drivePromise",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "drive",
+        "start"
+      ],
+      "readers": [
+        "stop",
+        "waitForStop"
+      ],
+      "writeCount": 2,
+      "readCount": 2,
+      "exportedTouchers": [
+        "start",
+        "stop",
+        "waitForStop",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let drivePromise = null;"
+    },
+    {
+      "id": "runtime.orchestrator.metronome.onStoppedHook",
+      "module": "runtime.orchestrator.metronome",
+      "file": "src/runtime/orchestrator/metronome.js",
+      "line": 230,
+      "name": "onStoppedHook",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "start"
+      ],
+      "readers": [
+        "drive"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "start",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let onStoppedHook = null;"
+    },
+    {
+      "id": "runtime.orchestrator.metronome.tickConfig",
+      "module": "runtime.orchestrator.metronome",
+      "file": "src/runtime/orchestrator/metronome.js",
+      "line": 231,
+      "name": "tickConfig",
+      "keyword": "let",
+      "kind": "object",
+      "init": "{}",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "start"
+      ],
+      "readers": [
+        "runPacedTick",
+        "status"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "start",
+        "status",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let tickConfig = {};"
+    },
+    {
+      "id": "runtime.orchestrator.metronome.ticksRun",
+      "module": "runtime.orchestrator.metronome",
+      "file": "src/runtime/orchestrator/metronome.js",
+      "line": 232,
+      "name": "ticksRun",
+      "keyword": "let",
+      "kind": "number",
+      "init": "0",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "drive"
+      ],
+      "readers": [
+        "autosave",
+        "drive",
+        "status"
+      ],
+      "writeCount": 1,
+      "readCount": 3,
+      "exportedTouchers": [
+        "autosave",
+        "status",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let ticksRun = 0;"
+    },
+    {
+      "id": "runtime.orchestrator.metronome.lastTickMs",
+      "module": "runtime.orchestrator.metronome",
+      "file": "src/runtime/orchestrator/metronome.js",
+      "line": 233,
+      "name": "lastTickMs",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "drive"
+      ],
+      "readers": [
+        "status"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "status",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let lastTickMs = null;"
+    },
+    {
+      "id": "runtime.orchestrator.metronome.lastError",
+      "module": "runtime.orchestrator.metronome",
+      "file": "src/runtime/orchestrator/metronome.js",
+      "line": 234,
+      "name": "lastError",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "drive",
+        "start"
+      ],
+      "readers": [
+        "autosave",
+        "status"
+      ],
+      "writeCount": 2,
+      "readCount": 2,
+      "exportedTouchers": [
+        "autosave",
+        "start",
+        "status",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let lastError = null;"
+    },
+    {
+      "id": "runtime.orchestrator.metronome.startedAtWall",
+      "module": "runtime.orchestrator.metronome",
+      "file": "src/runtime/orchestrator/metronome.js",
+      "line": 235,
+      "name": "startedAtWall",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "start"
+      ],
+      "readers": [
+        "status"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "start",
+        "status",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let startedAtWall = null;"
+    },
+    {
+      "id": "runtime.orchestrator.metronome.prevSequence",
+      "module": "runtime.orchestrator.metronome",
+      "file": "src/runtime/orchestrator/metronome.js",
+      "line": 238,
+      "name": "prevSequence",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "runPacedTick"
+      ],
+      "readers": [
+        "runPacedTick"
+      ],
+      "writeCount": 1,
+      "readCount": 1,
+      "exportedTouchers": [
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let prevSequence = null;"
+    },
+    {
+      "id": "runtime.orchestrator.metronome.stageMs",
+      "module": "runtime.orchestrator.metronome",
+      "file": "src/runtime/orchestrator/metronome.js",
+      "line": 240,
+      "name": "stageMs",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "recordWork"
+      ],
+      "readers": [
+        "weightOf",
+        "recordWork",
+        "status"
+      ],
+      "writeCount": 1,
+      "readCount": 3,
+      "exportedTouchers": [
+        "status",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const stageMs = new Map();"
+    },
+    {
+      "id": "runtime.orchestrator.metronome.autosaveHook",
+      "module": "runtime.orchestrator.metronome",
+      "file": "src/runtime/orchestrator/metronome.js",
+      "line": 268,
+      "name": "autosaveHook",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "setAutosaveHook"
+      ],
+      "readers": [
+        "autosaveStatus",
+        "autosave"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "setAutosaveHook",
+        "autosaveStatus",
+        "autosave",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let autosaveHook = null;"
+    },
+    {
+      "id": "runtime.orchestrator.metronome.autosaveState",
+      "module": "runtime.orchestrator.metronome",
+      "file": "src/runtime/orchestrator/metronome.js",
+      "line": 269,
+      "name": "autosaveState",
+      "keyword": "let",
+      "kind": "expr",
+      "init": "{ count: 0, lastAtTick: null, lastAtWall: null, lastReason: ",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "autosave"
+      ],
+      "readers": [
+        "autosaveStatus",
+        "autosave"
+      ],
+      "writeCount": 1,
+      "readCount": 2,
+      "exportedTouchers": [
+        "autosaveStatus",
+        "autosave",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let autosaveState = { count: 0, lastAtTick: null, lastAtWall: null, lastReason: null, lastError: null };"
     },
     {
       "id": "runtime.orchestrator.perception.lastCollected",
@@ -4357,6 +6558,126 @@
       "rawLine": "let lastCollected = [];"
     },
     {
+      "id": "runtime.orchestrator.stage-progress.currentTick",
+      "module": "runtime.orchestrator.stage-progress",
+      "file": "src/runtime/orchestrator/stage-progress.js",
+      "line": 40,
+      "name": "currentTick",
+      "keyword": "let",
+      "kind": "null",
+      "init": "null",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "begin",
+        "commit",
+        "fail",
+        "__restore"
+      ],
+      "readers": [
+        "unit",
+        "commit",
+        "fail",
+        "current",
+        "droppedInfo",
+        "observationalMeta"
+      ],
+      "writeCount": 4,
+      "readCount": 6,
+      "exportedTouchers": [
+        "begin",
+        "unit",
+        "commit",
+        "fail",
+        "current",
+        "observationalMeta",
+        "__restore",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let currentTick = null;"
+    },
+    {
+      "id": "runtime.orchestrator.stage-progress.recent",
+      "module": "runtime.orchestrator.stage-progress",
+      "file": "src/runtime/orchestrator/stage-progress.js",
+      "line": 42,
+      "name": "recent",
+      "keyword": "let",
+      "kind": "array",
+      "init": "[]",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "pushRecent",
+        "__restore"
+      ],
+      "readers": [
+        "recentTicks",
+        "lastCommitted",
+        "lastFailure",
+        "droppedInfo",
+        "observationalMeta"
+      ],
+      "writeCount": 2,
+      "readCount": 5,
+      "exportedTouchers": [
+        "recentTicks",
+        "lastCommitted",
+        "lastFailure",
+        "observationalMeta",
+        "__restore",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let recent = [];"
+    },
+    {
+      "id": "runtime.orchestrator.stage-progress.backgroundDriver",
+      "module": "runtime.orchestrator.stage-progress",
+      "file": "src/runtime/orchestrator/stage-progress.js",
+      "line": 44,
+      "name": "backgroundDriver",
+      "keyword": "let",
+      "kind": "flag",
+      "init": "false",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "setBackgroundDriver",
+        "__restore"
+      ],
+      "readers": [
+        "summary",
+        "setBackgroundDriver",
+        "__snapshot",
+        "restorableState",
+        "hasBackgroundDriver"
+      ],
+      "writeCount": 2,
+      "readCount": 5,
+      "exportedTouchers": [
+        "summary",
+        "setBackgroundDriver",
+        "__snapshot",
+        "restorableState",
+        "__restore",
+        "hasBackgroundDriver",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let backgroundDriver = false;"
+    },
+    {
       "id": "runtime.registry.entities",
       "module": "runtime.registry",
       "file": "src/runtime/registry.js",
@@ -4372,21 +6693,26 @@
       ],
       "writers": [
         "register",
-        "unregister"
+        "unregister",
+        "__restore"
       ],
       "readers": [
         "lookup",
         "unregister",
-        "count"
+        "count",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 2,
-      "readCount": 3,
+      "writeCount": 3,
+      "readCount": 5,
       "exportedTouchers": [
         "register",
         "lookup",
         "unregister",
         "count",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "const entities = new Map();"
@@ -4414,16 +6740,18 @@
         "snapshot",
         "get",
         "set",
-        "restore"
+        "restore",
+        "__restore"
       ],
       "writeCount": 1,
-      "readCount": 6,
+      "readCount": 7,
       "exportedTouchers": [
         "snapshot",
         "get",
         "set",
         "restore",
-        "__reset"
+        "__reset",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "let world = {};"
@@ -4455,10 +6783,10 @@
       "rawLine": "const VALENCES = new Set(['accepted', 'forbidden']);"
     },
     {
-      "id": "social.platform.posts.byId",
-      "module": "social.platform.posts",
-      "file": "src/social/platform/posts.js",
-      "line": 32,
+      "id": "social.interaction.byId",
+      "module": "social.interaction",
+      "file": "src/social/interaction.js",
+      "line": 74,
       "name": "byId",
       "keyword": "const",
       "kind": "map",
@@ -4469,23 +6797,113 @@
         "__reset"
       ],
       "writers": [
+        "rebuildFromGraph",
+        "save",
+        "__restore"
+      ],
+      "readers": [
+        "trust",
+        "propose",
+        "respond",
+        "settleOverdue",
+        "settleStaleResponses",
+        "get",
+        "list",
+        "stats",
+        "__snapshot",
+        "__restore"
+      ],
+      "writeCount": 3,
+      "readCount": 10,
+      "exportedTouchers": [
+        "trust",
+        "propose",
+        "respond",
+        "settleOverdue",
+        "settleStaleResponses",
+        "get",
+        "list",
+        "stats",
+        "__snapshot",
+        "__restore",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "const byId = new Map();"
+    },
+    {
+      "id": "social.interaction.lastGeneration",
+      "module": "social.interaction",
+      "file": "src/social/interaction.js",
+      "line": 76,
+      "name": "lastGeneration",
+      "keyword": "let",
+      "kind": "number",
+      "init": "-1",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
         "ensureFresh",
+        "__restore"
+      ],
+      "readers": [
+        "ensureFresh"
+      ],
+      "writeCount": 2,
+      "readCount": 1,
+      "exportedTouchers": [
+        "__restore",
+        "__reset"
+      ],
+      "exported": false,
+      "rawLine": "let lastGeneration = -1;"
+    },
+    {
+      "id": "social.platform.posts.byId",
+      "module": "social.platform.posts",
+      "file": "src/social/platform/posts.js",
+      "line": 84,
+      "name": "byId",
+      "keyword": "const",
+      "kind": "map",
+      "init": "new Map()",
+      "resetCovered": true,
+      "resetDeclared": true,
+      "resetFunctions": [
+        "__reset"
+      ],
+      "writers": [
+        "enforceHotLimit",
+        "rebuildFromGraph",
+        "__restore",
         "publish"
       ],
       "readers": [
+        "enforceHotLimit",
+        "__snapshot",
+        "__restore",
         "reply",
         "react",
         "get",
-        "list"
+        "list",
+        "recent",
+        "lookup"
       ],
-      "writeCount": 2,
-      "readCount": 4,
+      "writeCount": 4,
+      "readCount": 9,
       "exportedTouchers": [
+        "__snapshot",
+        "__restore",
         "publish",
         "reply",
         "react",
         "get",
         "list",
+        "recent",
+        "lookup",
         "__reset"
       ],
       "exported": false,
@@ -4495,7 +6913,7 @@
       "id": "social.platform.posts.lastGeneration",
       "module": "social.platform.posts",
       "file": "src/social/platform/posts.js",
-      "line": 35,
+      "line": 87,
       "name": "lastGeneration",
       "keyword": "let",
       "kind": "number",
@@ -4506,14 +6924,17 @@
         "__reset"
       ],
       "writers": [
-        "ensureFresh"
+        "ensureFresh",
+        "__restore"
       ],
       "readers": [
         "ensureFresh"
       ],
-      "writeCount": 1,
+      "writeCount": 2,
       "readCount": 1,
-      "exportedTouchers": [],
+      "exportedTouchers": [
+        "__restore"
+      ],
       "exported": false,
       "rawLine": "let lastGeneration = -1;"
     },
@@ -4532,18 +6953,23 @@
         "__reset"
       ],
       "writers": [
-        "ensureFresh",
+        "rebuildFromGraph",
+        "__restore",
         "update"
       ],
       "readers": [
+        "__snapshot",
+        "__restore",
         "update",
         "query",
         "list",
         "scoreMap"
       ],
-      "writeCount": 2,
-      "readCount": 4,
+      "writeCount": 3,
+      "readCount": 6,
       "exportedTouchers": [
+        "__snapshot",
+        "__restore",
         "update",
         "query",
         "list",
@@ -4568,14 +6994,17 @@
         "__reset"
       ],
       "writers": [
-        "ensureFresh"
+        "ensureFresh",
+        "__restore"
       ],
       "readers": [
         "ensureFresh"
       ],
-      "writeCount": 1,
+      "writeCount": 2,
       "readCount": 1,
-      "exportedTouchers": [],
+      "exportedTouchers": [
+        "__restore"
+      ],
       "exported": false,
       "rawLine": "let lastGeneration = -1;"
     },
@@ -4594,20 +7023,25 @@
         "__reset"
       ],
       "writers": [
+        "__restore",
         "configure"
       ],
       "readers": [
         "idx",
         "inBounds",
         "generate",
+        "__snapshot",
+        "__restore",
         "configure",
         "spread",
         "field"
       ],
-      "writeCount": 1,
-      "readCount": 6,
+      "writeCount": 2,
+      "readCount": 8,
       "exportedTouchers": [
         "__reset",
+        "__snapshot",
+        "__restore",
         "configure",
         "spread",
         "field"
@@ -4631,18 +7065,23 @@
       ],
       "writers": [
         "generate",
+        "__restore",
         "spread"
       ],
       "readers": [
+        "__snapshot",
+        "__restore",
         "configure",
         "query",
         "spread",
         "field"
       ],
-      "writeCount": 2,
-      "readCount": 4,
+      "writeCount": 3,
+      "readCount": 6,
       "exportedTouchers": [
         "__reset",
+        "__snapshot",
+        "__restore",
         "configure",
         "query",
         "spread",
@@ -4667,15 +7106,20 @@
       ],
       "writers": [
         "ensure",
+        "__restore",
         "configure"
       ],
       "readers": [
-        "ensure"
+        "ensure",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 2,
-      "readCount": 1,
+      "writeCount": 3,
+      "readCount": 3,
       "exportedTouchers": [
         "__reset",
+        "__snapshot",
+        "__restore",
         "configure"
       ],
       "exported": false,
@@ -4696,16 +7140,21 @@
         "__reset"
       ],
       "writers": [
+        "__restore",
         "forecast"
       ],
       "readers": [
+        "__snapshot",
+        "__restore",
         "forecast",
         "strike"
       ],
-      "writeCount": 1,
-      "readCount": 2,
+      "writeCount": 2,
+      "readCount": 4,
       "exportedTouchers": [
         "__reset",
+        "__snapshot",
+        "__restore",
         "forecast",
         "strike"
       ],
@@ -4727,17 +7176,22 @@
         "__reset"
       ],
       "writers": [
-        "load"
+        "load",
+        "__restore"
       ],
       "readers": [
         "load",
-        "list"
+        "list",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 2,
+      "writeCount": 2,
+      "readCount": 4,
       "exportedTouchers": [
         "list",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "const residents = new Map();"
@@ -4758,22 +7212,27 @@
       ],
       "writers": [
         "quarantine",
-        "release"
+        "release",
+        "__restore"
       ],
       "readers": [
         "quarantine",
         "isQuarantined",
         "listQuarantined",
-        "release"
+        "release",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 2,
-      "readCount": 4,
+      "writeCount": 3,
+      "readCount": 6,
       "exportedTouchers": [
         "quarantine",
         "isQuarantined",
         "listQuarantined",
         "release",
-        "__reset"
+        "__reset",
+        "__snapshot",
+        "__restore"
       ],
       "exported": false,
       "rawLine": "const quarantined = new Set();"
@@ -4793,16 +7252,21 @@
         "__reset"
       ],
       "writers": [
-        "load"
+        "load",
+        "__restore"
       ],
       "readers": [
         "load",
-        "query"
+        "query",
+        "__snapshot",
+        "__restore"
       ],
-      "writeCount": 1,
-      "readCount": 2,
+      "writeCount": 2,
+      "readCount": 4,
       "exportedTouchers": [
         "query",
+        "__snapshot",
+        "__restore",
         "__reset"
       ],
       "exported": false,
@@ -4871,6 +7335,36 @@
       "line": 15
     },
     {
+      "constName": "HEADSTART_TYPE",
+      "type": "civilization.headstart",
+      "file": "src/civilization/legacy/inherit/applier.js",
+      "line": 29
+    },
+    {
+      "constName": "TYPE",
+      "type": "civilization.preference",
+      "file": "src/civilization/legacy/inherit/preference.js",
+      "line": 22
+    },
+    {
+      "constName": "TYPE",
+      "type": "civilization.skill",
+      "file": "src/civilization/legacy/inherit/skill.js",
+      "line": 21
+    },
+    {
+      "constName": "TYPE",
+      "type": "civilization.relic",
+      "file": "src/civilization/relic/artifact.js",
+      "line": 27
+    },
+    {
+      "constName": "TYPE",
+      "type": "civilization.relic.discovery",
+      "file": "src/civilization/relic/discover.js",
+      "line": 29
+    },
+    {
       "constName": "HERITAGE_TYPE",
       "type": "civilization.heritage",
       "file": "src/civilization/restart.js",
@@ -4916,19 +7410,19 @@
       "constName": "TYPE",
       "type": "observer.action",
       "file": "src/observer/recorder/action-log.js",
-      "line": 13
+      "line": 19
     },
     {
       "constName": "TYPE",
       "type": "observer.decision",
       "file": "src/observer/recorder/decision-log.js",
-      "line": 13
+      "line": 19
     },
     {
       "constName": "TYPE",
       "type": "observer.event",
       "file": "src/observer/recorder/event-log.js",
-      "line": 14
+      "line": 20
     },
     {
       "constName": "MEME_TYPE",
@@ -4992,9 +7486,15 @@
     },
     {
       "constName": "TYPE",
+      "type": "social.interaction",
+      "file": "src/social/interaction.js",
+      "line": 45
+    },
+    {
+      "constName": "TYPE",
       "type": "social.platform.post",
       "file": "src/social/platform/posts.js",
-      "line": 18
+      "line": 19
     },
     {
       "constName": "TYPE",
@@ -5075,6 +7575,7 @@
         "src/agent/role/career.js",
         "src/agent/role/society.js",
         "src/civilization/tech/research.js",
+        "src/runtime/orchestrator/_stage2.js",
         "src/runtime/orchestrator/loop.js",
         "src/survival/health/treatment.js"
       ],
@@ -5095,6 +7596,7 @@
         "src/agent/role/career.js",
         "src/agent/role/society.js",
         "src/civilization/tech/research.js",
+        "src/runtime/orchestrator/_stage2.js",
         "src/runtime/orchestrator/loop.js",
         "src/survival/health/treatment.js"
       ],
@@ -5112,6 +7614,7 @@
         "src/agent/schedule/planner.js"
       ],
       "consumers": [
+        "src/agent/decision/action-contract.js",
         "src/agent/schedule/executor.js",
         "src/agent/schedule/planner.js",
         "src/runtime/orchestrator/loop.js"
@@ -5130,6 +7633,7 @@
         "src/agent/schedule/executor.js"
       ],
       "consumers": [
+        "src/agent/decision/action-contract.js",
         "src/agent/schedule/executor.js",
         "src/agent/schedule/planner.js",
         "src/runtime/orchestrator/loop.js"
@@ -5165,12 +7669,32 @@
         "src/observer/experiment/compare.js"
       ],
       "consumers": [
-        "src/observer/experiment/compare.js"
+        "src/observer/experiment/compare.js",
+        "src/runtime/orchestrator/loop.js"
       ],
       "orphan": false,
       "duplicateDeclaration": false,
       "declaredBy": [
         "src/observer/experiment/compare.js:11"
+      ]
+    },
+    {
+      "type": "civilization.headstart",
+      "constName": "HEADSTART_TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/civilization/legacy/inherit/applier.js"
+      ],
+      "consumers": [
+        "src/civilization/legacy/graph.js",
+        "src/genesis/renewal.js",
+        "src/runtime/orchestrator/_stage3.js",
+        "src/runtime/orchestrator/loop.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/civilization/legacy/inherit/applier.js:29"
       ]
     },
     {
@@ -5182,7 +7706,8 @@
       ],
       "consumers": [
         "src/genesis/renewal.js",
-        "src/runtime/orchestrator/_stage3.js"
+        "src/runtime/orchestrator/_stage3.js",
+        "src/runtime/orchestrator/loop.js"
       ],
       "orphan": false,
       "duplicateDeclaration": false,
@@ -5198,13 +7723,91 @@
         "src/civilization/legacy/graph.js"
       ],
       "consumers": [
+        "src/civilization/legacy/inherit/applier.js",
         "src/genesis/renewal.js",
-        "src/runtime/orchestrator/_stage3.js"
+        "src/runtime/orchestrator/_stage3.js",
+        "src/runtime/orchestrator/loop.js"
       ],
       "orphan": false,
       "duplicateDeclaration": false,
       "declaredBy": [
         "src/civilization/legacy/graph.js:15"
+      ]
+    },
+    {
+      "type": "civilization.preference",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/civilization/legacy/inherit/preference.js"
+      ],
+      "consumers": [
+        "src/civilization/legacy/graph.js",
+        "src/civilization/legacy/inherit/applier.js",
+        "src/genesis/renewal.js",
+        "src/runtime/orchestrator/_stage3.js",
+        "src/runtime/orchestrator/loop.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/civilization/legacy/inherit/preference.js:22"
+      ]
+    },
+    {
+      "type": "civilization.relic",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/civilization/relic/artifact.js"
+      ],
+      "consumers": [
+        "src/civilization/legacy/inherit/trace.js",
+        "src/civilization/relic/discover.js",
+        "src/runtime/orchestrator/loop.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/civilization/relic/artifact.js:27"
+      ]
+    },
+    {
+      "type": "civilization.relic.discovery",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/civilization/relic/discover.js"
+      ],
+      "consumers": [
+        "src/civilization/legacy/inherit/trace.js",
+        "src/civilization/relic/artifact.js",
+        "src/runtime/orchestrator/loop.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/civilization/relic/discover.js:29"
+      ]
+    },
+    {
+      "type": "civilization.skill",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/civilization/legacy/inherit/skill.js"
+      ],
+      "consumers": [
+        "src/civilization/legacy/graph.js",
+        "src/civilization/legacy/inherit/applier.js",
+        "src/genesis/renewal.js",
+        "src/runtime/orchestrator/_stage3.js",
+        "src/runtime/orchestrator/loop.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/civilization/legacy/inherit/skill.js:21"
       ]
     },
     {
@@ -5216,6 +7819,8 @@
       ],
       "consumers": [
         "src/agent/crafting/recipe.js",
+        "src/civilization/legacy/inherit/applier.js",
+        "src/civilization/legacy/inherit/skill.js",
         "src/civilization/tech/lock.js",
         "src/civilization/tech/research.js",
         "src/civilization/tech/tree.js",
@@ -5308,6 +7913,7 @@
       ],
       "consumers": [
         "src/agent/memory/episodic/store.js",
+        "src/infra/store/graph.js",
         "src/runtime/orchestrator/loop.js",
         "src/social/graph/edges.js",
         "src/social/platform/posts.js"
@@ -5326,6 +7932,8 @@
         "src/agent/memory/semantic.js"
       ],
       "consumers": [
+        "src/agent/memory/semantic.js",
+        "src/infra/store/graph.js",
         "src/runtime/orchestrator/loop.js",
         "src/social/graph/edges.js",
         "src/social/platform/posts.js"
@@ -5345,6 +7953,7 @@
         "src/observer/recorder/action-log.js"
       ],
       "consumers": [
+        "src/agent/decision/candidates.js",
         "src/civilization/collapse/confirmer.js",
         "src/civilization/restart.js",
         "src/observer/chronicle/store.js",
@@ -5355,7 +7964,7 @@
       "orphan": false,
       "duplicateDeclaration": false,
       "declaredBy": [
-        "src/observer/recorder/action-log.js:13"
+        "src/observer/recorder/action-log.js:19"
       ]
     },
     {
@@ -5384,6 +7993,7 @@
         "src/observer/recorder/decision-log.js"
       ],
       "consumers": [
+        "src/agent/decision/candidates.js",
         "src/civilization/collapse/confirmer.js",
         "src/civilization/restart.js",
         "src/observer/chronicle/store.js",
@@ -5394,7 +8004,7 @@
       "orphan": false,
       "duplicateDeclaration": false,
       "declaredBy": [
-        "src/observer/recorder/decision-log.js:13"
+        "src/observer/recorder/decision-log.js:19"
       ]
     },
     {
@@ -5406,6 +8016,7 @@
         "src/observer/recorder/event-log.js"
       ],
       "consumers": [
+        "src/agent/decision/candidates.js",
         "src/civilization/collapse/confirmer.js",
         "src/civilization/restart.js",
         "src/observer/chronicle/store.js",
@@ -5416,7 +8027,7 @@
       "orphan": false,
       "duplicateDeclaration": false,
       "declaredBy": [
-        "src/observer/recorder/event-log.js:14"
+        "src/observer/recorder/event-log.js:20"
       ]
     },
     {
@@ -5661,6 +8272,24 @@
       ]
     },
     {
+      "type": "social.interaction",
+      "constName": "TYPE",
+      "declaredAt": "undefined:undefined",
+      "producers": [
+        "src/social/interaction.js"
+      ],
+      "consumers": [
+        "src/runtime/orchestrator/_stage2.js",
+        "src/runtime/orchestrator/loop.js",
+        "src/social/interaction.js"
+      ],
+      "orphan": false,
+      "duplicateDeclaration": false,
+      "declaredBy": [
+        "src/social/interaction.js:45"
+      ]
+    },
+    {
       "type": "social.platform.post",
       "constName": "TYPE",
       "declaredAt": "undefined:undefined",
@@ -5671,12 +8300,13 @@
         "src/civilization/legacy/summary/writer.js",
         "src/runtime/orchestrator/_stage2.js",
         "src/runtime/orchestrator/loop.js",
-        "src/social/platform/feeds.js"
+        "src/social/platform/feeds.js",
+        "src/social/platform/posts.js"
       ],
       "orphan": false,
       "duplicateDeclaration": false,
       "declaredBy": [
-        "src/social/platform/posts.js:18"
+        "src/social/platform/posts.js:19"
       ]
     },
     {
@@ -5688,7 +8318,8 @@
       ],
       "consumers": [
         "src/runtime/orchestrator/_stage2.js",
-        "src/runtime/orchestrator/loop.js"
+        "src/runtime/orchestrator/loop.js",
+        "src/social/reputation.js"
       ],
       "orphan": false,
       "duplicateDeclaration": false,
@@ -5743,6 +8374,7 @@
         "src/civilization/tech/_energy.js",
         "src/civilization/tech/research.js",
         "src/economy/industry/production.js",
+        "src/observer/experiment/counterfactual.js",
         "src/runtime/orchestrator/_stage2.js",
         "src/runtime/orchestrator/_stage3.js",
         "src/runtime/orchestrator/loop.js",
@@ -5901,6 +8533,9 @@
   ],
   "worldKeys": [
     "agents.",
+    "civilization.generation",
+    "committedTick",
+    "lastTickError",
     "needs",
     "resources.energy",
     "resources.food",
@@ -5910,7 +8545,8 @@
     "shelter",
     "survival.crisis",
     "survival.goal",
-    "tick"
+    "tick",
+    "tickInFlight"
   ],
   "stepPhases": [
     {
@@ -6241,14 +8877,21 @@
       "code": "store/reset-by-generation",
       "subject": "agent.memory.episodic.store.lastGeneration",
       "message": "派生缓存（世代号）：由 __reset 或 ensureFresh 重建，非泄漏",
-      "at": "src/agent/memory/episodic/store.js:25"
+      "at": "src/agent/memory/episodic/store.js:50"
+    },
+    {
+      "level": "warning",
+      "code": "store/reset-missing",
+      "subject": "infra.store.hot-log.logs",
+      "message": "文件有 __reset 但未覆盖该变量：跨 run 残留会使结果取决于此前跑过什么",
+      "at": "src/infra/store/hot-log.js:53"
     },
     {
       "level": "info",
       "code": "store/reset-by-generation",
       "subject": "social.platform.posts.lastGeneration",
       "message": "派生缓存（世代号）：由 __reset 或 ensureFresh 重建，非泄漏",
-      "at": "src/social/platform/posts.js:35"
+      "at": "src/social/platform/posts.js:87"
     },
     {
       "level": "info",

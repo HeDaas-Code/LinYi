@@ -7,6 +7,7 @@ import { registry } from '../src/runtime/index.js';
 import { cycle } from '../src/runtime/index.js';
 import { perception } from '../src/runtime/index.js';
 import { dispatch } from '../src/runtime/index.js';
+import * as _loop from '../src/runtime/orchestrator/loop.js';
 
 test('clock: now 从 0 开始，tick 单调推进', () => {
   clock.__reset();
@@ -219,4 +220,46 @@ test('dispatch: effect 自定义世界变更与 onApplied 回调', () => {
   assert.equal(worldState.get('agents.a1.water'), -1);
   assert.deepEqual(observed, ['drink']);
   assert.throws(() => dispatch.resolve({ action: 'x' }), /agentId/);
+});
+
+function t2Reset() { return _loop.reset(); }
+function t2Spawn() {
+  for (let i = 0; i < 2; i += 1) _loop.spawnAgent({ name: '居民' + (i + 1) });
+}
+
+test('loop: 提交边界在 tick 完成后闭合（tickStatus 可观测）', async () => {
+  t2Reset();
+  t2Spawn();
+  const st0 = _loop.tickStatus();
+  assert.equal(st0.committedTick, 0);
+  assert.equal(st0.inFlight, false);
+  await _loop.step({ eventProbability: 0 });
+  const st1 = _loop.tickStatus();
+  assert.equal(st1.tick, 1);
+  assert.equal(st1.committedTick, 1);
+  assert.equal(st1.inFlight, false);
+  assert.equal(st1.stageFailure, null);
+});
+
+test('loop: 并发 step 抛 TICK_IN_FLIGHT，失败后 inFlight 归位', async () => {
+  t2Reset();
+  t2Spawn();
+  const p1 = _loop.step({ eventProbability: 0 });
+  await assert.rejects(() => _loop.step({ eventProbability: 0 }), (e) => e.code === 'TICK_IN_FLIGHT');
+  await p1;
+  assert.equal(_loop.tickStatus().inFlight, false);
+  assert.equal(_loop.tickStatus().committedTick, 1);
+});
+
+test('loop: reset 后提交边界归零，可干净重跑', async () => {
+  t2Reset();
+  t2Spawn();
+  await _loop.step({ eventProbability: 0 });
+  assert.equal(_loop.tickStatus().committedTick, 1);
+  _loop.reset();
+  const st = _loop.tickStatus();
+  assert.equal(st.tick, 0);
+  assert.equal(st.committedTick, 0);
+  assert.equal(st.inFlight, false);
+  assert.equal(st.stageFailure, null);
 });

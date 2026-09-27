@@ -105,3 +105,44 @@ export function __reset() {
   learned.clear();
   seq = 0;
 }
+
+// ---- 持久化：配方与已学配方必须进存档 ----
+
+/**
+ * 导出配方表、居民已学配方与 id 序号。
+ *
+ * learned 决定「谁能做什么」——它是居民的学习结果，不入档则恢复后所有人
+ * 忘掉配方，craft/build 退化为不可用；seq 不入档会让新配方 id 与旧的重号。
+ */
+export function __snapshot() {
+  return {
+    recipes: clone([...recipes.values()]),
+    learned: [...learned.entries()].map(([agentId, set]) => ({ agentId, recipeIds: [...set] })),
+    seq,
+  };
+}
+
+/**
+ * 恢复配方与已学配方（整体替换）。
+ * @param {{recipes?: Array, learned?: Array, seq?: number}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('recipe.__restore: 状态必须为对象');
+  }
+  recipes.clear();
+  learned.clear();
+  seq = 0;
+  const rlist = Array.isArray(data.recipes) ? data.recipes : [];
+  for (const rec of rlist) {
+    if (typeof rec?.id !== 'string' || rec.id === '') continue;
+    recipes.set(rec.id, clone(rec));
+  }
+  const llist = Array.isArray(data.learned) ? data.learned : [];
+  for (const rec of llist) {
+    if (typeof rec?.agentId !== 'string' || rec.agentId === '') continue;
+    learned.set(rec.agentId, new Set(Array.isArray(rec.recipeIds) ? rec.recipeIds : []));
+  }
+  if (Number.isInteger(data.seq) && data.seq >= 0) seq = data.seq;
+  return { recipes: recipes.size, learned: learned.size, seq };
+}

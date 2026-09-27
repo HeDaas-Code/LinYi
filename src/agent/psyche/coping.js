@@ -132,3 +132,32 @@ export function decisionWeights({ agentId } = {}) {
 export function __reset() {
   activeCoping.clear();
 }
+
+// ---- 持久化：进行中的应对策略必须进存档 ----
+
+/**
+ * 导出进行中的应对策略。
+ *
+ * 应对策略携带剩余 tick 与行动偏好，是**跨 tick 生效**的行为修正。
+ * 不入档则恢复后全城策略清空，续跑的行为分布与连续运行分叉。
+ */
+export function __snapshot() {
+  return { activeCoping: structuredClone([...activeCoping.entries()]) };
+}
+
+/**
+ * 恢复应对策略（整体替换）。
+ * @param {{activeCoping?: Array}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('coping.__restore: 状态必须为对象');
+  }
+  activeCoping.clear();
+  const list = Array.isArray(data.activeCoping) ? data.activeCoping : [];
+  for (const pair of list) {
+    if (!Array.isArray(pair) || pair.length < 2) continue;
+    if (typeof pair[0] === 'string' && pair[0] !== '') activeCoping.set(pair[0], structuredClone(pair[1]));
+  }
+  return { activeCoping: activeCoping.size };
+}

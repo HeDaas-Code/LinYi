@@ -11,7 +11,7 @@ description:
       map declared at src/infra/store/vector.js:17; writers=1, readers=4
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T17:26:35.160Z"
+updated_at: "2026-09-27T01:42:54.967Z"
 fingerprint: pending
 source: []
 apis:
@@ -74,7 +74,7 @@ deps:
     from_api: "rpc:rows-3eedc462:read-list"
     label: {zh: "读 rows", en: "read rows"}
   - kind: dataflow
-    to: truman-town-flow.code.infra.store.vector
+    to: truman-town-flow.code.agent.decision.outcome-model
     from_api: "rpc:rows-3eedc462:read-stats"
     label: {zh: "读 rows", en: "read rows"}
 ---

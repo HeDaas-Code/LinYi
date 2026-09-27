@@ -102,3 +102,46 @@ export function __reset() {
   deadLetters.length = 0;
   stats = { enqueued: 0, delivered: 0, dropped: 0 };
 }
+
+// ---- 持久化：事件重试队列与死信必须进存档 ----
+
+/**
+ * 导出重试队列、死信与统计。
+ *
+ * 未投递的重试条目携带 dueAt（tick 语义），是「未来该发生但还没发生」的工作。
+ * 不入档则恢复后这些工作凭空消失：订阅者永远收不到那次重投，而死信记录
+ * （审计「哪些事件永远失败」）也会丢失。
+ */
+export function __snapshot() {
+  return {
+    queue: [...queue.entries()].map(([key, e]) => ({ key, ...structuredClone(e) })),
+    deadLetters: structuredClone(deadLetters),
+    stats: { ...stats },
+  };
+}
+
+/**
+ * 恢复重试队列（整体替换）。
+ * @param {{queue?: Array<object>, deadLetters?: Array<object>, stats?: object}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('events.retry.__restore: 状态必须为对象');
+  }
+  queue.clear();
+  deadLetters.length = 0;
+  const list = Array.isArray(data.queue) ? data.queue : [];
+  for (const entry of list) {
+    const { key, ...rest } = entry;
+    if (typeof key !== 'string' || key === '') continue;
+    queue.set(key, structuredClone(rest));
+  }
+  if (Array.isArray(data.deadLetters)) deadLetters.push(...structuredClone(data.deadLetters));
+  const st = data.stats;
+  stats = {
+    enqueued: Number.isInteger(st?.enqueued) ? st.enqueued : 0,
+    delivered: Number.isInteger(st?.delivered) ? st.delivered : 0,
+    dropped: Number.isInteger(st?.dropped) ? st.dropped : 0,
+  };
+  return { queue: queue.size, dead: deadLetters.length };
+}

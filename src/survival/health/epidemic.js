@@ -131,3 +131,29 @@ export function release(input = {}) {
 export function __reset() {
   quarantined.clear();
 }
+
+// ---- 持久化：隔离名单必须进存档 ----
+
+/**
+ * 导出隔离名单。
+ *
+ * 隔离是**跨 tick 生效**的约束（被隔离者不能参与某些互动），不入档则恢复后
+ * 疫情管控凭空解除，续跑的传染曲线与连续运行不一致。
+ */
+export function __snapshot() {
+  return { quarantined: [...quarantined] };
+}
+
+/**
+ * 恢复隔离名单（整体替换）。
+ * @param {{quarantined?: string[]}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('epidemic.__restore: 状态必须为对象');
+  }
+  quarantined.clear();
+  const list = Array.isArray(data.quarantined) ? data.quarantined : [];
+  for (const id of list) if (typeof id === 'string' && id !== '') quarantined.add(id);
+  return { quarantined: quarantined.size };
+}

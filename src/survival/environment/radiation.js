@@ -83,6 +83,33 @@ export function __reset(input = {}) {
   initialized = false;
 }
 
+// ---- 持久化：辐射场必须进存档 ----
+
+/**
+ * 导出辐射网格。
+ *
+ * 辐射场是**空间累积状态**（热点扩散 + 衰减 + 避难所豁免），且会被探索
+ * 结算读取。不入档则恢复后场被重掷（initialized=false），居民脚下的辐射
+ * 剂量与连续运行不同，健康与探索结果随之分叉。
+ */
+export function __snapshot() {
+  return { size, grid: [...grid], initialized };
+}
+
+/**
+ * 恢复辐射网格。
+ * @param {{size?: number, grid?: number[], initialized?: boolean}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('radiation.__restore: 状态必须为对象');
+  }
+  if (Number.isInteger(data.size) && data.size >= 2) size = data.size;
+  grid = Array.isArray(data.grid) ? data.grid.map((v) => (Number.isFinite(v) ? v : 0)) : [];
+  initialized = data.initialized === true;
+  return { size, cells: grid.length, initialized };
+}
+
 /** 配置网格尺寸并重生。尺寸变更后全部强度重掷（旧场已无意义）。 */
 export function configure(input = {}) {
   if (Number.isInteger(input.size) && input.size >= 2) {

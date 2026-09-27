@@ -11,7 +11,7 @@ description:
       Code module src/genesis/agent-factory/template.js as a data-flow endpoint.
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T17:26:46.551Z"
+updated_at: "2026-09-27T01:43:20.282Z"
 fingerprint: pending
 source: []
 apis: []

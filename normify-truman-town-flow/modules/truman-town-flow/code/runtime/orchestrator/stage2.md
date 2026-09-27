@@ -11,14 +11,26 @@ description:
       Code module src/runtime/orchestrator/_stage2.js as a data-flow endpoint.
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T17:26:46.551Z"
+updated_at: "2026-09-27T01:43:24.455Z"
 fingerprint: pending
 source: []
 apis: []
 deps:
   - kind: dataflow
+    to: truman-town-flow.state.area.runtime.platform-gen-state-505afe0a
+    to_api: "rpc:platform-gen-state-505afe0a:write-platformSeed"
+    label: {zh: "写 platformGenState", en: "write platformGenState"}
+  - kind: dataflow
+    to: truman-town-flow.state.area.runtime.platform-gen-state-505afe0a
+    to_api: "rpc:platform-gen-state-505afe0a:write-platformGenRestore_"
+    label: {zh: "写 platformGenState", en: "write platformGenState"}
+  - kind: dataflow
     to: truman-town-flow.state.area.runtime.platform-gen-7b0f3229
     to_api: "rpc:platform-gen-7b0f3229:write-platformSeed"
+    label: {zh: "写 platformGen", en: "write platformGen"}
+  - kind: dataflow
+    to: truman-town-flow.state.area.runtime.platform-gen-7b0f3229
+    to_api: "rpc:platform-gen-7b0f3229:write-platformGenRestore_"
     label: {zh: "写 platformGen", en: "write platformGen"}
   - kind: dataflow
     to: truman-town-flow.state.area.runtime.pending-courts-3dc80871
@@ -65,6 +77,10 @@ deps:
     to_api: "rpc:releases-count-c0fa172f:write-runHealth"
     label: {zh: "写 releasesCount", en: "write releasesCount"}
   - kind: dataflow
+    to: truman-town-flow.state.area.runtime.business-ids-89b39352
+    to_api: "rpc:business-ids-89b39352:write-performAgentAction"
+    label: {zh: "写 businessIds", en: "write businessIds"}
+  - kind: dataflow
     to: truman-town-flow.state.area.runtime.goods-produced-a7bedaa0
     to_api: "rpc:goods-produced-a7bedaa0:write-runIndustry"
     label: {zh: "写 goodsProduced", en: "write goodsProduced"}
@@ -76,6 +92,10 @@ deps:
     to: truman-town-flow.state.area.runtime.bankruptcies-076a85e1
     to_api: "rpc:bankruptcies-076a85e1:write-runIndustry"
     label: {zh: "写 bankruptcies", en: "write bankruptcies"}
+  - kind: dataflow
+    to: truman-town-flow.state.area.runtime.credit-issued-4489bb1e
+    to_api: "rpc:credit-issued-4489bb1e:write-performAgentAction"
+    label: {zh: "写 creditIssued", en: "write creditIssued"}
   - kind: dataflow
     to: truman-town-flow.state.area.runtime.interest-accrued-6d3a86a5
     to_api: "rpc:interest-accrued-6d3a86a5:write-runFiscal"
@@ -160,4 +180,12 @@ deps:
     to: truman-town-flow.state.area.runtime.candidate-state-cache-tick-02b4577c
     to_api: "rpc:candidate-state-cache-tick-02b4577c:write-candidateStateFor"
     label: {zh: "写 _candidateStateCac", en: "write _candidateStateCac"}
+  - kind: dataflow
+    to: truman-town-flow.state.area.runtime.found-capital-config-3a5e75f0
+    to_api: "rpc:found-capital-config-3a5e75f0:write-setFoundConfig"
+    label: {zh: "写 foundCapitalConfig", en: "write foundCapitalConfig"}
+  - kind: dataflow
+    to: truman-town-flow.state.area.runtime.reserve-scale-pop-ea238683
+    to_api: "rpc:reserve-scale-pop-ea238683:write-rescaleReserves"
+    label: {zh: "写 reserveScalePop", en: "write reserveScalePop"}
 ---

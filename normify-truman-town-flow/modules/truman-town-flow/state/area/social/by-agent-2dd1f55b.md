@@ -5,24 +5,33 @@ parent: truman-town-flow.state.area.social
 name: {zh: "byAgent", en: "byAgent"}
 description:
   zh: >
-      map 类型，声明于 src/social/reputation.js:43。写入方 2 个、读取方 4 个；已纳入复位。
+      map 类型，声明于 src/social/reputation.js:43。写入方 3 个、读取方 6 个；已纳入复位。
       
   en: >
-      map declared at src/social/reputation.js:43; writers=2, readers=4
+      map declared at src/social/reputation.js:43; writers=3, readers=6
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T17:26:44.509Z"
+updated_at: "2026-09-27T01:43:16.417Z"
 fingerprint: pending
 source: []
 apis:
   - protocol: rpc
-    path: "by-agent-2dd1f55b:write-ensureFresh"
+    path: "by-agent-2dd1f55b:write-rebuildFromGraph"
     description:
       zh: >
-          写入方 ensureFresh（src/social/reputation.js）
+          写入方 rebuildFromGraph（src/social/reputation.js）
           
       en: >
-          writer ensureFresh
+          writer rebuildFromGraph
+          
+  - protocol: rpc
+    path: "by-agent-2dd1f55b:write-__restore"
+    description:
+      zh: >
+          写入方 __restore（src/social/reputation.js）
+          
+      en: >
+          writer __restore
           
   - protocol: rpc
     path: "by-agent-2dd1f55b:write-update"
@@ -32,6 +41,24 @@ apis:
           
       en: >
           writer update
+          
+  - protocol: rpc
+    path: "by-agent-2dd1f55b:read-__snapshot"
+    description:
+      zh: >
+          读取方 __snapshot
+          
+      en: >
+          reader __snapshot
+          
+  - protocol: rpc
+    path: "by-agent-2dd1f55b:read-__restore"
+    description:
+      zh: >
+          读取方 __restore
+          
+      en: >
+          reader __restore
           
   - protocol: rpc
     path: "by-agent-2dd1f55b:read-update"
@@ -70,6 +97,14 @@ apis:
           reader scoreMap
           
 deps:
+  - kind: dataflow
+    to: truman-town-flow.code.agent.crafting.recipe
+    from_api: "rpc:by-agent-2dd1f55b:read-__snapshot"
+    label: {zh: "读 byAgent", en: "read byAgent"}
+  - kind: dataflow
+    to: truman-town-flow.code.agent.crafting.recipe
+    from_api: "rpc:by-agent-2dd1f55b:read-__restore"
+    label: {zh: "读 byAgent", en: "read byAgent"}
   - kind: dataflow
     to: truman-town-flow.code.economy.market.price
     from_api: "rpc:by-agent-2dd1f55b:read-update"

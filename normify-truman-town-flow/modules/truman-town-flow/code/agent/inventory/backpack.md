@@ -11,7 +11,7 @@ description:
       Code module src/agent/inventory/backpack.js as a data-flow endpoint.
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T17:26:44.509Z"
+updated_at: "2026-09-27T01:43:16.417Z"
 fingerprint: pending
 source: []
 apis: []

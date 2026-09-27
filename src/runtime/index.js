@@ -12,3 +12,7 @@ export * as cycle from './orchestrator/cycle.js';
 export * as perception from './orchestrator/perception.js';
 export * as dispatch from './orchestrator/dispatch.js';
 export * as loop from './orchestrator/loop.js';
+export * as stageProgress from './orchestrator/stage-progress.js';
+export * as metronome from './orchestrator/metronome.js';
+export * as state from './state.js';
+export * as persistence from './persistence.js';

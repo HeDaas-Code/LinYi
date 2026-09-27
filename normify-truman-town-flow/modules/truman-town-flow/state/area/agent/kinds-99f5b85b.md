@@ -11,7 +11,7 @@ description:
       set declared at src/agent/crafting/recipe.js:10; writers=0, readers=1
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T17:26:31.618Z"
+updated_at: "2026-09-27T01:42:48.436Z"
 fingerprint: pending
 source: []
 apis:

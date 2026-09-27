@@ -24,6 +24,8 @@ import * as platformFeeds from './platform/feeds.js';
 import * as reputation from './reputation.js';
 import * as culture from './culture/index.js';
 import * as politics from './politics/index.js';
+import * as interaction from './interaction.js';
+import * as facts from './facts.js';
 
 export const relationship = { friendship, romance, family: familyRelationship };
 export const procreation = { match, offspring };
@@ -40,4 +42,7 @@ export const platform = { posts: platformPosts, feeds: platformFeeds };
 export { reputation };
 export { culture };
 export { politics };
+// t13：双向社会互动（请求/接受/拒绝/承诺/履约/违约/信任）与世界事实校验门。
+export { interaction };
+export { facts };
 

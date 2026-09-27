@@ -72,23 +72,55 @@ test('counterfactual: 未记录决策时 branch 抛错', () => {
   assert.throws(() => counterfactual.branch({ agentId: 'a', tick: 99 }), Error);
 });
 
-test('counterfactual: compare 给出分歧判定、投影与下游证据', () => {
+test('counterfactual: 废止哈希投影——compare 不再产出伪因果分数', () => {
+  // t10：旧 compare 用 hashHex(agentId:tick:choice) 生成 originalScore/alternativeScore，
+  // 再以两者之差冒充"反事实因果效应"。那是**伪因果**：差值纯由字符串决定，
+  // 与资源、需求、后续行为无关，世界根本没被模拟过。
+  // 本用例把"不得回归"钉死：任何重新引入哈希分数的实现都会在这里失败。
   seedHistory();
-  const c = counterfactual.compare({ agentId: 'a', tick: 5, alternative: { type: 'eat' } });
-  assert.equal(c.branchId, 'cf:a:5');
-  assert.equal(c.diverged, true);
-  assert.ok(c.originalScore >= 0 && c.originalScore < 1);
-  assert.ok(c.alternativeScore >= 0 && c.alternativeScore < 1);
-  assert.notEqual(c.delta, 0);
-  assert.equal(c.downstream.length, 1); // tick 6 的 sleep 行为
-  assert.equal(c.downstream[0].action.type, 'sleep');
+  // 旧实现的伪因果入口必须彻底消失。
+  assert.equal(counterfactual.project, undefined, '哈希投影 project() 必须被删除');
+  assert.equal(counterfactual.compare.constructor.name, 'AsyncFunction',
+    'compare 必须是 async——真实重演不可能同步算出结果');
+
+  const b = counterfactual.branch({ agentId: 'a', tick: 5, alternative: { type: 'eat' } });
+  assert.equal(b.branchId, 'cf:a:5');
+  assert.deepEqual(b.original, { type: 'sleep' });
+  assert.deepEqual(b.alternative, { type: 'eat' });
+  assert.ok(b.sourceDecisionId);
+  // 备选必须标明是否在当时候选集内：不可达的备选不构成反事实。
+  assert.equal(b.alternativeAdmissible, true);
+  assert.deepEqual(b.availableActions, ['sleep', 'eat']);
+  // 不在候选集里的备选必须被判为不可达。
+  assert.equal(
+    counterfactual.branch({ agentId: 'a', tick: 5, alternative: { type: 'fly' } }).alternativeAdmissible,
+    false,
+  );
 });
 
-test('counterfactual: 备选等于原决策时不分歧', () => {
+test('counterfactual: compare 拒绝在错误的 tick 上分叉（反事实只能从提交边界分叉）', async () => {
   seedHistory();
-  const c = counterfactual.compare({ agentId: 'a', tick: 5, alternative: { type: 'sleep' } });
-  assert.equal(c.diverged, false);
-  assert.equal(c.delta, 0);
+  // 替换点必须是"分叉后的第一 tick"。给历史 tick 时显式报错，
+  // 而不是悄悄跑出一个起点并不自洽的世界。
+  await assert.rejects(
+    () => counterfactual.compare({ agentId: 'a', tick: 5, alternative: 'eat', ticks: 1 }),
+    /必须等于分叉后的第一 tick/,
+  );
+});
+
+test('counterfactual: pivotTickFor 给出可替换的 tick（分叉后的第一 tick）', () => {
+  // 反事实只能替换**存档之后**的第一 tick：存档采集于完整提交边界，
+  // 该 tick 已经走过并写进日志，属于历史。这个换算收在库内，避免调用方推错
+  // （推错的表现是"干预静默不生效"，不崩不报错）。
+  assert.equal(typeof counterfactual.pivotTickFor, 'function');
+});
+
+test('counterfactual: 世界指纹可用于证明原世界未被污染', () => {
+  seedHistory();
+  const f = counterfactual.worldFingerprint();
+  for (const k of ['tick', 'agents', 'alive', 'rng', 'world']) {
+    assert.ok(Object.prototype.hasOwnProperty.call(f, k), '指纹应包含 ' + k);
+  }
 });
 
 test('compare: civilizations 按存活时长降序读取存档', () => {
@@ -120,4 +152,63 @@ test('compare: metrics 聚合存活/崩溃/遗产统计', () => {
 test('compare: metrics 空数组与非数组', () => {
   assert.deepEqual(compare.metrics([]), { count: 0, avgSurvival: 0, maxSurvival: 0, collapseModes: {}, withLegacy: 0 });
   assert.throws(() => compare.metrics('nope'), TypeError);
+});
+
+// ---- t24：反事实锚点必须经 pivotTickFor/提交边界换算，不得直接取最旧日志 ----
+
+test('counterfactual: anchorPivotFor 把历史决策换算成提交边界之后的可替换 tick', () => {
+  seedHistory();
+  // 调用方手上通常只有一条历史决策（例如 decisionLog.list().find(...) 拿到的**最旧**那条）。
+  // 直接把它丢给 compare() 会撞上提交边界契约；这里必须给出可替换的 tick。
+  const anchor = decisionLog.list().find((n) => n.data && n.data.agentId && Number.isInteger(n.data.tick));
+  const pivot = counterfactual.anchorPivotFor({ agentId: anchor.data.agentId, tick: anchor.data.tick });
+  assert.equal(pivot.anchorTick, anchor.data.tick, '锚点 tick 应等于选中决策的 tick');
+  assert.equal(pivot.agentId, anchor.data.agentId);
+  assert.ok(Number.isInteger(pivot.pivotTick), '必须给出可替换的 tick');
+  assert.equal(pivot.pivotTick, pivot.splitTick + 1,
+    '替换点必须是提交边界之后的第一个 tick（存档采集于完整提交边界）');
+  // 替换点与锚点是否同一条决策要**如实报告**：只有边界恰好落在锚点前一 tick 时才是重放。
+  assert.equal(pivot.replaysOriginalDecision, pivot.pivotTick === pivot.anchorTick);
+  assert.equal(typeof pivot.note, 'string');
+});
+
+test('counterfactual: anchorPivotFor 用存档里的提交边界，而不是当前时钟', () => {
+  seedHistory();
+  // 只读世界（无 loop.run）时时钟停在 0；若实现忽略存档参数、只看当前时钟，
+  // 这里就会得到 1 而不是 43——「推错边界」在真实使用中表现为干预静默不生效。
+  const snap = { sections: { clock: { tick: 42 } } };
+  assert.equal(counterfactual.pivotTickFor(snap), 43, 'pivotTickFor 必须读存档里的提交边界');
+  const pivot = counterfactual.anchorPivotFor({ agentId: 'a', tick: 5, restore: snap });
+  assert.equal(pivot.splitTick, 42, 'splitTick 必须来自存档');
+  assert.equal(pivot.pivotTick, 43);
+  assert.equal(pivot.anchorTick, 5);
+  assert.equal(pivot.replaysOriginalDecision, false,
+    '锚点 5 与替换点 43 不是同一条决策，不得假装换掉了原来那条');
+});
+
+test('counterfactual: anchorPivotFor 拒绝不存在的锚点（不许凭空造一条决策）', () => {
+  seedHistory();
+  assert.throws(() => counterfactual.anchorPivotFor({ agentId: 'a', tick: 99 }), /未找到/);
+  assert.throws(() => counterfactual.anchorPivotFor({ agentId: 'nobody', tick: 1 }), /未找到/);
+  assert.throws(() => counterfactual.anchorPivotFor({ decisionId: 'obs.decision.999' }), /找不到/);
+  assert.throws(() => counterfactual.anchorPivotFor({}), TypeError);
+  // 存档缺少 clock.tick 时必须显式报错，而不是悄悄按当前时钟算出一个错的边界。
+  assert.throws(() => counterfactual.pivotTickFor({ sections: {} }), /提交边界/);
+});
+
+test('counterfactual: anchorPivotFor 可用 decisionId 精确锚定（同 tick 多条决策）', () => {
+  seedHistory();
+  // 同一 (agentId, tick) 在真实运行中可能有多条决策（实测 tick 1 有两条）。
+  // 按 (agentId, tick) 只能定位到「该 tick 的最后一条」，无法指定是哪一条；
+  // decisionId 才能精确锚定，且必须回报的就是那一条。
+  decisionLog.record({ tick: 1, agentId: 'a', decision: { type: 'rest' } });
+  const all = decisionLog.list().filter((n) => n.data.agentId === 'a' && n.data.tick === 1);
+  assert.equal(all.length, 2, '本用例需要同一 (agentId, tick) 上的两条决策');
+  const first = counterfactual.anchorPivotFor({ decisionId: all[0].id });
+  const second = counterfactual.anchorPivotFor({ decisionId: all[1].id });
+  assert.equal(first.originalDecisionId, all[0].id, 'decisionId 必须精确锚定到指定那条');
+  assert.equal(second.originalDecisionId, all[1].id);
+  // 按 (agentId, tick) 只能定位到最后一条——这正是 smoke.p3 曾经踩到的坑。
+  const byTick = counterfactual.anchorPivotFor({ agentId: 'a', tick: 1 });
+  assert.equal(byTick.originalDecisionId, all[1].id, '按 (agentId, tick) 定位到该 tick 的最后一条');
 });

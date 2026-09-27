@@ -57,3 +57,33 @@ export function query(input = {}) {
 export function __reset() {
   items.clear();
 }
+
+// ---- 持久化：物品目录必须进存档 ----
+
+/**
+ * 导出物品目录。
+ *
+ * 物品是居民制作的产物（define 幂等 upsert），背包里的 itemId 指向它们。
+ * 不入档则恢复后背包里的物品 id 成为悬空引用（query 返回 null），
+ * 制作校验与库存统计全部失真。
+ */
+export function __snapshot() {
+  return { items: clone([...items.values()]) };
+}
+
+/**
+ * 恢复物品目录（整体替换）。
+ * @param {{items?: Array<object>}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('item.__restore: 状态必须为对象');
+  }
+  items.clear();
+  const list = Array.isArray(data.items) ? data.items : [];
+  for (const rec of list) {
+    if (typeof rec?.id !== 'string' || rec.id === '') continue;
+    items.set(rec.id, clone(rec));
+  }
+  return { items: items.size };
+}

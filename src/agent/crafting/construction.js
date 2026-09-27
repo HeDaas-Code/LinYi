@@ -102,3 +102,15 @@ export function pending() {
 export function __reset() {
   jobs.__reset();
 }
+
+// ---- 持久化：在途任务队列必须进存档（见 _jobs.js 的说明） ----
+
+/** 导出在途任务队列。 */
+export function __snapshot() {
+  return jobs.__snapshot();
+}
+
+/** 恢复在途任务队列。 */
+export function __restore(data = {}) {
+  return jobs.__restore(data);
+}

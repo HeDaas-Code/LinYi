@@ -57,10 +57,16 @@ export function actions(resolved, opts = {}) {
   const list = Array.isArray(resolved) ? resolved : [resolved];
   const applied = [];
   for (const op of list) {
+    // 捕获 effect 的返回值：生存骨架的 effect 会返回实测结果
+    // （ok/reason/needsDelta/consumed/produced），供执行结果记账使用。
+    // 旧实现丢弃返回值，调用方只能假设「执行了就成功了」，这正是
+    // 「空操作误记成功」的根源。返回 undefined 时记录 undefined（向后兼容）。
+    let effectResult;
     if (op !== null && typeof op === 'object' && typeof op.effect === 'function') {
-      op.effect(worldState);
+      effectResult = op.effect(worldState);
     }
     const record = {
+      ...(effectResult === undefined ? {} : { effectResult }),
       id: op.id,
       agentId: op.agentId,
       action: op.action,
@@ -79,4 +85,28 @@ export function actions(resolved, opts = {}) {
 /** 复位行动执行状态（测试用）。 */
 export function __reset() {
   opSeq = 0;
+}
+
+// ---- 持久化：行动序号必须进存档 ----
+
+/**
+ * 导出行动序号。
+ *
+ * 序号参与行动 id（op_<序号>），action-log 用它作为 actionId。
+ * 不入档则恢复后行动 id 与存档中的旧行动重号，行动日志出现歧义 id。
+ */
+export function __snapshot() {
+  return { opSeq };
+}
+
+/**
+ * 恢复行动序号。
+ * @param {{opSeq?: number}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('dispatch.__restore: 状态必须为对象');
+  }
+  opSeq = Number.isInteger(data.opSeq) && data.opSeq >= 0 ? data.opSeq : 0;
+  return { opSeq };
 }

@@ -28,9 +28,51 @@ let lastGeneration = -1;
 function ensureFresh() {
   const gen = graph.__generation();
   if (gen !== lastGeneration) {
-    eventsByAgent.clear();
+    rebuildFromGraph();
     lastGeneration = gen;
   }
+}
+
+/**
+ * 从图重建索引。
+ *
+ * 图里存 { agentId, level }（事件历史只在内存，见文件头取舍）。原实现只 clear()
+ * 不重建：graph 复位后 load() 拿不到任何索引条目，level 虽能从节点读到，
+ * 但事件链全空。重建后至少把 level 与主体对齐，事件由 __restore 保留。
+ */
+function rebuildFromGraph() {
+  eventsByAgent.clear();
+  for (const node of graph.read({ type: TYPE })) {
+    const d = node.data;
+    if (!d || typeof d.agentId !== 'string' || d.agentId === '') continue;
+    if (!eventsByAgent.has(d.agentId)) eventsByAgent.set(d.agentId, []);
+  }
+}
+
+// ---- 持久化：创伤事件历史必须进存档（只在内存里） ----
+
+/** 导出创伤事件索引。 */
+export function __snapshot() {
+  return { eventsByAgent: [...eventsByAgent.entries()].map(([k, v]) => [k, structuredClone(v)]) };
+}
+
+/**
+ * 恢复创伤事件索引（整体替换）。
+ * 必须在 graph.__restore 之后调用，并把 lastGeneration 对齐到新代数。
+ * @param {{eventsByAgent?: Array}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('trauma.__restore: 状态必须为对象');
+  }
+  eventsByAgent.clear();
+  for (const pair of (Array.isArray(data.eventsByAgent) ? data.eventsByAgent : [])) {
+    if (!Array.isArray(pair) || pair.length < 2) continue;
+    if (typeof pair[0] !== 'string' || pair[0] === '') continue;
+    eventsByAgent.set(pair[0], structuredClone(pair[1]));
+  }
+  lastGeneration = graph.__generation();
+  return { agents: eventsByAgent.size };
 }
 
 function clamp01(value) {

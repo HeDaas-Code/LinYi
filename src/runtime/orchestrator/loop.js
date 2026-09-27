@@ -21,6 +21,7 @@ import * as perception from './perception.js';
 import * as dispatch from './dispatch.js';
 
 import * as graph from '../../infra/store/graph.js';
+import * as hotLog from '../../infra/store/hot-log.js';
 import * as configStore from '../../infra/config.js';
 import * as identity from '../../infra/identity.js';
 import * as rng from '../../infra/rng.js';
@@ -29,10 +30,13 @@ import * as agent from '../../agent/index.js';
 import * as ai from '../../ai/index.js';
 import * as survival from '../../survival/index.js';
 import * as social from '../../social/index.js';
+import * as genesis from '../../genesis/index.js';
+import * as civilization from '../../civilization/index.js';
 import * as town from '../../town/index.js';
 import * as observer from '../../observer/index.js';
 import * as stage2 from './_stage2.js';
 import * as stage3 from './_stage3.js';
+import * as stageProgress from './stage-progress.js';
 
 /** 默认生存事件目录（供 selector 加权抽取）。 */
 const DEFAULT_EVENTS = Object.freeze([
@@ -50,8 +54,12 @@ const DEFAULT_ACTIONS = Object.freeze([
   { id: 'forage', action: 'forage', score: 0.2 },
 ]);
 
-/** 非生存行动的基础分（与 candidate planner 的 BASE_SCORE 一致，供逐 tick 刷新时复用）。 */
-const SURVIVAL_ACTIONS = Object.freeze(['eat', 'drink', 'forage', 'rest']);
+/** 生存骨架行动（t11：**由行动契约推导**，不再硬编码）。
+ * 此前同一份分类在本文件里存在两份（此处 + scoreAction 的 NON_SURVIVAL），
+ * 与 candidates 的 RULES 构成第三份；任何一处新增行动都会静默漏配。 */
+const SURVIVAL_ACTIONS = Object.freeze(agent.decision.contract.sustainActions());
+/** 非生存行动（同样由契约推导）。 */
+const NON_SURVIVAL_ACTIONS = Object.freeze(agent.decision.contract.nonSustainActions());
 
 const DYNAMIC_BASE_SCORE = Object.freeze({
   craft: 0.9, build: 0.8, write: 0.7, work: 1.0, trade: 0.8, socialize: 0.7, court: 0.85, accept: 1.1,
@@ -59,6 +67,14 @@ const DYNAMIC_BASE_SCORE = Object.freeze({
   // found：居民自己创办企业。基准分低于 work（1.0），因为创办是**机会性**行为——
   // 有资本且无事可做时才值得做，不应压过日常谋生。
   found: 0.6,
+  // ---- t13：双向社会互动 ----
+  // 注意：这张表是**派发闸门**（下表未列出的行动根本不会被 stage2 执行，
+  // performed 恒为 null），它同时还是候选分的第二份拷贝。
+  // 行动空间事实上被声明在**三处**（candidates.BASE_SCORE / action-contract / 这里），
+  // 三者不同步就会出现"候选能被选中、执行器却什么都不做"的静默空转——
+  // 实测承诺被选中 5 次、互动记录 0 条，正是漏了这张表。
+  // 新增行动时三处都要改；此处保留副本是为了避免 dispatch 热路径再做一次查表。
+  reject: 1.05, promise: 0.55, fulfill: 1.15, violate: 0.3,
 });
 
 /**
@@ -141,11 +157,114 @@ const DEFAULT_CONFIG = Object.freeze({
   events: DEFAULT_EVENTS,
   phase2: false,
   phase3: false,
+  // 语义记忆是否落图存储（memoryPersist 的真实语义）。
+  //
+  // 默认 false：主循环每 tick 每居民写一条语义记忆（50 人 × 200 tick = 10000 条），
+  // 而图里每多一个节点，所有 read({ type }) 全量查询都要为它付出代价
+  // （实测 30000 节点时一次全量读 51ms）。语义记忆在本进程内即建即用
+  // （按 agentId 分桶的 byAgent 索引），不需要经图存储中转。
+  // true = 显式要求落图（跨模块按 type 查询可见，代价是图规模增长）。
+  memoryPersist: false,
 });
 
 // ---- 世界采集池（t32）：每 tick 再生、全局共享，避免补给随人口线性增长 ----
 let foragePool = null;
 let currentSeed = 'default';
+
+// ---- 干预钩子（t10：真实反事实分支重演）----
+// 为什么必须有这个钩子：反事实要求「除一个行动外，两个世界完全一致」。
+// 但决策序列是**状态依赖**的——被替换的行动会改变世界，后续决策看到的状态就变了。
+// 不注入干预，就只能重放同一套规则选择，得到的结果里混着"世界真的变了"与
+// "这不是我原本要问的问题"两种效应，无法归因到被替换的那一个行动。
+//
+// 语义：干预把指定 (agentId, tick) 的**最终行动**改写为 alternative，
+// 且只改写决策的**结果**——候选集、上下文、争用预支、日志记录全部照常执行，
+// 使被替换的那一 tick 与真实世界逐字段可比（除 decision 本身）。
+// 干预是**逐次生效**的（consumed）：同 tick 被多次决策调用时只改写一次，
+// 避免把"替换一个行动"意外放大成"替换一个居民的全部行动"。
+let intervention = null;
+
+/**
+ * 设置反事实干预（仅供 observer.experiment.counterfactual 的分支会话使用）。
+ *
+ * ## tick 语义（实测校准，不是推测）
+ * 干预的 `tick` 就是**决策日志里记的那个 tick**，内部循环 tick 与之相同，
+ * 两者之间**没有偏移**。校准方法（seed 7, 4 人, 12 tick 存档, resume 5 tick）：
+ *   spec.tick=13 → 改写记录 tick 13；spec.tick=12 → 改写记录 tick 12；依此类推。
+ * 之所以要把这条写下来：t10 初版曾以为存在 ±1 偏移并据此折算，结果干预
+ * **静默不生效**（改写落到相邻 tick 上）。现在改为不折算，并由回归测试锁死——
+ * 这类"差一个 tick"的错误不会崩、不会报错，只会让反事实结论悄悄变成另一件事。
+ *
+ * 只改决策**结果**，不改候选集与上下文：候选集若也被改，
+ * 「为什么当时没选它」就无从判定——而候选集恰恰是准入门的证据。
+ * @param {object|null} spec
+ */
+export function setIntervention(spec = null) {
+  if (spec === null || spec === undefined) { intervention = null; return; }
+  if (typeof spec !== 'object' || typeof spec.agentId !== 'string' || spec.agentId === '') {
+    throw new TypeError('loop.setIntervention: agentId 必须为非空字符串');
+  }
+  if (typeof spec.action !== 'string' || spec.action === '') {
+    throw new TypeError('loop.setIntervention: action 必须为非空字符串');
+  }
+  // 调用方给的就是**记录 tick**，内部循环 tick 与之相同（实测校准，见上），故不折算。
+  const fromTick = Number.isInteger(spec.fromTick) ? spec.fromTick : 0;
+  const toTick = Number.isInteger(spec.toTick) ? spec.toTick : Number.MAX_SAFE_INTEGER;
+  intervention = {
+    agentId: spec.agentId,
+    action: spec.action,
+    recordedTick: fromTick,
+    fromTick,
+    toTick,
+    maxUses: Number.isInteger(spec.maxUses) && spec.maxUses > 0 ? spec.maxUses : 1,
+    reason: typeof spec.reason === 'string' ? spec.reason : null,
+    used: 0,
+  };
+}
+
+/** 当前是否有未用完的干预（观测/断言用）。 */
+export function interventionStatus() {
+  return intervention === null ? null : { ...intervention };
+}
+
+/**
+ * 对一次已完成的决策套用干预。返回是否真正改写了。
+ *
+ * 只允许在**候选集内**改写：若备选行动当时不可行，
+ * 强行注入会造出一个真实世界不可能出现的世界，反事实结论随即失去意义。
+ * 这种拒绝必须显式记录（return false + 调用方留痕），不得静默当作"已替换"。
+ */
+function applyIntervention(decision, agentId, tick) {
+  if (intervention === null) return false;
+  const iv = intervention;
+  if (iv.agentId !== agentId || tick < iv.fromTick || tick > iv.toTick) return false;
+  if (iv.maxUses === 1 && iv.used >= 1) return false;
+  if (iv.used >= iv.maxUses) return false;
+  const allowed = (decision.options ?? []).map((o) => o.action);
+  if (!allowed.includes(iv.action)) return false;
+  if (decision.action === iv.action) return false;
+  iv.used += 1;
+  decision.action = iv.action;
+  decision.reason = '反事实干预：' + (iv.reason ?? ('改为「' + iv.action + '」'));
+  decision.counterfactual = { action: iv.action, reason: iv.reason, use: iv.used };
+  decision.final = { action: iv.action, source: 'counterfactual', score: null, confidence: null };
+  // 与模型/日程覆盖同一契约：最终动作被改写后，原动作的分数不得冒充它。
+  decision.score = null;
+  decision.confidence = null;
+  return true;
+}
+
+// ---- tick 提交边界（t2）----
+// 语义：tick 开始即 inFlight=true 并记录 inFlightTick；只有全部阶段（含 phase2/phase3）
+// 跑完、末端快照写完之后才 committedTick=tick、inFlight=false。因此：
+//   - step 进行中 snapshot() 的 lastCommittedTick 仍是上一个完整 tick；
+//   - 观察者能区分“推进中”与“已提交”；
+//   - 任一步骤抛错时 inFlight 归位并记录 stageError，不会留下永久 running 假象。
+let inFlight = false;
+let committedTick = 0;
+let inFlightTick = 0;
+let stageError = null;
+let stageFailure = null;
 
 /**
  * 存活人口。性能关键：registry.lookup 会 graph.read 深拷贝全部智能体，
@@ -226,12 +345,33 @@ function decayRate(cfg, key) {
  * }} [input]
  * @returns {{ id: string, name: string, persona: string }}
  */
+// ---- 代际（t5）：真实创建入口与跨代交接 ----
+//
+// generationCount：当前世代编号。初代 = 1，文明重启交接后 +1。
+// 每一次「造人」（初代登记 / 生育 / 重启建国）都必须经过 registerAgent，
+// 世代号与父母由此写进 registry 与 world-state。
+//
+// 修复前的真实断裂：registerAgent 只写 { name, persona }，registry 里查不到
+// 任何代际信息（generation/parents 恒为 undefined）。而 genesis.agentFactory.assemble
+// 明明把 generation/parents 写进了 registry —— 也就是说「代际」只存在于那条
+// **没有任何生产调用点**的路径上，真实运行查不到「这个人属于第几代、父母是谁」。
+let generationCount = 1;
+/** 本局已被封存的旧世代（重启时隔离出来的世代快照，供遗产与审计）。 */
+let sealedGenerations = [];
+
 /**
  * 登记一个智能体（注册表 + 预想池 + 需求 + 世界状态）；标签由调用方负责。
  * spawnAgent 负责写标签，阶段二子代由 offspring 先写标签再走这里。
+ *
+ * @param {{ id: string, name: string, persona: string, food?: number, water?: number,
+ *           candidates?: Array<object>, age?: number,
+ *           generation?: number, parents?: Array<string>|{paternal?:string,maternal?:string}|null }} input
  */
-function registerAgent({ id, name, persona, food, water, candidates, age }) {
-  registry.register({ id, type: 'agent', data: { name, persona } });
+function registerAgent({ id, name, persona, food, water, candidates, age, generation, parents }) {
+  const gen = Number.isInteger(generation) && generation > 0 ? generation : generationCount;
+  const kin = parents ?? null;
+  const bornTick = clock.now().tick;
+  registry.register({ id, type: 'agent', data: { name, persona, generation: gen, parents: kin, bornTick, alive: true } });
   for (const candidate of candidates) {
     agent.anticipation.pool.store.add(id, {
       id: `${id}:${candidate.id}`,
@@ -241,11 +381,13 @@ function registerAgent({ id, name, persona, food, water, candidates, age }) {
   }
   survival.needs.meter.update({ agentId: id, need: 'food', level: food });
   survival.needs.meter.update({ agentId: id, need: 'water', level: water });
-  worldState.set(`agents.${id}`, { name, persona, alive: true, bornTick: clock.now().tick });
+  worldState.set(`agents.${id}`, {
+    name, persona, alive: true, bornTick, generation: gen, parents: kin,
+  });
   // 批次2-A：登记生命周期（初始年龄，子代默认 0）与身份
-  agent.lifecycle.birth(id, { tick: clock.now().tick, age: typeof age === 'number' ? age : 0 });
-  agent.persona.identity.update(id, { name, persona });
-  return { id, name, persona };
+  agent.lifecycle.birth(id, { tick: bornTick, age: typeof age === 'number' ? age : 0 });
+  agent.persona.identity.update(id, { name, persona, generation: gen });
+  return { id, name, persona, generation: gen };
 }
 
 /** 确定性初始年龄（FNV-1a 哈希 → [min,max)），不消耗全局 rng，保证随机流稳定。 */
@@ -284,6 +426,301 @@ function seedAgentScheduleRoles(spawned, options) {
   }
 }
 
+/**
+ * 文明重启的**真实**代际交接（t5）。
+ *
+ * 修复前这条链路是断的：`civilization.restart.execute` 在 phase3 里被调用时
+ * **没有 reset 回调**（config.restartReset 在生产里从未被设置），于是「重启沙盒」
+ * 是一句空话——崩溃之后同一批居民继续活着、世代号不变、也没有下一代产生。
+ * 实测（3 居民 6 tick + collapseForce）：重启后 registry 里仍是 agent_...001/002/003，
+ * 且 data.generation / data.parents 恒为 undefined；genesis.agentFactory.assemble
+ * 的 assembled 计数恒为 0（那条「唯一产生副作用的创建入口」在生产路径零调用）。
+ *
+ * 本函数把「归档 → 隔离 → 重建 → 交棒」变成有副作用的事实：
+ *   1) **隔离旧世代**：旧世代移出活跃注册表（不再被生存/经济/社交系统消费），
+ *      标记 alive=false + sealedTick，并写 observer 事件。旧世代不是被抹掉，
+ *      而是被封存进 sealedGenerations 与文明遗产图谱，可审计。
+ *   2) **用居民工厂创建下一代**：走 genesis.agentFactory.template（真正的造人入口，
+ *      纯函数模板 + 组装），而不是复用旧人。新世代 traits 来自 'native'（避难所新生代）
+ *      模板的 50 条标签 —— 与初代的 5 条固定标签分布不同，因此行为可分叉。
+ *   3) **写入代际身份**：registry/world-state/身份面都带上 generation = 旧代 + 1，
+ *      parents = null（开国一代无父母）。next-generation 行为差异因此可被查询，
+ *      而不只是「换了一批 id」。
+ *
+ * 语义边界（刻意不做的事）：本函数不做「遗产→特质注入」，那是遗产闭环的职责；
+ * 这里只保证旧状态被隔离、新世代真实诞生且可被识别为下一代。
+ *
+ * @param {number} tick 交接发生的 tick
+ * @param {object} cfg 运行配置
+ * @param {{ graph?: object, summary?: object }|null} [heritage] 已归档的遗产（供记录引用）
+ *   4) **改派研究负责人**：研究任务把负责人记死在记录里，progress 每 tick 以
+ *      researchers[0] 为行为主体写 action-log。不改派的话，被封存的居民会"隔着世代"
+ *      继续推进研究（实测交接后 tick 2/3 的 action-log 仍以已封存的旧 id 出现）——
+ *      那不是历史，是跨世代的状态泄漏。
+ *
+ * @returns {{ previousGeneration: number, generation: number, retired: Array<string>,
+ *             founded: Array<object>, templateId: string, heritageGraphId: string|null,
+ *             reassignedResearch: Array<{techId: string, from: Array<string>, to: Array<string>}> }}
+ */
+function runGenerationHandover(tick, cfg, heritage = null) {
+  const before = registry.lookup({ type: 'agent' });
+  const previousGeneration = generationCount;
+  const nextGeneration = previousGeneration + 1;
+  const population = Number.isInteger(cfg.restartPopulation) && cfg.restartPopulation > 0
+    ? cfg.restartPopulation
+    : Math.max(1, before.length);
+  const templateId = typeof cfg.restartTemplateId === 'string' && cfg.restartTemplateId !== ''
+    ? cfg.restartTemplateId
+    : 'native';
+
+  // 1) 隔离旧世代：移出活跃注册表 + 生命周期标记 + 事件留痕。
+  const retired = [];
+  for (const record of before) {
+    const id = record.id;
+    registry.unregister(id);
+    agent.lifecycle.death(id, { tick, cause: 'civilization_restart' });
+    worldState.set(`agents.${id}.sealedTick`, tick);
+    worldState.set(`agents.${id}.sealedGeneration`, previousGeneration);
+    mortality.delete(id);
+    observer.recorder.eventLog.record({
+      tick,
+      topic: 'civilization.generation.sealed',
+      payload: { agentId: id, generation: previousGeneration, reason: 'civilization_restart' },
+      agentId: id,
+    });
+    retired.push(id);
+  }
+  sealedGenerations.push({ generation: previousGeneration, tick, members: retired });
+
+  // 2) 用居民工厂创建下一代（真实创建入口）。
+  generationCount = nextGeneration;
+  const founded = [];
+  for (let i = 0; i < population; i += 1) {
+    const desc = genesis.agentFactory.template.instantiate({ templateId });
+    const id = identity.next('agent');
+    const created = spawnAgent({
+      id,
+      name: '第' + nextGeneration + '代居民' + (i + 1),
+      persona: '文明重启后出生的第 ' + nextGeneration + ' 代居民',
+      tags: desc.tags,
+      generation: nextGeneration,
+      parents: null,
+      age: 0,
+    });
+    founded.push({ id: created.id, name: created.name, generation: nextGeneration, tagCount: desc.tags.length });
+  }
+  // 新世代同样要有日程/职业/公共角色——否则重启后文明只剩「活着」，
+  // 识字供给、治疗名额、工作块全部归零，行为差异会被误读成"重启即退化"。
+  seedAgentScheduleRoles(founded, cfg);
+  invalidateAlivePopulation();
+
+  // 研究任务里**记死的负责人**必须一起改派：否则被封存的居民会继续以行为主体身份
+  // 推进研究（实测交接后 tick 2/3 的 action-log 仍以已封存的旧 id 出现）——
+  // 那不是历史，而是跨世代的状态泄漏，会让"重启隔离"名不副实。
+  const reassigned = [];
+  try {
+    const pool = founded.map((f) => f.id);
+    for (const rec of civilization.tech.research.pending()) {
+      const alive = rec.researchers.filter((id) => registry.lookup(id) !== null);
+      if (alive.length === rec.researchers.length && alive.length > 0) continue;
+      const next = alive.length > 0 ? alive : pool.slice(0, Math.min(2, pool.length));
+      if (next.length === 0) continue;
+      civilization.tech.research.reassign({ techId: rec.techId, researchers: next, tick });
+      reassigned.push({ techId: rec.techId, from: rec.researchers, to: next });
+    }
+  } catch { /* 研究系统不可用时，交接本身不应失败 */ }
+
+  // 3) 遗产注入（t14）：把上一代留下的**物证**变成下一代真实拥有的能力。
+  //
+  // 这一步是 t5 刻意留白的接缝：交接只保证"旧状态被隔离、新世代真实诞生"，
+  // 不做"遗产→能力"的注入。没有这一步，重启后的新世代与"凭空造一批人"毫无区别——
+  // 实测（未注入时）新世代技能/偏好/研究前提全为 0，遗产只是 graph 里的一堆死数据。
+  //
+  // 链路：legacy.graph → relic.artifact.forge → relic.discover（可能读歪）
+  //        → skill / tech head start / action preference（每条都带来源）
+  // 开关：config.legacyInheritance（默认 true）。显式 false 用于**同条件对照**，
+  // 证明"下一代行为改变"确实来自遗产，而不是来自重启本身。
+  const inheritance = { enabled: cfg.legacyInheritance !== false, relics: 0, discoveries: 0, garbled: 0, applied: [] };
+  if (inheritance.enabled && heritage !== null && heritage !== undefined) {
+    try {
+      const seeded = civilization.legacy.inherit.applier.seedFromHeritage({
+        heritage,
+        agents: founded,
+        tick,
+        // 素养决定能不能读懂物证：识字者读对的概率高得多。
+        literacyOf: (id) => (isLiterate(id, cfg) ? 0.85 : 0.2),
+      });
+      inheritance.relics = seeded.relics;
+      inheritance.discoveries = seeded.discoveries;
+      inheritance.garbled = seeded.garbled;
+      inheritance.applied = seeded.applied.map((a) => ({ agentId: a.agentId, applied: a.applied }));
+    } catch (err) {
+      // 遗产注入失败**不能**让交接失败：文明重启本身是比继承更基础的动作。
+      inheritance.error = err instanceof Error ? err.message : String(err);
+    }
+  }
+  const inherited = civilization.legacy.inherit.trace.summary();
+
+  const heritageGraphId = heritage?.graph?.graphId ?? null;
+  worldState.set('civilization.generation', {
+    generation: nextGeneration,
+    previousGeneration,
+    foundedAt: tick,
+    population: founded.length,
+    templateId,
+    heritageGraphId,
+    // 观测面：下一代到底继承到了什么（而不是"遗产已归档"这种空话）。
+    inheritance: {
+      enabled: inheritance.enabled,
+      relics: inheritance.relics,
+      discoveries: inheritance.discoveries,
+      garbled: inheritance.garbled,
+      skills: inherited.skills.total,
+      preferences: inherited.preferences.total,
+      headStarts: inherited.headStarts,
+    },
+  });
+  observer.recorder.eventLog.record({
+    tick,
+    topic: 'civilization.generation.founded',
+    payload: {
+      generation: nextGeneration, previousGeneration, population: founded.length,
+      templateId, heritageGraphId, retired: retired.length,
+      inheritance: {
+        enabled: inheritance.enabled,
+        relics: inheritance.relics,
+        discoveries: inheritance.discoveries,
+        garbled: inheritance.garbled,
+        skills: inherited.skills.total,
+        preferences: inherited.preferences.total,
+        headStarts: inherited.headStarts,
+      },
+    },
+  });
+
+  return {
+    previousGeneration,
+    generation: nextGeneration,
+    retired,
+    founded,
+    templateId,
+    heritageGraphId,
+    reassignedResearch: reassigned,
+    inheritance: {
+      enabled: inheritance.enabled,
+      relics: inheritance.relics,
+      discoveries: inheritance.discoveries,
+      garbled: inheritance.garbled,
+      skills: inherited.skills,
+      preferences: inherited.preferences,
+      headStarts: inherited.headStarts,
+    },
+  };
+}
+
+/**
+ * t14：本 tick 的遗产考古——有界地解读遗物，并结算技能失传。
+ *
+ * 为什么"有界"：解读如果每 tick 每人一次，遗物会在几 tick 内被一扫而空，
+ * "发现"就不再是稀缺事件，考古也就退化成"开局发奖"。
+ *
+ * 为什么只让识字者做：读不懂物证的人拿到它也没用——这条限制让"继承"与
+ * "识字/教育"这两个系统真正耦合起来，而不是各自独立地发奖励。
+ *
+ * @param {number} tick
+ * @param {object} cfg
+ * @returns {{ discoveries: number, garbled: number, lost: Array<object> }}
+ */
+function runLegacyDiscovery(tick, cfg) {
+  const perTick = Number.isInteger(cfg.legacyDiscoveryPerTick) && cfg.legacyDiscoveryPerTick > 0
+    ? cfg.legacyDiscoveryPerTick : 1;
+  const inherit = civilization.legacy.inherit;
+  const und = civilization.relic.artifact.query({ discovered: false });
+  let discoveries = 0;
+  let garbled = 0;
+  if (und.length > 0) {
+    // 按完整度降序：先捡看得懂的。确定性排序，不消耗全局 rng。
+    const ordered = und.slice().sort((a, b) => (b.integrity - a.integrity) || a.relicId.localeCompare(b.relicId));
+    const readers = registry.lookup({ type: 'agent' })
+      .map((r) => r.id)
+      .filter((id) => isLiterate(id, cfg));
+    for (let i = 0; i < perTick && i < ordered.length && readers.length > 0; i += 1) {
+      const relic = ordered[i];
+      // 谁去读：按 tick 轮转，避免永远是同一个人包揽全部遗物。
+      const reader = readers[(tick + i) % readers.length];
+      const res = civilization.relic.discover.discover({
+        agentId: reader, relicId: relic.relicId, tick, literacy: 0.85,
+      });
+      if (res.ok !== true) continue;
+      discoveries += 1;
+      if (res.discovery.fidelity === 'garbled') garbled += 1;
+      inherit.applier.apply({ discovery: res.discovery, tick });
+    }
+  }
+  // 技能失传（"可丢失"）：掌握者全部死亡后技能消失。每 20 tick 结算一次，
+  // 避免每 tick 全量扫描技能表（长跑性能）。
+  let lost = [];
+  if (tick % 20 === 0) {
+    const living = registry.lookup({ type: 'agent' }).map((r) => r.id);
+    lost = inherit.skill.detectLoss({ living, tick }).lost;
+    inherit.preference.detectLoss({ living, tick });
+  }
+  return { discoveries, garbled, lost };
+}
+
+/** 当前世代信息（供观测与验收：第几代、上一代何时被封存、封存了谁）。 */
+export function generationStatus() {
+  return Object.freeze({
+    generation: generationCount,
+    sealed: sealedGenerations.map((s) => ({ generation: s.generation, tick: s.tick, members: [...s.members] })),
+  });
+}
+
+/**
+ * t14：遗产与知识继承的**观测面**（供 observer/api 与验收使用）。
+ *
+ * - 不传 agentId：整条链的规模（遗物/解读/技能/偏好/研究前提）与来源校验结果。
+ * - 传 agentId：该居民的来源链逐环展开，并附带**继承技能是否让他识字**——
+ *   这是"遗产变成技能"最直接的可观测后果（读写技能优先于人口比例判定）。
+ *
+ * 之所以要有这个出口：链路的每一环都落在 graph store 里，验收方不该为了
+ * 检查"下一代到底继承了什么"而自己去拼四个 store 的查询。
+ *
+ * @param {{ agentId?: string, config?: object }} [input]
+ * @returns {object}
+ */
+export function legacyStatus(input = {}) {
+  const cfg = { ...DEFAULT_CONFIG, ...(input.config ?? {}) };
+  const inherit = civilization.legacy.inherit;
+  const summary = inherit.trace.summary();
+  const base = {
+    enabled: cfg.legacyInheritance !== false,
+    discoveryPerTick: Number.isInteger(cfg.legacyDiscoveryPerTick) ? cfg.legacyDiscoveryPerTick : 1,
+    relics: summary.relics,
+    discoveries: summary.discoveries,
+    skills: summary.skills,
+    preferences: summary.preferences,
+    headStarts: summary.headStarts,
+    provenance: inherit.trace.verify({}),
+  };
+  if (typeof input.agentId === 'string' && input.agentId !== '') {
+    return {
+      ...base,
+      agentId: input.agentId,
+      trace: inherit.trace.of(input.agentId),
+      literate: isLiterate(input.agentId, cfg),
+      researchDiscount: inherit.applier.researchDiscount(input.agentId),
+    };
+  }
+  return base;
+}
+
+/** 复位代际状态（跨 run 不留残）。 */
+function resetGenerations() {
+  generationCount = 1;
+  sealedGenerations = [];
+}
+
 /** 批次2-C（t48）：公共角色影响——医生按治疗名额实施治疗。 */
 function applySocietyEffects(tick, cfg) {
   if (cfg.societyEnabled === false) return;
@@ -293,6 +730,28 @@ function applySocietyEffects(tick, cfg) {
   const patients = survival.health.treatment.triage({ tick });
   for (let i = 0; i < Math.min(capacity, patients.length); i += 1) {
     survival.health.treatment.apply({ agentId: patients[i].agentId, tick });
+  }
+}
+
+/**
+ * 日程可行性判定所需的居民状态视图。
+ * 复用执行器侧的 candidateStateFor（同一份状态来源），再补上日程关心的字段，
+ * 使「日程建议可行」与「执行器接受」判定一致。
+ */
+function scheduleStateFor(agentId, tick) {
+  try {
+    const st = stage2.candidateStateFor(agentId, tick) ?? {};
+    return {
+      ...st,
+      literate: true,
+      hasWorkbenchMaterial: true,
+      hasBuildingMaterial: true,
+      hasSurplus: true,
+    };
+  } catch {
+    // 状态不可得时**不阻断日程**：返回一个宽松视图，让执行器的真实拒绝兜底，
+    // 而不是凭缺失的数据判定"不可行"。
+    return { employed: true, businessActive: true, hasPeer: true, expeditionViable: true, literate: true };
   }
 }
 
@@ -308,6 +767,29 @@ function scheduleOverride(decision, agentId, tick, cfg) {
   const emergency = (need === 'food' || need === 'water') && level >= crisisLevel;
   const scheduled = agent.schedule.executor.tick(agentId, { tick, interrupted: emergency, trigger: emergency ? 'emergency' : 'interrupt' });
   if (!scheduled || !scheduled.action) return null;
+  // t11：日程建议的行动必须**真的可行**——与执行器同一套前置条件。
+  // 日程词汇表来自 motivation.rank（eat/drink/forage/rest + work），
+  // 其中 work 要求「受雇且雇主企业活跃」；未被雇用的居民若被日程指派 work，
+  // 执行器会以 not_employed 拒绝，居民当 tick 就白白空转。
+  // 因此这里先过契约前置条件；不可行的建议**降级为理由**而不是命令。
+  const admission = agent.decision.contract.preconditionOf(scheduled.action, scheduleStateFor(agentId, tick));
+  if (admission.ok !== true) {
+    const own0 = decision?.action;
+    return {
+      action: own0 ?? 'rest',
+      reason: '日程建议「' + scheduled.action + '」不可行（' + admission.reason + '），改由居民自选',
+      replanned: scheduled.replanned,
+      trigger: 'schedule_infeasible',
+      meta: {
+        action: own0 ?? 'rest',
+        block: scheduled.block?.reason ?? null,
+        suggested: scheduled.action,
+        replanned: scheduled.replanned,
+        feasible: false,
+        infeasibleReason: admission.reason,
+      },
+    };
+  }
   // D0：日程**建议**行动，但不得剥夺居民自己可执行的「非生存选择」。
   // 仅当（a）处于紧急需求，或（b）居民选的是生存骨架行动时，日程才结果性覆盖；
   // 否则日程仅作为理由记录，行动仍取居民的决定（否则日程会退回成"代码替居民决定"）。
@@ -370,6 +852,7 @@ function socialSummary() {
   const members = families.reduce((n, f) => n + f.members.length, 0);
   return {
     schedule: agent.schedule.planner.summary(),
+    goals: agent.decision.goals.summary(),
     careers: agent.role.career.summary(),
     society: agent.role.society.activeEffects(),
     family: { families: families.length, members, size: families.length > 0 ? Math.max(...families.map((f) => f.members.length)) : 0 },
@@ -390,7 +873,10 @@ export function spawnAgent(input = {}) {
     : deterministicAge(name);
 
   agent.traits.tagset.store.upsert(id, tags);
-  return registerAgent({ id, name, persona, food, water, candidates, age });
+  return registerAgent({
+    id, name, persona, food, water, candidates, age,
+    generation: input?.generation, parents: input?.parents,
+  });
 }
 
 function dominantPressure(pressures) {
@@ -532,8 +1018,7 @@ function scoreAction(candidate, ctx = {}) {
   // 非生存行动仍会被性格/行动模拟的加成推上首位（实测 pruneK=6 整镇饿死）。
   // 因此门必须在**最终决定分数**上再施加一次，生存优先才成立。
   if (ctx.survivalGate === true) {
-    const NON_SURVIVAL = ['craft', 'build', 'write', 'work', 'trade', 'socialize', 'court', 'accept', 'expedition', 'found'];
-    if (NON_SURVIVAL.includes(candidate?.action)) score -= 5;
+    if (NON_SURVIVAL_ACTIONS.includes(candidate?.action)) score -= 5;
     if (candidate?.action === 'rest') score -= 1;
     // 采集优先**仅限尚未挨饿时**：若已饿/渴，eat/drink 的 +2 必须压过采集。
     // 否则会出现「守着满仓粮饿死」——实测 seed7 全员在 food=92 时需求饱和并死亡。
@@ -550,8 +1035,160 @@ function scoreAction(candidate, ctx = {}) {
   return score;
 }
 
-/** 把候选池重置为「生存骨架 + 当前状态可达的动态行动」（D0：行动空间地基）。 */
-function refreshCandidates(agentId, tick, cfg) {
+/**
+ * 把候选池重置为「生存骨架 + 当前状态可达的动态行动」（D0：行动空间地基）。
+ *
+ * @param {object|null} [poolView] 本 tick 的共享池争用视图（见 decision.contention）。
+ *   传入后，交易这类**受共享额度限制**的行动按「前面居民已卖掉的额度」判定可行性，
+ *   而不是所有人都看到 tick 起始的满额供应池。
+ */
+/**
+ * 目标引擎所需的**真实**居民状态：候选前置条件字段 + 原料/成品实计数 + 需求。
+ *
+ * 与 t11 的候选状态同源（candidateStateFor），只补上计划完成判据需要的两个计数：
+ *   · wood    —— 制作原料数量（craft 消耗它，因此它是「采料」步骤的完成判据）
+ *   · surplus —— 可售产出品数量（craft 产出它，因此它是「制作/出售」步骤的完成判据）
+ * 计数直接读背包**实况**，不读缓存：完成判据必须反映"东西是否真的到手了"，
+ * 否则计划会基于过期状态自以为完成。
+ */
+function goalStateOf(agentId, tick) {
+  const base = stage2.candidateStateFor(agentId, tick) ?? {};
+  let wood = 0;
+  let surplus = 0;
+  try {
+    const woodId = stage2.craftMaterialId();
+    const items = agent.inventory.backpack.list({ agentId }).items ?? {};
+    for (const [id, n] of Object.entries(items)) {
+      if (!Number.isFinite(n) || n <= 0) continue;
+      if (id === woodId) wood += n; else surplus += n;
+    }
+  } catch { /* 背包不可用时按 0 处理：保守，不假装手里有料 */ }
+  let needs = {};
+  try { needs = survival.needs.meter.query({ agentId }).needs ?? {}; } catch { needs = {}; }
+  // 这三个门是**派生量**，refreshCandidates 与执行器都用它们判定可行性。
+  // 必须在这里按同一口径补齐：candidateStateFor 不返回它们，
+  // 缺了就会让契约的前置条件在 undefined 上判假——实测表现为
+  // craft 被误判「材料不足」而永远不可执行、trade 被误判「无可售余量」。
+  return {
+    ...base,
+    wood,
+    surplus,
+    needs,
+    hasWorkbenchMaterial: wood >= 2,
+    hasBuildingMaterial: wood >= 3,
+    hasSurplus: surplus > 2,
+  };
+}
+
+/**
+ * 可售余量：背包里**除制作原料（木头）外**的产出品数量。
+ * 与执行器 trade 分支的口径一致——交易的对象是劳动成果，不是生产资料
+ * （木头被 craft 耗 2 / build 耗 3 持续争夺，用它作可售量会让 trade 永久不可达）。
+ */
+function surplusItemsOf(agentId) {
+  const woodId = stage2.craftMaterialId();
+  let surplus = 0;
+  try {
+    const items = agent.inventory.backpack.list({ agentId }).items ?? {};
+    for (const [id, n] of Object.entries(items)) {
+      if (!Number.isFinite(n) || n <= 0) continue;
+      if (id !== woodId) surplus += n;
+    }
+  } catch { surplus = 0; }
+  return surplus;
+}
+
+/** 交易售价（可售余量 × 单价）。共享额度的计价口径与执行器一致。 */
+function tradeValueOf(surplusItems, cfg) {
+  const price = (typeof cfg.rawPrice === 'number' && cfg.rawPrice > 0) ? cfg.rawPrice : 1;
+  return Math.max(0, surplusItems) * price;
+}
+
+/**
+ * 供应池是否足以支付本次卖出。
+ * 池况未知（无账本且执行器未给出余额）时返回 true——**显式未知不阻断**，
+ * 由执行器的 pool_insufficient 兜底，而不是在候选侧假装"没钱"。
+ */
+function supplyPoolCoversSurplusOf(state, surplusItems, cfg, poolView) {
+  const POOL = agent.decision.contract.POOLS.SUPPLY_MONEY;
+  const fromLedger = (poolView !== null && poolView !== undefined) ? poolView[POOL] : undefined;
+  const left = (typeof fromLedger === 'number' && Number.isFinite(fromLedger))
+    ? fromLedger : state.supplyPoolBalance;
+  if (typeof left !== 'number' || !Number.isFinite(left)) return true;
+  return left >= tradeValueOf(surplusItems, cfg);
+}
+
+/**
+ * 按契约的争用声明**预支**共享池额度。
+ *
+ * 只影响后续居民的预想，**不改真实执行**：真实取用仍由执行器对真实池操作。
+ * 决策顺序与 dispatch 顺序一致，因此第 i 个居民预想时看到的就是
+ * 「前 i-1 人取走之后」的真实剩余量——预想与执行因此可对账。
+ */
+function reserveContention(action, surplusItems, cfg) {
+  const c = agent.decision.contract.contractOf(action);
+  if (c.known !== true) return 0;
+  const pool = c.contention?.pool;
+  if (typeof pool !== 'string' || pool === '') return 0;
+  const ledger = agent.decision.contention;
+  const P = agent.decision.contract.POOLS;
+  if (c.contention.mode === 'shared-draw') {
+    if (pool === P.FORAGE) {
+      const y = (typeof cfg.forageYield === 'number' && Number.isFinite(cfg.forageYield)) ? cfg.forageYield : 2;
+      return ledger.reserve(pool, y);
+    }
+    if (pool === P.FOOD) return ledger.reserve(pool, 1);
+    if (pool === P.WATER) return ledger.reserve(pool, 1);
+  }
+  if (c.contention.mode === 'quota') {
+    if (pool === P.MARKET_ROOM) return ledger.reserve(pool, 1);
+    if (pool === P.SUPPLY_MONEY) return ledger.reserve(pool, tradeValueOf(surplusItems, cfg));
+  }
+  return 0;
+}
+
+/**
+ * 本 tick 里**注定落空**的行动集合：契约声明了共享争用，而该池已被前面的居民预支空。
+ *
+ * 计划必须知道这件事，否则它会用固定加分去推一个当下注定空转的步骤
+ * （t12 实测：不传这条时采集空转率由 3.8% 反弹到 20.8%）。
+ * 池况**未知**（视图里没有该池）时不列入：未知不等于空。
+ */
+function doomedActionsFor(poolView) {
+  const doomed = new Set();
+  if (poolView === null || poolView === undefined) return doomed;
+  for (const action of agent.decision.contract.knownActions()) {
+    const c = agent.decision.contract.contentionOf(action);
+    if (c === null || c === undefined) continue;
+    if (c.mode !== 'shared-draw') continue;
+    const left = poolView[c.pool];
+    if (typeof left === 'number' && left <= 0) doomed.add(action);
+  }
+  return doomed;
+}
+
+/** 本 tick 的共享池容量（tick 起始真实池况），供争用账本开启。 */
+function contentionCapacities() {
+  const P = agent.decision.contract.POOLS;
+  const caps = {};
+  caps[P.FORAGE] = (foragePool ?? 0);
+  caps[P.FOOD] = survival.resources.food.query().stockpile ?? 0;
+  caps[P.WATER] = survival.resources.water.query().stockpile ?? 0;
+  // 供应池余额由 stage2 提供（账户与产业数据在那里）。
+  try {
+    const st = stage2.candidateStateFor(settledProbeAgentId(), 0);
+    if (typeof st?.supplyPoolBalance === 'number') caps[P.SUPPLY_MONEY] = st.supplyPoolBalance;
+  } catch { /* 无账本数据时不登记该池：视图里缺失即「未知」，而不是 0 */ }
+  return caps;
+}
+
+/** 取一个已存在居民 id 作为读取全局状态的探针（无居民时返回空串）。 */
+function settledProbeAgentId() {
+  const recs = registry.lookup({ type: 'agent' });
+  return recs.length > 0 ? recs[0].id : '';
+}
+
+function refreshCandidates(agentId, tick, cfg, poolView = null) {
   // 行动空间关闭时保持既有行为（也不付候选重建成本）：存活骨架已在 spawnAgent 写定。
   if (cfg.actionSpaceEnabled === false) return null;
   const state = stage2.candidateStateFor(agentId, tick);
@@ -559,14 +1196,7 @@ function refreshCandidates(agentId, tick, cfg) {
   const woodId = stage2.craftMaterialId();
   // 产出品余量（不含制作原料木头）：trade 的可售对象是劳动成果，不是生产资料。
   // 木头被 craft/build 持续消耗，用「木头>2」作判据会让 trade 永久不可达。
-  let surplusItems = 0;
-  try {
-    const items = agent.inventory.backpack.list({ agentId }).items ?? {};
-    for (const [id, n] of Object.entries(items)) {
-      if (!Number.isFinite(n) || n <= 0) continue;
-      if (id !== woodId) surplusItems += n;
-    }
-  } catch { surplusItems = 0; }
+  const surplusItems = surplusItemsOf(agentId);
   try { held = agent.inventory.backpack.list({ agentId }).items?.[woodId] ?? 0; } catch { held = 0; }
   const planned = agent.decision.candidates.plan({
     actionSpaceEnabled: cfg.actionSpaceEnabled !== false,
@@ -592,6 +1222,27 @@ function refreshCandidates(agentId, tick, cfg) {
     // 漏传 marketRoom 会让容量约束形同虚设——实测 42 家企业挤在只容得下 1 家的
     // 市场里，破产 655 次、成本 42946 而收入仅 8686。
     marketRoom: state.marketRoom !== false,
+    // ---- t11：与执行器同源的前置条件状态（action-contract 的 requires） ----
+    // 配对状态：court/accept 都要求「尚未配对」。
+    paired: state.paired === true,
+    // ---- t13：双向互动的准入状态 ----
+    // 这三个字段必须显式透传：candidates.plan 用一个**字面量对象**做状态视图，
+    // 未列出的字段在执行器看来就是 undefined，于是 accept/reject/fulfill/violate
+    // 的 requires 恒不满足、候选永远不出现（实测 80 tick 内 40 条待决互动、0 次回应）。
+    // 这与上面 found 的 canFound/marketRoom 是同一类漏传缺陷——同一个坑不能再踩第二次。
+    hasPendingInteraction: state.hasPendingInteraction === true,
+    hasOpenPromise: state.hasOpenPromise === true,
+    canFulfillPromise: state.canFulfillPromise === true,
+    // 进行中任务：执行器会以 already_crafting / already_building / already_writing 拒绝。
+    pendingCraft: state.pendingCraft === true,
+    pendingBuild: state.pendingBuild === true,
+    pendingWrite: state.pendingWrite === true,
+    hasAccount: state.hasAccount === true,
+    hasItemCatalog: state.hasItemCatalog === true,
+    // 供应池余额：交易是「把全部余量一次卖出」，因此判据是「余额 ≥ 本次售价」。
+    // 优先用本 tick 的争用账本（已扣除前面居民卖掉的额度），
+    // 否则回落到 tick 起始的真实余额；池况未知时**不阻断**（显式未知，不假装没钱）。
+    supplyPoolCoversSurplus: supplyPoolCoversSurplusOf(state, surplusItems, cfg, poolView),
   }, { attributeRandom: cfg.actionSpaceAttribution === true });
 
   // 整批替换（单次 graph.write）：逐候选 add() 会触发逐次 graph.read 深拷贝，
@@ -659,6 +1310,12 @@ function computeLiterateSet(agentIds, cfg = {}) {
 }
 
 function isLiterate(agentId, cfg = {}) {
+  // t14：**继承来的读写技能**优先于人口比例判定。
+  // 祖先留下的笔记让后代真的会读——这是"遗产变成技能"最直接的体现，
+  // 也解释了为什么重启后的识字供给不会归零。
+  try {
+    if (civilization.legacy.inherit.skill.has(agentId, 'reading')) return true;
+  } catch { /* 技能表不可用时回落到人口比例判定 */ }
   if (literateSet !== null) return literateSet.has(agentId);
   const eff = agent.role.society.activeEffects();
   const rate = Number(eff?.effects?.literacyRate ?? 0);
@@ -678,8 +1335,8 @@ function societyEffectsHasLiteracy() {
 }
 
 /** 组装单个智能体的决策：感知 + 压力 + 预想 + 记忆 → 行动选择。 */
-function decide(agentId, tick, percepts, cfg = {}) {
-  refreshCandidates(agentId, tick, cfg);
+function decide(agentId, tick, percepts, cfg = {}, poolView = null) {
+  refreshCandidates(agentId, tick, cfg, poolView);
   const pressure = survival.needs.pressure.scorer.score({ agentId });
   // limit 6 → 10：生存骨架固定占 4 席（由 selector/pruner 保送），
   // 另留 6 席给动态行动。
@@ -773,6 +1430,10 @@ function decide(agentId, tick, percepts, cfg = {}) {
     noise: cfg.simNoise,
     seed: currentSeed,
     tick,
+    // t11：共享池争用视图。池已空时，依赖该池的行动被预想为「注定落空」，
+    // 因此居民不再基于过期池况做注定失败的决策（实测曾 33% 的采集空转）。
+    // 未登记的池在视图里缺失 → 预想视为「未知」而非 0。
+    poolRemaining: poolView ?? undefined,
   });
   const simBy = new Map();
   for (const p of predicted) simBy.set(p.candidate?.id, p.expectedUtility);
@@ -809,6 +1470,17 @@ function decide(agentId, tick, percepts, cfg = {}) {
 
   // 探索条件（供打分使用）。refreshCandidates 已按同一 tick 缓存过，这里零成本。
   const agentState = stage2.candidateStateFor(agentId, tick);
+  // t12：短期目标与多步计划。目标按 agentId **跨 tick 持久保存**（含中断挂起），
+  // 由实测后果推进（见 dispatch 的 observe），此处只取本 tick 的建议步骤。
+  // 目标是**建议**：只给有界加分（goalWeight），从不覆盖居民的决定，生存门永远优先。
+  const goalPlan = agent.decision.goals.plan(
+    agentId, tick, goalStateOf(agentId, tick), cfg, agent.decision.contract, doomedActionsFor(poolView));
+  for (const tr of goalPlan.transitions) {
+    observer.recorder.eventLog.record({ tick, topic: 'agent.goal.' + tr.type, agentId, payload: tr });
+  }
+  const goalSuggestion = goalPlan.suggestion;
+  const goalBonusFor = (action) => (goalSuggestion !== null && action === goalSuggestion.action)
+    ? goalSuggestion.weight : 0;
   // 商品售价：全系统最热的位置（50 人 × 200 tick × 每个候选行动），
   // 只在这里取一次，供打分函数与习惯偏置共用（原本每个候选行动查一次）。
   const goodsPriceNow = (() => {
@@ -816,6 +1488,30 @@ function decide(agentId, tick, percepts, cfg = {}) {
   })();
   const origScore = new Map(anticipations.map((a) => [a.id, a.score]));
   const candidates = window.map((a) => ({ id: a.id, action: a.action, score: origScore.get(a.id) ?? 0 }));
+
+  // D03：有界状态-行动-结果估计。读取该（需求状态 × 行动）的历史结果，
+  // 以**有界偏置**参与打分——失败降低预期、成功提高预期、证据过期自动失效。
+  // 权重刻意小于生存/人格项，因此它塑造偏好而不能颠倒量级差异。
+  const outcomeLearningOn = cfg.outcomeLearningEnabled !== false;
+  const outcomeWeight = outcomeLearningOn
+    ? (typeof cfg.outcomeLearningWeight === 'number' && Number.isFinite(cfg.outcomeLearningWeight)
+      ? cfg.outcomeLearningWeight : 0.3)
+    : 0;
+  const outcomeHalfLife = Number.isInteger(cfg.outcomeEvidenceHalfLife) && cfg.outcomeEvidenceHalfLife > 0
+    ? cfg.outcomeEvidenceHalfLife : 200;
+  const outcomeBiasFor = (action) => (outcomeWeight > 0
+    ? agent.decision.outcomeModel.bias({
+      agentId, action, need, tick, weight: outcomeWeight, halfLife: outcomeHalfLife,
+    })
+    : 0);
+
+  // t14：继承偏好的读取器。异常时返回 0（偏好缺失不该让决策崩溃）。
+  const preferenceBiasFor = (action) => {
+    if (cfg.legacyInheritance === false) return 0;
+    try {
+      return civilization.legacy.inherit.preference.biasFor({ agentId, action });
+    } catch { return 0; }
+  };
 
   const choice = agent.decision.selector.choose({
     candidates,
@@ -861,7 +1557,15 @@ function decide(agentId, tick, percepts, cfg = {}) {
           base *= 1 + gain;
         }
       }
-      return base;
+      // D03：结果学习的**有界**偏置（|bias| ≤ weight）。放在最后相加，
+      // 因此它只能微调排序，无法把负分的生存行动顶成正分。
+      // t12：计划倾向的**有界**加分。与结果学习同量级，远小于生存门的 5，
+      // 因此"计划中的那一步"更容易被选中，但绝不可能把饥饿的居民留在工作台前。
+      // t14：**继承来的行动偏好**同样是有界偏置（|bias| ≤ 0.4，上限在 preference 模块强制）。
+      // 它必须与生存门差一个量级：祖先留下的"多去采集"能让后代更爱采集，
+      // 但绝不能让一个饥饿的人不去吃饭。
+      return base + outcomeBiasFor(candidate.action) + goalBonusFor(candidate.action)
+        + preferenceBiasFor(candidate.action);
     },
   });
   if (choice === null) return null;
@@ -886,11 +1590,24 @@ function decide(agentId, tick, percepts, cfg = {}) {
     context: { dominantNeed: need, level: needLevel, threshold: cfg.eatThreshold },
   });
 
+  // D01：规则选择阶段的结果单独留档为 intent。之后若模型或日程覆盖 action，
+  // intent 仍保留居民本意，且**最终动作不得沿用被覆盖动作的分数/置信度**。
+  const intent = {
+    action: choice.action,
+    score: choice.score,
+    confidence: choice.confidence,
+    source: 'rule',
+  };
+
   return {
     id: choice.id,
     action: choice.action,
     score: choice.score,
     confidence: choice.confidence,
+    intent,
+    // 最终动作来源：rule（居民自选）/ model（模型改选）/ schedule（日程覆盖，仅危机时）。
+    // 覆盖发生时 score/confidence 置 null——被覆盖动作的分数不能冒充最终动作的分数。
+    final: { action: choice.action, source: 'rule', score: choice.score, confidence: choice.confidence },
     reason: explanation,
     explanation,
     trace,
@@ -906,28 +1623,97 @@ function decide(agentId, tick, percepts, cfg = {}) {
       simulation: chosenPred
         ? { expectedUtility: chosenPred.expectedUtility, risk: chosenPred.risk, exploration: chosenPred.exploration }
         : null,
+      // D03/D04：把结果估计与「契约未建模的行动」一起写进上下文，使预想的
+      // 未知项可被审计（旧实现把未知当作零风险零收益，无法被发现）。
+      outcomeEstimate: outcomeLearningOn
+        ? {
+          expected: agent.decision.outcomeModel.estimate({
+            agentId, action: choice.action, need, tick, halfLife: outcomeHalfLife,
+          }),
+          bias: outcomeBiasFor(choice.action),
+          weight: outcomeWeight,
+        }
+        : null,
+      unknownActions: predicted.filter((p) => p.known !== true).map((p) => p.action),
+      // t12：本 tick 的计划状态与建议步骤，使"居民为什么做这件事"可追溯到目标，
+      // 而不只是追溯到一次打分。null = 无活跃目标（或目标被生存危机挂起）。
+      goal: goalSuggestion === null
+        ? (goalPlan.plan === null
+          ? null
+          : { goalId: goalPlan.plan.goalId, goal: goalPlan.plan.goal, status: goalPlan.plan.status, stepIndex: goalPlan.plan.stepIndex })
+        : {
+          goalId: goalSuggestion.goalId,
+          goal: goalSuggestion.goal,
+          stepIndex: goalSuggestion.stepIndex,
+          stepCount: goalSuggestion.stepCount,
+          stepAction: goalSuggestion.action,
+          why: goalSuggestion.why,
+          weight: goalSuggestion.weight,
+          // 是否真的按计划执行，由 dispatch 后的 goal.aligned 判定；此处只记建议。
+          aligned: choice.action === goalSuggestion.action,
+        },
     },
   };
 }
 
 /** 行动 → 世界变更函数（供 dispatch.actions 调用）。 */
+/** 把执行结果渲染成一行人类可读文本（供情景/语义记忆引用，不新增事实）。 */
+function describeOutcome(outcome) {
+  if (outcome === null || typeof outcome !== 'object') return '结果未知';
+  const parts = [outcome.status];
+  if (outcome.reason !== null && outcome.reason !== undefined) parts.push('原因=' + outcome.reason);
+  if (outcome.needsDelta !== null && outcome.needsDelta !== undefined) {
+    const d = outcome.needsDelta;
+    parts.push('需求变化=food' + (d.food ?? 0) + '/water' + (d.water ?? 0));
+  }
+  if (outcome.gain !== null && outcome.gain !== undefined) parts.push('收益=' + JSON.stringify(outcome.gain));
+  if (outcome.cost !== null && outcome.cost !== undefined) parts.push('成本=' + JSON.stringify(outcome.cost));
+  parts.push('收益分=' + (outcome.gainScore ?? 0).toFixed(2) + '/成本分=' + (outcome.costScore ?? 0).toFixed(2));
+  if (outcome.known !== true) parts.push('契约未知');
+  return parts.join(' ');
+}
+
 function effectFor(agentId, action, cfg = {}) {
+  // D04：生存骨架的数字不再在这里硬编码，统一取 decision.action-contract，
+  // 与 anticipation.simulator 的预想共用同一份来源，使「无噪声预想」与
+  // 「确定性执行」可以逐项对账（预想的 needsDelta === 执行的 needsDelta）。
+  const c = agent.decision.contract.contractOf(action);
+  // D01/D02：effect 必须**返回实测结果**（ok/reason/needsDelta/consumed/produced），
+  // 而不是靠调用方假设「调用了就是成功了」。旧实现里 eat/drink 在库存为 0 时
+  // 什么都没发生，却被记为 applied:true —— 这正是「空操作误记成功」。
   switch (action) {
     case 'eat':
       return () => {
-        const consumed = survival.resources.food.consume(1);
-        if (consumed.consumed > 0) survival.needs.meter.update({ agentId, need: 'food', delta: -0.5 });
+        const consumed = survival.resources.food.consume(c.consumes.food);
+        const ok = consumed.consumed > 0;
+        if (ok) survival.needs.meter.update({ agentId, need: 'food', delta: c.needsDelta.food });
+        return {
+          ok,
+          reason: ok ? null : 'no_food_stock',
+          needsDelta: ok ? { ...c.needsDelta } : null,
+          consumed: { food: consumed.consumed },
+          produced: null,
+        };
       };
     case 'drink':
       return () => {
-        const consumed = survival.resources.water.consume(1);
-        if (consumed.consumed > 0) survival.needs.meter.update({ agentId, need: 'water', delta: -0.5 });
+        const consumed = survival.resources.water.consume(c.consumes.water);
+        const ok = consumed.consumed > 0;
+        if (ok) survival.needs.meter.update({ agentId, need: 'water', delta: c.needsDelta.water });
+        return {
+          ok,
+          reason: ok ? null : 'no_water_stock',
+          needsDelta: ok ? { ...c.needsDelta } : null,
+          consumed: { water: consumed.consumed },
+          produced: null,
+        };
       };
     case 'forage':
       return () => {
         const yieldAmount = typeof cfg.forageYield === 'number' && Number.isFinite(cfg.forageYield) ? cfg.forageYield : 2;
         const take = Math.min(yieldAmount, foragePool);
         foragePool = Math.max(0, foragePool - take);
+        let wood = 0;
         if (take > 0) {
           survival.resources.food.produce(take);
           survival.resources.water.produce(take);
@@ -937,14 +1723,30 @@ function effectFor(agentId, action, cfg = {}) {
           // 采集是唯一与外界的接触面，木材自此处产出才符合语义。
           const woodId = stage2.craftMaterialId();
           if (woodId !== null && rng.next() < (cfg.forageWoodChance ?? 0.25)) {
-            try { agent.inventory.backpack.add({ agentId, itemId: woodId, quantity: 1 }); } catch { /* 背包满则不带回 */ }
+            try { agent.inventory.backpack.add({ agentId, itemId: woodId, quantity: 1 }); wood = 1; } catch { /* 背包满则不带回 */ }
           }
         }
+        // 采集池见底时 take=0：这是空操作，必须记 noop 而不是成功（实测该场景曾让
+        // 居民在「守着满仓水渴死」时仍被记为有效采集）。
+        return {
+          ok: take > 0,
+          reason: take > 0 ? null : 'forage_pool_empty',
+          needsDelta: null,
+          consumed: null,
+          produced: take > 0 ? { food: take, water: take, ...(wood > 0 ? { wood } : {}) } : null,
+        };
       };
     case 'rest':
       return () => {
-        survival.needs.meter.update({ agentId, need: 'food', delta: -0.1 });
-        survival.needs.meter.update({ agentId, need: 'water', delta: -0.1 });
+        survival.needs.meter.update({ agentId, need: 'food', delta: c.needsDelta.food });
+        survival.needs.meter.update({ agentId, need: 'water', delta: c.needsDelta.water });
+        return {
+          ok: true,
+          reason: null,
+          needsDelta: { ...c.needsDelta },
+          consumed: null,
+          produced: null,
+        };
       };
     default:
       return undefined;
@@ -1182,11 +1984,30 @@ function runTraitDrift(tick, cfg) {
  *
  * @param {object} config 与 step 同参
  */
-export async function* tickSequence(config = {}) {
-  const unit = (id, detail, value) => ({ id, detail: detail ?? null, value: value === undefined ? null : value });
+async function* tickSequenceInner(config = {}) {
+  // t16：每个阶段单元被产出时同步记入阶段进度，供观测 API 展示「此刻跑到哪一步」。
+  // 记录点放在 unit() 里，是因为 unit() 就是「阶段边界」的唯一定义处——
+  // 若在别处再记一次，两处口径迟早会漂移。
+  const unit = (id, detail, value) => {
+    stageProgress.unit(id, detail ?? null);
+    return { id, detail: detail ?? null, value: value === undefined ? null : value };
+  };
 
   const cfg = { ...DEFAULT_CONFIG, ...configStore.currentDifficultyParams(), ...(config ?? {}) };
+  // 提交边界：进入本 tick 即标记进行中。tick 号在 clock.tick() 之后才确定，
+  // 故先占位、推进时钟后补齐 inFlightTick。
+  inFlight = true;
+  inFlightTick = clock.now().tick + 1;
   const tick = clock.tick().tick;
+  inFlightTick = tick;
+  stageFailure = null;
+  // t16：上一次 tick 的失败不得"粘住"。state 表达的是**最近一次 tick 的结果**，
+  // 若不在新 tick 开始时清掉 stageError，一次失败之后即使后续 tick 全部成功，
+  // 观测 API 仍会永远报 failed——那与"用 running 标签伪装"是同一类失真。
+  // 失败历史仍然保留在 stageProgress 的环形缓冲里，不会丢。
+  stageError = null;
+  // t16：阶段进度从本 tick 的第一个单元开始记录。
+  stageProgress.begin(tick);
   // 人口可能在上个 tick 因出生/死亡变化：先失效缓存再算采集池容量/再生。
   invalidateAlivePopulation();
 
@@ -1222,9 +2043,17 @@ export async function* tickSequence(config = {}) {
   // 识字者集合按 tick 统一计算：识字人数取决于全城人口，不是单人属性，
   // 因此必须在这里（能看到全部居民的位置）算一次，而不是在 decide 里逐个判断。
   computeLiterateSet(agentRecords.map((r) => r.id), cfg);
+  // t11：开启本 tick 的共享池争用账本。
+  // 决策顺序与 dispatch 顺序一致，因此按决策顺序预支额度后，
+  // 第 i 个居民预想时看到的就是「前 i-1 人取走之后」的真实剩余量——
+  // 这消除了「N 人同时决定采集、后到者全部空转」的重复预支，
+  // 也让「无噪声预想」与「确定性执行」可以逐项对账。
+  agent.decision.contention.open(tick, contentionCapacities());
+  // t12：死亡居民的计划不留残影（否则 summary 与观测会把死者的意图算作在办事项）。
+  agent.decision.goals.prune(new Set(agentRecords.map((r) => r.id)));
   for (const record of agentRecords) {
     const agentId = record.id;
-    const decision = decide(agentId, tick, inbox[agentId] ?? [], cfg);
+    const decision = decide(agentId, tick, inbox[agentId] ?? [], cfg, agent.decision.contention.view());
     if (decision === null) continue;
     // 有模型 E2E：模型从**居民当前可行候选集**内做选择（不新增行动、不绕过可行性）。
     if (llmDecide && llmCalls < (cfg.llmDecideMaxAgents ?? 1)) {
@@ -1234,20 +2063,83 @@ export async function* tickSequence(config = {}) {
         decision.action = picked.action;
         decision.reason = picked.reason;
         decision.llmDecide = picked.meta;
+        // D01：模型只改选**候选集内**的行动；改选后最终动作的分数/置信度置 null，
+        // 因为 choice.score 属于被覆盖的那个动作，不能冒充最终动作的分数。
+        decision.model = {
+          mode: 'llm',
+          applied: true,
+          action: picked.action,
+          fallbackReason: null,
+          meta: picked.meta,
+        };
+        decision.final = { action: picked.action, source: 'model', score: null, confidence: null };
+        decision.score = null;
+        decision.confidence = null;
+      } else {
+        // 模型回退必须透明：不可解析/不在候选集/调用失败都留档。
+        decision.model = { mode: 'llm', applied: false, action: null, fallbackReason: 'model_unavailable_or_unparsable', meta: null };
       }
+    } else {
+      decision.model = {
+        mode: 'rule', applied: false, action: null,
+        fallbackReason: llmDecide ? 'sampling_limit' : 'llm_decide_disabled', meta: null,
+      };
     }
     // 批次2-C（t48）：日程驱动行动（非紧急时以日程为准，紧急触发重排）
     if (cfg.scheduleEnabled !== false) {
       const scheduled = scheduleOverride(decision, agentId, tick, cfg);
       if (scheduled) {
+        const adopted = scheduled.action !== (decision.intent?.action ?? decision.action);
         decision.action = scheduled.action;
         decision.reason = scheduled.reason;
-        decision.schedule = scheduled.meta;
+        decision.schedule = {
+          ...(scheduled.meta ?? {}),
+          // 日程是**建议**：记下建议值与是否被采纳，避免把建议伪装成决定。
+          adopted,
+          trigger: scheduled.trigger,
+          replanned: scheduled.replanned === true,
+        };
+        if (adopted) {
+          decision.final = { action: scheduled.action, source: 'schedule', score: null, confidence: null };
+          decision.score = null;
+          decision.confidence = null;
+        }
         if (scheduled.replanned) {
           observer.recorder.eventLog.record({ tick, topic: 'agent.schedule.replan', payload: { agentId, trigger: scheduled.trigger } });
         }
       }
+    } else {
+      decision.schedule = null;
     }
+    // t10：反事实干预在模型/日程覆盖**之后**生效——它要替换的是"最终行动"，
+    // 而不是"规则初步选择"；否则被模型或日程覆盖过的决策会覆盖掉干预，
+    // 分支世界就与原世界无差别。
+    applyIntervention(decision, agentId, tick);
+    // t11：决策已定（含模型/日程覆盖）后，按**最终动作**预支共享额度。
+    // 只影响后续居民的预想；真实取用仍由执行器对真实池操作。
+    // 记账留在决策上下文里，使「谁在本 tick 预支了多少公共资源」可直接审计。
+    const contention = agent.decision.contract.contentionOf(decision.action);
+    const poolName = contention?.pool ?? null;
+    const before = poolName === null ? undefined : agent.decision.contention.remaining(poolName);
+    const reserved = reserveContention(decision.action, surplusItemsOf(agentId), cfg);
+    const after = poolName === null ? undefined : agent.decision.contention.remaining(poolName);
+    // 实测残留：少数居民在「池已被前面的居民预支空」时仍选了该行动。
+    // 原因不是信息过期，而是**生存门有意压过争用惩罚**——食物/水见底时
+    // forage 是唯一能补货的行动，此时「效率」必须让位于「活下去」。
+    // 这种压过必须是**显式可审计**的，而不是静默的预测-执行不一致。
+    const doomedButChosen = contention?.mode === 'shared-draw'
+      && reserved === 0 && typeof before === 'number' && before <= 0;
+    decision.context = {
+      ...(decision.context ?? {}),
+      contention: {
+        pool: poolName,
+        mode: contention?.mode ?? 'none',
+        remainingBefore: typeof before === 'number' ? before : null,
+        reserved,
+        remainingAfter: typeof after === 'number' ? after : null,
+        doomedButChosen,
+      },
+    };
     observer.recorder.decisionLog.record({
       tick,
       agentId,
@@ -1256,6 +2148,15 @@ export async function* tickSequence(config = {}) {
       context: decision.context,
       reason: decision.reason,
       decisionId: decision.id,
+      // D01：规则选择 / 模型选择 / 日程建议 / 最终行动分成四个阶段记录。
+      intent: decision.intent,
+      model: decision.model,
+      schedule: decision.schedule,
+      final: decision.final,
+      // t10：反事实干预标记（仅分支会话会出现）。必须显式转发——record() 是按
+      // 字段白名单记录的，不在这里传就等于没记，而"分支到底有没有被改写"正是
+      // 反事实结论可信与否的关键证据。
+      counterfactual: decision.counterfactual,
     });
     // 批次2-B（t47）：把本次决策沉淀为语义记忆（事件→摘要），供后续召回。
     // `persist: false` 表示只留在内存索引里，**不写入图存储**：
@@ -1263,11 +2164,16 @@ export async function* tickSequence(config = {}) {
     // 而图里每多一个语义记忆节点，所有 `read({ type })` 的全量查询都要为它付出代价
     // ——实测 30000 节点时一次全量读要 51ms，整个测试套件因此多花数分钟。
     // 语义记忆在本进程内即建即用（按 agentId 分桶），不需要经图存储中转。
+    // D02：决策时刻写入的是**意图**（phase:'intent'），不是后果。
+    // tags 保持 [action, need] 不变——习惯偏置仍按同一契约统计；
+    // 真正的成本收益在执行后由 dispatch 阶段以 phase:'outcome' 写入。
     agent.memory.semantic.store(agentId, {
       content: '第 ' + tick + ' tick 选择「' + decision.action + '」' + (decision.context?.dominantNeed ? '（主导需求：' + decision.context.dominantNeed + '）' : ''),
       tags: [decision.action, decision.context?.dominantNeed ?? 'sustenance'],
       salience: 0.5,
-    }, { maxEntries: cfg.semanticMaxEntries, persist: cfg.memoryPersist !== true });
+      phase: 'intent',
+      ref: { decisionId: decision.id, tick, agentId },
+    }, { maxEntries: cfg.semanticMaxEntries, persist: cfg.memoryPersist === true });
     const situation = `当前处境：${(inbox[agentId] ?? []).map((p) => p.topic).join('、') || '一切如常'}。你决定采取行动「${decision.action}」。`;
     const thought = await ai.thought.generate(agentContextOf(record), situation);
     decisions.push({ agentId, decision, thought });
@@ -1278,10 +2184,14 @@ export async function* tickSequence(config = {}) {
   let dispatched = 0;
   for (const { agentId, decision, thought } of decisions) {
     // D0：非生存行动由居民自己发起（调用真实模块）；生存行动沿用 effectFor。
-    const performed = DYNAMIC_BASE_SCORE[decision.action] !== undefined
+    const dynamic = DYNAMIC_BASE_SCORE[decision.action] !== undefined;
+    const performed = dynamic
       ? stage2.performAgentAction(tick, agentId, decision.action, cfg)
       : null;
+    // D01：用 decision.id 作为世界操作 id，使 actionId === decisionId，
+    // 「意图 → 执行 → 结果」可用同一个 ID 串起来（旧实现 actionId 是无关的 op_N）。
     const op = dispatch.resolve([{
+      id: decision.id,
       agentId,
       action: decision.action,
       params: performed === null
@@ -1293,14 +2203,91 @@ export async function* tickSequence(config = {}) {
     }])[0];
     dispatch.actions(op, {
       onApplied: (record) => {
-        const dyn = DYNAMIC_BASE_SCORE[record.action] !== undefined;
+        // D01/D02：执行结果由**实测**归一化（生存动作取 effect 返回值，
+        // 动态动作取 performAgentAction 返回值），不再假设「调用了就是成功了」。
+        const sustainResult = record.effectResult !== undefined ? record.effectResult : null;
+        const outcome = agent.decision.executionOutcome.normalize({
+          action: record.action,
+          dynamic,
+          performed: dynamic ? performed : sustainResult,
+        });
+        const outcomeWithRef = agent.decision.executionOutcome.withRef(outcome, {
+          decisionId: decision.id,
+          actionId: record.id,
+          tick,
+          agentId,
+        });
         observer.recorder.actionLog.record({
           tick,
           agentId: record.agentId,
           action: record.action,
-          outcome: dyn ? { applied: performed !== null && performed.ok === true, reason: performed?.reason ?? null } : { applied: true },
+          outcome: outcomeWithRef,
           actionId: record.id,
+          decisionId: decision.id,
         });
+        // 失败/空操作单独写事件日志（带同一 decisionId），使失败结果可被检索与告警。
+        if (outcome.status === 'failed' || outcome.status === 'noop') {
+          observer.recorder.eventLog.record({
+            tick,
+            topic: 'agent.action.' + outcome.status,
+            payload: {
+              decisionId: decision.id,
+              actionId: record.id,
+              action: record.action,
+              status: outcome.status,
+              reason: outcome.reason,
+              intentAction: decision.intent?.action ?? null,
+            },
+            agentId: record.agentId,
+          });
+        }
+        // D02：把执行成本收益写回情景记忆（带执行引用，可反查日志）。
+        if (cfg.outcomeMemoryEnabled !== false) {
+          agent.memory.episodic.store.write(agentId, {
+            content: '第 ' + tick + ' tick 执行「' + record.action + '」：' + describeOutcome(outcome),
+            emotion: null,
+            salience: outcome.status === 'applied' ? 0.5 : 0.7,
+            tags: ['outcome', String(record.action)],
+            ref: outcomeWithRef.ref,
+            outcome: outcomeWithRef,
+          });
+        }
+        // D02：把执行成本收益写回语义记忆（phase:'outcome'，带执行引用）。
+        // 与决策时刻的 phase:'intent' 条目区分开：意图不等于后果。
+        if (cfg.outcomeMemoryEnabled !== false) {
+          agent.memory.semantic.store(agentId, {
+            content: '第 ' + tick + ' tick 执行「' + record.action + '」：' + describeOutcome(outcome),
+            tags: ['outcome', String(record.action), decision.context?.dominantNeed ?? 'sustenance'],
+            salience: outcome.status === 'applied' ? 0.5 : 0.7,
+            phase: 'outcome',
+            ref: outcomeWithRef.ref,
+            outcome: outcomeWithRef,
+          }, { maxEntries: cfg.semanticMaxEntries, persist: cfg.memoryPersist === true });
+        }
+        // D03：把实际结果写进有界结果估计（失败降预期、成功升预期）。
+        agent.decision.outcomeModel.observe({
+          agentId,
+          action: record.action,
+          need: decision.context?.dominantNeed ?? 'none',
+          tick,
+          outcome,
+        });
+        // t12：把**实测结果与实测后的状态**反馈给多步计划。
+        // 计划据此推进（完成判据在真实状态上成立）/ 等待（动作已生效但效果跨 tick）/
+        // 回退（前置条件不满足则退回最早的未完成步骤）/ 放弃（连续失败或超预算）。
+        // 关键：判据是"东西是否真的到手"，不是"我是否发出过命令"。
+        if (cfg.goalPlanningEnabled !== false) {
+          const goalAfter = agent.decision.goals.observe(
+            agentId,
+            tick,
+            { status: outcome.status, reason: outcome.reason ?? null, action: record.action },
+            goalStateOf(agentId, tick),
+            cfg,
+          );
+          for (const tr of goalAfter.transitions) {
+            observer.recorder.eventLog.record({ tick, topic: 'agent.goal.' + tr.type, agentId, payload: tr });
+          }
+        }
       },
     });
     agent.memory.episodic.store.write(agentId, {
@@ -1329,28 +2316,82 @@ export async function* tickSequence(config = {}) {
   yield unit('snapshot', null);
 
   // 6) 第二阶段：家庭/经济/制作/居住/健康（被主循环驱动并写 observer）
+  // 阶段边界重新读取 registry：本 tick 早段可能已出生/死亡，若沿用旧的 agentRecords，
+  // 新生的孩子要到下一 tick 才被经济/家庭系统看到（跨 tick 滞后），死者的幽灵仍被消费。
   let phase2Summary = null;
   if (cfg.phase2) {
-    const spawnChild = (child) => registerAgent({
-      id: child.id, name: child.name, persona: '避难所新生儿',
-      food: 0.2, water: 0.2, candidates: DEFAULT_ACTIONS,
-    });
+    // t5：子代的世代号必须由**真实父母**推导，而不是默认值。
+    // 语义：当前文明的开国一代 = 该文明创建时的世代号；子代 = 父母世代的最大值 + 1。
+    // 修复前 registerAgent 完全不写 generation，子代的代际在 registry 里查不到，
+    // 「三代未遗失」只能从 family.lineage 间接推断，文明重启后更无从判断谁是新的一代。
+    const spawnChild = (child) => {
+      const parents = Array.isArray(child.parents) ? child.parents : [];
+      const parentGens = parents
+        .map((p) => registry.lookup(p)?.data?.generation)
+        .filter((g) => Number.isInteger(g) && g > 0);
+      const generation = parentGens.length > 0 ? Math.max(...parentGens) + 1 : generationCount;
+      return registerAgent({
+        id: child.id, name: child.name, persona: '避难所新生儿',
+        food: 0.2, water: 0.2, candidates: DEFAULT_ACTIONS,
+        generation, parents: parents.length > 0 ? parents : null,
+      });
+    };
     // 第二阶段逐子系统 yield：市场/产业/健康等各自要跑几十毫秒到数秒，
     // 整段 yield 出去等于把观察者冻住。这里把十一子系统拆成十一步。
+    const agentsForStage2 = registry.lookup({ type: 'agent' });
     phase2Summary = {};
-    for (const unit2 of stage2.tickSequence({ tick, agents: agentRecords, config: cfg, spawnChild })) {
-      phase2Summary[unit2.id] = unit2.value;
-      yield unit('phase2:' + unit2.id, { label: unit2.label, index: unit2.index, total: unit2.total });
+    try {
+      for (const unit2 of stage2.tickSequence({ tick, agents: agentsForStage2, config: cfg, spawnChild })) {
+        phase2Summary[unit2.id] = unit2.value;
+        yield unit('phase2:' + unit2.id, { label: unit2.label, index: unit2.index, total: unit2.total });
+      }
+    } catch (err) {
+      stageFailure = { stage: 'phase2', tick, message: err instanceof Error ? err.message : String(err) };
+      observer.recorder.eventLog.record({ tick, topic: 'tick.stage.failed', payload: stageFailure });
+      throw err;
     }
   }
 
   // 7) 第三阶段：治理/文化/心理/科技/遗产（被主循环驱动并写 observer）
+  // 同样在阶段边界重读 registry：phase2 里可能刚出生了一批新生儿。
   let phase3Summary = null;
   if (cfg.phase3) {
+    const agentsForStage3 = registry.lookup({ type: 'agent' });
     phase3Summary = {};
-    for await (const unit3 of stage3.tickSequence({ tick, agents: agentRecords, config: cfg })) {
-      phase3Summary[unit3.id] = unit3.value;
-      yield unit('phase3:' + unit3.id, { label: unit3.label, index: unit3.index, total: unit3.total });
+    try {
+      // t5：把「代际交接」注入第三阶段——文明崩溃确认后，遗产归档与重启之间
+      // 必须先隔离旧世代并真实创建下一代（否则"重启"只是写一条记录）。
+      const handover = (meta) => runGenerationHandover(tick, cfg, meta?.heritage ?? null);
+      for await (const unit3 of stage3.tickSequence({ tick, agents: agentsForStage3, config: cfg, handover })) {
+        phase3Summary[unit3.id] = unit3.value;
+        yield unit('phase3:' + unit3.id, { label: unit3.label, index: unit3.index, total: unit3.total });
+      }
+    } catch (err) {
+      stageFailure = { stage: 'phase3', tick, message: err instanceof Error ? err.message : String(err) };
+      observer.recorder.eventLog.record({ tick, topic: 'tick.stage.failed', payload: stageFailure });
+      throw err;
+    }
+  }
+
+  // 7.5) 遗产考古（t14）：让遗物**在长跑中真的会被捡到**。
+  //
+  // 交接时的批量注入只在"文明重启"那一刻发生；若不补这一步，
+  // 常态运行中"发现遗物"这条路永远不可达——遗物只是重启时的装饰。
+  // 这里每 tick 允许**有界**数量的解读（默认 1），且只由识字者进行：
+  // 解读是有代价的稀缺行为，不是每 tick 每人一次的全员动作。
+  if (cfg.legacyInheritance !== false && cfg.legacyDiscoveryPerTick !== 0) {
+    try {
+      const dig = runLegacyDiscovery(tick, cfg);
+      if (dig.discoveries > 0 || dig.lost.length > 0) {
+        yield unit('legacy', { discoveries: dig.discoveries, garbled: dig.garbled, lost: dig.lost.length });
+      }
+    } catch (err) {
+      // 考古失败不得让 tick 失败：它是文明叙事的一部分，不是主循环的必需环节。
+      stageFailure = null;
+      observer.recorder.eventLog.record({
+        tick, topic: 'civilization.legacy.discovery.failed',
+        payload: { message: err instanceof Error ? err.message : String(err) },
+      });
     }
   }
 
@@ -1359,6 +2400,17 @@ export async function* tickSequence(config = {}) {
   const goalState = survival.goal.elapsed({ tick });
   worldState.set('survival.crisis', crisisState);
   worldState.set('survival.goal', goalState);
+
+  // 9) 后置快照：phase2/phase3 会改动资源/人口/建造，必须在它们之后再同步一次
+  //    world-state，否则 observer 看到的是阶段执行前的世界（跨阶段不一致）。
+  syncWorldState(tick, cfg);
+  worldState.set('tick', tick);
+  worldState.set('committedTick', tick);
+  worldState.set('tickInFlight', false);
+  // 提交边界闭合：此刻起本 tick 的所有变更对观察者可见且自洽。
+  committedTick = tick;
+  inFlight = false;
+  stageFailure = null;
 
   const summary = {
     tick,
@@ -1378,20 +2430,146 @@ export async function* tickSequence(config = {}) {
 }
 
 /**
+ * 挂机节拍器 / 观测 API 用的**阶段序列**（tickSequenceInner 的提交边界包装）。
+ *
+ * 包装层只做一件事：把「本 tick 是否完整跑完」这一事实写进阶段进度。
+ *   - 正常结束 → stageProgress.commit(tick)：观察者从此看到该 tick 已提交；
+ *   - 中途抛错 → stageProgress.fail(tick, err)：失败同样成为可观测事实。
+ * 没有这一层时，失败的 tick 会永远停留在「推进中」，观察者无法区分卡死与失败。
+ *
+ * @param {object} config 与 step 同参
+ */
+export async function* tickSequence(config = {}) {
+  let result;
+  try {
+    result = yield* tickSequenceInner(config);
+  } catch (err) {
+    const cur = stageProgress.current();
+    stageProgress.fail(cur === null ? -1 : cur.tick, err);
+    throw err;
+  }
+  const cur = stageProgress.current();
+  if (cur !== null) stageProgress.commit(cur.tick);
+  return result;
+}
+
+/**
  * 推进一个 tick（与 `tickSequence` 共用同一份步骤定义）。
  * 批处理 / 测试走这条路径；挂机节拍器走 `tickSequence` 逐步推进。
  * @param {object} config
  * @returns {Promise<object>}
  */
 export async function step(config = {}) {
-  let last = null;
-  for await (const unit of tickSequence(config)) last = unit;
-  return last === null ? {} : last.value;
+  // 并发互斥：同一时刻只允许一个 tick 在跑。若已有 tick 进行中，直接拒绝，
+  // 而不是让两个生成器交错推进同一份共享状态（时钟/registry/资源都会被撕裂）。
+  if (inFlight) {
+    const err = new Error('loop.step: 上一个 tick 仍在推进中（tick ' + inFlightTick + '），拒绝并发步进');
+    err.code = 'TICK_IN_FLIGHT';
+    throw err;
+  }
+  try {
+    let last = null;
+    for await (const unit of tickSequence(config)) last = unit;
+    return last === null ? {} : last.value;
+  } catch (err) {
+    // 任一步骤抛错时归位 inFlight，并留下可供观测的失败状态，
+    // 避免"失败后永远 running"这种假象。
+    stageError = { tick: inFlightTick, message: err instanceof Error ? err.message : String(err) };
+    inFlight = false;
+    worldState.set('tickInFlight', false);
+    worldState.set('lastTickError', stageError);
+    throw err;
+  }
 }
 /** 复位全部共享状态（graph/rng/identity/clock/world-state/registry/needs/recorder）。 */
+// ---- 持久化：运行阶段与循环级状态必须进存档 ----
+
+/**
+ * 导出循环级运行状态。
+ *
+ * 覆盖：采集池余量（逐 tick 再生/抽取的全局共享资源）、当前种子、死亡计量表
+ * （饥饿持续计数与健康，跨 tick 累积）、识字者集合（由全城人口决定，
+ * 跨 tick 复用）、提交边界（tick/committedTick/inFlight 等运行阶段）、
+ * 以及 LAYA 紧迫度缓存。
+ *
+ * **不导出**派生缓存 `_alivePop*` 与 `literateSet` 的世代号语义：它们按显式
+ * 世代号失效，恢复时直接作废重建即可（下方 __restore 会重置世代号）。
+ */
+export function __snapshot() {
+  return {
+    foragePool,
+    currentSeed,
+    mortality: [...mortality.entries()].map(([agentId, st]) => ({ agentId, ...structuredClone(st) })),
+    literateSet: literateSet === null ? null : [...literateSet],
+    inFlight,
+    committedTick,
+    inFlightTick,
+    stageError: stageError === null ? null : structuredClone(stageError),
+    stageFailure: stageFailure === null ? null : structuredClone(stageFailure),
+    // t5：代际必须进存档。不入档的话，恢复后的世界会以「第 1 代」重启一个
+    // 已经繁衍/重启过若干代的运行：新出生的子代世代号会回退，封存记录丢失，
+    // 「谁是新的一代」在恢复后立刻失真。
+    generationCount,
+    sealedGenerations: sealedGenerations.map((s) => ({
+      generation: s.generation, tick: s.tick, members: [...s.members],
+    })),
+  };
+}
+
+/**
+ * 恢复循环级运行状态。
+ *
+ * 恢复后**不**保留 `inFlight=true`：存档只可能在提交边界之后采集，
+ * 续跑必须从一个自洽的世界开始（否则 step 会因并发守卫永久拒绝）。
+ * 派生缓存（存活人口 / LAYA 紧迫度 / 识字者）一律作废重建。
+ * @param {object} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('loop.__restore: 状态必须为对象');
+  }
+  const d = data;
+  foragePool = (typeof d.foragePool === 'number' && Number.isFinite(d.foragePool)) ? d.foragePool : null;
+  currentSeed = typeof d.currentSeed === 'string' ? d.currentSeed : 'default';
+  mortality.clear();
+  for (const rec of (Array.isArray(d.mortality) ? d.mortality : [])) {
+    if (typeof rec?.agentId !== 'string' || rec.agentId === '') continue;
+    const { agentId, ...rest } = rec;
+    mortality.set(agentId, structuredClone(rest));
+  }
+  literateSet = d.literateSet === null || d.literateSet === undefined ? null : new Set(d.literateSet);
+  // 运行阶段：恢复为「已提交、无进行中 tick」的自洽态。
+  committedTick = Number.isInteger(d.committedTick) && d.committedTick >= 0 ? d.committedTick : 0;
+  inFlightTick = Number.isInteger(d.inFlightTick) && d.inFlightTick >= 0 ? d.inFlightTick : 0;
+  stageError = (d.stageError === null || d.stageError === undefined) ? null : structuredClone(d.stageError);
+  stageFailure = (d.stageFailure === null || d.stageFailure === undefined) ? null : structuredClone(d.stageFailure);
+  inFlight = false;
+  // t5：代际状态随档恢复（见 __snapshot 的说明）。
+  generationCount = Number.isInteger(d.generationCount) && d.generationCount > 0 ? d.generationCount : 1;
+  sealedGenerations = (Array.isArray(d.sealedGenerations) ? d.sealedGenerations : [])
+    .filter((s) => s !== null && typeof s === 'object' && Number.isInteger(s.generation))
+    .map((s) => ({
+      generation: s.generation,
+      tick: Number.isInteger(s.tick) ? s.tick : 0,
+      members: Array.isArray(s.members) ? [...s.members] : [],
+    }));
+  // 派生缓存作废：恢复后的世界与恢复前不同。
+  invalidateAlivePopulation();
+  layaUrgencyCache.clear();
+  return {
+    committedTick, foragePool, mortality: mortality.size,
+    literate: literateSet === null ? 0 : literateSet.size,
+    generation: generationCount,
+  };
+}
+
 export function reset() {
   invalidateAlivePopulation();
   graph.__reset();
+  // 热数据归档必须一起清空：graph.__reset 只清图节点，归档与序号水位是
+  // hot-log 自己的模块级状态，不跟着图走。不清的话新一局会继承上一局的
+  // 归档条目与 maxSeq 水位，lookup() 会把本局从未存在的 id 判成「已淘汰」。
+  hotLog.__reset();
   rng.__reset();
   identity.__reset();
   clock.__reset();
@@ -1426,6 +2604,12 @@ export function reset() {
   agent.anticipation.pool.pruner.__reset();
   agent.anticipation.pool.selector.__reset();
   agent.anticipation.simulator.__reset();
+  // D03：结果估计与行动契约一样是跨 run 状态，必须复位，否则新一局会继承
+  // 上一局学到的偏置（实测同类漏复位会让结果依赖「此前跑过什么」）。
+  agent.decision.outcomeModel.__reset();
+  // t11：争用账本是逐 tick 的预测视图，跨 run 必须清空（否则新一局会继承上一局的预支额度）。
+  agent.decision.contention.__reset();
+  agent.decision.goals.__reset();
   agent.memory.episodic.store.__reset();
   agent.memory.semantic.__reset();
   agent.psyche.trauma.__reset();
@@ -1445,6 +2629,9 @@ export function reset() {
   social.reputation.__reset();
   social.relationship.friendship.__reset();
   social.relationship.romance.__reset();
+  // t13：互动与承诺记录复位（图节点由 social.graph.edges 那次 __reset 清掉，
+  // 但内存索引必须显式清空，否则跨 run 会残留上局的"欠债"）。
+  social.interaction.__reset();
   social.relationship.family.__reset();
   social.family.registry.__reset();
   social.family.lineage.__reset();
@@ -1466,6 +2653,20 @@ export function reset() {
   mortality.clear();
   foragePool = null;
   currentSeed = 'default';
+  // t10：干预钩子是全局的，必须随运行复位。不清的后果不是"少一个功能"，
+  // 而是**后续真实运行被静默改写**——一次反事实分析之后忘了撤掉干预，
+  // 新一局就会带着一个凭空替换行动的世界跑下去，且不崩不报错。
+  // （flow-index 的 store/reset-missing 检查正是抓到了这一点。）
+  // 提交边界复位：新一局从 tick 0、无进行中 tick、无阶段失败开始。
+  intervention = null;
+  inFlight = false;
+  committedTick = 0;
+  inFlightTick = 0;
+  stageError = null;
+  stageFailure = null;
+  // 阶段进度同样跨 run 残留：不清空的话，上一局最后一 tick 的"推进中"记录
+  // 会让新一局的观测 API 一开始就报「正在跑 tick N」。
+  stageProgress.__reset();
   // LAYA 紧迫度缓存只在 step() 内按 tick 清空；若上一局最后一 tick 的缓存留着，
   // 下一局第一 tick 的 prefetch 之前会先读到上一局的紧迫度（跨 run 泄漏）。
   layaUrgencyCache.clear();
@@ -1474,6 +2675,9 @@ export function reset() {
   _alivePopGeneration = -1;
   _alivePopValue = 0;
   literateSet = null;
+  // 代际状态跨 run 必须复位：否则新一局会从上一局的世代号继续往上加，
+  // 「第几代」变成"此前跑过几局"的函数。
+  resetGenerations();
 }
 
 /**
@@ -1564,10 +2768,70 @@ export async function run(options = {}) {
   };
 }
 
-/** 当前观测快照（世界状态 + 资源 + 编年计数），供 api / 冒烟测试观测。 */
+/**
+ * 在**已恢复**的运行上继续推进 N 个 tick（不 reset / 不 spawn / 不 seed）。
+ *
+ * 与 run() 的关键区别（这也是它存在的理由）：
+ *   run() 面向「开一局」——它 reset 全部状态、按 agentCount 生成居民、再调用
+ *   stage2.seed / stage3.seed 做一次性初始化。
+ *   恢复存档后，世界已经自洽（居民、账户、配对、在研项目、阵营、法令都在档里），
+ *   再 seed 一次等于对同一批实体**重复初始化**：实测 stage3.seed 会再次
+ *   research.start 同一技术并抛「技术 greenhouse 已在研究中」，续跑直接崩。
+ *
+ * 因此续跑只有一条正确路径：不碰初始化，只按 tick 推进。
+ * 配置必须与存档时一致（phase2/phase3 等），否则阶段构成会变。
+ * @param {object} [options] 与 step 同参（ticks / phase2 / phase3 / seed 等）
+ * @returns {Promise<object>} 与 run() 同形状的汇总
+ */
+export async function resume(options = {}) {
+  const ticks = Number.isInteger(options.ticks) && options.ticks > 0 ? options.ticks : 1;
+  const steps = [];
+  for (let i = 0; i < ticks; i += 1) {
+    steps.push(await step(options));
+  }
+  // 编年志分段：与 run() 同一策略，保证「跑完还能按 tick 查证据」。
+  try {
+    const lastTick = clock.now().tick;
+    const segmentSize = Number.isInteger(options.chronicleSegmentSize) && options.chronicleSegmentSize > 0
+      ? options.chronicleSegmentSize : 50;
+    for (let from = 0; from <= lastTick; from += segmentSize) {
+      observer.chronicle.store.capture({ fromTick: from, toTick: Math.min(from + segmentSize - 1, lastTick) });
+    }
+    observer.timeline.__reset();
+  } catch { /* 观察者为可选能力 */ }
+
+  return {
+    seed: options.seed,
+    resumed: true,
+    ticks,
+    finalTick: clock.now().tick,
+    steps,
+    world: worldState.snapshot(),
+    resources: { food: survival.resources.food.query(), water: survival.resources.water.query(), energy: survival.resources.energy.query(), medical: survival.resources.medical.query() },
+    chronicle: observer.chronicle.compiler.compile().counts,
+    chronicleStore: observer.chronicle.store.getStats(),
+    social: socialSummary(),
+    ...(options.phase2 ? { phase2: { seed: null, summary: stage2.summary() } } : {}),
+    ...(options.phase3 ? { phase3: { seed: null, summary: stage3.summary() } } : {}),
+  };
+}
+
+/**
+ * 当前观测快照（世界状态 + 资源 + 编年计数），供 api / 冒烟测试观测。
+ *
+ * tick 与 committedTick 的语义区别（t2 提交边界）：
+ *   - tick：时钟当前值。step 进行中它就等于 inFlightTick，此时世界仍处于半提交态；
+ *   - committedTick：最后一次**完整跑完全部阶段并写完末端快照**的 tick。
+ * 观察者要判断"这个世界现在是否自洽"，应以 committedTick 为准。
+ */
 export function snapshot() {
   return {
     tick: clock.now().tick,
+    committedTick,
+    inFlight,
+    stageFailure,
+    stageError,
+    generation: generationStatus(),
     agents: registry.lookup({ type: 'agent' }),
     world: worldState.snapshot(),
     resources: { food: survival.resources.food.query(), water: survival.resources.water.query(), energy: survival.resources.energy.query(), medical: survival.resources.medical.query() },
@@ -1575,6 +2839,51 @@ export function snapshot() {
     chronicleStore: observer.chronicle.store.getStats(),
     social: socialSummary(),
   };
+}
+
+/**
+ * 存档恢复后重新对齐提交边界（t16）。
+ *
+ * 恢复出来的 tick 是**已提交边界**（存档只在完整 tick 之后采集），因此恢复后：
+ *   - committedTick 必须跟上恢复后的时钟，否则观测 API 会拿旧进程的 tick 当"已提交"；
+ *   - inFlight/失败状态必须清空——恢复后没有任何 tick 在跑；
+ *   - 阶段进度的**观测历史**必须清空——旧进程的半截阶段记录不属于恢复后的运行；
+ *   - 阶段进度的**后台驱动器事实必须保留**——见下。
+ * 这是"恢复后状态自洽"的必要条件，不是可选清理。
+ *
+ * t25：为什么这里不再调 stageProgress.__reset()
+ *   __reset() 会连 backgroundDriver 一起归零，而 markRestored 的职责是"对齐提交边界"，
+ *   不是"停掉驱动器"。若在节拍器仍在运行时恢复，归零会让观测 API 谎报
+ *   driver='manual-step'/background=false——正是 t16 禁止的"用标签伪装真相"。
+ *   因此这里用"只清观测历史、保留驱动器事实"的 __restore：
+ *     恢复的是"当前有没有后台推进器"这一**事实**，不是"历史上有没有跑过"。
+ *   （loop.reset() 仍走 __reset 全量归零：新一局不该继承上一局的驱动器事实。）
+ */
+export function markRestored() {
+  const tick = clock.now().tick;
+  inFlight = false;
+  inFlightTick = 0;
+  committedTick = tick;
+  stageError = null;
+  stageFailure = null;
+  // 保留驱动器事实，只清观测历史（见上方注释）。
+  stageProgress.__restore(stageProgress.__snapshot());
+  worldState.set('tick', tick);
+  worldState.set('committedTick', tick);
+  worldState.set('tickInFlight', false);
+  return tickStatus();
+}
+
+/** 提交边界状态（供 api/control 与观察者查询，不暴露内部可变引用）。 */
+export function tickStatus() {
+  return Object.freeze({
+    tick: clock.now().tick,
+    committedTick,
+    inFlight,
+    inFlightTick,
+    stageFailure,
+    stageError,
+  });
 }
 
 export { DEFAULT_ACTIONS, DEFAULT_EVENTS, DEFAULT_TAGS };

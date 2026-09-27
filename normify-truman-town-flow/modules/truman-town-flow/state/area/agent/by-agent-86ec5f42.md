@@ -5,24 +5,33 @@ parent: truman-town-flow.state.area.agent
 name: {zh: "byAgent", en: "byAgent"}
 description:
   zh: >
-      map 类型，声明于 src/agent/memory/episodic/store.js:22。写入方 2 个、读取方 4 个；已纳入复位。
+      map 类型，声明于 src/agent/memory/episodic/store.js:22。写入方 3 个、读取方 7 个；已纳入复位。
       
   en: >
-      map declared at src/agent/memory/episodic/store.js:22; writers=2, readers=4
+      map declared at src/agent/memory/episodic/store.js:22; writers=3, readers=7
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T17:26:31.618Z"
+updated_at: "2026-09-27T01:42:48.437Z"
 fingerprint: pending
 source: []
 apis:
   - protocol: rpc
-    path: "by-agent-86ec5f42:write-ensureFresh"
+    path: "by-agent-86ec5f42:write-rebuildFromGraph"
     description:
       zh: >
-          写入方 ensureFresh（src/agent/memory/episodic/store.js）
+          写入方 rebuildFromGraph（src/agent/memory/episodic/store.js）
           
       en: >
-          writer ensureFresh
+          writer rebuildFromGraph
+          
+  - protocol: rpc
+    path: "by-agent-86ec5f42:write-__restore"
+    description:
+      zh: >
+          写入方 __restore（src/agent/memory/episodic/store.js）
+          
+      en: >
+          writer __restore
           
   - protocol: rpc
     path: "by-agent-86ec5f42:write-write"
@@ -32,6 +41,33 @@ apis:
           
       en: >
           writer write
+          
+  - protocol: rpc
+    path: "by-agent-86ec5f42:read-rebuildFromGraph"
+    description:
+      zh: >
+          读取方 rebuildFromGraph
+          
+      en: >
+          reader rebuildFromGraph
+          
+  - protocol: rpc
+    path: "by-agent-86ec5f42:read-__snapshot"
+    description:
+      zh: >
+          读取方 __snapshot
+          
+      en: >
+          reader __snapshot
+          
+  - protocol: rpc
+    path: "by-agent-86ec5f42:read-__restore"
+    description:
+      zh: >
+          读取方 __restore
+          
+      en: >
+          reader __restore
           
   - protocol: rpc
     path: "by-agent-86ec5f42:read-write"
@@ -70,6 +106,18 @@ apis:
           reader _rawList
           
 deps:
+  - kind: dataflow
+    to: truman-town-flow.code.agent.memory.episodic.store
+    from_api: "rpc:by-agent-86ec5f42:read-rebuildFromGraph"
+    label: {zh: "读 byAgent", en: "read byAgent"}
+  - kind: dataflow
+    to: truman-town-flow.code.agent.crafting.recipe
+    from_api: "rpc:by-agent-86ec5f42:read-__snapshot"
+    label: {zh: "读 byAgent", en: "read byAgent"}
+  - kind: dataflow
+    to: truman-town-flow.code.agent.crafting.recipe
+    from_api: "rpc:by-agent-86ec5f42:read-__restore"
+    label: {zh: "读 byAgent", en: "read byAgent"}
   - kind: dataflow
     to: truman-town-flow.code.agent.memory.episodic.store
     from_api: "rpc:by-agent-86ec5f42:read-write"

@@ -45,13 +45,72 @@ const byAgent = new Map();
 /** 上次校验的 graph 复位代数；graph 被直接 __reset 时使本索引失效。 */
 let lastGeneration = -1;
 
-/** graph 被上层直接 __reset 后重建本派生索引（保证与图一致）。 */
+/** graph 被上层直接 __reset / __restore 后重建本派生索引（保证与图一致）。 */
 function ensureFresh() {
   const gen = graph.__generation();
   if (gen !== lastGeneration) {
-    byAgent.clear();
+    rebuildFromGraph();
     lastGeneration = gen;
   }
+}
+
+/**
+ * 从图重建索引。
+ *
+ * **为什么必须「重建」而不是「清空」**：graph 是事实来源，索引只是加速器。
+ * 原实现只 clear() 不重建，于是任何一次 graph 复位（loop.reset / 存档恢复）之后，
+ * 索引都是空的，而 query/list/scoreMap **只读索引**——调用方拿到的是
+ * 「全城声誉 = 初始值」，而不是图里真实存着的分数。这是静默的数据丢失：
+ * 实测恢复存档后 reputation.count 由 6 掉到 0、mean 由 48.85 变回 50。
+ * 重建后索引与图重新一致，存档恢复（v1 档无 sections 时）也能自愈。
+ *
+ * 注意：history 只存内存（见 update 的落盘取舍），重建时无法从图恢复，
+ * 故置空——完整的 history 由 __snapshot/__restore 在完整存档路径上保留。
+ */
+function rebuildFromGraph() {
+  byAgent.clear();
+  for (const node of graph.read({ type: TYPE })) {
+    const d = node.data;
+    if (!d || typeof d.agentId !== 'string' || d.agentId === '') continue;
+    byAgent.set(d.agentId, {
+      agentId: d.agentId,
+      score: typeof d.score === 'number' ? d.score : INITIAL,
+      level: typeof d.level === 'string' ? d.level : levelOf(typeof d.score === 'number' ? d.score : INITIAL),
+      updatedAt: typeof d.updatedAt === 'number' ? d.updatedAt : 0,
+      history: [],
+    });
+  }
+}
+
+// ---- 持久化：内存索引必须进存档（history 只在内存里） ----
+
+/**
+ * 导出声誉索引。
+ *
+ * 图里只有标量（score/level/updatedAt）；**history 只活在 byAgent**。
+ * 不入档则恢复后历史归零（分数本身可由 rebuildFromGraph 自愈，但审计链断掉）。
+ */
+export function __snapshot() {
+  return { byAgent: [...byAgent.entries()].map(([k, v]) => [k, structuredClone(v)]) };
+}
+
+/**
+ * 恢复声誉索引（整体替换）。
+ * 必须在 graph.__restore 之后调用，并把 lastGeneration 对齐到新代数。
+ * @param {{byAgent?: Array}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('reputation.__restore: 状态必须为对象');
+  }
+  byAgent.clear();
+  for (const pair of (Array.isArray(data.byAgent) ? data.byAgent : [])) {
+    if (!Array.isArray(pair) || pair.length < 2) continue;
+    if (typeof pair[0] !== 'string' || pair[0] === '') continue;
+    byAgent.set(pair[0], structuredClone(pair[1]));
+  }
+  lastGeneration = graph.__generation();
+  return { agents: byAgent.size };
 }
 
 /**

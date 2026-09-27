@@ -5,13 +5,13 @@ parent: truman-town-flow.state.area.runtime
 name: {zh: "tasks", en: "tasks"}
 description:
   zh: >
-      map 类型，声明于 src/runtime/clock.js:14。写入方 1 个、读取方 2 个；已纳入复位。
+      map 类型，声明于 src/runtime/clock.js:14。写入方 2 个、读取方 3 个；已纳入复位。
       
   en: >
-      map declared at src/runtime/clock.js:14; writers=1, readers=2
+      map declared at src/runtime/clock.js:14; writers=2, readers=3
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T17:26:35.160Z"
+updated_at: "2026-09-27T01:42:58.220Z"
 fingerprint: pending
 source: []
 apis:
@@ -23,6 +23,15 @@ apis:
           
       en: >
           writer schedule
+          
+  - protocol: rpc
+    path: "tasks-79b3964f:write-__restore"
+    description:
+      zh: >
+          写入方 __restore（src/runtime/clock.js）
+          
+      en: >
+          writer __restore
           
   - protocol: rpc
     path: "tasks-79b3964f:read-tick"
@@ -42,6 +51,15 @@ apis:
       en: >
           reader schedule
           
+  - protocol: rpc
+    path: "tasks-79b3964f:read-__snapshot"
+    description:
+      zh: >
+          读取方 __snapshot
+          
+      en: >
+          reader __snapshot
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.code.runtime.clock
@@ -50,5 +68,9 @@ deps:
   - kind: dataflow
     to: truman-town-flow.code.runtime.clock
     from_api: "rpc:tasks-79b3964f:read-schedule"
+    label: {zh: "读 tasks", en: "read tasks"}
+  - kind: dataflow
+    to: truman-town-flow.code.agent.crafting.recipe
+    from_api: "rpc:tasks-79b3964f:read-__snapshot"
     label: {zh: "读 tasks", en: "read tasks"}
 ---

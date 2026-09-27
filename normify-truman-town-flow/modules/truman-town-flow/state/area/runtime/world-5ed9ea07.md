@@ -5,13 +5,13 @@ parent: truman-town-flow.state.area.runtime
 name: {zh: "world", en: "world"}
 description:
   zh: >
-      object 类型，声明于 src/runtime/world-state.js:9。写入方 1 个、读取方 6 个；已纳入复位。
+      object 类型，声明于 src/runtime/world-state.js:9。写入方 1 个、读取方 7 个；已纳入复位。
       
   en: >
-      object declared at src/runtime/world-state.js:9; writers=1, readers=6
+      object declared at src/runtime/world-state.js:9; writers=1, readers=7
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T17:26:42.543Z"
+updated_at: "2026-09-27T01:43:16.417Z"
 fingerprint: pending
 source: []
 apis:
@@ -78,6 +78,15 @@ apis:
       en: >
           reader restore
           
+  - protocol: rpc
+    path: "world-5ed9ea07:read-__restore"
+    description:
+      zh: >
+          读取方 __restore
+          
+      en: >
+          reader __restore
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.code.runtime.world-state
@@ -88,7 +97,7 @@ deps:
     from_api: "rpc:world-5ed9ea07:read-setByPath"
     label: {zh: "读 world", en: "read world"}
   - kind: dataflow
-    to: truman-town-flow.code.civilization.tech.tree
+    to: truman-town-flow.code.agent.decision.contention
     from_api: "rpc:world-5ed9ea07:read-snapshot"
     label: {zh: "读 world", en: "read world"}
   - kind: dataflow
@@ -102,5 +111,9 @@ deps:
   - kind: dataflow
     to: truman-town-flow.code.runtime.world-state
     from_api: "rpc:world-5ed9ea07:read-restore"
+    label: {zh: "读 world", en: "read world"}
+  - kind: dataflow
+    to: truman-town-flow.code.agent.crafting.recipe
+    from_api: "rpc:world-5ed9ea07:read-__restore"
     label: {zh: "读 world", en: "read world"}
 ---

@@ -117,3 +117,29 @@ export function decisionModifier({ agentId } = {}) {
 export function __reset() {
   brokenAgents.clear();
 }
+
+// ---- 持久化：崩溃集合必须进存档 ----
+
+/**
+ * 导出已崩溃居民集合。
+ *
+ * 崩溃状态直接改变决策（置信度惩罚 + 异常行为偏好），且由创伤累积触发。
+ * 不入档则恢复后全城「精神健康」，崩溃/恢复事件与决策质量在续跑中失真。
+ */
+export function __snapshot() {
+  return { brokenAgents: [...brokenAgents] };
+}
+
+/**
+ * 恢复崩溃集合（整体替换）。
+ * @param {{brokenAgents?: string[]}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('break.__restore: 状态必须为对象');
+  }
+  brokenAgents.clear();
+  const list = Array.isArray(data.brokenAgents) ? data.brokenAgents : [];
+  for (const id of list) if (typeof id === 'string' && id !== '') brokenAgents.add(id);
+  return { brokenAgents: brokenAgents.size };
+}

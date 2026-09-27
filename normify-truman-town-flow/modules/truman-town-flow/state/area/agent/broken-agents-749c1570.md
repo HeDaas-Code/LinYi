@@ -5,13 +5,13 @@ parent: truman-town-flow.state.area.agent
 name: {zh: "brokenAgents", en: "brokenAgents"}
 description:
   zh: >
-      set 类型，声明于 src/agent/psyche/break.js:17。写入方 2 个、读取方 4 个；已纳入复位。
+      set 类型，声明于 src/agent/psyche/break.js:17。写入方 3 个、读取方 6 个；已纳入复位。
       
   en: >
-      set declared at src/agent/psyche/break.js:17; writers=2, readers=4
+      set declared at src/agent/psyche/break.js:17; writers=3, readers=6
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T17:26:31.618Z"
+updated_at: "2026-09-27T01:42:51.765Z"
 fingerprint: pending
 source: []
 apis:
@@ -32,6 +32,15 @@ apis:
           
       en: >
           writer recover
+          
+  - protocol: rpc
+    path: "broken-agents-749c1570:write-__restore"
+    description:
+      zh: >
+          写入方 __restore（src/agent/psyche/break.js）
+          
+      en: >
+          writer __restore
           
   - protocol: rpc
     path: "broken-agents-749c1570:read-check"
@@ -69,6 +78,24 @@ apis:
       en: >
           reader decisionModifier
           
+  - protocol: rpc
+    path: "broken-agents-749c1570:read-__snapshot"
+    description:
+      zh: >
+          读取方 __snapshot
+          
+      en: >
+          reader __snapshot
+          
+  - protocol: rpc
+    path: "broken-agents-749c1570:read-__restore"
+    description:
+      zh: >
+          读取方 __restore
+          
+      en: >
+          reader __restore
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.code.agent.psyche.break
@@ -85,5 +112,13 @@ deps:
   - kind: dataflow
     to: truman-town-flow.code.agent.psyche.break
     from_api: "rpc:broken-agents-749c1570:read-decisionModifier"
+    label: {zh: "读 brokenAgents", en: "read brokenAgents"}
+  - kind: dataflow
+    to: truman-town-flow.code.agent.crafting.recipe
+    from_api: "rpc:broken-agents-749c1570:read-__snapshot"
+    label: {zh: "读 brokenAgents", en: "read brokenAgents"}
+  - kind: dataflow
+    to: truman-town-flow.code.agent.crafting.recipe
+    from_api: "rpc:broken-agents-749c1570:read-__restore"
     label: {zh: "读 brokenAgents", en: "read brokenAgents"}
 ---

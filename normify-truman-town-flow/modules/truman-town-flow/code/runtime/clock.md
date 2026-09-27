@@ -11,7 +11,7 @@ description:
       Code module src/runtime/clock.js as a data-flow endpoint.
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T17:26:46.551Z"
+updated_at: "2026-09-27T01:43:24.455Z"
 fingerprint: pending
 source: []
 apis: []
@@ -28,12 +28,4 @@ deps:
     to: truman-town-flow.state.area.runtime.tasks-79b3964f
     to_api: "rpc:tasks-79b3964f:write-schedule"
     label: {zh: "写 tasks", en: "write tasks"}
-  - kind: dataflow
-    to: truman-town-flow.state.area.runtime.settled-agent-ids-6dcf86b2
-    to_api: "rpc:settled-agent-ids-6dcf86b2:write-tick"
-    label: {zh: "写 settledAgentIds", en: "write settledAgentIds"}
-  - kind: dataflow
-    to: truman-town-flow.state.area.runtime.candidate-state-cache-93c7ac3d
-    to_api: "rpc:candidate-state-cache-93c7ac3d:write-tick"
-    label: {zh: "写 _candidateStateCac", en: "write _candidateStateCac"}
 ---

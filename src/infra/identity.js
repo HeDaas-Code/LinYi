@@ -27,3 +27,32 @@ export function next(prefix = 'ent') {
 export function __reset() {
   counter = 0;
 }
+
+// ---- 持久化：ID 计数器必须进存档 ----
+
+/**
+ * 导出 ID 计数器。
+ *
+ * 不还原计数器会**重发已用过的 ID**：恢复后下一次 next('agent') 可能生成
+ * 与存档中某居民相同的 id，registry 的 upsert 会把两人合并成一个。
+ * 这是静默数据损坏，故必须持久化。
+ */
+export function __snapshot() {
+  return { counter };
+}
+
+/**
+ * 恢复 ID 计数器。只允许向前推进（不允许把计数器调小到已发号之前）。
+ * @param {{counter?: number}} [data]
+ */
+export function __restore(data = {}) {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('identity.__restore: 状态必须为对象');
+  }
+  const c = data.counter;
+  if (c !== undefined && (!Number.isInteger(c) || c < 0)) {
+    throw new TypeError('identity.__restore: counter 必须为非负整数');
+  }
+  counter = Number.isInteger(c) ? c : 0;
+  return { counter };
+}
