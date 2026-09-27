@@ -340,6 +340,8 @@ PER_TICK_MS=207.5  UNITS_PER_TICK=145
 - [2026-09-28 01:34] [工作记录] 停止Team模式并形成新会话调试交接 — 已归档linyi-deepseek-repair并停止Team模式；t30正式failed且未改代码，seed3/5/11的20人60tick分别birth19/19/16、craft109/101/101、trade183/190/194、deaths均0，唯一失败为decision-closure结果学习消融21 vs25。已形成新会话调试交接：先逐tick定位结果学习出生链第一处分叉，再修smoke.p3 CLI旧字段、smoke.p2 write_book可达链、hot-log reset warning和long超时；每项先最小复现、再生产修复、再定向测试，最后冻结快照验收。
 - [2026-09-28 01:43] [工作记录] 当前仓库提交并推送远程仓库 — 已将当前工作树的源码、Normify派生物、PROJECT_MEMORY与已跟踪的AgentTeams状态提交为 177bfc5、16f3c7d，并推送到新建的公开远程仓库 https://github.com/HeDaas-Code/LinYi；master 已跟踪 origin/master。AgentTeams运行日志和tmp等被.gitignore排除，未纳入提交。
 - [2026-09-28 01:59] [工作记录] 定位结果学习回归首处分叉并修复 smoke.p3 CLI — 已用 seed=11、12 agents、60 ticks、phase2=true 重现：outcomeLearningWeight=0.3 时 births=9/alive=21，weight=0 时 births=13/alive=25；两侧死亡均为0。对照决策日志定位首处分叉在 tick 7、agent_000000000003：学习开启选 forage，关闭时选 craft；该居民正处于 craft_and_sell 目标的 craft 步骤，前一动作序列和同 tick 多数动作仍一致。该定位证明目标步骤被不同打分排序替换，但尚不足以证明可安全修复的因果根因。尝试性偏置保护没有通过回归，已撤回，未保留生产源码变更。另已修复 bin/smoke.p3.js 使用过时同步 compare/旧评分字段的问题，改为 await compare、anchorPivotFor 及当前结果字段；node bin/smoke.p3.js --ticks 2 --agents 2 --seed 7 成功，test/smoke.p3.test.js 4/4 通过。下一步继续定位结果学习导致的出生差异并做最小因果修复；不得只依据单个首处分叉就直接调权重或改变决策规则。
+- [2026-09-28 02:14] [工作记录] 结果学习回归与写书链路继续处于未收口状态 — 本轮确认：结果学习回归首处分叉仍为 seed=11、12人、tick=7、agent_000000000003 的 forage/craft 选择差异；尝试的延迟目标保护修复未通过既有回归，已撤回，不能作为完成修复。当前快速层 274/274、smoke.p3 4/4 通过；smoke.p2 的 write_book action-log 仍失败，且 2人60tick 的生育回归在该尝试下失败。进一步对照显示默认 goalPlanningEnabled=true 时 seed42、4人、30tick 没有 write_book，而关闭目标规划时有2次，但该相关性尚不足以确定安全修复。下一步必须拆分目标规划对写作与生育链的影响，先建立最小复现并验证候选修复，不能放宽断言、关闭结果学习或把部分通过当作最终验收。
+- [2026-09-28 02:17] [工作记录] 已提交完整重构PR替换旧仓库 — GitHub 网络恢复后，已从旧远端 main 创建 refactor/complete-project-rewrite 分支，用当前 LinYi 项目完整替换旧仓库内容，清理未跟踪的依赖、模型、benchmark、临时文件和 AgentTeams运行日志后推送；已创建公开 PR #36（base=main，状态 OPEN）：https://github.com/HeDaas-Code/LinYi/pull/36。
 
 ## 经验教训 Lessons Learned
 
@@ -898,6 +900,7 @@ t12 只测了 40 人 × 60 tick 就声称存活一致 → 小规模从未被覆�
 - [2026-09-28 00:39] [经验教训] 失败任务终态不可伪改，需拆分依赖与共享范围 — 已确认t26为不可变failed(partial)，不能伪标completed解除t28依赖；t28领取被失败依赖阻塞，且t29与其共享loop.js。smoke.p2进一步证实企业创建4个但后续破产剩1个，真正缺口是可达且完成的write_book链路，可能与t28决策候选路径重叠，不能并发新建重叠修复。
 - [2026-09-28 01:11] [经验教训] 运行中团队无法重构重叠任务图 — 尝试把t28从不可变failed t26依赖中解耦时，AgentTeams拒绝：t28与t29已有共享inScope（含loop.js及相关测试），运行中团队只允许有限pending任务更新，不能删除/重划任务或创建重叠repair；t26终态也不可变，无法伪标completed。当前需要在团队生命周期允许的计划编辑窗口重构依赖，或结束旧团队后按用户明确意图建立新计划，不能用重试绕过依赖。
 - [2026-09-28 01:12] [经验教训] 运行中AgentTeams无法解耦失败依赖与重叠范围 — 实测重构失败：t26是不可变failed，t28依赖t26无法领取或接管；t28与t29存在共享inScope，运行中团队拒绝删除/重划任务和创建重叠repair。不能伪标completed或用重试绕过；后续必须在可编辑计划窗口把t28改依赖已完成基线、将t29串行化后再启动。
+- [2026-09-28 02:26] [经验教训] 切换回 Truman Town master 后尝试修写书仍未通过回归 — 本轮确认当前工作树需使用 master 分支的 LinYi/Truman Town 运行时；先前 refactor/complete-project-rewrite 是另一套 Python 重写仓库，不能用于继续本目标的 runtime 验收。master 分支基线复测：decision-closure 的结果学习生存断言仍报 alive=21 vs 25，smoke.p2 仍缺 write_book action-log；integration2 的 2人60tick生育用例通过。尝试将不识字者 write score 设为 -1 并传入 literacy 状态，未使 smoke.p2 写书回归通过，也未修复生存差异，已全部撤回。后续应从日志可观察的选择分布及候选入选原因出发定位写书选择被压制，而不是先假设 literacy feasibility 是原因；结果学习出生链仍须独立因果分析。无源码修改被保留。
 
 ## 行动指南 Action Guide
 
