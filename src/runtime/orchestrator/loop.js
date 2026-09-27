@@ -2743,8 +2743,9 @@ export async function run(options = {}) {
 
   const ticks = Number.isInteger(options.ticks) && options.ticks > 0 ? options.ticks : 1;
   const steps = [];
+  const runConfig = { ...options, endTick: clock.now().tick + ticks };
   for (let i = 0; i < ticks; i += 1) {
-    steps.push(await step(options));
+    steps.push(await step(runConfig));
   }
 
   // 编年志分段持久化：把本次运行的全部 tick 落成可回取的段。

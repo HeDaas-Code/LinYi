@@ -1383,6 +1383,8 @@ export function performAgentAction(tick, agentId, action, config = {}) {
       const what = terms.what;
       const amount = terms.amount;
       const dueTick = tick + (Number.isInteger(config.promiseDueTicks) && config.promiseDueTicks > 0 ? config.promiseDueTicks : 10);
+      const horizon = Number.isInteger(config.endTick) ? config.endTick : null;
+      if (horizon !== null && dueTick > horizon) return { ok: false, reason: 'promise_due_after_horizon' };
       const proposed = social.interaction.propose({
         type: 'promise', from: agentId, to: peer, tick,
         terms: { what, amount, dueTick },
