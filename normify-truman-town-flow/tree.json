@@ -8,7 +8,7 @@
         "root_uid": "aa9bb6f4"
       }
     ],
-    "compiled_at": "2026-09-27T20:53:00.685Z",
+    "compiled_at": "2026-09-27T20:59:51.185Z",
     "stats": {
       "tree_count": 1,
       "module_count": 346,
@@ -4852,8 +4852,8 @@
           "path": "src/runtime/orchestrator/_stage2.js"
         }
       ],
-      "revision": "d274800fb7ef2a36072ec55a91e20ac867835ce0",
-      "updated_at": "2026-09-27T20:52:52.425Z",
+      "revision": "7e564ca000000000000000000000000000000000",
+      "updated_at": "2026-09-27T20:59:43.264Z",
       "fingerprint": "f5f7e70eb62f2bd3d6aaa8bd7e4fcd95ba636a6587fb1b212ff0f79b1de6a74a",
       "deps": [
         {
