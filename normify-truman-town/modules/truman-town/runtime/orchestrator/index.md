@@ -11,7 +11,7 @@ description:
       Orchestrates the perceive-decide-act loop and coordinates agent and world updates.
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T06:59:44.285Z"
+updated_at: "2026-09-28T04:21:51.496Z"
 fingerprint: pending
 source: []
 ---

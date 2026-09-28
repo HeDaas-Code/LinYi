@@ -11,7 +11,7 @@ description:
       Town social platform: posts, replies, feeds and moderation.
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T08:50:35.490Z"
+updated_at: "2026-09-28T04:21:52.952Z"
 fingerprint: pending
 source: []
 ---

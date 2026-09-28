@@ -10,9 +10,9 @@ description:
   en: >
       Describes name, age, occupation and self-narrative.
       
-revision: 6939444d190f953b7c3e7a73b35ad8b25ac43b07
-updated_at: "2026-09-24T02:04:23.738Z"
-fingerprint: 9c6bab4c4236c8733939a420b4a10f976f5ae073579317b7e1fd4819c4ff7400
+revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
+updated_at: "2026-09-28T08:45:24.379Z"
+fingerprint: 1b2dbebd80a101c92e35e5e93ba21cd41d36c4e99202054962082a60670f4dd8
 source:
   - path: "src/agent/persona/identity.js"
 apis:

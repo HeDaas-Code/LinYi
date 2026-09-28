@@ -10,9 +10,9 @@ description:
   en: >
       Chooses and executes coping behaviors such as prayer, writing, socializing or drinking.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T14:25:36.976Z"
-fingerprint: 21396753b311947e4d7f91a47f9992985e8a4ec49c235a1e6725f34ee01c1df3
+revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
+updated_at: "2026-09-28T08:45:24.379Z"
+fingerprint: 70213be2bcc1f2dd8ac9f23e4500e884748d00a1fe8029d6e88fcc7418c3671e
 source:
   - path: "src/agent/psyche/coping.js"
 apis:

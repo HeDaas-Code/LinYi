@@ -8,20 +8,20 @@
         "root_uid": "d440391b"
       }
     ],
-    "compiled_at": "2026-09-26T16:15:05.886Z",
+    "compiled_at": "2026-09-28T09:00:33.076Z",
     "stats": {
       "tree_count": 1,
       "module_count": 232,
       "leaf_count": 163,
-      "api_count": 380,
+      "api_count": 388,
       "dep_count": 370,
       "cross_tree_dep_count": 0,
       "max_depth": 5,
       "layout_count": 69,
-      "planned_count": 34,
+      "planned_count": 1,
       "deprecated_count": 8,
       "policy_rule_count": 2,
-      "change_count": 5,
+      "change_count": 9,
       "open_change_count": 0
     }
   },
@@ -48,7 +48,7 @@
       "aggregate": {
         "descendant_count": 231,
         "own_api_count": 0,
-        "inherited_api_count": 380,
+        "inherited_api_count": 388,
         "dep_out": 0,
         "dep_in": 0
       }
@@ -59,7 +59,6 @@
       "parent": "truman-town",
       "tree": "truman-town",
       "depth": 2,
-      "state": "planned",
       "name": {
         "zh": "智能体核心",
         "en": "Agent Core"
@@ -70,7 +69,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
+      "updated_at": "2026-09-28T04:21:43.085Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 51,
@@ -86,7 +85,6 @@
       "parent": "truman-town.agent",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "行动预想池",
         "en": "Anticipation Pool"
@@ -97,7 +95,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
+      "updated_at": "2026-09-28T04:21:43.288Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 5,
@@ -123,7 +121,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
+      "updated_at": "2026-09-28T04:21:43.495Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 3,
@@ -333,9 +331,9 @@
           "path": "src/agent/anticipation/simulator.js"
         }
       ],
-      "revision": "159dc43daf11d18b03ea9fc0ea5c3e6b18f16488",
-      "updated_at": "2026-09-24T02:49:57.817Z",
-      "fingerprint": "29c83b4baf35c9149b82eb13d56a846b393371cc8f37a78595a133068f009ada",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.377Z",
+      "fingerprint": "a10a30c05301853d5030e30be952941b493fdfb4b4aca0d71358a160367cfc04",
       "apis": [
         {
           "protocol": "rpc",
@@ -377,7 +375,6 @@
       "parent": "truman-town.agent",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "制作系统",
         "en": "Crafting"
@@ -388,7 +385,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T05:08:43Z",
+      "updated_at": "2026-09-28T04:21:43.705Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 7,
@@ -417,9 +414,9 @@
           "path": "src/agent/crafting/construction.js"
         }
       ],
-      "revision": "45f6c8b7b8ba210fcd94506b2097c8e601dd1382",
-      "updated_at": "2026-09-26T01:40:46.603Z",
-      "fingerprint": "ea6e1cc7713061ee1dac873c1ea37b5910518bbb16ae519cff9e0bff172c7326",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.377Z",
+      "fingerprint": "81d8dab1de592fd8a30263412b5311c6deb312f59ff48e1d27557abebf418ce8",
       "apis": [
         {
           "protocol": "rpc",
@@ -494,9 +491,9 @@
           "path": "src/agent/crafting/recipe.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T08:02:32.239Z",
-      "fingerprint": "5559f8d9e11333d87f4a97d3604ed0f0e0f3a471db1d2c71fa60488b1615740b",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.377Z",
+      "fingerprint": "22eabca8a4bca14a79201b3d1081951722a2cfdeb976a6ef94744280a678c849",
       "apis": [
         {
           "protocol": "rpc",
@@ -562,7 +559,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
+      "updated_at": "2026-09-28T04:21:43.924Z",
       "fingerprint": "pending",
       "deps": [
         {
@@ -618,9 +615,9 @@
           "path": "src/agent/crafting/workbench/executor.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T08:02:32.256Z",
-      "fingerprint": "701e63e81095340f9a3eb0df16027b538357dd6351d504259fe3715f05ca7c25",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.378Z",
+      "fingerprint": "918f4abc5168e3004c153418e9ef5fe7d11117279db4de6f4a44093f6b6b7de3",
       "apis": [
         {
           "protocol": "rpc",
@@ -809,9 +806,9 @@
           "path": "src/agent/crafting/writing.js"
         }
       ],
-      "revision": "b2c533dcbb9a29bf0cd2322749845b223954c80f",
-      "updated_at": "2026-09-25T05:42:38.157Z",
-      "fingerprint": "f8647ac9aea87b15d0b82efc85de97d3456ec888056ebc0c390b9f25704a7a0e",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.378Z",
+      "fingerprint": "3476a1c8db583e623281399cddd767932eb9e8ba9f04dc200e31cf50e07241d4",
       "apis": [
         {
           "protocol": "rpc",
@@ -888,7 +885,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
+      "updated_at": "2026-09-28T04:21:44.126Z",
       "fingerprint": "pending",
       "deps": [
         {
@@ -949,9 +946,9 @@
           "path": "src/agent/decision/candidates.js"
         }
       ],
-      "revision": "45f6c8b7b8ba210fcd94506b2097c8e601dd1382",
-      "updated_at": "2026-09-26T01:46:05.912Z",
-      "fingerprint": "6761af8c28ca671d3c910ed714b75a14db614d8d852dbc6add39b42ac079c74b",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.378Z",
+      "fingerprint": "58f6bbe6d6e7f20311dcd2d6b599168c726ef2395e5fac4bf3d183c49cd6a4c1",
       "apis": [
         {
           "protocol": "rpc",
@@ -1221,7 +1218,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
+      "updated_at": "2026-09-28T04:21:44.331Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 2,
@@ -1250,9 +1247,9 @@
           "path": "src/agent/inventory/backpack.js"
         }
       ],
-      "revision": "b2c533dcbb9a29bf0cd2322749845b223954c80f",
-      "updated_at": "2026-09-25T05:42:38.158Z",
-      "fingerprint": "02a0f8a2e851bbc121055be7948a89e0c39751ea20cb764100f01950f5e2740a",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.378Z",
+      "fingerprint": "4a0a803365a05598621a0988bbfc7d82d0d77d3694227c139f2e5a29502036a4",
       "apis": [
         {
           "protocol": "rpc",
@@ -1325,9 +1322,9 @@
           "path": "src/agent/inventory/item.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T08:02:32.222Z",
-      "fingerprint": "72e98d6b98beeaf9007f933fb850bdf0993e2015abec95bbafa21cd5e7f0a558",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.378Z",
+      "fingerprint": "1c9ccd05043b6746fb6c7296c18ea15e8222752be592891549897a4eb787540f",
       "apis": [
         {
           "protocol": "rpc",
@@ -1428,7 +1425,6 @@
       "parent": "truman-town.agent",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "记忆系统",
         "en": "Memory"
@@ -1439,7 +1435,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
+      "updated_at": "2026-09-28T04:21:44.527Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 4,
@@ -1465,7 +1461,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
+      "updated_at": "2026-09-28T04:21:44.975Z",
       "fingerprint": "pending",
       "deps": [
         {
@@ -1563,9 +1559,9 @@
           "path": "src/agent/memory/episodic/store.js"
         }
       ],
-      "revision": "e023d797f741ad817f8c81c2bd91de8d996e39ac",
-      "updated_at": "2026-09-23T04:24:00.237Z",
-      "fingerprint": "fa5013d479cdb11b32baa465f491fc102e66aa0214ab84700b02bc711a5c2d24",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.378Z",
+      "fingerprint": "eb478f209df5ccde97dc9e5a061f2f90b93b78d0189a5abcafcf04a1ef6d2494",
       "apis": [
         {
           "protocol": "rpc",
@@ -1620,9 +1616,9 @@
           "path": "src/agent/memory/semantic.js"
         }
       ],
-      "revision": "f5619e53d4eabebf1a7aa7f58a657c03cf3d5583",
-      "updated_at": "2026-09-26T16:03:47.710Z",
-      "fingerprint": "2c3de7aa214f0a641073f110a0fbd57fcc4184d3aee810cb2cac9da414fca9d3",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.379Z",
+      "fingerprint": "df03a7b7e9732693efe8b8e7f1b6748d623042b17d6f8e083c545a71c904b241",
       "apis": [
         {
           "protocol": "rpc",
@@ -1667,7 +1663,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
+      "updated_at": "2026-09-28T04:21:45.178Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 3,
@@ -1696,9 +1692,9 @@
           "path": "src/agent/persona/identity.js"
         }
       ],
-      "revision": "6939444d190f953b7c3e7a73b35ad8b25ac43b07",
-      "updated_at": "2026-09-24T02:04:23.738Z",
-      "fingerprint": "9c6bab4c4236c8733939a420b4a10f976f5ae073579317b7e1fd4819c4ff7400",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.379Z",
+      "fingerprint": "1b2dbebd80a101c92e35e5e93ba21cd41d36c4e99202054962082a60670f4dd8",
       "apis": [
         {
           "protocol": "rpc",
@@ -1850,7 +1846,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
+      "updated_at": "2026-09-28T04:21:45.384Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 3,
@@ -1879,9 +1875,9 @@
           "path": "src/agent/psyche/break.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T14:25:36.977Z",
-      "fingerprint": "cc28705de0474103bff4481db437dc698450307393665f648a42f20f95846d1c",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.379Z",
+      "fingerprint": "2f5d89e2d118367076585ac043d0899f3e5615060b5363354a6f4dae7015c27b",
       "apis": [
         {
           "protocol": "rpc",
@@ -1967,9 +1963,9 @@
           "path": "src/agent/psyche/coping.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T14:25:36.976Z",
-      "fingerprint": "21396753b311947e4d7f91a47f9992985e8a4ec49c235a1e6725f34ee01c1df3",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.379Z",
+      "fingerprint": "70213be2bcc1f2dd8ac9f23e4500e884748d00a1fe8029d6e88fcc7418c3671e",
       "apis": [
         {
           "protocol": "rpc",
@@ -2055,9 +2051,9 @@
           "path": "src/agent/psyche/trauma.js"
         }
       ],
-      "revision": "5363daa33de6939922915ece1c71fbb993114054",
-      "updated_at": "2026-09-24T07:54:56.513Z",
-      "fingerprint": "fa3968bd76c489c2c21248c2f53937edcc47b0a2b04d031fae3b0f0133505f93",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.379Z",
+      "fingerprint": "b9840a8ecd012cb22862c4afab5f5eb6148ae2614b47cf82ba88e8632deb434c",
       "apis": [
         {
           "protocol": "rpc",
@@ -2140,7 +2136,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
+      "updated_at": "2026-09-28T04:21:45.577Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 2,
@@ -2280,7 +2276,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
+      "updated_at": "2026-09-28T04:21:45.788Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 2,
@@ -2432,7 +2428,6 @@
       "parent": "truman-town.agent",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "50 标签特质",
         "en": "50-Tag Traits"
@@ -2443,7 +2438,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
+      "updated_at": "2026-09-28T04:21:46.003Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 8,
@@ -2519,7 +2514,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
+      "updated_at": "2026-09-28T04:21:46.213Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 2,
@@ -2664,7 +2659,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
+      "updated_at": "2026-09-28T04:21:46.420Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 3,
@@ -2851,7 +2846,6 @@
       "parent": "truman-town",
       "tree": "truman-town",
       "depth": 2,
-      "state": "planned",
       "name": {
         "zh": "AI 引擎",
         "en": "AI Engine"
@@ -2862,12 +2856,12 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
+      "updated_at": "2026-09-28T08:46:20.258Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 14,
         "own_api_count": 0,
-        "inherited_api_count": 23,
+        "inherited_api_count": 25,
         "dep_out": 0,
         "dep_in": 0
       }
@@ -2954,7 +2948,6 @@
       "parent": "truman-town.ai",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "安全护栏",
         "en": "AI Guard"
@@ -2963,17 +2956,21 @@
         "zh": "检查生成内容的安全性与世界观一致性。\n",
         "en": "Checks generated content for safety and worldview consistency.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/ai/guard.js"
+        }
+      ],
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T09:00:32.042Z",
+      "fingerprint": "d6ac8b2f6080d4cbc46aabd84f828bfd8d5873c1c419ac21b2c6980eb4184bd3",
       "apis": [
         {
           "protocol": "rpc",
           "path": "ai.guard.check",
           "description": {
-            "zh": "调用 ai.guard.check。\n",
-            "en": "Calls ai.guard.check.\n"
+            "zh": "检查文本或消息中的注入和世界观规则。\n",
+            "en": "检查文本或消息中的注入和世界观规则。\n"
           },
           "key": "rpc:ai.guard.check"
         },
@@ -2981,8 +2978,8 @@
           "protocol": "rpc",
           "path": "ai.guard.sanitize",
           "description": {
-            "zh": "调用 ai.guard.sanitize。\n",
-            "en": "Calls ai.guard.sanitize.\n"
+            "zh": "返回经过护栏规则净化的文本或消息。\n",
+            "en": "返回经过护栏规则净化的文本或消息。\n"
           },
           "key": "rpc:ai.guard.sanitize"
         }
@@ -3096,7 +3093,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
+      "updated_at": "2026-09-28T04:21:46.631Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 2,
@@ -3219,7 +3216,6 @@
       "parent": "truman-town.ai",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "记忆向量",
         "en": "Memory Vectors"
@@ -3230,12 +3226,12 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
+      "updated_at": "2026-09-28T08:46:20.258Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 2,
         "own_api_count": 0,
-        "inherited_api_count": 3,
+        "inherited_api_count": 5,
         "dep_out": 0,
         "dep_in": 0
       }
@@ -3246,7 +3242,6 @@
       "parent": "truman-town.ai.memory",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "记忆嵌入",
         "en": "Memory Embedding"
@@ -3255,26 +3250,39 @@
         "zh": "把情景与语义记忆编码为向量并检索相似记忆。\n",
         "en": "Encodes memory to vectors and searches similar memories.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/ai/memory/embedding.js"
+        }
+      ],
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T09:00:32.043Z",
+      "fingerprint": "7e9a49439546fddb158c1d2dd598bf3b91118c00138756d8d9a62586da33008a",
       "apis": [
         {
           "protocol": "rpc",
           "path": "ai.memory.embedding.encode",
           "description": {
-            "zh": "调用 ai.memory.embedding.encode。\n",
-            "en": "Calls ai.memory.embedding.encode.\n"
+            "zh": "将记忆文本编码为向量。\n",
+            "en": "将记忆文本编码为向量。\n"
           },
           "key": "rpc:ai.memory.embedding.encode"
         },
         {
           "protocol": "rpc",
+          "path": "ai.memory.embedding.index",
+          "description": {
+            "zh": "将记忆向量写入索引。\n",
+            "en": "将记忆向量写入索引。\n"
+          },
+          "key": "rpc:ai.memory.embedding.index"
+        },
+        {
+          "protocol": "rpc",
           "path": "ai.memory.embedding.search",
           "description": {
-            "zh": "调用 ai.memory.embedding.search。\n",
-            "en": "Calls ai.memory.embedding.search.\n"
+            "zh": "按向量相似度检索记忆。\n",
+            "en": "按向量相似度检索记忆。\n"
           },
           "key": "rpc:ai.memory.embedding.search"
         }
@@ -3288,7 +3296,7 @@
       ],
       "aggregate": {
         "descendant_count": 0,
-        "own_api_count": 2,
+        "own_api_count": 3,
         "inherited_api_count": 0,
         "dep_out": 1,
         "dep_in": 2
@@ -3300,7 +3308,6 @@
       "parent": "truman-town.ai.memory",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "记忆摘要",
         "en": "Memory Summary"
@@ -3309,17 +3316,30 @@
         "zh": "把长段记忆压缩为结构化摘要。\n",
         "en": "Compresses long memories into structured summaries.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/ai/memory/summary.js"
+        }
+      ],
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T09:00:32.043Z",
+      "fingerprint": "9eaf3b92621bf715caac3d4431a0a5aae651b19dc361968cfd1518aa5df84c55",
       "apis": [
+        {
+          "protocol": "rpc",
+          "path": "ai.memory.summary.summarize",
+          "description": {
+            "zh": "确定性地去重并截断记忆事实。\n",
+            "en": "确定性地去重并截断记忆事实。\n"
+          },
+          "key": "rpc:ai.memory.summary.summarize"
+        },
         {
           "protocol": "rpc",
           "path": "ai.memory.summary.compress",
           "description": {
-            "zh": "调用 ai.memory.summary.compress。\n",
-            "en": "Calls ai.memory.summary.compress.\n"
+            "zh": "按配置使用确定性或模型摘要。\n",
+            "en": "按配置使用确定性或模型摘要。\n"
           },
           "key": "rpc:ai.memory.summary.compress"
         }
@@ -3333,7 +3353,7 @@
       ],
       "aggregate": {
         "descendant_count": 0,
-        "own_api_count": 1,
+        "own_api_count": 2,
         "inherited_api_count": 0,
         "dep_out": 1,
         "dep_in": 0
@@ -3345,7 +3365,6 @@
       "parent": "truman-town.ai",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "提示词构建",
         "en": "Prompt Builder"
@@ -3356,7 +3375,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
+      "updated_at": "2026-09-28T04:58:07.727Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 2,
@@ -3585,7 +3604,6 @@
       "parent": "truman-town",
       "tree": "truman-town",
       "depth": 2,
-      "state": "planned",
       "name": {
         "zh": "对外接口",
         "en": "External API"
@@ -3596,7 +3614,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
+      "updated_at": "2026-09-28T04:58:07.894Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 4,
@@ -3682,9 +3700,9 @@
           "path": "src/api/control.js"
         }
       ],
-      "revision": "2f8d4802decfe249e375f794ab44026c45dcdded",
-      "updated_at": "2026-09-23T09:49:40.814Z",
-      "fingerprint": "b4378fb7fc7a26c33177c4f400fa5c54850ebdb03530be06b60c759e22aa9dba",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.379Z",
+      "fingerprint": "23eff409096678790232c3960c6606e194e70d863bc0d09ba120c41302c87fa9",
       "apis": [
         {
           "protocol": "http",
@@ -3786,9 +3804,9 @@
           "path": "src/api/observer.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T07:20:13.532Z",
-      "fingerprint": "4c4d35c910e7037ab0d71afe012cad40b9ecfbd85326df47c1fe5845382661a7",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.379Z",
+      "fingerprint": "72ec664f5d4a3a69b78dcbc4e934afb980396b11f406f769b3f6fab3b452eceb",
       "apis": [
         {
           "protocol": "http",
@@ -3847,7 +3865,6 @@
       "parent": "truman-town.api",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "可视化入口",
         "en": "Viewer"
@@ -3856,18 +3873,25 @@
         "zh": "提供沙盘可视化单页入口。\n",
         "en": "Serves the sandbox visualization page.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/api/viewer.js"
+        },
+        {
+          "path": "web/viewer.html"
+        }
+      ],
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T09:00:32.043Z",
+      "fingerprint": "c0dbe072ac57e1d03676beeca7348ce510b96c6b6688f75c862e65b9f248fecc",
       "apis": [
         {
           "protocol": "http",
           "method": "GET",
           "path": "/viewer",
           "description": {
-            "zh": "返回沙盘可视化页面。\n",
-            "en": "Returns the sandbox viewer page.\n"
+            "zh": "返回沙盘观测单页。\n",
+            "en": "返回沙盘观测单页。\n"
           },
           "key": "GET /viewer"
         }
@@ -3886,7 +3910,6 @@
       "parent": "truman-town",
       "tree": "truman-town",
       "depth": 2,
-      "state": "planned",
       "name": {
         "zh": "文明系统",
         "en": "Civilization System"
@@ -3897,12 +3920,12 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:55:51Z",
+      "updated_at": "2026-09-28T08:46:20.258Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 18,
         "own_api_count": 0,
-        "inherited_api_count": 28,
+        "inherited_api_count": 34,
         "dep_out": 0,
         "dep_in": 0
       }
@@ -3983,7 +4006,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T14:39:34.061Z",
+      "updated_at": "2026-09-28T04:21:46.856Z",
       "fingerprint": "pending",
       "deps": [
         {
@@ -4140,7 +4163,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T14:39:33.760Z",
+      "updated_at": "2026-09-28T04:21:47.055Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 4,
@@ -4238,7 +4261,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T14:39:33.911Z",
+      "updated_at": "2026-09-28T04:21:47.267Z",
       "fingerprint": "pending",
       "deps": [
         {
@@ -4380,7 +4403,6 @@
       "parent": "truman-town.civilization",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "文明遗物",
         "en": "Civilization Relics"
@@ -4391,12 +4413,12 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T05:08:43Z",
+      "updated_at": "2026-09-28T08:46:20.258Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 2,
         "own_api_count": 0,
-        "inherited_api_count": 4,
+        "inherited_api_count": 10,
         "dep_out": 0,
         "dep_in": 0
       }
@@ -4407,7 +4429,6 @@
       "parent": "truman-town.civilization.relic",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "遗物",
         "en": "Artifact"
@@ -4416,28 +4437,59 @@
         "zh": "把上一代文明的物品、建筑与书籍固化为遗物并持久化。\n",
         "en": "Turns past items, buildings and books into persistent relics.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-26T03:35:05.395Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/civilization/relic/artifact.js"
+        }
+      ],
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T09:00:32.044Z",
+      "fingerprint": "ebc2a41f28ffb892732d4846b0db9943451abab3729ab0b6675339f56ca7529b",
       "apis": [
         {
           "protocol": "rpc",
-          "path": "civilization.relic.artifact.create",
+          "path": "civilization.relic.artifact.forge",
           "description": {
-            "zh": "调用 civilization.relic.artifact.create。\n",
-            "en": "Calls civilization.relic.artifact.create.\n"
+            "zh": "forge：遗物铸造与物证管理接口。\n",
+            "en": "forge: relic forging and artifact management API.\n"
           },
-          "key": "rpc:civilization.relic.artifact.create"
+          "key": "rpc:civilization.relic.artifact.forge"
         },
         {
           "protocol": "rpc",
-          "path": "civilization.relic.artifact.persist",
+          "path": "civilization.relic.artifact.query",
           "description": {
-            "zh": "调用 civilization.relic.artifact.persist。\n",
-            "en": "Calls civilization.relic.artifact.persist.\n"
+            "zh": "query：遗物铸造与物证管理接口。\n",
+            "en": "query: relic forging and artifact management API.\n"
           },
-          "key": "rpc:civilization.relic.artifact.persist"
+          "key": "rpc:civilization.relic.artifact.query"
+        },
+        {
+          "protocol": "rpc",
+          "path": "civilization.relic.artifact.markDiscovered",
+          "description": {
+            "zh": "markDiscovered：遗物铸造与物证管理接口。\n",
+            "en": "markDiscovered: relic forging and artifact management API.\n"
+          },
+          "key": "rpc:civilization.relic.artifact.markDiscovered"
+        },
+        {
+          "protocol": "rpc",
+          "path": "civilization.relic.artifact.remove",
+          "description": {
+            "zh": "remove：遗物铸造与物证管理接口。\n",
+            "en": "remove: relic forging and artifact management API.\n"
+          },
+          "key": "rpc:civilization.relic.artifact.remove"
+        },
+        {
+          "protocol": "rpc",
+          "path": "civilization.relic.artifact.stats",
+          "description": {
+            "zh": "stats：遗物铸造与物证管理接口。\n",
+            "en": "stats: relic forging and artifact management API.\n"
+          },
+          "key": "rpc:civilization.relic.artifact.stats"
         }
       ],
       "deps": [
@@ -4459,7 +4511,7 @@
       ],
       "aggregate": {
         "descendant_count": 0,
-        "own_api_count": 2,
+        "own_api_count": 5,
         "inherited_api_count": 0,
         "dep_out": 3,
         "dep_in": 0
@@ -4471,7 +4523,6 @@
       "parent": "truman-town.civilization.relic",
       "tree": "truman-town",
       "depth": 4,
-      "state": "planned",
       "name": {
         "zh": "遗物发现",
         "en": "Relic Discovery"
@@ -4480,28 +4531,59 @@
         "zh": "新一代智能体在土地上挖掘并解读遗物，把旧文明知识带回来。\n",
         "en": "New agents excavate and interpret relics, bringing old knowledge back.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-26T03:35:06.207Z",
-      "fingerprint": "pending",
-      "apis": [
+      "source": [
         {
-          "protocol": "rpc",
-          "path": "civilization.relic.discover.find",
-          "description": {
-            "zh": "调用 civilization.relic.discover.find。\n",
-            "en": "Calls civilization.relic.discover.find.\n"
-          },
-          "key": "rpc:civilization.relic.discover.find"
-        },
+          "path": "src/civilization/relic/discover.js"
+        }
+      ],
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T09:00:32.044Z",
+      "fingerprint": "5e0fc84a59cd8164030fc073b70c8195759b62daec98e5c478d3de9bc9a63ad8",
+      "apis": [
         {
           "protocol": "rpc",
           "path": "civilization.relic.discover.interpret",
           "description": {
-            "zh": "调用 civilization.relic.discover.interpret。\n",
-            "en": "Calls civilization.relic.discover.interpret.\n"
+            "zh": "interpret：遗物发现与解读接口。\n",
+            "en": "interpret: relic discovery and interpretation API.\n"
           },
           "key": "rpc:civilization.relic.discover.interpret"
+        },
+        {
+          "protocol": "rpc",
+          "path": "civilization.relic.discover.discover",
+          "description": {
+            "zh": "discover：遗物发现与解读接口。\n",
+            "en": "discover: relic discovery and interpretation API.\n"
+          },
+          "key": "rpc:civilization.relic.discover.discover"
+        },
+        {
+          "protocol": "rpc",
+          "path": "civilization.relic.discover.list",
+          "description": {
+            "zh": "list：遗物发现与解读接口。\n",
+            "en": "list: relic discovery and interpretation API.\n"
+          },
+          "key": "rpc:civilization.relic.discover.list"
+        },
+        {
+          "protocol": "rpc",
+          "path": "civilization.relic.discover.byAgent",
+          "description": {
+            "zh": "byAgent：遗物发现与解读接口。\n",
+            "en": "byAgent: relic discovery and interpretation API.\n"
+          },
+          "key": "rpc:civilization.relic.discover.byAgent"
+        },
+        {
+          "protocol": "rpc",
+          "path": "civilization.relic.discover.stats",
+          "description": {
+            "zh": "stats：遗物发现与解读接口。\n",
+            "en": "stats: relic discovery and interpretation API.\n"
+          },
+          "key": "rpc:civilization.relic.discover.stats"
         }
       ],
       "deps": [
@@ -4523,7 +4605,7 @@
       ],
       "aggregate": {
         "descendant_count": 0,
-        "own_api_count": 2,
+        "own_api_count": 5,
         "inherited_api_count": 0,
         "dep_out": 3,
         "dep_in": 0
@@ -4672,7 +4754,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
+      "updated_at": "2026-09-28T04:21:47.465Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 3,
@@ -4763,9 +4845,9 @@
           "path": "src/civilization/tech/research.js"
         }
       ],
-      "revision": "5363daa33de6939922915ece1c71fbb993114054",
-      "updated_at": "2026-09-24T07:54:56.514Z",
-      "fingerprint": "08e1e60843d00c6db03eefa90af4942a03663a9ca04eacd0036f7c6272fa870e",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.380Z",
+      "fingerprint": "ebea2d5fdd8850c70ed1e1e7f81a804465cf55c83ab394986da57b4efdb5ac98",
       "apis": [
         {
           "protocol": "rpc",
@@ -4902,7 +4984,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-23T13:07:29.470Z",
+      "updated_at": "2026-09-28T04:21:47.669Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 20,
@@ -4928,7 +5010,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-23T13:07:29.470Z",
+      "updated_at": "2026-09-28T04:21:47.879Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 2,
@@ -4957,9 +5039,9 @@
           "path": "src/economy/bank/credit.js"
         }
       ],
-      "revision": "291c1bea8967e3110e48250864e71452d803a9bf",
-      "updated_at": "2026-09-23T13:07:29.469Z",
-      "fingerprint": "12b300e4b8008f79a80957c37f633c3ce5a1f936e3da09ad1d9fab51e4668a4b",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.380Z",
+      "fingerprint": "2ca476013fa13e47558ed0d27174a2d95f8c9b581525509e387ee475d221d8ef",
       "apis": [
         {
           "protocol": "rpc",
@@ -5144,7 +5226,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
+      "updated_at": "2026-09-28T04:21:48.094Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 3,
@@ -5365,7 +5447,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T08:02:50.389Z",
+      "updated_at": "2026-09-28T04:21:48.310Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 5,
@@ -5457,7 +5539,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T08:02:50.389Z",
+      "updated_at": "2026-09-28T04:21:48.508Z",
       "fingerprint": "pending",
       "deps": [
         {
@@ -5555,9 +5637,9 @@
           "path": "src/economy/ledger/transaction/recorder.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T08:02:50.389Z",
-      "fingerprint": "a30f81b0dee03f1f55aacdd16bbbc30b4077ea4d1fc3529996e216a5acea543b",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.380Z",
+      "fingerprint": "0bc94305c374dbe405ae4af0653393af9c4e2b9e61a73145cbe30676796b3cef",
       "apis": [
         {
           "protocol": "rpc",
@@ -5671,7 +5753,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T08:02:50.389Z",
+      "updated_at": "2026-09-28T04:21:48.721Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 4,
@@ -5697,7 +5779,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T08:02:50.389Z",
+      "updated_at": "2026-09-28T04:21:48.928Z",
       "fingerprint": "pending",
       "deps": [
         {
@@ -5857,9 +5939,9 @@
           "path": "src/economy/market/price.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T08:02:50.389Z",
-      "fingerprint": "3f17a2138d67ea297f0a008121873935c4bcb5ce145aeb306e8ad7dbb4033ec6",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.380Z",
+      "fingerprint": "72bcbb44aa7c41b0eb41db4ec5d3f8fe0fbf88ee76f4f4ced306341149221f03",
       "apis": [
         {
           "protocol": "rpc",
@@ -5914,9 +5996,9 @@
           "path": "src/economy/tax.js"
         }
       ],
-      "revision": "291c1bea8967e3110e48250864e71452d803a9bf",
-      "updated_at": "2026-09-23T13:07:29.470Z",
-      "fingerprint": "dac5aa0127d28839bcf24bb5a6c3f0c68206201754e33d0479622dcb31e1cd0f",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.380Z",
+      "fingerprint": "6c5f43b6a2505dd011febd1783b64850d3ba3d7b0db51f8a453248e2b619dfe5",
       "apis": [
         {
           "protocol": "rpc",
@@ -5972,7 +6054,6 @@
       "parent": "truman-town",
       "tree": "truman-town",
       "depth": 2,
-      "state": "planned",
       "name": {
         "zh": "创世与更新",
         "en": "Genesis & Renewal"
@@ -5983,7 +6064,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
+      "updated_at": "2026-09-28T04:58:08.418Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 9,
@@ -5999,7 +6080,6 @@
       "parent": "truman-town.genesis",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "智能体工厂",
         "en": "Agent Factory"
@@ -6010,7 +6090,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
+      "updated_at": "2026-09-28T04:21:49.146Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 2,
@@ -6150,7 +6230,6 @@
       "parent": "truman-town.genesis",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "遗传系统",
         "en": "Heredity"
@@ -6161,7 +6240,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
+      "updated_at": "2026-09-28T04:21:49.364Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 2,
@@ -6496,7 +6575,6 @@
       "parent": "truman-town",
       "tree": "truman-town",
       "depth": 2,
-      "state": "planned",
       "name": {
         "zh": "基础设施",
         "en": "Infrastructure"
@@ -6507,7 +6585,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
+      "updated_at": "2026-09-28T04:21:49.586Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 10,
@@ -6536,9 +6614,9 @@
           "path": "src/infra/config.js"
         }
       ],
-      "revision": "9f0996005124054052fc61d9ec3f762219e92a2c",
-      "updated_at": "2026-09-26T05:45:37.198Z",
-      "fingerprint": "5c4bb5b7de0fadd194582edd8d2b4cb743972b8dbbd60e940e1494f069e8e373",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.380Z",
+      "fingerprint": "3e7f0509419ef296860cb861ef8cf1c9b69dd752fd1dcea4fae98ea4076236c5",
       "apis": [
         {
           "protocol": "rpc",
@@ -6670,7 +6748,6 @@
       "parent": "truman-town.infra",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "事件总线",
         "en": "Event Bus"
@@ -6681,7 +6758,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
+      "updated_at": "2026-09-28T04:21:50.036Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 2,
@@ -6760,9 +6837,9 @@
           "path": "src/infra/events/retry.js"
         }
       ],
-      "revision": "36ce55d9e3d8994abf455c13925f0c4f4a3f316c",
-      "updated_at": "2026-09-25T09:50:41.310Z",
-      "fingerprint": "621b51f786b470749be1dd74b2e7abe5551efeefd54fff86a396849da8a8cd16",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.380Z",
+      "fingerprint": "5f80d410f398d78226194ad2d4287e00c4191c4e7721b13518be35ca1568b2b6",
       "apis": [
         {
           "protocol": "rpc",
@@ -6817,9 +6894,9 @@
           "path": "src/infra/identity.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T05:45:38.726Z",
-      "fingerprint": "1b9ef3cf98e21032abbf873e2c28db43536739d9a6e29ab6ef80841f9854d2e9",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.380Z",
+      "fingerprint": "a9df5585e710e1c2fd2b96b4f81682b08e41c68060fb77f0d8595da54954daea",
       "apis": [
         {
           "protocol": "rpc",
@@ -6858,9 +6935,9 @@
           "path": "src/infra/rng.js"
         }
       ],
-      "revision": "45f6c8b7b8ba210fcd94506b2097c8e601dd1382",
-      "updated_at": "2026-09-26T01:40:46.603Z",
-      "fingerprint": "9b870ea3e1c34c4f345f256953dc1007bffb339dbd324da46a05b89c7a2612ee",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.381Z",
+      "fingerprint": "27234027da3536dd2b3fc5cba2134859ef009b0436b2bb352734a6f761168ac0",
       "apis": [
         {
           "protocol": "rpc",
@@ -6895,7 +6972,6 @@
       "parent": "truman-town.infra",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "持久化存储",
         "en": "Persistence"
@@ -6906,7 +6982,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
+      "updated_at": "2026-09-28T04:21:50.239Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 3,
@@ -6935,9 +7011,9 @@
           "path": "src/infra/store/archive.js"
         }
       ],
-      "revision": "36ce55d9e3d8994abf455c13925f0c4f4a3f316c",
-      "updated_at": "2026-09-25T09:50:41.310Z",
-      "fingerprint": "6e80b99a590086002245e53921ef33519471bb6e5b6f47f0ec397b495ef09ec7",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.381Z",
+      "fingerprint": "4551403cf17070d8baffb5bd764817d15125549bb3c4e3f4f6076b11c86d6e58",
       "apis": [
         {
           "protocol": "rpc",
@@ -6992,9 +7068,9 @@
           "path": "src/infra/store/graph.js"
         }
       ],
-      "revision": "f5619e53d4eabebf1a7aa7f58a657c03cf3d5583",
-      "updated_at": "2026-09-26T16:03:47.710Z",
-      "fingerprint": "ed725d1dd1435ad5bafb4299fb6babca855fc558b8f247f35bbff424c7ba6990",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.381Z",
+      "fingerprint": "536e8f5dbbfdeb4b85a5f0ad562bd6b2ec9671d54863f3d4bfc3169a07259f6b",
       "apis": [
         {
           "protocol": "rpc",
@@ -7079,7 +7155,6 @@
       "parent": "truman-town",
       "tree": "truman-town",
       "depth": 2,
-      "state": "planned",
       "name": {
         "zh": "观察者系统",
         "en": "Observer System"
@@ -7090,7 +7165,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:55:51Z",
+      "updated_at": "2026-09-28T04:21:50.444Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 14,
@@ -7163,7 +7238,6 @@
       "parent": "truman-town.observer",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "编年志实现",
         "en": "Chronicle Implementation"
@@ -7174,7 +7248,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T05:27:53Z",
+      "updated_at": "2026-09-28T04:21:50.643Z",
       "fingerprint": "pending",
       "deps": [
         {
@@ -7321,7 +7395,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
+      "updated_at": "2026-09-28T04:21:50.858Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 3,
@@ -7420,9 +7494,9 @@
           "path": "src/observer/experiment/counterfactual.js"
         }
       ],
-      "revision": "5ad9af8b020cb978dad9c8ac59c41cdb224d5c73",
-      "updated_at": "2026-09-22T17:24:01.916Z",
-      "fingerprint": "2b14c01ab1e651c191e84a91e236de18b3711cf832c9b24f1cfca3d1208d94e8",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.381Z",
+      "fingerprint": "a4f270f77f7f1167414717ca6a773101feda4711c82f23ba16c47a85b31ccc77",
       "apis": [
         {
           "protocol": "rpc",
@@ -7601,7 +7675,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
+      "updated_at": "2026-09-28T04:21:51.075Z",
       "fingerprint": "pending",
       "deps": [
         {
@@ -7637,9 +7711,9 @@
           "path": "src/observer/recorder/action-log.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T06:15:09.887Z",
-      "fingerprint": "a208cc189cca593302b2905685fdcb8d9b0562f79484bfcc86d5d63f6ed4b53d",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.381Z",
+      "fingerprint": "e145ba231b835d7a909939c4a60b48169fc813c4a1681dfc7da6002655114e3c",
       "apis": [
         {
           "protocol": "rpc",
@@ -7685,9 +7759,9 @@
           "path": "src/observer/recorder/decision-log.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T06:15:09.887Z",
-      "fingerprint": "3e1f3cb0f49ab7bbec3ccfca939979eb342e0afe9aa016d036f8b9c8e51faafc",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.381Z",
+      "fingerprint": "eae4e838508c119c42f3dc01063096654ad74f6e1833169d79a285a3d03fc764",
       "apis": [
         {
           "protocol": "rpc",
@@ -7733,9 +7807,9 @@
           "path": "src/observer/recorder/event-log.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T06:15:51.378Z",
-      "fingerprint": "4431150baa62a34336e7206ff1091de26547889b3838a90d162d5feb0834113f",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.382Z",
+      "fingerprint": "f256230020f173df2040e8d0c581120f68b5076ac3d393b31d5bace7d60dd7c2",
       "apis": [
         {
           "protocol": "rpc",
@@ -7840,7 +7914,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T06:59:44.285Z",
+      "updated_at": "2026-09-28T04:21:51.282Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 9,
@@ -7869,9 +7943,9 @@
           "path": "src/runtime/clock.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T06:14:27.005Z",
-      "fingerprint": "99ac90d88dcb9201a3426c29dcbdaf0839830b1471a84ca2f0272319660f6585",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.382Z",
+      "fingerprint": "47d6082f871f46e7c87f33b976c56348de6a06a10197195c8ec51d24e3c684a9",
       "apis": [
         {
           "protocol": "rpc",
@@ -7925,7 +7999,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T06:59:44.285Z",
+      "updated_at": "2026-09-28T04:21:51.496Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 5,
@@ -8030,9 +8104,9 @@
           "path": "src/runtime/orchestrator/dispatch.js"
         }
       ],
-      "revision": "45f6c8b7b8ba210fcd94506b2097c8e601dd1382",
-      "updated_at": "2026-09-26T01:40:46.603Z",
-      "fingerprint": "6dfceae41ea760e87f1a465a76263ae45da4be3f29f71d5b55d8be45a92e1a98",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.382Z",
+      "fingerprint": "ca20c86692a41d7289dd669dd5dda2d80fc40f0f389c020ca76e53e93bb6bc8d",
       "apis": [
         {
           "protocol": "rpc",
@@ -8097,9 +8171,9 @@
           "path": "src/runtime/orchestrator/loop.js"
         }
       ],
-      "revision": "f5619e53d4eabebf1a7aa7f58a657c03cf3d5583",
-      "updated_at": "2026-09-26T16:03:47.710Z",
-      "fingerprint": "f14bed1439e596fd0e6587dbd40fad26ee22188ac2b52ab89f3d83232348429d",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.382Z",
+      "fingerprint": "56d12036a82066b75d5b666272f28a7ed110363e85c8b8bd901ea88039d383ac",
       "apis": [
         {
           "protocol": "rpc",
@@ -8577,9 +8651,9 @@
           "path": "src/runtime/orchestrator/_stage2.js"
         }
       ],
-      "revision": "e1e8062289df523a9fb3c40c412c354bc7c4eba6",
-      "updated_at": "2026-09-26T16:15:04.368Z",
-      "fingerprint": "e68b6dc3cfe7879bc5dd5de92066263a2ed651e5c204f0a1bb2e75ea294e09b7",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.383Z",
+      "fingerprint": "30a4bba66f6603b782da02bbe1b72daa18961d208f6890f5976b54569bb498f2",
       "apis": [
         {
           "protocol": "rpc",
@@ -8792,9 +8866,9 @@
           "path": "src/runtime/registry.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T06:14:27.005Z",
-      "fingerprint": "23c6d599b8188c345f8184b3a63d70b49da4966d7bb09bd97edca0ac080cdfc1",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.383Z",
+      "fingerprint": "e00f082476d0cb7d02a531a84029f7c1dd606d37cd25d6300c1a6d0b7c762aaf",
       "apis": [
         {
           "protocol": "rpc",
@@ -8851,9 +8925,9 @@
           "path": "src/runtime/world-state.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T06:14:27.005Z",
-      "fingerprint": "8ed711bd64b5e5bde537d59c47f2d92e29f77b19edfa203f043592310c250e41",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.383Z",
+      "fingerprint": "1dd4be91cefe1c814932556aaa5e4e5267e40ab7ee4afa40a0f4c009c16bf688",
       "apis": [
         {
           "protocol": "rpc",
@@ -8897,7 +8971,6 @@
       "parent": "truman-town",
       "tree": "truman-town",
       "depth": 2,
-      "state": "planned",
       "name": {
         "zh": "社交系统",
         "en": "Social System"
@@ -8908,7 +8981,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
+      "updated_at": "2026-09-28T04:21:51.700Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 33,
@@ -8934,7 +9007,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
+      "updated_at": "2026-09-28T04:21:51.930Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 3,
@@ -9205,7 +9278,6 @@
       "parent": "truman-town.social",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "家族系统",
         "en": "Family System"
@@ -9216,7 +9288,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:55:51Z",
+      "updated_at": "2026-09-28T04:21:52.140Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 9,
@@ -9299,7 +9371,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
+      "updated_at": "2026-09-28T04:21:52.341Z",
       "fingerprint": "pending",
       "deps": [
         {
@@ -9606,7 +9678,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
+      "updated_at": "2026-09-28T04:21:52.541Z",
       "fingerprint": "pending",
       "deps": [
         {
@@ -9780,7 +9852,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
+      "updated_at": "2026-09-28T04:21:52.743Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 2,
@@ -9920,7 +9992,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
+      "updated_at": "2026-09-28T04:21:52.952Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 2,
@@ -10006,9 +10078,9 @@
           "path": "src/social/platform/posts.js"
         }
       ],
-      "revision": "e317580e2e9326327504170ed572a942b2b0db47",
-      "updated_at": "2026-09-24T07:01:20.043Z",
-      "fingerprint": "d8ae82d4776d553250e664c327ea57d271bd881aad67bfc4f710b29d6aa37b54",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.383Z",
+      "fingerprint": "41539505249e7aee761f2ba11544adce5af03bcd3b6ce82dbc275f93585be292",
       "apis": [
         {
           "protocol": "rpc",
@@ -10069,7 +10141,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T14:28:10.152Z",
+      "updated_at": "2026-09-28T04:21:53.170Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 4,
@@ -10375,7 +10447,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
+      "updated_at": "2026-09-28T04:21:53.380Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 2,
@@ -10568,7 +10640,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
+      "updated_at": "2026-09-28T04:21:53.587Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 3,
@@ -10790,9 +10862,9 @@
           "path": "src/social/reputation.js"
         }
       ],
-      "revision": "e317580e2e9326327504170ed572a942b2b0db47",
-      "updated_at": "2026-09-24T07:01:20.044Z",
-      "fingerprint": "a57930478c3faadf467f03a5c1727b06d40ab0ec475546736be4ee19873f72ea",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.383Z",
+      "fingerprint": "68ec85d0a11dc6390a52c27098643bb89da567051b985a61c307d879dec3af3f",
       "apis": [
         {
           "protocol": "rpc",
@@ -10834,7 +10906,6 @@
       "parent": "truman-town",
       "tree": "truman-town",
       "depth": 2,
-      "state": "planned",
       "name": {
         "zh": "生存系统",
         "en": "Survival System"
@@ -10843,10 +10914,14 @@
         "zh": "核战争后 LinYi 号避难所居民的生存层：资源、需求、疾病、环境与突发事件，目标只有一个——继续活下去，并记录存活时长。\n",
         "en": "Survival layer for post-nuclear LinYi Shelter residents: resources, needs, disease, environment and events, with one goal — keep living and record survival time.\n"
       },
-      "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:55:51Z",
-      "fingerprint": "pending",
+      "source": [
+        {
+          "path": "src/survival/index.js"
+        }
+      ],
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T04:19:37.321Z",
+      "fingerprint": "52866ce1864b937d7e055fecabc5a68c5b1489a702b06040d658234fe3c3f1f3",
       "aggregate": {
         "descendant_count": 26,
         "own_api_count": 0,
@@ -10918,7 +10993,6 @@
       "parent": "truman-town.survival",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "环境与探险",
         "en": "Environment & Expedition"
@@ -10929,8 +11003,8 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T05:20:43Z",
-      "fingerprint": "pending",
+      "updated_at": "2026-09-28T04:19:37.506Z",
+      "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "aggregate": {
         "descendant_count": 3,
         "own_api_count": 0,
@@ -11079,9 +11153,9 @@
           "path": "src/survival/environment/radiation.js"
         }
       ],
-      "revision": "36ce55d9e3d8994abf455c13925f0c4f4a3f316c",
-      "updated_at": "2026-09-25T09:50:41.311Z",
-      "fingerprint": "29f52eaad0a19437b22556eaca188c5767536c77c47fbcd3975271b2eda38169",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.383Z",
+      "fingerprint": "1ec0707acb22d0916ac0acabc8b99a7de92b44632ebad4811d22c51d7a189505",
       "apis": [
         {
           "protocol": "rpc",
@@ -11141,9 +11215,9 @@
           "path": "src/survival/environment/weather.js"
         }
       ],
-      "revision": "36ce55d9e3d8994abf455c13925f0c4f4a3f316c",
-      "updated_at": "2026-09-25T09:50:41.311Z",
-      "fingerprint": "ed1dffb012ebd0e5dee79cc50a574fd60dcae5fbb786c0cd3e9aaf2b78dfc782",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.384Z",
+      "fingerprint": "e453db20364517c803422f1933856ac8e604ee43e6b838c2251b03bc0fc2b9d0",
       "apis": [
         {
           "protocol": "rpc",
@@ -11190,7 +11264,6 @@
       "parent": "truman-town.survival",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "突发事件",
         "en": "Random Events"
@@ -11200,9 +11273,9 @@
         "en": "Generates and applies post-nuclear events: fallout, breakdowns, resource crises and outsiders.\n"
       },
       "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:55:51Z",
-      "fingerprint": "pending",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T04:19:37.703Z",
+      "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "aggregate": {
         "descendant_count": 4,
         "own_api_count": 0,
@@ -11226,9 +11299,9 @@
         "en": "Rolls and selects random events by probability.\n"
       },
       "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
-      "fingerprint": "pending",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T04:19:37.898Z",
+      "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "deps": [
         {
           "kind": "call",
@@ -11497,9 +11570,9 @@
         "en": "Disease, treatment and epidemics turn medical resources into hard choices.\n"
       },
       "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.490Z",
-      "fingerprint": "pending",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T04:19:38.097Z",
+      "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "aggregate": {
         "descendant_count": 3,
         "own_api_count": 0,
@@ -11527,9 +11600,9 @@
           "path": "src/survival/health/disease.js"
         }
       ],
-      "revision": "5363daa33de6939922915ece1c71fbb993114054",
-      "updated_at": "2026-09-24T07:54:56.514Z",
-      "fingerprint": "d499f46462fd1a352f5f17950cf6375272f05ce4b35740bc774f8c614563323c",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.384Z",
+      "fingerprint": "192c3b664e8e58c1111ae224ed39952dc10fe67c4cfe367741cd9cf045acf7df",
       "apis": [
         {
           "protocol": "rpc",
@@ -11598,9 +11671,9 @@
           "path": "src/survival/health/epidemic.js"
         }
       ],
-      "revision": "45f6c8b7b8ba210fcd94506b2097c8e601dd1382",
-      "updated_at": "2026-09-26T01:42:23.762Z",
-      "fingerprint": "ad23e752496b4efb911726c6ac646db8d553d661c7e6c8a837e4e33482f59f8b",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.384Z",
+      "fingerprint": "dd4d11eff1ed174fb43b21f8c84fa51a8b9ad50d4422026019b5683b88dac227",
       "apis": [
         {
           "protocol": "rpc",
@@ -11714,7 +11787,6 @@
       "parent": "truman-town.survival",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "生存需求",
         "en": "Survival Needs"
@@ -11724,9 +11796,9 @@
         "en": "Meters hunger, thirst, health and sanity, converting deficits into survival pressure.\n"
       },
       "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:55:51Z",
-      "fingerprint": "pending",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T04:19:38.296Z",
+      "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "aggregate": {
         "descendant_count": 4,
         "own_api_count": 0,
@@ -11754,9 +11826,9 @@
           "path": "src/survival/needs/meter.js"
         }
       ],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T06:36:55.531Z",
-      "fingerprint": "2d6e244fd0c5d8c07a16ef44dd75b406d6a8bf18c90ae3e06f2e55853fc0aa30",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T08:45:24.384Z",
+      "fingerprint": "a5bbfb742857742921378ec6ac37b01ea132309698688eeebe77391a0ea5ec5f",
       "apis": [
         {
           "protocol": "rpc",
@@ -11812,9 +11884,9 @@
         "en": "Scores and ranks survival pressure from need deficits and scarcity.\n"
       },
       "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.491Z",
-      "fingerprint": "pending",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T04:19:38.491Z",
+      "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "deps": [
         {
           "kind": "call",
@@ -11959,9 +12031,9 @@
         "en": "Water, food, energy and medical supplies form hard survival constraints.\n"
       },
       "source": [],
-      "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-25T08:50:35.491Z",
-      "fingerprint": "pending",
+      "revision": "824d4c242a0abd8e6ed58a6edcc322da739c728a",
+      "updated_at": "2026-09-28T04:19:38.697Z",
+      "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "aggregate": {
         "descendant_count": 4,
         "own_api_count": 0,
@@ -12292,7 +12364,6 @@
       "parent": "truman-town",
       "tree": "truman-town",
       "depth": 2,
-      "state": "planned",
       "name": {
         "zh": "小镇空间",
         "en": "Town Space"
@@ -12303,7 +12374,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
+      "updated_at": "2026-09-28T04:58:08.242Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 11,
@@ -12329,7 +12400,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T07:57:17.695Z",
+      "updated_at": "2026-09-28T04:21:53.808Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 2,
@@ -12468,7 +12539,6 @@
       "parent": "truman-town.town",
       "tree": "truman-town",
       "depth": 3,
-      "state": "planned",
       "name": {
         "zh": "公共设施",
         "en": "Facilities"
@@ -12479,7 +12549,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T04:32:53Z",
+      "updated_at": "2026-09-28T04:58:08.060Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 2,
@@ -12658,7 +12728,7 @@
       },
       "source": [],
       "revision": "0000000000000000000000000000000000000000",
-      "updated_at": "2026-09-22T07:57:17.695Z",
+      "updated_at": "2026-09-28T04:21:54.015Z",
       "fingerprint": "pending",
       "aggregate": {
         "descendant_count": 2,
@@ -12954,8 +13024,10 @@
     "rpc:ai.llm.router.fallback": "truman-town.ai.llm.router",
     "rpc:ai.llm.router.route": "truman-town.ai.llm.router",
     "rpc:ai.memory.embedding.encode": "truman-town.ai.memory.embedding",
+    "rpc:ai.memory.embedding.index": "truman-town.ai.memory.embedding",
     "rpc:ai.memory.embedding.search": "truman-town.ai.memory.embedding",
     "rpc:ai.memory.summary.compress": "truman-town.ai.memory.summary",
+    "rpc:ai.memory.summary.summarize": "truman-town.ai.memory.summary",
     "rpc:ai.prompt.agent.compose": "truman-town.ai.prompt.agent",
     "rpc:ai.prompt.agent.validate": "truman-town.ai.prompt.agent",
     "rpc:ai.prompt.world.compose": "truman-town.ai.prompt.world",
@@ -12975,10 +13047,16 @@
     "rpc:civilization.legacy.summary.extractor.extract": "truman-town.civilization.legacy.summary.extractor",
     "rpc:civilization.legacy.summary.writer.constrain": "truman-town.civilization.legacy.summary.writer",
     "rpc:civilization.legacy.summary.writer.generate": "truman-town.civilization.legacy.summary.writer",
-    "rpc:civilization.relic.artifact.create": "truman-town.civilization.relic.artifact",
-    "rpc:civilization.relic.artifact.persist": "truman-town.civilization.relic.artifact",
-    "rpc:civilization.relic.discover.find": "truman-town.civilization.relic.discover",
+    "rpc:civilization.relic.artifact.forge": "truman-town.civilization.relic.artifact",
+    "rpc:civilization.relic.artifact.markDiscovered": "truman-town.civilization.relic.artifact",
+    "rpc:civilization.relic.artifact.query": "truman-town.civilization.relic.artifact",
+    "rpc:civilization.relic.artifact.remove": "truman-town.civilization.relic.artifact",
+    "rpc:civilization.relic.artifact.stats": "truman-town.civilization.relic.artifact",
+    "rpc:civilization.relic.discover.byAgent": "truman-town.civilization.relic.discover",
+    "rpc:civilization.relic.discover.discover": "truman-town.civilization.relic.discover",
     "rpc:civilization.relic.discover.interpret": "truman-town.civilization.relic.discover",
+    "rpc:civilization.relic.discover.list": "truman-town.civilization.relic.discover",
+    "rpc:civilization.relic.discover.stats": "truman-town.civilization.relic.discover",
     "rpc:civilization.restart.execute": "truman-town.civilization.restart",
     "rpc:civilization.restart.inherit": "truman-town.civilization.restart",
     "rpc:civilization.state.metrics": "truman-town.civilization.state",
@@ -16737,28 +16815,26 @@
     "truman-town.survival.environment": {
       "schema_version": 1,
       "id": "truman-town.survival.environment",
-      "updated_at": "2026-09-22T05:21:14.509Z",
+      "updated_at": "2026-09-28T03:48:21.693Z",
       "mode": "grid",
-      "max_columns": 3,
       "reading": {
-        "zh": "辐射与天气提供风险因子，探索结算把因子、物资、装备、特质与随机数综合成日志和资源/状态变化。",
-        "en": "Radiation and weather provide risk factors; expedition resolution combines them with supplies, gear, traits and randomness into a log plus resource/state changes."
+        "zh": "探索结算整合环境风险；辐射与天气提供风险因子。",
+        "en": "Expedition resolution combines environmental risks from radiation and weather."
       },
       "order": [
+        "truman-town.survival.environment.expedition",
         "truman-town.survival.environment.radiation",
-        "truman-town.survival.environment.weather",
-        "truman-town.survival.environment.expedition"
+        "truman-town.survival.environment.weather"
       ]
     },
     "truman-town.survival.events": {
       "schema_version": 1,
       "id": "truman-town.survival.events",
-      "updated_at": "2026-09-22T05:09:09.911Z",
+      "updated_at": "2026-09-28T03:39:18.308Z",
       "mode": "grid",
-      "max_columns": 2,
       "reading": {
-        "zh": "查看 突发事件 的内部组成，箭头表示模块间依赖。",
-        "en": "Inspect the internals of Random Events; arrows show dependencies."
+        "zh": "本模块由下级已实现子系统组合构成。",
+        "en": "This module groups the implemented child subsystems."
       },
       "order": [
         "truman-town.survival.events.generator",
@@ -16768,12 +16844,11 @@
     "truman-town.survival.events.generator": {
       "schema_version": 1,
       "id": "truman-town.survival.events.generator",
-      "updated_at": "2026-09-22T05:28:31.623Z",
+      "updated_at": "2026-09-28T03:39:18.793Z",
       "mode": "grid",
-      "max_columns": 2,
       "reading": {
-        "zh": "查看 事件生成实现 的实现组成，箭头表示模块间依赖。",
-        "en": "Inspect the implementation of Event Generator Implementation; arrows show dependencies."
+        "zh": "本模块由下级已实现子系统组合构成。",
+        "en": "This module groups the implemented child subsystems."
       },
       "order": [
         "truman-town.survival.events.generator.roller",
@@ -16783,12 +16858,11 @@
     "truman-town.survival.health": {
       "schema_version": 1,
       "id": "truman-town.survival.health",
-      "updated_at": "2026-09-22T05:09:10.208Z",
+      "updated_at": "2026-09-28T03:39:19.299Z",
       "mode": "grid",
-      "max_columns": 2,
       "reading": {
-        "zh": "查看 疾病与医疗 的内部组成，箭头表示模块间依赖。",
-        "en": "Inspect the internals of Health & Disease; arrows show dependencies."
+        "zh": "本模块由下级已实现子系统组合构成。",
+        "en": "This module groups the implemented child subsystems."
       },
       "order": [
         "truman-town.survival.health.disease",
@@ -16799,12 +16873,11 @@
     "truman-town.survival.needs": {
       "schema_version": 1,
       "id": "truman-town.survival.needs",
-      "updated_at": "2026-09-22T05:09:09.870Z",
+      "updated_at": "2026-09-28T03:39:19.809Z",
       "mode": "grid",
-      "max_columns": 2,
       "reading": {
-        "zh": "查看 生存需求 的内部组成，箭头表示模块间依赖。",
-        "en": "Inspect the internals of Survival Needs; arrows show dependencies."
+        "zh": "本模块由下级已实现子系统组合构成。",
+        "en": "This module groups the implemented child subsystems."
       },
       "order": [
         "truman-town.survival.needs.meter",
@@ -16814,12 +16887,11 @@
     "truman-town.survival.needs.pressure": {
       "schema_version": 1,
       "id": "truman-town.survival.needs.pressure",
-      "updated_at": "2026-09-22T05:28:31.566Z",
+      "updated_at": "2026-09-28T03:39:20.331Z",
       "mode": "grid",
-      "max_columns": 2,
       "reading": {
-        "zh": "查看 生存压力实现 的实现组成，箭头表示模块间依赖。",
-        "en": "Inspect the implementation of Pressure Implementation; arrows show dependencies."
+        "zh": "本模块由下级已实现子系统组合构成。",
+        "en": "This module groups the implemented child subsystems."
       },
       "order": [
         "truman-town.survival.needs.pressure.ranker",
@@ -16829,12 +16901,11 @@
     "truman-town.survival.resources": {
       "schema_version": 1,
       "id": "truman-town.survival.resources",
-      "updated_at": "2026-09-22T05:09:09.827Z",
+      "updated_at": "2026-09-28T03:39:20.814Z",
       "mode": "grid",
-      "max_columns": 2,
       "reading": {
-        "zh": "查看 资源系统 的内部组成，箭头表示模块间依赖。",
-        "en": "Inspect the internals of Resources; arrows show dependencies."
+        "zh": "本模块由下级已实现子系统组合构成。",
+        "en": "This module groups the implemented child subsystems."
       },
       "order": [
         "truman-town.survival.resources.energy",
@@ -16976,6 +17047,42 @@
         "en": "Truman Town Sandbox: Survival Pressure, Observer, Family and Civilization Restart"
       },
       "updated_at": "2026-09-22T04:57:04.584Z"
+    },
+    {
+      "id": "2026-09-28-planned-parent-cleanup",
+      "status": "verified",
+      "title": {
+        "zh": "激活已完成域的计划态父模块",
+        "en": "Activate Completed-Domain Parent Modules"
+      },
+      "updated_at": "2026-09-28T04:20:34.855Z"
+    },
+    {
+      "id": "2026-09-28-planned-state-full-recheck",
+      "status": "verified",
+      "title": {
+        "zh": "全树复查计划态与已弃用后代",
+        "en": "Full-Tree Planned-State Recheck"
+      },
+      "updated_at": "2026-09-28T04:59:03.656Z"
+    },
+    {
+      "id": "2026-09-28-survival-parent-state",
+      "status": "verified",
+      "title": {
+        "zh": "激活已实现的生存系统父模块",
+        "en": "Activate Implemented Survival Parent Modules"
+      },
+      "updated_at": "2026-09-28T03:44:32.258Z"
+    },
+    {
+      "id": "2026-09-28-truman-town-planned-features",
+      "status": "verified",
+      "title": {
+        "zh": "完成 Truman Town 未完成模块及证据刷新",
+        "en": "Complete Truman Town Planned Modules and Evidence Refresh"
+      },
+      "updated_at": "2026-09-28T09:00:32.936Z"
     }
   ]
 }

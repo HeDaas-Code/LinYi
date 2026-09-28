@@ -10,9 +10,9 @@ description:
   en: >
       Forecasts and strikes with disasters as a factor for expedition resolution and events.
       
-revision: 36ce55d9e3d8994abf455c13925f0c4f4a3f316c
-updated_at: "2026-09-25T09:50:41.311Z"
-fingerprint: ed1dffb012ebd0e5dee79cc50a574fd60dcae5fbb786c0cd3e9aaf2b78dfc782
+revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
+updated_at: "2026-09-28T08:45:24.384Z"
+fingerprint: e453db20364517c803422f1933856ac8e604ee43e6b838c2251b03bc0fc2b9d0
 source:
   - path: "src/survival/environment/weather.js"
 apis:

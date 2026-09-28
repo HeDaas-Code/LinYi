@@ -10,9 +10,9 @@ description:
   en: >
       Updates and queries reputation from social and economic behavior.
       
-revision: e317580e2e9326327504170ed572a942b2b0db47
-updated_at: "2026-09-24T07:01:20.044Z"
-fingerprint: a57930478c3faadf467f03a5c1727b06d40ab0ec475546736be4ee19873f72ea
+revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
+updated_at: "2026-09-28T08:45:24.383Z"
+fingerprint: 68ec85d0a11dc6390a52c27098643bb89da567051b985a61c307d879dec3af3f
 source:
   - path: "src/social/reputation.js"
 apis:

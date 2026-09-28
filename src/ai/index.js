@@ -10,4 +10,7 @@ export * as laya from './laya.js';
 export * as gateway from './llm/gateway.js';
 export * as router from './llm/router.js';
 export * as agentPrompt from './prompt/agent.js';
+export * as guard from './guard.js';
+export * as memoryEmbedding from './memory/embedding.js';
+export * as memorySummary from './memory/summary.js';
 export * as thought from './thought.js';

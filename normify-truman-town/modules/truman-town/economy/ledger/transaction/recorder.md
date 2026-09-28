@@ -10,9 +10,9 @@ description:
   en: >
       Records transactions and publishes events.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T08:02:50.389Z"
-fingerprint: a30f81b0dee03f1f55aacdd16bbbc30b4077ea4d1fc3529996e216a5acea543b
+revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
+updated_at: "2026-09-28T08:45:24.380Z"
+fingerprint: 0bc94305c374dbe405ae4af0653393af9c4e2b9e61a73145cbe30676796b3cef
 source:
   - path: "src/economy/ledger/transaction/recorder.js"
 apis:

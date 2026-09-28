@@ -10,9 +10,9 @@ description:
   en: >
       Adds, removes and lists backpack items with capacity and weight.
       
-revision: b2c533dcbb9a29bf0cd2322749845b223954c80f
-updated_at: "2026-09-25T05:42:38.158Z"
-fingerprint: 02a0f8a2e851bbc121055be7948a89e0c39751ea20cb764100f01950f5e2740a
+revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
+updated_at: "2026-09-28T08:45:24.378Z"
+fingerprint: 4a0a803365a05598621a0988bbfc7d82d0d77d3694227c139f2e5a29502036a4
 source:
   - path: "src/agent/inventory/backpack.js"
 apis:

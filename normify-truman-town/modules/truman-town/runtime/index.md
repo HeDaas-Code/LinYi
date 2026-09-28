@@ -11,7 +11,7 @@ description:
       Drives the town loop: world clock, cycle orchestration, perception routing, action dispatch and world-state management.
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T06:59:44.285Z"
+updated_at: "2026-09-28T04:21:51.282Z"
 fingerprint: pending
 source: []
 ---

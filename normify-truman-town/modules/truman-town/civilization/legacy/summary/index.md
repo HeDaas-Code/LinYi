@@ -11,7 +11,7 @@ description:
       Generates a 200-500 word civilization legacy description.
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T14:39:33.911Z"
+updated_at: "2026-09-28T04:21:47.267Z"
 fingerprint: pending
 source: []
 deps:

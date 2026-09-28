@@ -11,7 +11,7 @@ description:
       Detects collective civilizational collapse.
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T14:39:34.061Z"
+updated_at: "2026-09-28T04:21:46.856Z"
 fingerprint: pending
 source: []
 deps:

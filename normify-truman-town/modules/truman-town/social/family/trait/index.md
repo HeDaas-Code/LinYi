@@ -11,7 +11,7 @@ description:
       Fixes a tag as a family trait when it survives three generations without loss; max 5 family traits.
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T08:50:35.490Z"
+updated_at: "2026-09-28T04:21:52.541Z"
 fingerprint: pending
 source: []
 deps:

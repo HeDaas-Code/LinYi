@@ -11,7 +11,7 @@ description:
       Tech tree, research and knowledge loss: civilizations gain long-term memory.
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T08:50:35.490Z"
+updated_at: "2026-09-28T04:21:47.465Z"
 fingerprint: pending
 source: []
 ---

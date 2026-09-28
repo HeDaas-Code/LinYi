@@ -10,9 +10,9 @@ description:
   en: >
       Updates and queries survival need levels for each resident.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T06:36:55.531Z"
-fingerprint: 2d6e244fd0c5d8c07a16ef44dd75b406d6a8bf18c90ae3e06f2e55853fc0aa30
+revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
+updated_at: "2026-09-28T08:45:24.384Z"
+fingerprint: a5bbfb742857742921378ec6ac37b01ea132309698688eeebe77391a0ea5ec5f
 source:
   - path: "src/survival/needs/meter.js"
 apis:

@@ -10,9 +10,9 @@ description:
   en: >
       Quotes and updates prices by supply and demand.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T08:02:50.389Z"
-fingerprint: 3f17a2138d67ea297f0a008121873935c4bcb5ce145aeb306e8ad7dbb4033ec6
+revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
+updated_at: "2026-09-28T08:45:24.380Z"
+fingerprint: 72bcbb44aa7c41b0eb41db4ec5d3f8fe0fbf88ee76f4f4ced306341149221f03
 source:
   - path: "src/economy/market/price.js"
 apis:

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>世界观测</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, -apple-system, "Noto Sans CJK SC", sans-serif; color: #202824; background: #f2f5f2; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px max(16px, calc((100% - 960px) / 2)); background: #fff; border-bottom: 1px solid #dce3dd; }
+    h1 { margin: 0; font-size: 21px; }
+    button { min-height: 42px; padding: 0 16px; border: 1px solid #176b55; border-radius: 6px; color: white; background: #176b55; font: inherit; cursor: pointer; }
+    button:focus-visible { outline: 3px solid #e3a834; outline-offset: 2px; }
+    main { max-width: 960px; margin: 0 auto; padding: 20px 16px 40px; }
+    .status { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 18px; margin-bottom: 20px; }
+    .tick { font-size: 20px; font-weight: 700; }
+    #updated, #message { color: #5c6962; font-size: 14px; }
+    h2 { margin: 22px 0 10px; font-size: 17px; }
+    .resources { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1px; background: #dce3dd; border: 1px solid #dce3dd; }
+    .resource { min-width: 0; padding: 12px; background: #fff; }
+    .resource strong { display: block; margin-top: 4px; font-size: 19px; overflow-wrap: anywhere; }
+    .label { color: #5c6962; font-size: 13px; }
+    .table-wrap { overflow-x: auto; background: #fff; border: 1px solid #dce3dd; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid #e6ebe7; }
+    th { color: #5c6962; font-size: 13px; font-weight: 600; }
+    td { overflow-wrap: anywhere; }
+    @media (max-width: 480px) { header { align-items: flex-start; } main { padding-top: 16px; } th, td { padding: 9px 8px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>世界观测</h1>
+    <button id="refresh" type="button">刷新</button>
+  </header>
+  <main>
+    <div class="status"><span class="tick">Tick <span id="tick">--</span></span><span id="updated">尚未更新</span></div>
+    <div id="message" role="status" aria-live="polite">正在读取世界状态…</div>
+    <section aria-labelledby="resource-heading">
+      <h2 id="resource-heading">资源</h2>
+      <div id="resources" class="resources"></div>
+    </section>
+    <section aria-labelledby="resident-heading">
+      <h2 id="resident-heading">居民 <span id="resident-count"></span></h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>姓名</th><th>状态</th><th>最近行动</th></tr></thead>
+        <tbody id="residents"></tbody>
+      </table></div>
+    </section>
+  </main>
+  <script>
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+    const resourceLabels = { food: '食物', water: '水', energy: '能源', medical: '医疗物资' };
+
+    async function refresh() {
+      const message = document.querySelector('#message');
+      const button = document.querySelector('#refresh');
+      button.disabled = true;
+      message.textContent = '正在读取世界状态…';
+      try {
+        const response = await fetch('/api/v1/world/state', { headers: { Accept: 'application/json' } });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const state = await response.json();
+        document.querySelector('#tick').innerHTML = escapeHtml(state.tick);
+        document.querySelector('#updated').textContent = '更新于 ' + new Date().toLocaleTimeString('zh-CN');
+        const resources = state.resources ?? {};
+        document.querySelector('#resources').innerHTML = Object.entries(resources).map(([key, value]) => {
+          const stock = value && typeof value === 'object' ? (value.stockpile ?? value.stock ?? value.amount ?? '—') : value;
+          return '<div class="resource"><span class="label">' + escapeHtml(resourceLabels[key] ?? key) + '</span><strong>' + escapeHtml(stock) + '</strong></div>';
+        }).join('') || '<div class="resource">暂无资源数据</div>';
+        const agents = Array.isArray(state.agents) ? state.agents : Object.values(state.agents ?? {});
+        document.querySelector('#resident-count').textContent = '(' + agents.length + ')';
+        document.querySelector('#residents').innerHTML = agents.map((agent) => {
+          const alive = agent.alive !== false;
+          return '<tr><td>' + escapeHtml(agent.name ?? agent.id ?? '未命名') + '</td><td>' + (alive ? '在世' : '已故') + '</td><td>' + escapeHtml(agent.last_action ?? agent.lastAction ?? '—') + '</td></tr>';
+        }).join('') || '<tr><td colspan="3">暂无居民</td></tr>';
+        message.textContent = '';
+      } catch (error) {
+        message.textContent = '读取失败：' + error.message;
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    document.querySelector('#refresh').addEventListener('click', refresh);
+    refresh();
+    setInterval(refresh, 10000);
+  </script>
+</body>
+</html>

@@ -11,7 +11,7 @@ description:
       Manages accounts and transaction records for agents and businesses.
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T08:02:50.389Z"
+updated_at: "2026-09-28T04:21:48.310Z"
 fingerprint: pending
 source: []
 ---

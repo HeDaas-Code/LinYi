@@ -10,9 +10,9 @@ description:
   en: >
       Records every agent action and its outcome into an immutable append log in the graph store.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T06:15:09.887Z"
-fingerprint: a208cc189cca593302b2905685fdcb8d9b0562f79484bfcc86d5d63f6ed4b53d
+revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
+updated_at: "2026-09-28T08:45:24.381Z"
+fingerprint: e145ba231b835d7a909939c4a60b48169fc813c4a1681dfc7da6002655114e3c
 source:
   - path: "src/observer/recorder/action-log.js"
 apis:

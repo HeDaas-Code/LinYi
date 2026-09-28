@@ -10,9 +10,9 @@ description:
   en: >
       Detects epidemics and triggers quarantine, panic and mutual aid.
       
-revision: 45f6c8b7b8ba210fcd94506b2097c8e601dd1382
-updated_at: "2026-09-26T01:42:23.762Z"
-fingerprint: ad23e752496b4efb911726c6ac646db8d553d661c7e6c8a837e4e33482f59f8b
+revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
+updated_at: "2026-09-28T08:45:24.384Z"
+fingerprint: dd4d11eff1ed174fb43b21f8c84fa51a8b9ad50d4422026019b5683b88dac227
 source:
   - path: "src/survival/health/epidemic.js"
 apis:

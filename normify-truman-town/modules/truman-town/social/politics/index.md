@@ -11,7 +11,7 @@ description:
       Self-organized governance: factions, laws, leaders and conflict emerge from agent interactions.
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T14:28:10.152Z"
+updated_at: "2026-09-28T04:21:53.170Z"
 fingerprint: pending
 source: []
 ---

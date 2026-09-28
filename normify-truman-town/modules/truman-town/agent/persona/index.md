@@ -11,7 +11,7 @@ description:
       Defines agent identity, personality and motivations as the stable basis for prompts and behavior.
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T08:50:35.490Z"
+updated_at: "2026-09-28T04:21:45.178Z"
 fingerprint: pending
 source: []
 ---

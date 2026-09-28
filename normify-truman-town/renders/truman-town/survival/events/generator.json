@@ -1,12 +1,11 @@
 {
   "schema_version": 1,
   "id": "truman-town.survival.events.generator",
-  "updated_at": "2026-09-22T05:28:31.623Z",
+  "updated_at": "2026-09-28T03:39:18.793Z",
   "mode": "grid",
-  "max_columns": 2,
   "reading": {
-    "zh": "查看 事件生成实现 的实现组成，箭头表示模块间依赖。",
-    "en": "Inspect the implementation of Event Generator Implementation; arrows show dependencies."
+    "zh": "本模块由下级已实现子系统组合构成。",
+    "en": "This module groups the implemented child subsystems."
   },
   "order": [
     "truman-town.survival.events.generator.roller",

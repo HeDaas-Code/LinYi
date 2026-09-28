@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "id": "2026-09-28-survival-parent-state",
+  "title": {
+    "zh": "激活已实现的生存系统父模块",
+    "en": "Activate Implemented Survival Parent Modules"
+  },
+  "status": "verified",
+  "intent": {
+    "zh": "将已由完成源码及子模块实现的 survival 聚合节点从 planned 更新为 active，并记录根聚合入口。",
+    "en": "Activate implemented survival aggregators based on existing source and completed child modules, recording the root entry point."
+  },
+  "modules": {
+    "modify": [
+      "truman-town.survival",
+      "truman-town.survival.environment",
+      "truman-town.survival.events",
+      "truman-town.survival.events.generator",
+      "truman-town.survival.health",
+      "truman-town.survival.needs",
+      "truman-town.survival.needs.pressure",
+      "truman-town.survival.resources"
+    ]
+  },
+  "acceptance": [
+    "survival 及其已实现子系统聚合父节点不再标记 planned/pending。",
+    "survival 根模块源码入口存在且指纹有效。",
+    "结构校验无 errors 并重新生成图谱。"
+  ],
+  "note": "将已实现的 survival 聚合根及其 completed 子系统父节点改为 active；根入口 src/survival/index.js 有效并已计算 fingerprint。全项目 repoRoot 证据校验仍报告既存的非 survival fingerprint drift，因此此关闭仅采用结构校验；未改写无源码聚合容器指纹。",
+  "revision": {
+    "before": null,
+    "after": null
+  },
+  "created_at": "2026-09-28T03:40:37.922Z",
+  "updated_at": "2026-09-28T03:44:32.258Z",
+  "closed_at": "2026-09-28T03:44:32.258Z"
+}

@@ -10,9 +10,9 @@ description:
   en: >
       Defines and learns recipes for items, buildings and books.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T08:02:32.239Z"
-fingerprint: 5559f8d9e11333d87f4a97d3604ed0f0e0f3a471db1d2c71fa60488b1615740b
+revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
+updated_at: "2026-09-28T08:45:24.377Z"
+fingerprint: 22eabca8a4bca14a79201b3d1081951722a2cfdeb976a6ef94744280a678c849
 source:
   - path: "src/agent/crafting/recipe.js"
 apis:

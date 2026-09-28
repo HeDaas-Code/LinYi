@@ -12,10 +12,11 @@ export { createRouter, createServer, HttpError } from './http.js';
 import { createServer } from './http.js';
 import { routes as controlRoutes } from './control.js';
 import { routes as observerRoutes } from './observer.js';
+import { routes as viewerRoutes } from './viewer.js';
 
 /** 全部 HTTP 路由（控制 + 观测）。 */
 export function routes() {
-  return [...controlRoutes, ...observerRoutes];
+  return [...controlRoutes, ...observerRoutes, ...viewerRoutes];
 }
 
 /** 由全部路由构建 HTTP 服务实例。 */

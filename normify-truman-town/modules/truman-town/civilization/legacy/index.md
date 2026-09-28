@@ -11,7 +11,7 @@ description:
       Builds a history graph and a 200-500 word description of a collapsed civilization for the next one to inherit.
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T14:39:33.760Z"
+updated_at: "2026-09-28T04:21:47.055Z"
 fingerprint: pending
 source: []
 ---

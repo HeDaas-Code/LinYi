@@ -10,9 +10,9 @@ description:
   en: >
       Simulates candidate action outcomes and scores their utility.
       
-revision: 159dc43daf11d18b03ea9fc0ea5c3e6b18f16488
-updated_at: "2026-09-24T02:49:57.817Z"
-fingerprint: 29c83b4baf35c9149b82eb13d56a846b393371cc8f37a78595a133068f009ada
+revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
+updated_at: "2026-09-28T08:45:24.377Z"
+fingerprint: a10a30c05301853d5030e30be952941b493fdfb4b4aca0d71358a160367cfc04
 source:
   - path: "src/agent/anticipation/simulator.js"
 apis:

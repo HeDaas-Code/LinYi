@@ -10,9 +10,9 @@ description:
   en: >
       Consumes ticks, materials and energy to execute crafting.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T08:02:32.256Z"
-fingerprint: 701e63e81095340f9a3eb0df16027b538357dd6351d504259fe3715f05ca7c25
+revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
+updated_at: "2026-09-28T08:45:24.378Z"
+fingerprint: 918f4abc5168e3004c153418e9ef5fe7d11117279db4de6f4a44093f6b6b7de3
 source:
   - path: "src/agent/crafting/workbench/executor.js"
 apis:

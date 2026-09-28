@@ -11,7 +11,7 @@ description:
       Appends agent decisions, actions and events to an immutable log.
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T08:50:35.490Z"
+updated_at: "2026-09-28T04:21:51.075Z"
 fingerprint: pending
 source: []
 deps:

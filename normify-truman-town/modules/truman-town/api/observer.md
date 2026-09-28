@@ -10,9 +10,9 @@ description:
   en: >
       Queries world state and agent details.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T07:20:13.532Z"
-fingerprint: 4c4d35c910e7037ab0d71afe012cad40b9ecfbd85326df47c1fe5845382661a7
+revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
+updated_at: "2026-09-28T08:45:24.379Z"
+fingerprint: 72ec664f5d4a3a69b78dcbc4e934afb980396b11f406f769b3f6fab3b452eceb
 source:
   - path: "src/api/observer.js"
 apis:

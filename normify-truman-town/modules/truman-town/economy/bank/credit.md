@@ -10,9 +10,9 @@ description:
   en: >
       Applies for and repays loans for business and consumption.
       
-revision: 291c1bea8967e3110e48250864e71452d803a9bf
-updated_at: "2026-09-23T13:07:29.469Z"
-fingerprint: 12b300e4b8008f79a80957c37f633c3ce5a1f936e3da09ad1d9fab51e4668a4b
+revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
+updated_at: "2026-09-28T08:45:24.380Z"
+fingerprint: 2ca476013fa13e47558ed0d27174a2d95f8c9b581525509e387ee475d221d8ef
 source:
   - path: "src/economy/bank/credit.js"
 apis:

@@ -10,9 +10,9 @@ description:
   en: >
       Records world events and connects to the event bus, appending to an immutable log in the graph store.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T06:15:51.378Z"
-fingerprint: 4431150baa62a34336e7206ff1091de26547889b3838a90d162d5feb0834113f
+revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
+updated_at: "2026-09-28T08:45:24.382Z"
+fingerprint: f256230020f173df2040e8d0c581120f68b5076ac3d393b31d5bace7d60dd7c2
 source:
   - path: "src/observer/recorder/event-log.js"
 apis:

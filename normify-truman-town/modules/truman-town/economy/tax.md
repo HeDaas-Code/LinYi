@@ -10,9 +10,9 @@ description:
   en: >
       Collects and redistributes taxes for public goods and welfare.
       
-revision: 291c1bea8967e3110e48250864e71452d803a9bf
-updated_at: "2026-09-23T13:07:29.470Z"
-fingerprint: dac5aa0127d28839bcf24bb5a6c3f0c68206201754e33d0479622dcb31e1cd0f
+revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
+updated_at: "2026-09-28T08:45:24.380Z"
+fingerprint: 6c5f43b6a2505dd011febd1783b64850d3ba3d7b0db51f8a453248e2b619dfe5
 source:
   - path: "src/economy/tax.js"
 apis:

@@ -10,9 +10,9 @@ description:
   en: >
       Starts, pauses and steps the simulation.
       
-revision: 2f8d4802decfe249e375f794ab44026c45dcdded
-updated_at: "2026-09-23T09:49:40.814Z"
-fingerprint: b4378fb7fc7a26c33177c4f400fa5c54850ebdb03530be06b60c759e22aa9dba
+revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
+updated_at: "2026-09-28T08:45:24.379Z"
+fingerprint: 23eff409096678790232c3960c6606e194e70d863bc0d09ba120c41302c87fa9
 source:
   - path: "src/api/control.js"
 apis:

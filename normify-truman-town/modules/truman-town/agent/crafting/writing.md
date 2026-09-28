@@ -10,9 +10,9 @@ description:
   en: >
       Consumes ticks to write memory, knowledge and culture into books for the backpack or library.
       
-revision: b2c533dcbb9a29bf0cd2322749845b223954c80f
-updated_at: "2026-09-25T05:42:38.157Z"
-fingerprint: f8647ac9aea87b15d0b82efc85de97d3456ec888056ebc0c390b9f25704a7a0e
+revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
+updated_at: "2026-09-28T08:45:24.378Z"
+fingerprint: 3476a1c8db583e623281399cddd767932eb9e8ba9f04dc200e31cf50e07241d4
 source:
   - path: "src/agent/crafting/writing.js"
 apis:

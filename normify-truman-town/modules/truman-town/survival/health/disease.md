@@ -10,9 +10,9 @@ description:
   en: >
       Infection, symptom progression and recovery shaped by trait immunity and medical supplies.
       
-revision: 5363daa33de6939922915ece1c71fbb993114054
-updated_at: "2026-09-24T07:54:56.514Z"
-fingerprint: d499f46462fd1a352f5f17950cf6375272f05ce4b35740bc774f8c614563323c
+revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
+updated_at: "2026-09-28T08:45:24.384Z"
+fingerprint: 192c3b664e8e58c1111ae224ed39952dc10fe67c4cfe367741cd9cf045acf7df
 source:
   - path: "src/survival/health/disease.js"
 apis:

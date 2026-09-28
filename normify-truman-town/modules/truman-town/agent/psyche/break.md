@@ -10,9 +10,9 @@ description:
   en: >
       Triggers breakdown past a trauma threshold, degrading decisions or ending in death.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T14:25:36.977Z"
-fingerprint: cc28705de0474103bff4481db437dc698450307393665f648a42f20f95846d1c
+revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
+updated_at: "2026-09-28T08:45:24.379Z"
+fingerprint: 2f5d89e2d118367076585ac043d0899f3e5615060b5363354a6f4dae7015c27b
 source:
   - path: "src/agent/psyche/break.js"
 apis:

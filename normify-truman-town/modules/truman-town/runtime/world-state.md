@@ -10,9 +10,9 @@ description:
   en: >
       Stores and restores world snapshots with diff and rollback support.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T06:14:27.005Z"
-fingerprint: 8ed711bd64b5e5bde537d59c47f2d92e29f77b19edfa203f043592310c250e41
+revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
+updated_at: "2026-09-28T08:45:24.383Z"
+fingerprint: 1dd4be91cefe1c814932556aaa5e4e5267e40ab7ee4afa40a0f4c009c16bf688
 source:
   - path: "src/runtime/world-state.js"
 apis:

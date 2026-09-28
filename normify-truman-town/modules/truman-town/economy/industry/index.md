@@ -11,7 +11,7 @@ description:
       Agents found and run businesses, hire labour and organize production.
       
 revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-25T08:50:35.490Z"
+updated_at: "2026-09-28T04:21:48.094Z"
 fingerprint: pending
 source: []
 ---
