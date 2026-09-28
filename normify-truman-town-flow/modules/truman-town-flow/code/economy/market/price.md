@@ -10,11 +10,30 @@ description:
   en: >
       Code module src/economy/market/price.js as a data-flow endpoint.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-27T01:43:20.282Z"
-fingerprint: pending
-source: []
-apis: []
+revision: 097b667976bac34f168628c34a69a1c227c462d0
+updated_at: "2026-09-28T02:35:43.149Z"
+fingerprint: 72bcbb44aa7c41b0eb41db4ec5d3f8fe0fbf88ee76f4f4ced306341149221f03
+source:
+  - path: "src/economy/market/price.js"
+apis:
+  - protocol: rpc
+    path: "economy.market.price.quote"
+    description:
+      zh: >
+          quote：模块导出函数。
+          
+      en: >
+          quote: exported module function.
+          
+  - protocol: rpc
+    path: "economy.market.price.update"
+    description:
+      zh: >
+          update：模块导出函数。
+          
+      en: >
+          update: exported module function.
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.state.area.economy.prices-8b89e4ac

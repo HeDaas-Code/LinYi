@@ -10,11 +10,30 @@ description:
   en: >
       Code module src/infra/events/pubsub.js as a data-flow endpoint.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-27T01:43:20.282Z"
-fingerprint: pending
-source: []
-apis: []
+revision: 097b667976bac34f168628c34a69a1c227c462d0
+updated_at: "2026-09-28T02:35:46.816Z"
+fingerprint: fa5ae74ea49d2d08d06b797e27982b0f8820b2c0a0e2987f1dbf00ea44cfad24
+source:
+  - path: "src/infra/events/pubsub.js"
+apis:
+  - protocol: rpc
+    path: "infra.events.pubsub.subscribe"
+    description:
+      zh: >
+          subscribe：模块导出函数。
+          
+      en: >
+          subscribe: exported module function.
+          
+  - protocol: rpc
+    path: "infra.events.pubsub.publish"
+    description:
+      zh: >
+          publish：模块导出函数。
+          
+      en: >
+          publish: exported module function.
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.state.area.infra.handlers-f9a5ebb0

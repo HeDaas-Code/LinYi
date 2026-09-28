@@ -10,11 +10,39 @@ description:
   en: >
       Code module src/runtime/clock.js as a data-flow endpoint.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-27T01:43:24.455Z"
-fingerprint: pending
-source: []
-apis: []
+revision: 097b667976bac34f168628c34a69a1c227c462d0
+updated_at: "2026-09-28T02:35:54.158Z"
+fingerprint: 47d6082f871f46e7c87f33b976c56348de6a06a10197195c8ec51d24e3c684a9
+source:
+  - path: "src/runtime/clock.js"
+apis:
+  - protocol: rpc
+    path: "runtime.clock.now"
+    description:
+      zh: >
+          now：模块导出函数。
+          
+      en: >
+          now: exported module function.
+          
+  - protocol: rpc
+    path: "runtime.clock.tick"
+    description:
+      zh: >
+          tick：模块导出函数。
+          
+      en: >
+          tick: exported module function.
+          
+  - protocol: rpc
+    path: "runtime.clock.schedule"
+    description:
+      zh: >
+          schedule：模块导出函数。
+          
+      en: >
+          schedule: exported module function.
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.state.area.runtime.current-tick-af3bf7fd

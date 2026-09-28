@@ -10,11 +10,120 @@ description:
   en: >
       Code module src/api/control.js as a data-flow endpoint.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-27T01:43:20.282Z"
-fingerprint: pending
-source: []
-apis: []
+revision: 097b667976bac34f168628c34a69a1c227c462d0
+updated_at: "2026-09-28T02:35:37.803Z"
+fingerprint: 23eff409096678790232c3960c6606e194e70d863bc0d09ba120c41302c87fa9
+source:
+  - path: "src/api/control.js"
+apis:
+  - protocol: rpc
+    path: "api.control.start"
+    description:
+      zh: >
+          start：模块导出函数。
+          
+      en: >
+          start: exported module function.
+          
+  - protocol: rpc
+    path: "api.control.pause"
+    description:
+      zh: >
+          pause：模块导出函数。
+          
+      en: >
+          pause: exported module function.
+          
+  - protocol: rpc
+    path: "api.control.currentPhase"
+    description:
+      zh: >
+          currentPhase：模块导出函数。
+          
+      en: >
+          currentPhase: exported module function.
+          
+  - protocol: rpc
+    path: "api.control.stop"
+    description:
+      zh: >
+          stop：模块导出函数。
+          
+      en: >
+          stop: exported module function.
+          
+  - protocol: rpc
+    path: "api.control.resume"
+    description:
+      zh: >
+          resume：模块导出函数。
+          
+      en: >
+          resume: exported module function.
+          
+  - protocol: rpc
+    path: "api.control.getPacing"
+    description:
+      zh: >
+          getPacing：模块导出函数。
+          
+      en: >
+          getPacing: exported module function.
+          
+  - protocol: rpc
+    path: "api.control.setPacing"
+    description:
+      zh: >
+          setPacing：模块导出函数。
+          
+      en: >
+          setPacing: exported module function.
+          
+  - protocol: rpc
+    path: "api.control.step"
+    description:
+      zh: >
+          step：模块导出函数。
+          
+      en: >
+          step: exported module function.
+          
+  - protocol: rpc
+    path: "api.control.listDifficulties"
+    description:
+      zh: >
+          listDifficulties：模块导出函数。
+          
+      en: >
+          listDifficulties: exported module function.
+          
+  - protocol: rpc
+    path: "api.control.getDifficulty"
+    description:
+      zh: >
+          getDifficulty：模块导出函数。
+          
+      en: >
+          getDifficulty: exported module function.
+          
+  - protocol: rpc
+    path: "api.control.setDifficulty"
+    description:
+      zh: >
+          setDifficulty：模块导出函数。
+          
+      en: >
+          setDifficulty: exported module function.
+          
+  - protocol: rpc
+    path: "api.control.routes"
+    description:
+      zh: >
+          routes：模块导出函数。
+          
+      en: >
+          routes: exported module function.
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.state.area.api.phase-1c73471d

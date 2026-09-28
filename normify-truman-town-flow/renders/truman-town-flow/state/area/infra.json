@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "id": "truman-town-flow.state.area.infra",
+  "updated_at": "2026-09-28T02:33:30.959Z",
+  "mode": "grid",
+  "reading": {
+    "zh": "按数据流顺序浏览本层模块，边表示已确认的依赖关系。",
+    "en": "Browse modules in data-flow order; edges show confirmed dependencies."
+  },
+  "order": [
+    "truman-town-flow.state.area.infra.by-type-49f64b03",
+    "truman-town-flow.state.area.infra.counter-d8b78ddd",
+    "truman-town-flow.state.area.infra.current-difficulty-id-59939754",
+    "truman-town-flow.state.area.infra.dead-letters-5964bca1",
+    "truman-town-flow.state.area.infra.dim-21e62417",
+    "truman-town-flow.state.area.infra.gen-3a5a94ca",
+    "truman-town-flow.state.area.infra.gen-state-28bc6a9f",
+    "truman-town-flow.state.area.infra.generation-6bb3f83c",
+    "truman-town-flow.state.area.infra.handlers-f9a5ebb0",
+    "truman-town-flow.state.area.infra.nodes-231cb4f7",
+    "truman-town-flow.state.area.infra.queue-d30bf235",
+    "truman-town-flow.state.area.infra.rows-3eedc462",
+    "truman-town-flow.state.area.infra.state-b04accf5",
+    "truman-town-flow.state.area.infra.stats-a44339a1",
+    "truman-town-flow.state.area.infra.stopwords-660760b0",
+    "truman-town-flow.state.area.infra.wildcard-8d95c95f"
+  ]
+}

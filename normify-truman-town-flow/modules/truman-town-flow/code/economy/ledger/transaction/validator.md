@@ -10,11 +10,39 @@ description:
   en: >
       Code module src/economy/ledger/transaction/validator.js as a data-flow endpoint.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-27T01:43:20.282Z"
-fingerprint: pending
-source: []
-apis: []
+revision: 097b667976bac34f168628c34a69a1c227c462d0
+updated_at: "2026-09-28T02:35:42.398Z"
+fingerprint: 39fdf876fff7c6d5f7bafe41c9d8f88af069ccc065e55398b2aa3ea24aa0824f
+source:
+  - path: "src/economy/ledger/transaction/validator.js"
+apis:
+  - protocol: rpc
+    path: "economy.ledger.transaction.validator.onBankruptcy"
+    description:
+      zh: >
+          onBankruptcy：模块导出函数。
+          
+      en: >
+          onBankruptcy: exported module function.
+          
+  - protocol: rpc
+    path: "economy.ledger.transaction.validator.check"
+    description:
+      zh: >
+          check：模块导出函数。
+          
+      en: >
+          check: exported module function.
+          
+  - protocol: rpc
+    path: "economy.ledger.transaction.validator.atomic"
+    description:
+      zh: >
+          atomic：模块导出函数。
+          
+      en: >
+          atomic: exported module function.
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.state.area.economy.bankruptcy-handlers-45cbba7c

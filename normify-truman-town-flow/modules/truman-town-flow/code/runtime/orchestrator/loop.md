@@ -5,18 +5,134 @@ parent: truman-town-flow.code.runtime.orchestrator
 name: {zh: "runtime/orchestrator/loop.js", en: "runtime/orchestrator/loop.js"}
 description:
   zh: >
-      代码模块 src/runtime/orchestrator/loop.js。出边=它写的状态，入边=它读的状态；箭头锚定到具体写/读函数。
+      主循环负责单 tick 阶段编排、决策与提交边界管理。
       
   en: >
-      Code module src/runtime/orchestrator/loop.js as a data-flow endpoint.
+      Coordinates per-tick stages, decisions, and commit boundaries.
       
-revision: 7e564ca000000000000000000000000000000000
-updated_at: "2026-09-27T20:59:43.264Z"
-fingerprint: f5f7e70eb62f2bd3d6aaa8bd7e4fcd95ba636a6587fb1b212ff0f79b1de6a74a
+revision: 097b667976bac34f168628c34a69a1c227c462d0
+updated_at: "2026-09-28T02:42:20.961Z"
+fingerprint: 56d12036a82066b75d5b666272f28a7ed110363e85c8b8bd901ea88039d383ac
 source:
   - path: "src/runtime/orchestrator/loop.js"
-  - path: "src/runtime/orchestrator/_stage2.js"
-apis: []
+apis:
+  - protocol: rpc
+    path: "runtime.orchestrator.loop.setIntervention"
+    description:
+      zh: >
+          setIntervention：主循环公开的运行时接口。
+          
+      en: >
+          setIntervention: public orchestrator runtime API.
+          
+  - protocol: rpc
+    path: "runtime.orchestrator.loop.interventionStatus"
+    description:
+      zh: >
+          interventionStatus：主循环公开的运行时接口。
+          
+      en: >
+          interventionStatus: public orchestrator runtime API.
+          
+  - protocol: rpc
+    path: "runtime.orchestrator.loop.foragePoolRemaining"
+    description:
+      zh: >
+          foragePoolRemaining：主循环公开的运行时接口。
+          
+      en: >
+          foragePoolRemaining: public orchestrator runtime API.
+          
+  - protocol: rpc
+    path: "runtime.orchestrator.loop.generationStatus"
+    description:
+      zh: >
+          generationStatus：主循环公开的运行时接口。
+          
+      en: >
+          generationStatus: public orchestrator runtime API.
+          
+  - protocol: rpc
+    path: "runtime.orchestrator.loop.legacyStatus"
+    description:
+      zh: >
+          legacyStatus：主循环公开的运行时接口。
+          
+      en: >
+          legacyStatus: public orchestrator runtime API.
+          
+  - protocol: rpc
+    path: "runtime.orchestrator.loop.spawnAgent"
+    description:
+      zh: >
+          spawnAgent：主循环公开的运行时接口。
+          
+      en: >
+          spawnAgent: public orchestrator runtime API.
+          
+  - protocol: rpc
+    path: "runtime.orchestrator.loop.tickSequence"
+    description:
+      zh: >
+          tickSequence：主循环公开的运行时接口。
+          
+      en: >
+          tickSequence: public orchestrator runtime API.
+          
+  - protocol: rpc
+    path: "runtime.orchestrator.loop.step"
+    description:
+      zh: >
+          step：主循环公开的运行时接口。
+          
+      en: >
+          step: public orchestrator runtime API.
+          
+  - protocol: rpc
+    path: "runtime.orchestrator.loop.run"
+    description:
+      zh: >
+          run：主循环公开的运行时接口。
+          
+      en: >
+          run: public orchestrator runtime API.
+          
+  - protocol: rpc
+    path: "runtime.orchestrator.loop.resume"
+    description:
+      zh: >
+          resume：主循环公开的运行时接口。
+          
+      en: >
+          resume: public orchestrator runtime API.
+          
+  - protocol: rpc
+    path: "runtime.orchestrator.loop.snapshot"
+    description:
+      zh: >
+          snapshot：主循环公开的运行时接口。
+          
+      en: >
+          snapshot: public orchestrator runtime API.
+          
+  - protocol: rpc
+    path: "runtime.orchestrator.loop.markRestored"
+    description:
+      zh: >
+          markRestored：主循环公开的运行时接口。
+          
+      en: >
+          markRestored: public orchestrator runtime API.
+          
+  - protocol: rpc
+    path: "runtime.orchestrator.loop.tickStatus"
+    description:
+      zh: >
+          tickStatus：主循环公开的运行时接口。
+          
+      en: >
+          tickStatus: public orchestrator runtime API.
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.state.area.runtime.laya-urgency-cache-41855253

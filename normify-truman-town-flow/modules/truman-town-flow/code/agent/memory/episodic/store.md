@@ -10,11 +10,75 @@ description:
   en: >
       Code module src/agent/memory/episodic/store.js as a data-flow endpoint.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-27T01:43:16.417Z"
-fingerprint: pending
-source: []
-apis: []
+revision: 097b667976bac34f168628c34a69a1c227c462d0
+updated_at: "2026-09-28T02:35:30.718Z"
+fingerprint: eb478f209df5ccde97dc9e5a061f2f90b93b78d0189a5abcafcf04a1ef6d2494
+source:
+  - path: "src/agent/memory/episodic/store.js"
+apis:
+  - protocol: rpc
+    path: "agent.memory.episodic.store.write"
+    description:
+      zh: >
+          write：模块导出函数。
+          
+      en: >
+          write: exported module function.
+          
+  - protocol: rpc
+    path: "agent.memory.episodic.store.tag"
+    description:
+      zh: >
+          tag：模块导出函数。
+          
+      en: >
+          tag: exported module function.
+          
+  - protocol: rpc
+    path: "agent.memory.episodic.store.list"
+    description:
+      zh: >
+          list：模块导出函数。
+          
+      en: >
+          list: exported module function.
+          
+  - protocol: rpc
+    path: "agent.memory.episodic.store.listRaw"
+    description:
+      zh: >
+          listRaw：模块导出函数。
+          
+      en: >
+          listRaw: exported module function.
+          
+  - protocol: rpc
+    path: "agent.memory.episodic.store.archived"
+    description:
+      zh: >
+          archived：模块导出函数。
+          
+      en: >
+          archived: exported module function.
+          
+  - protocol: rpc
+    path: "agent.memory.episodic.store.lookup"
+    description:
+      zh: >
+          lookup：模块导出函数。
+          
+      en: >
+          lookup: exported module function.
+          
+  - protocol: rpc
+    path: "agent.memory.episodic.store.stats"
+    description:
+      zh: >
+          stats：模块导出函数。
+          
+      en: >
+          stats: exported module function.
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.state.area.agent.by-agent-86ec5f42

@@ -10,11 +10,48 @@ description:
   en: >
       Code module src/agent/psyche/trauma.js as a data-flow endpoint.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-27T01:43:20.282Z"
-fingerprint: pending
-source: []
-apis: []
+revision: 097b667976bac34f168628c34a69a1c227c462d0
+updated_at: "2026-09-28T02:35:34.659Z"
+fingerprint: b9840a8ecd012cb22862c4afab5f5eb6148ae2614b47cf82ba88e8632deb434c
+source:
+  - path: "src/agent/psyche/trauma.js"
+apis:
+  - protocol: rpc
+    path: "agent.psyche.trauma.add"
+    description:
+      zh: >
+          add：模块导出函数。
+          
+      en: >
+          add: exported module function.
+          
+  - protocol: rpc
+    path: "agent.psyche.trauma.query"
+    description:
+      zh: >
+          query：模块导出函数。
+          
+      en: >
+          query: exported module function.
+          
+  - protocol: rpc
+    path: "agent.psyche.trauma.heal"
+    description:
+      zh: >
+          heal：模块导出函数。
+          
+      en: >
+          heal: exported module function.
+          
+  - protocol: rpc
+    path: "agent.psyche.trauma.accumulate"
+    description:
+      zh: >
+          accumulate：模块导出函数。
+          
+      en: >
+          accumulate: exported module function.
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.state.area.agent.events-by-agent-63e338fd

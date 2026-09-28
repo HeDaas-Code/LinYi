@@ -10,11 +10,30 @@ description:
   en: >
       Code module src/economy/ledger/transaction/recorder.js as a data-flow endpoint.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-27T01:43:20.282Z"
-fingerprint: pending
-source: []
-apis: []
+revision: 097b667976bac34f168628c34a69a1c227c462d0
+updated_at: "2026-09-28T02:35:41.409Z"
+fingerprint: 0bc94305c374dbe405ae4af0653393af9c4e2b9e61a73145cbe30676796b3cef
+source:
+  - path: "src/economy/ledger/transaction/recorder.js"
+apis:
+  - protocol: rpc
+    path: "economy.ledger.transaction.recorder.post"
+    description:
+      zh: >
+          post：模块导出函数。
+          
+      en: >
+          post: exported module function.
+          
+  - protocol: rpc
+    path: "economy.ledger.transaction.recorder.receipt"
+    description:
+      zh: >
+          receipt：模块导出函数。
+          
+      en: >
+          receipt: exported module function.
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.state.area.economy.seq-408361b9

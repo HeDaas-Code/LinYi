@@ -10,11 +10,39 @@ description:
   en: >
       Code module src/agent/psyche/coping.js as a data-flow endpoint.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-27T01:43:20.282Z"
-fingerprint: pending
-source: []
-apis: []
+revision: 097b667976bac34f168628c34a69a1c227c462d0
+updated_at: "2026-09-28T02:35:33.919Z"
+fingerprint: 70213be2bcc1f2dd8ac9f23e4500e884748d00a1fe8029d6e88fcc7418c3671e
+source:
+  - path: "src/agent/psyche/coping.js"
+apis:
+  - protocol: rpc
+    path: "agent.psyche.coping.choose"
+    description:
+      zh: >
+          choose：模块导出函数。
+          
+      en: >
+          choose: exported module function.
+          
+  - protocol: rpc
+    path: "agent.psyche.coping.execute"
+    description:
+      zh: >
+          execute：模块导出函数。
+          
+      en: >
+          execute: exported module function.
+          
+  - protocol: rpc
+    path: "agent.psyche.coping.decisionWeights"
+    description:
+      zh: >
+          decisionWeights：模块导出函数。
+          
+      en: >
+          decisionWeights: exported module function.
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.state.area.agent.active-coping-22d99f84

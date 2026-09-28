@@ -10,11 +10,48 @@ description:
   en: >
       Code module src/agent/crafting/recipe.js as a data-flow endpoint.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-27T01:43:16.417Z"
-fingerprint: pending
-source: []
-apis: []
+revision: 097b667976bac34f168628c34a69a1c227c462d0
+updated_at: "2026-09-28T02:42:20.961Z"
+fingerprint: 22eabca8a4bca14a79201b3d1081951722a2cfdeb976a6ef94744280a678c849
+source:
+  - path: "src/agent/crafting/recipe.js"
+apis:
+  - protocol: rpc
+    path: "agent.crafting.recipe.recipe.define"
+    description:
+      zh: >
+          定义工艺配方。
+          
+      en: >
+          Define a crafting recipe.
+          
+  - protocol: rpc
+    path: "agent.crafting.recipe.recipe.query"
+    description:
+      zh: >
+          查询已定义配方。
+          
+      en: >
+          Query a defined recipe.
+          
+  - protocol: rpc
+    path: "agent.crafting.recipe.recipe.learn"
+    description:
+      zh: >
+          记录居民学会配方。
+          
+      en: >
+          Record a learned recipe.
+          
+  - protocol: rpc
+    path: "agent.crafting.recipe.recipe.isLearned"
+    description:
+      zh: >
+          检查居民是否学会配方。
+          
+      en: >
+          Check whether an agent learned a recipe.
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.state.area.agent.recipes-6c89fd3f

@@ -10,11 +10,48 @@ description:
   en: >
       Code module src/genesis/agent-factory/template.js as a data-flow endpoint.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-27T01:43:20.282Z"
-fingerprint: pending
-source: []
-apis: []
+revision: 097b667976bac34f168628c34a69a1c227c462d0
+updated_at: "2026-09-28T02:35:45.358Z"
+fingerprint: 27e8c6edfe0c11ef1ce3357b3b5c026a582504e1a821ae306ff9e0ebd08196ad
+source:
+  - path: "src/genesis/agent-factory/template.js"
+apis:
+  - protocol: rpc
+    path: "genesis.agent-factory.template.build"
+    description:
+      zh: >
+          build：模块导出函数。
+          
+      en: >
+          build: exported module function.
+          
+  - protocol: rpc
+    path: "genesis.agent-factory.template.get"
+    description:
+      zh: >
+          get：模块导出函数。
+          
+      en: >
+          get: exported module function.
+          
+  - protocol: rpc
+    path: "genesis.agent-factory.template.list"
+    description:
+      zh: >
+          list：模块导出函数。
+          
+      en: >
+          list: exported module function.
+          
+  - protocol: rpc
+    path: "genesis.agent-factory.template.instantiate"
+    description:
+      zh: >
+          instantiate：模块导出函数。
+          
+      en: >
+          instantiate: exported module function.
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.state.area.genesis.templates-bd587d5a

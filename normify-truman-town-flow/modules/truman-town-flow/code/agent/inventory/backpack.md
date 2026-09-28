@@ -10,11 +10,48 @@ description:
   en: >
       Code module src/agent/inventory/backpack.js as a data-flow endpoint.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-27T01:43:16.417Z"
-fingerprint: pending
-source: []
-apis: []
+revision: 097b667976bac34f168628c34a69a1c227c462d0
+updated_at: "2026-09-28T02:35:29.030Z"
+fingerprint: 4a0a803365a05598621a0988bbfc7d82d0d77d3694227c139f2e5a29502036a4
+source:
+  - path: "src/agent/inventory/backpack.js"
+apis:
+  - protocol: rpc
+    path: "agent.inventory.backpack.add"
+    description:
+      zh: >
+          add：模块导出函数。
+          
+      en: >
+          add: exported module function.
+          
+  - protocol: rpc
+    path: "agent.inventory.backpack.remove"
+    description:
+      zh: >
+          remove：模块导出函数。
+          
+      en: >
+          remove: exported module function.
+          
+  - protocol: rpc
+    path: "agent.inventory.backpack.list"
+    description:
+      zh: >
+          list：模块导出函数。
+          
+      en: >
+          list: exported module function.
+          
+  - protocol: rpc
+    path: "agent.inventory.backpack.capacity"
+    description:
+      zh: >
+          capacity：模块导出函数。
+          
+      en: >
+          capacity: exported module function.
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.state.area.agent.backpacks-19f4cfd5

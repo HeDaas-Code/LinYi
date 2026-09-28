@@ -10,11 +10,66 @@ description:
   en: >
       Code module src/infra/rng.js as a data-flow endpoint.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-27T01:43:20.282Z"
-fingerprint: pending
-source: []
-apis: []
+revision: 097b667976bac34f168628c34a69a1c227c462d0
+updated_at: "2026-09-28T02:35:49.201Z"
+fingerprint: 27234027da3536dd2b3fc5cba2134859ef009b0436b2bb352734a6f761168ac0
+source:
+  - path: "src/infra/rng.js"
+apis:
+  - protocol: rpc
+    path: "infra.rng.seed"
+    description:
+      zh: >
+          seed：模块导出函数。
+          
+      en: >
+          seed: exported module function.
+          
+  - protocol: rpc
+    path: "infra.rng.next"
+    description:
+      zh: >
+          next：模块导出函数。
+          
+      en: >
+          next: exported module function.
+          
+  - protocol: rpc
+    path: "infra.rng.int"
+    description:
+      zh: >
+          int：模块导出函数。
+          
+      en: >
+          int: exported module function.
+          
+  - protocol: rpc
+    path: "infra.rng.float"
+    description:
+      zh: >
+          float：模块导出函数。
+          
+      en: >
+          float: exported module function.
+          
+  - protocol: rpc
+    path: "infra.rng.choice"
+    description:
+      zh: >
+          choice：模块导出函数。
+          
+      en: >
+          choice: exported module function.
+          
+  - protocol: rpc
+    path: "infra.rng.shuffle"
+    description:
+      zh: >
+          shuffle：模块导出函数。
+          
+      en: >
+          shuffle: exported module function.
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.state.area.infra.state-b04accf5

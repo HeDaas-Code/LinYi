@@ -10,11 +10,30 @@ description:
   en: >
       Code module src/agent/traits/tagset/store.js as a data-flow endpoint.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-27T01:43:20.282Z"
-fingerprint: pending
-source: []
-apis: []
+revision: 097b667976bac34f168628c34a69a1c227c462d0
+updated_at: "2026-09-28T02:35:35.378Z"
+fingerprint: fd656aed6ef8f9e94be6af1a9bcd54d83aaab7a738d936940c673f53e7c1f479
+source:
+  - path: "src/agent/traits/tagset/store.js"
+apis:
+  - protocol: rpc
+    path: "agent.traits.tagset.store.get"
+    description:
+      zh: >
+          get：模块导出函数。
+          
+      en: >
+          get: exported module function.
+          
+  - protocol: rpc
+    path: "agent.traits.tagset.store.upsert"
+    description:
+      zh: >
+          upsert：模块导出函数。
+          
+      en: >
+          upsert: exported module function.
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.state.area.agent.write-count-0535ab2a

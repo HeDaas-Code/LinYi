@@ -10,11 +10,57 @@ description:
   en: >
       Code module src/ai/laya.js as a data-flow endpoint.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-27T01:43:20.282Z"
-fingerprint: pending
-source: []
-apis: []
+revision: 097b667976bac34f168628c34a69a1c227c462d0
+updated_at: "2026-09-28T02:35:36.111Z"
+fingerprint: 55cce1d6d200ea3934410b860b36620cb93778e101f3ddc866c82a8886dcd495
+source:
+  - path: "src/ai/laya.js"
+apis:
+  - protocol: rpc
+    path: "ai.laya.stateKey"
+    description:
+      zh: >
+          stateKey：模块导出函数。
+          
+      en: >
+          stateKey: exported module function.
+          
+  - protocol: rpc
+    path: "ai.laya.getStats"
+    description:
+      zh: >
+          getStats：模块导出函数。
+          
+      en: >
+          getStats: exported module function.
+          
+  - protocol: rpc
+    path: "ai.laya.judge"
+    description:
+      zh: >
+          judge：模块导出函数。
+          
+      en: >
+          judge: exported module function.
+          
+  - protocol: rpc
+    path: "ai.laya.scoreExpectation"
+    description:
+      zh: >
+          scoreExpectation：模块导出函数。
+          
+      en: >
+          scoreExpectation: exported module function.
+          
+  - protocol: rpc
+    path: "ai.laya.survivalUrgency"
+    description:
+      zh: >
+          survivalUrgency：模块导出函数。
+          
+      en: >
+          survivalUrgency: exported module function.
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.state.area.ai.cache-e04b957e

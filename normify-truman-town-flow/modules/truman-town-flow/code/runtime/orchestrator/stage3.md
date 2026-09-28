@@ -10,11 +10,39 @@ description:
   en: >
       Code module src/runtime/orchestrator/_stage3.js as a data-flow endpoint.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-27T01:43:24.455Z"
-fingerprint: pending
-source: []
-apis: []
+revision: 097b667976bac34f168628c34a69a1c227c462d0
+updated_at: "2026-09-28T02:35:58.949Z"
+fingerprint: 10baea7138a6f981903537cd6c160367d02821d1f5a3c1fdb47c7f530e350716
+source:
+  - path: "src/runtime/orchestrator/_stage3.js"
+apis:
+  - protocol: rpc
+    path: "runtime.orchestrator._stage3.seed"
+    description:
+      zh: >
+          seed：模块导出函数。
+          
+      en: >
+          seed: exported module function.
+          
+  - protocol: rpc
+    path: "runtime.orchestrator._stage3.tick"
+    description:
+      zh: >
+          tick：模块导出函数。
+          
+      en: >
+          tick: exported module function.
+          
+  - protocol: rpc
+    path: "runtime.orchestrator._stage3.summary"
+    description:
+      zh: >
+          summary：模块导出函数。
+          
+      en: >
+          summary: exported module function.
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.state.area.runtime.allied-3f55bd00

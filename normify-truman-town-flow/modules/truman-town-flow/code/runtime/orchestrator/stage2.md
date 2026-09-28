@@ -10,11 +10,84 @@ description:
   en: >
       Code module src/runtime/orchestrator/_stage2.js as a data-flow endpoint.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-27T01:43:24.455Z"
-fingerprint: pending
-source: []
-apis: []
+revision: 097b667976bac34f168628c34a69a1c227c462d0
+updated_at: "2026-09-28T02:35:58.197Z"
+fingerprint: 30a4bba66f6603b782da02bbe1b72daa18961d208f6890f5976b54569bb498f2
+source:
+  - path: "src/runtime/orchestrator/_stage2.js"
+apis:
+  - protocol: rpc
+    path: "runtime.orchestrator._stage2.makeTags"
+    description:
+      zh: >
+          makeTags：模块导出函数。
+          
+      en: >
+          makeTags: exported module function.
+          
+  - protocol: rpc
+    path: "runtime.orchestrator._stage2.seed"
+    description:
+      zh: >
+          seed：模块导出函数。
+          
+      en: >
+          seed: exported module function.
+          
+  - protocol: rpc
+    path: "runtime.orchestrator._stage2.craftMaterialId"
+    description:
+      zh: >
+          craftMaterialId：模块导出函数。
+          
+      en: >
+          craftMaterialId: exported module function.
+          
+  - protocol: rpc
+    path: "runtime.orchestrator._stage2.candidateStateFor"
+    description:
+      zh: >
+          candidateStateFor：模块导出函数。
+          
+      en: >
+          candidateStateFor: exported module function.
+          
+  - protocol: rpc
+    path: "runtime.orchestrator._stage2.performAgentAction"
+    description:
+      zh: >
+          performAgentAction：模块导出函数。
+          
+      en: >
+          performAgentAction: exported module function.
+          
+  - protocol: rpc
+    path: "runtime.orchestrator._stage2.rankTriageByReputation"
+    description:
+      zh: >
+          rankTriageByReputation：模块导出函数。
+          
+      en: >
+          rankTriageByReputation: exported module function.
+          
+  - protocol: rpc
+    path: "runtime.orchestrator._stage2.tick"
+    description:
+      zh: >
+          tick：模块导出函数。
+          
+      en: >
+          tick: exported module function.
+          
+  - protocol: rpc
+    path: "runtime.orchestrator._stage2.summary"
+    description:
+      zh: >
+          summary：模块导出函数。
+          
+      en: >
+          summary: exported module function.
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.state.area.runtime.platform-gen-state-505afe0a

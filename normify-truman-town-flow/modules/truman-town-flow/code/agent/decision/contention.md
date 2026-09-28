@@ -10,11 +10,75 @@ description:
   en: >
       Code module src/agent/decision/contention.js as a data-flow endpoint.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-27T01:43:16.417Z"
-fingerprint: pending
-source: []
-apis: []
+revision: 097b667976bac34f168628c34a69a1c227c462d0
+updated_at: "2026-09-28T02:42:20.962Z"
+fingerprint: cd9bf2dd1736134255d01b727266314a3ca8e93da4fbf587a7bd6e527d67de80
+source:
+  - path: "src/agent/decision/contention.js"
+apis:
+  - protocol: rpc
+    path: "agent.decision.contention.open"
+    description:
+      zh: >
+          open：模块导出函数。
+          
+      en: >
+          open: exported module function.
+          
+  - protocol: rpc
+    path: "agent.decision.contention.isOpen"
+    description:
+      zh: >
+          isOpen：模块导出函数。
+          
+      en: >
+          isOpen: exported module function.
+          
+  - protocol: rpc
+    path: "agent.decision.contention.tickOf"
+    description:
+      zh: >
+          tickOf：模块导出函数。
+          
+      en: >
+          tickOf: exported module function.
+          
+  - protocol: rpc
+    path: "agent.decision.contention.remaining"
+    description:
+      zh: >
+          remaining：模块导出函数。
+          
+      en: >
+          remaining: exported module function.
+          
+  - protocol: rpc
+    path: "agent.decision.contention.reserve"
+    description:
+      zh: >
+          reserve：模块导出函数。
+          
+      en: >
+          reserve: exported module function.
+          
+  - protocol: rpc
+    path: "agent.decision.contention.view"
+    description:
+      zh: >
+          view：模块导出函数。
+          
+      en: >
+          view: exported module function.
+          
+  - protocol: rpc
+    path: "agent.decision.contention.snapshot"
+    description:
+      zh: >
+          snapshot：模块导出函数。
+          
+      en: >
+          snapshot: exported module function.
+          
 deps:
   - kind: dataflow
     to: truman-town-flow.state.area.agent.pools-1c7d56f4
