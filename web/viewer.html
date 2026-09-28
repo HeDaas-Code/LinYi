@@ -12,6 +12,10 @@
     h1 { margin: 0; font-size: 21px; }
     button { min-height: 42px; padding: 0 16px; border: 1px solid #176b55; border-radius: 6px; color: white; background: #176b55; font: inherit; cursor: pointer; }
     button:focus-visible { outline: 3px solid #e3a834; outline-offset: 2px; }
+    button:disabled { opacity: .55; cursor: wait; }
+    .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .sim-status { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 10px; }
+    #message.error { color: #a12828; }
     main { max-width: 960px; margin: 0 auto; padding: 20px 16px 40px; }
     .status { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 18px; margin-bottom: 20px; }
     .tick { font-size: 20px; font-weight: 700; }
@@ -35,6 +39,14 @@
     <button id="refresh" type="button">刷新</button>
   </header>
   <main>
+    <div class="controls" aria-label="模拟控制">
+      <button type="button" data-action="start">启动</button>
+      <button type="button" data-action="step">单步</button>
+      <button type="button" data-action="pause">暂停</button>
+      <button type="button" data-action="resume">恢复</button>
+      <button type="button" data-action="stop">停止</button>
+    </div>
+    <div class="sim-status"><span>phase <strong id="phase">--</strong></span><span>state <strong id="sim-state">--</strong></span><span>tick <strong id="sim-tick">--</strong></span><span>居民 <strong id="sim-residents">--</strong></span></div>
     <div class="status"><span class="tick">Tick <span id="tick">--</span></span><span id="updated">尚未更新</span></div>
     <div id="message" role="status" aria-live="polite">正在读取世界状态…</div>
     <section aria-labelledby="resource-heading">
@@ -55,14 +67,19 @@
 
     async function refresh() {
       const message = document.querySelector('#message');
-      const button = document.querySelector('#refresh');
-      button.disabled = true;
-      message.textContent = '正在读取世界状态…';
+      if (!controlsBusy) message.textContent = '正在读取世界状态…';
       try {
-        const response = await fetch('/api/v1/world/state', { headers: { Accept: 'application/json' } });
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-        const state = await response.json();
+        const [worldResponse, simResponse] = await Promise.all([
+          fetch('/api/v1/world/state', { headers: { Accept: 'application/json' } }),
+          fetch('/api/v1/sim/status', { headers: { Accept: 'application/json' } }),
+        ]);
+        if (!worldResponse.ok) throw new Error('世界状态 HTTP ' + worldResponse.status);
+        if (!simResponse.ok) throw new Error('模拟状态 HTTP ' + simResponse.status);
+        const [state, sim] = await Promise.all([worldResponse.json(), simResponse.json()]);
         document.querySelector('#tick').innerHTML = escapeHtml(state.tick);
+        document.querySelector('#phase').textContent = sim.phase ?? '—';
+        document.querySelector('#sim-state').textContent = sim.state ?? '—';
+        document.querySelector('#sim-tick').textContent = sim.tick ?? state.tick ?? '—';
         document.querySelector('#updated').textContent = '更新于 ' + new Date().toLocaleTimeString('zh-CN');
         const resources = state.resources ?? {};
         document.querySelector('#resources').innerHTML = Object.entries(resources).map(([key, value]) => {
@@ -70,20 +87,54 @@
           return '<div class="resource"><span class="label">' + escapeHtml(resourceLabels[key] ?? key) + '</span><strong>' + escapeHtml(stock) + '</strong></div>';
         }).join('') || '<div class="resource">暂无资源数据</div>';
         const agents = Array.isArray(state.agents) ? state.agents : Object.values(state.agents ?? {});
+        document.querySelector('#sim-residents').textContent = agents.length;
         document.querySelector('#resident-count').textContent = '(' + agents.length + ')';
         document.querySelector('#residents').innerHTML = agents.map((agent) => {
           const alive = agent.alive !== false;
           return '<tr><td>' + escapeHtml(agent.name ?? agent.id ?? '未命名') + '</td><td>' + (alive ? '在世' : '已故') + '</td><td>' + escapeHtml(agent.last_action ?? agent.lastAction ?? '—') + '</td></tr>';
         }).join('') || '<tr><td colspan="3">暂无居民</td></tr>';
-        message.textContent = '';
+        if (!controlsBusy) { message.textContent = ''; message.classList.remove('error'); }
       } catch (error) {
         message.textContent = '读取失败：' + error.message;
+        message.classList.add('error');
+      }
+    }
+
+    let controlsBusy = false;
+    async function control(action) {
+      if (controlsBusy) return;
+      controlsBusy = true;
+      const buttons = [...document.querySelectorAll('.controls button'), document.querySelector('#refresh')];
+      buttons.forEach((button) => { button.disabled = true; });
+      const message = document.querySelector('#message');
+      message.classList.remove('error');
+      message.textContent = '正在执行：' + action;
+      try {
+        const response = await fetch('/api/v1/sim/' + action, {
+          method: 'POST',
+          headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+          body: '{}',
+        });
+        if (!response.ok) {
+          const detail = await response.json().catch(() => ({}));
+          throw new Error(detail.error ?? detail.message ?? ('HTTP ' + response.status));
+        }
+        await refresh();
+        if (!message.classList.contains('error')) message.textContent = '';
+      } catch (error) {
+        message.textContent = '操作失败：' + error.message;
+        message.classList.add('error');
+        await refresh();
       } finally {
-        button.disabled = false;
+        controlsBusy = false;
+        buttons.forEach((button) => { button.disabled = false; });
       }
     }
 
     document.querySelector('#refresh').addEventListener('click', refresh);
+    document.querySelectorAll('.controls button').forEach((button) => {
+      button.addEventListener('click', () => control(button.dataset.action));
+    });
     refresh();
     setInterval(refresh, 10000);
   </script>
