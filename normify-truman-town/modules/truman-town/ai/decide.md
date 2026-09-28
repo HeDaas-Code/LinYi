@@ -11,8 +11,8 @@ description:
   en: >
       Lets a real LLM pick an action from the agent feasible candidate set; the LLM-in-the-loop entry point. No invented actions or bypassed feasibility.
       
-revision: 050f2e42262a110318bd7af859f5a3bea3220177
-updated_at: "2026-09-28T10:38:06.461Z"
+revision: 4aa30ac21fd7f498d4c759a5b139d7f84a412acc
+updated_at: "2026-09-28T10:38:40.020Z"
 fingerprint: 0a3de1cb49e4e7cd82b56c70cfbe25b40350659699a99c15529fb5252200bc94
 source:
   - path: "src/ai/decide.js"

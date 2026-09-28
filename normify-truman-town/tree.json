@@ -8,7 +8,7 @@
         "root_uid": "d440391b"
       }
     ],
-    "compiled_at": "2026-09-28T10:38:07.234Z",
+    "compiled_at": "2026-09-28T10:38:40.616Z",
     "stats": {
       "tree_count": 1,
       "module_count": 232,
@@ -2891,8 +2891,8 @@
           "path": "src/ai/decide.js"
         }
       ],
-      "revision": "050f2e42262a110318bd7af859f5a3bea3220177",
-      "updated_at": "2026-09-28T10:38:06.461Z",
+      "revision": "4aa30ac21fd7f498d4c759a5b139d7f84a412acc",
+      "updated_at": "2026-09-28T10:38:40.020Z",
       "fingerprint": "0a3de1cb49e4e7cd82b56c70cfbe25b40350659699a99c15529fb5252200bc94",
       "apis": [
         {
@@ -3881,8 +3881,8 @@
           "path": "web/viewer.html"
         }
       ],
-      "revision": "050f2e42262a110318bd7af859f5a3bea3220177",
-      "updated_at": "2026-09-28T10:37:31.171Z",
+      "revision": "4aa30ac21fd7f498d4c759a5b139d7f84a412acc",
+      "updated_at": "2026-09-28T10:38:40.022Z",
       "fingerprint": "78811eec7c44a53c65e00dd1072fdb1beba84804eb8d1aa473f9fd585a9eeaf7",
       "apis": [
         {
@@ -6614,8 +6614,8 @@
           "path": "src/infra/config.js"
         }
       ],
-      "revision": "050f2e42262a110318bd7af859f5a3bea3220177",
-      "updated_at": "2026-09-28T10:38:06.462Z",
+      "revision": "4aa30ac21fd7f498d4c759a5b139d7f84a412acc",
+      "updated_at": "2026-09-28T10:38:40.021Z",
       "fingerprint": "9fe75308715a76bcadb42c05d3237c38823384f7478d64524cab727341583ebc",
       "apis": [
         {
@@ -8171,8 +8171,8 @@
           "path": "src/runtime/orchestrator/loop.js"
         }
       ],
-      "revision": "050f2e42262a110318bd7af859f5a3bea3220177",
-      "updated_at": "2026-09-28T10:38:06.462Z",
+      "revision": "4aa30ac21fd7f498d4c759a5b139d7f84a412acc",
+      "updated_at": "2026-09-28T10:38:40.021Z",
       "fingerprint": "44ff2593c9445393adf4dfb6a6172c3eb8dbf2f18bf53ff7e8c95b7a793da83e",
       "apis": [
         {
