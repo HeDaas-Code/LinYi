@@ -10,8 +10,8 @@ description:
   en: >
       Validates child tag legality (count/uniqueness/weights) and audits inheritance ratio.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T06:24:06.394Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.832Z"
 fingerprint: 37904151ac870b39d570cc68bcd62360be696ac72a7853ba63bafe55a4026b36
 source:
   - path: "src/agent/traits/inherit/validator.js"

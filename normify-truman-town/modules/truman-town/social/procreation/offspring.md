@@ -10,8 +10,8 @@ description:
   en: >
       Requests offspring creation and invokes heredity and prompt assembly.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T07:57:42.689Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.838Z"
 fingerprint: 354da6a5e2e887c8a7d8acf78bdcf14043fe4537517880fbba2650c3e60419bf
 source:
   - path: "src/social/procreation/offspring.js"

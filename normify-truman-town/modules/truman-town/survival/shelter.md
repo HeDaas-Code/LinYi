@@ -10,8 +10,8 @@ description:
   en: >
       Maintains LinYi Shelter integrity, capacity and damage state.
       
-revision: b79c517f68ea4ab47f3b657b9a2bf591b2b21aa4
-updated_at: "2026-09-23T19:04:06.115Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.839Z"
 fingerprint: 303ed7b0dac9492de72ddb895241c66c374aa789f94f3a9bb5c43b8804ca7481
 source:
   - path: "src/survival/shelter.js"

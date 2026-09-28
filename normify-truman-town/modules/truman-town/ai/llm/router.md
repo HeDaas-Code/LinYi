@@ -10,8 +10,8 @@ description:
   en: >
       Routes tasks to models with fallback policies.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T06:18:02.555Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.832Z"
 fingerprint: 3ba9b237eb7e769a926349c45f9efe5ddeb21c01e178ec3cd0a17e110b9beab9
 source:
   - path: "src/ai/llm/router.js"

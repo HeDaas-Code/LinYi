@@ -10,8 +10,8 @@ description:
   en: >
       Generates a 200-500 word legacy description via LLM.
       
-revision: 9885f1e507ec4ef5a3c1f8c166ed456cf0026737
-updated_at: "2026-09-24T19:40:06.129Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.834Z"
 fingerprint: 243e44fe25c8edb2c3e086a38afcc9ac3d4b30e857fcd8cb2a279ef4f55f9879
 source:
   - path: "src/civilization/legacy/summary/writer.js"

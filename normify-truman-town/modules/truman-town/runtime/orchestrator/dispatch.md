@@ -10,8 +10,8 @@ description:
   en: >
       Resolves agent decisions into world operations and commits them.
       
-revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
-updated_at: "2026-09-28T08:45:24.382Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.836Z"
 fingerprint: ca20c86692a41d7289dd669dd5dda2d80fc40f0f389c020ca76e53e93bb6bc8d
 source:
   - path: "src/runtime/orchestrator/dispatch.js"

@@ -10,8 +10,8 @@ description:
   en: >
       Detects whether a tag survived three generations without loss.
       
-revision: 9f0996005124054052fc61d9ec3f762219e92a2c
-updated_at: "2026-09-26T05:45:37.198Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.837Z"
 fingerprint: 2d0eeffdd00957ddeee7628c686dc4cd25b38c309ba4d502fbb5946bf82c959f
 source:
   - path: "src/social/family/trait/detector.js"

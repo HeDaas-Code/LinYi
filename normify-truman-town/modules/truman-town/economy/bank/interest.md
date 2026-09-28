@@ -10,8 +10,8 @@ description:
   en: >
       Accrues and settles interest on deposits and loans.
       
-revision: 291c1bea8967e3110e48250864e71452d803a9bf
-updated_at: "2026-09-23T13:07:29.470Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.834Z"
 fingerprint: 585af047197f7eae9e6dca380c3fdd92a67cc86d43a91e1a3337c97dadca1ccc
 source:
   - path: "src/economy/bank/interest.js"

@@ -10,8 +10,8 @@ description:
   en: >
       Confirms collective collapse and writes the observer log.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T14:39:19.573Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.833Z"
 fingerprint: e196c8a8d3d08e23ed7c950c99c50d009e91319ee938503c1409a6ac95bc08b5
 source:
   - path: "src/civilization/collapse/confirmer.js"

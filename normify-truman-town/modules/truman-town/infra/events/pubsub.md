@@ -10,8 +10,8 @@ description:
   en: >
       Publishes and subscribes to sandbox events.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T05:45:38.726Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.835Z"
 fingerprint: fa5ae74ea49d2d08d06b797e27982b0f8820b2c0a0e2987f1dbf00ea44cfad24
 source:
   - path: "src/infra/events/pubsub.js"

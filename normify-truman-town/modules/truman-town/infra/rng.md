@@ -10,8 +10,8 @@ description:
   en: >
       Provides reproducible randomness and seed management.
       
-revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
-updated_at: "2026-09-28T08:45:24.381Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.835Z"
 fingerprint: 27234027da3536dd2b3fc5cba2134859ef009b0436b2bb352734a6f761168ac0
 source:
   - path: "src/infra/rng.js"

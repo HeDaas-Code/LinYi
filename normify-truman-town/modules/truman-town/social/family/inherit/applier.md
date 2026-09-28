@@ -10,8 +10,8 @@ description:
   en: >
       Merges family traits into the 50-tag set of newborn family members.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T07:57:42.689Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.837Z"
 fingerprint: b2181bcc86088ebfe70ed2c4e17872252f7c3f18485a57a5c135f8b8fa2c2ade
 source:
   - path: "src/social/family/inherit/applier.js"

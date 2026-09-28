@@ -10,8 +10,8 @@ description:
   en: >
       Records every agent decision — who chose what from which options at which tick and why — into an immutable append log in the graph store.
       
-revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
-updated_at: "2026-09-28T08:45:24.381Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.836Z"
 fingerprint: eae4e838508c119c42f3dc01063096654ad74f6e1833169d79a285a3d03fc764
 source:
   - path: "src/observer/recorder/decision-log.js"

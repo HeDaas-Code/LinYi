@@ -10,8 +10,8 @@ description:
   en: >
       Proposes, votes and enforces shelter rules.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T14:28:10.151Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.838Z"
 fingerprint: 6b27201ca00956bc5db768768425018f59a4d7a5d1a5f9ee22b72704524b5b0f
 source:
   - path: "src/social/politics/law.js"

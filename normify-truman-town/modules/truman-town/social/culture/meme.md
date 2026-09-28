@@ -10,8 +10,8 @@ description:
   en: >
       Ideas spread, mutate and die among residents, with event logging.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T14:22:57.360Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.837Z"
 fingerprint: eba3c5e7f2efdbc4756afedebae241e824c62a27456e075853d78e5179a0e4b7
 source:
   - path: "src/social/culture/meme.js"

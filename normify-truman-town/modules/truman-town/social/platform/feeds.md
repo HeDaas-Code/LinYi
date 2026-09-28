@@ -10,8 +10,8 @@ description:
   en: >
       Generates and ranks feeds by relationships and interests.
       
-revision: e317580e2e9326327504170ed572a942b2b0db47
-updated_at: "2026-09-24T07:01:20.044Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.838Z"
 fingerprint: 895306c82c1890813ec2bcff91f59b2d854b803419a14ec27deaec7a23f39c1c
 source:
   - path: "src/social/platform/feeds.js"

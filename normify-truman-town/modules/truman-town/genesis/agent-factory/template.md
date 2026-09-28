@@ -10,8 +10,8 @@ description:
   en: >
       Builds agent templates from traits and roles.
       
-revision: 02dffcd347b42bfde4f8a766a3a77cff7de9c286
-updated_at: "2026-09-26T02:15:14.376Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.835Z"
 fingerprint: 27e8c6edfe0c11ef1ce3357b3b5c026a582504e1a821ae306ff9e0ebd08196ad
 source:
   - path: "src/genesis/agent-factory/template.js"

@@ -10,8 +10,8 @@ description:
   en: >
       Shortlists pool candidates by simulated score. **Survival spine (eat/drink/rest/forage) is exempt from truncation**, and found/socialize/court/accept get reserved seats; pure score truncation evicts low-base-score necessities (measured: settlement stops foraging, supplies hit zero, survival collapses). First of two decision-bandwidth gates.
       
-revision: 45f6c8b7b8ba210fcd94506b2097c8e601dd1382
-updated_at: "2026-09-26T01:44:47.422Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.824Z"
 fingerprint: 9f98bae0723d0753ca4b7fb25ae3010b7747fd4675bd504df2a6dadff184784e
 source:
   - path: "src/agent/anticipation/pool/selector.js"

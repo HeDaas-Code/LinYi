@@ -10,8 +10,8 @@ description:
   en: >
       Computes similarity between two 50-tag sets and finds neighbors.
       
-revision: 6939444d190f953b7c3e7a73b35ad8b25ac43b07
-updated_at: "2026-09-24T02:04:23.739Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.832Z"
 fingerprint: fcc52c46932330246ac98d057a4bc49844e919b6214225fa852134f6f0a75f61
 source:
   - path: "src/agent/traits/tagset/similarity.js"

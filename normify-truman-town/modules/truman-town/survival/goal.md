@@ -10,8 +10,8 @@ description:
   en: >
       Makes survival the top goal, outputs survival strategy and tracks elapsed time.
       
-revision: da6092c786d6c0615331ed8d297d5c0d6a2fa45a
-updated_at: "2026-09-23T12:12:22.377Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.839Z"
 fingerprint: be58bcc56a82058df013a2674b8bca7e46ad5ad44d05838267c99da76286d5d7
 source:
   - path: "src/survival/goal.js"

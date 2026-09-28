@@ -10,8 +10,8 @@ description:
   en: >
       Compares survival times, collapse modes and legacies across civilizations; read-only over archives.
       
-revision: 5ad9af8b020cb978dad9c8ac59c41cdb224d5c73
-updated_at: "2026-09-26T03:35:08.522Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.836Z"
 fingerprint: cee92fb24030c2c7fa2dec1387516a0f4e00a36207d42699f67737d5fa7a8f8f
 source:
   - path: "src/observer/experiment/compare.js"

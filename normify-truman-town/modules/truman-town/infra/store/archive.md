@@ -10,8 +10,8 @@ description:
   en: >
       Saves and loads full sandbox archives.
       
-revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
-updated_at: "2026-09-28T08:45:24.381Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.836Z"
 fingerprint: 4551403cf17070d8baffb5bd764817d15125549bb3c4e3f4f6076b11c86d6e58
 source:
   - path: "src/infra/store/archive.js"

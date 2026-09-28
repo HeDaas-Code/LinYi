@@ -10,8 +10,8 @@ description:
   en: >
       Weighted-samples trait tags without replacement, reproducible via a seeded RNG.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T06:24:06.393Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.832Z"
 fingerprint: 82f0078f175270b3cf4ab02b9c0c3abc84687eeaa1010d657675f683fffb442b
 source:
   - path: "src/agent/traits/tagset/sampler.js"

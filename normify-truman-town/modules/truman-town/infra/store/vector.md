@@ -10,8 +10,8 @@ description:
   en: >
       Upserts and searches memory vectors.
       
-revision: 36ce55d9e3d8994abf455c13925f0c4f4a3f316c
-updated_at: "2026-09-25T09:50:41.310Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.836Z"
 fingerprint: 056beb6dc30aaf9fce06c4b80bcaf57b696eefd543e5a21e384278a0a5f234ab
 source:
   - path: "src/infra/store/vector.js"

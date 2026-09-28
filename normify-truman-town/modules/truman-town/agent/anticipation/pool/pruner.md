@@ -10,8 +10,8 @@ description:
   en: >
       Trims the candidate pool to top-K by score. Shares the **same exemption rules** as selector.shortlist (survival spine plus found/socialize/court/accept reserved); both gates must exempt together or the second gate re-evicts what the first admitted.
       
-revision: 45f6c8b7b8ba210fcd94506b2097c8e601dd1382
-updated_at: "2026-09-26T01:44:47.639Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.824Z"
 fingerprint: 07fee21210d2af2442d95e1c6157f8887473294a1cfe04b5e92fda02bc91985f
 source:
   - path: "src/agent/anticipation/pool/pruner.js"

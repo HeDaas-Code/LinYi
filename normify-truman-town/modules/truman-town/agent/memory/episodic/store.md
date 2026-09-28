@@ -10,8 +10,8 @@ description:
   en: >
       Writes/tags episodic events with emotional markers, plus list queries.
       
-revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
-updated_at: "2026-09-28T08:45:24.378Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.831Z"
 fingerprint: eb478f209df5ccde97dc9e5a061f2f90b93b78d0189a5abcafcf04a1ef6d2494
 source:
   - path: "src/agent/memory/episodic/store.js"

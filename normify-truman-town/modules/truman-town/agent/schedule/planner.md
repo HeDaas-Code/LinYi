@@ -10,8 +10,8 @@ description:
   en: >
       Generates and replans schedules from roles, goals and constraints.
       
-revision: e350da98bb80d56a99c3c70b9cd269a351113026
-updated_at: "2026-09-24T03:13:06.630Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.832Z"
 fingerprint: 0c461c852583855d1fc1d57b0c532661a24ad3e21e16e4d8c81ca7fabda2076f
 source:
   - path: "src/agent/schedule/planner.js"

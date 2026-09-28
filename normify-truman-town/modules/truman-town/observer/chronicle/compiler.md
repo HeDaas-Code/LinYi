@@ -10,8 +10,8 @@ description:
   en: >
       Compiles raw decision/action/event logs into a time-bucketed chronicle.
       
-revision: c153893ac2349a3e3a99e6331904bebe7274b479
-updated_at: "2026-09-23T05:05:51.519Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.836Z"
 fingerprint: efcaf2f16db1ba6052d8859012c6dc555bf437458ad37fd7b708c79e15343754
 source:
   - path: "src/observer/chronicle/compiler.js"

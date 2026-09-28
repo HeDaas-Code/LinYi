@@ -10,8 +10,8 @@ description:
   en: >
       Detects collapse signals from survival crisis and civilization metrics.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-26T03:35:04.418Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.833Z"
 fingerprint: bcfabb6e33fbbcc8a0826dd1da11a6242c38061553c3e16ecebbb3b7bb4c8edb
 source:
   - path: "src/civilization/collapse/detector.js"

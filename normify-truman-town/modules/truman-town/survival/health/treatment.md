@@ -10,8 +10,8 @@ description:
   en: >
       Triages and treats patients using medical supplies.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T09:15:17.026Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.839Z"
 fingerprint: 5c46e4e77eea5f1d23db3124fe25a22a31d772551e87e109299b7f67b01d7801
 source:
   - path: "src/survival/health/treatment.js"

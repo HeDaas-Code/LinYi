@@ -10,8 +10,8 @@ description:
   en: >
       Holds funerals/harvests/naming/restart memorials, triggering periodically with group effects.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T14:22:57.360Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.837Z"
 fingerprint: d6683ee0c4bd981d6e83e9bca3be5c2cbb2b9acd533a58104dada9285581b126
 source:
   - path: "src/social/culture/ritual.js"

@@ -10,8 +10,8 @@ description:
   en: >
       Traces individual decision chains and compares behavior across agents.
       
-revision: 796aec9412d132997f5cdc37d01cac934e03d018
-updated_at: "2026-09-25T10:03:44.359Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.836Z"
 fingerprint: 51d20f39a7090ebf0a0ef330b4074a088767c5c6f5327944784e4db93f203e8d
 source:
   - path: "src/observer/audit.js"

@@ -10,8 +10,8 @@ description:
   en: >
       Queries, unlocks and locks tech nodes like water purification, greenhouses, power, medicine and comms.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T14:24:31.903Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.834Z"
 fingerprint: 924d649a369bb9c8df18cf5a71537f76da35669f27f49e6e6fbde2404186e013
 source:
   - path: "src/civilization/tech/tree.js"

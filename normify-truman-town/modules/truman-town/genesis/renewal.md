@@ -10,8 +10,8 @@ description:
   en: >
       Evaluates population, industry and space, replacing the dead to renew the town.
       
-revision: 02dffcd347b42bfde4f8a766a3a77cff7de9c286
-updated_at: "2026-09-25T10:17:35.034Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.835Z"
 fingerprint: 67680da37f40889699a831b0b2a5830e6a8bae255296fc1aebe3213dc6d2272a
 source:
   - path: "src/genesis/renewal.js"

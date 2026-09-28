@@ -10,8 +10,8 @@ description:
   en: >
       Randomly samples 50 tags from 100 parental tags for the child.
       
-revision: 02dffcd347b42bfde4f8a766a3a77cff7de9c286
-updated_at: "2026-09-26T02:15:12.888Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.835Z"
 fingerprint: c8922df0e187d0c2bd125b85feec177b2bc86232fb902107792c122eae8731bc
 source:
   - path: "src/genesis/heredity/tags.js"

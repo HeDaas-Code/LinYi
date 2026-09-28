@@ -10,8 +10,8 @@ description:
   en: >
       Advances schedule items by world time and triggers actions.
       
-revision: e350da98bb80d56a99c3c70b9cd269a351113026
-updated_at: "2026-09-24T03:13:06.630Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.832Z"
 fingerprint: 3f6b6c3bc3ec539299841def187b42f2161123f06ab399be924be3f68395e466
 source:
   - path: "src/agent/schedule/executor.js"

@@ -10,8 +10,8 @@ description:
   en: >
       Handles move-in, move-out and rent linking families to housing.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T07:57:17.695Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.840Z"
 fingerprint: d930fb45cd94111e69dc15ffab326e0515805148219556cf3faa438a79059efa
 source:
   - path: "src/town/residence.js"

@@ -11,8 +11,8 @@ description:
   en: >
       Value pool for the 50-trait tag string: 12 dimensions, 55 candidate values. Each resident holds one 50-tag string; offspring tags are randomly composed from the parents 100 tags. Zero-dependency pure-data module, shared source of truth for heredity and prompt assembly.
       
-revision: 1fe29bb1e2491f51b484e2e2e047f8c23b95cfc4
-updated_at: "2026-09-26T10:15:00Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.835Z"
 fingerprint: c33f8e1c48831920ce68a6ebbcaf8408a28633d44a85dd9d2856186323e4106d
 source:
   - path: "src/genesis/tag-pool.js"

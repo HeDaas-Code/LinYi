@@ -10,8 +10,8 @@ description:
   en: >
       Encodes memory to vectors and searches similar memories.
       
-revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
-updated_at: "2026-09-28T09:00:32.043Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.833Z"
 fingerprint: 7e9a49439546fddb158c1d2dd598bf3b91118c00138756d8d9a62586da33008a
 source:
   - path: "src/ai/memory/embedding.js"

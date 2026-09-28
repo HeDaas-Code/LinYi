@@ -10,8 +10,8 @@ description:
   en: >
       Assembles child traits, family context and town worldview into a new agent prompt.
       
-revision: 02dffcd347b42bfde4f8a766a3a77cff7de9c286
-updated_at: "2026-09-26T02:15:13.410Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.835Z"
 fingerprint: 139d70b9c303b9045231b4cc60fdaa51f252d4e52c3a74570aa91bd332f3d690
 source:
   - path: "src/genesis/heredity/prompt.js"

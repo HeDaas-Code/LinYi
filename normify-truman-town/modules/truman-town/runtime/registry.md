@@ -10,8 +10,8 @@ description:
   en: >
       Registers agents, buildings and businesses with lookup and unregister support.
       
-revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
-updated_at: "2026-09-28T08:45:24.383Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.837Z"
 fingerprint: e00f082476d0cb7d02a531a84029f7c1dd606d37cd25d6300c1a6d0b7c762aaf
 source:
   - path: "src/runtime/registry.js"

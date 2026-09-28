@@ -10,8 +10,8 @@ description:
   en: >
       Locks or forgets tech nodes when their holders die without successors.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T14:24:31.904Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.834Z"
 fingerprint: 733ea94635d0378e1e6d76a88e125a8cc8db9efdb5b7c0887455223c79368f36
 source:
   - path: "src/civilization/tech/lock.js"

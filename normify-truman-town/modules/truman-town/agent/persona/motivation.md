@@ -10,8 +10,8 @@ description:
   en: >
       Evaluates needs, goals and emotional drives to rank action priorities.
       
-revision: 6939444d190f953b7c3e7a73b35ad8b25ac43b07
-updated_at: "2026-09-24T02:04:23.738Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.831Z"
 fingerprint: c672a858be9b17677c79a42b99cdf716757df15e4ae73d3b5eb6304a08e23454
 source:
   - path: "src/agent/persona/motivation.js"

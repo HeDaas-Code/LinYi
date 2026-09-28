@@ -10,8 +10,8 @@ description:
   en: >
       Chooses the final action from candidates with a softmax confidence.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T06:24:06.394Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.827Z"
 fingerprint: f71a00b8596ebb15f79a16c8138dda032d90340fc34d87696f0c9aa58786cad4
 source:
   - path: "src/agent/decision/selector.js"

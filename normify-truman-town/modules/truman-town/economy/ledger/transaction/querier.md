@@ -10,8 +10,8 @@ description:
   en: >
       Queries and audits transaction records.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T08:02:50.389Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.834Z"
 fingerprint: 2bf0bec260b6df4bbacc152929fec1e8f4b9f9f30a2747b03adb1f3887bfa385
 source:
   - path: "src/economy/ledger/transaction/querier.js"

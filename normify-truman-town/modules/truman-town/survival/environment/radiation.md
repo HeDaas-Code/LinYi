@@ -10,8 +10,8 @@ description:
   en: >
       Queries radiation intensity and spreads it as a risk factor for expedition resolution.
       
-revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
-updated_at: "2026-09-28T08:45:24.383Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.838Z"
 fingerprint: 1ec0707acb22d0916ac0acabc8b99a7de92b44632ebad4811d22c51d7a189505
 source:
   - path: "src/survival/environment/radiation.js"

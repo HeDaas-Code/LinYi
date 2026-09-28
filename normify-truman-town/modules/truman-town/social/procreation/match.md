@@ -10,8 +10,8 @@ description:
   en: >
       Evaluates romantic compatibility and readiness for children.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T07:57:42.688Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.838Z"
 fingerprint: 9660bf36285b6fd5a97a3c434405f20d0dd49ad4b55843793ba672689f4710ed
 source:
   - path: "src/social/procreation/match.js"

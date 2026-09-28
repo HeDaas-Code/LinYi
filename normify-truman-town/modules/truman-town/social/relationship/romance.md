@@ -10,8 +10,8 @@ description:
   en: >
       Handles proposals, acceptance, rejection and breakups.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T07:57:42.688Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.838Z"
 fingerprint: ece370677269a357f36249326f6a41d04a768d29d2b07b6412ea5855f965aa73
 source:
   - path: "src/social/relationship/romance.js"

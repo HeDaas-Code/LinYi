@@ -10,8 +10,8 @@ description:
   en: >
       Opens, queries and closes money accounts.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T08:02:50.389Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.834Z"
 fingerprint: 094618ae968abca8aa85e05c64ebd4b846bb679d5b17841fe8e9137cd8ac8160
 source:
   - path: "src/economy/ledger/account.js"

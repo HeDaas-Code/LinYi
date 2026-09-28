@@ -10,8 +10,8 @@ description:
   en: >
       Validates recipe, materials and backpack inventory.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T08:02:32.253Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.826Z"
 fingerprint: f452efd1708287f01e3ad9db14f8765e1e27cbe5cb2471499b9ce8f66652db53
 source:
   - path: "src/agent/crafting/workbench/validator.js"

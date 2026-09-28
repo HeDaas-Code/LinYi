@@ -10,8 +10,8 @@ description:
   en: >
       Explains decisions and produces auditable decision traces.
       
-revision: 159dc43daf11d18b03ea9fc0ea5c3e6b18f16488
-updated_at: "2026-09-24T02:31:02.018Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.827Z"
 fingerprint: ca1556bf9ff32886e3a4350fa156921089687f3751db6a6a3863bb9433a77f9e
 source:
   - path: "src/agent/decision/explainer.js"

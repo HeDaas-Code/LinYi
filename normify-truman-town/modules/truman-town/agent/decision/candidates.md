@@ -10,8 +10,8 @@ description:
   en: >
       Generates reachable action candidates from agent state, always including the survival spine, then appends rule-gated dynamic actions (craft/build/write/work/trade/socialize/court/accept/expedition/found); rejects with a reason when infeasible.
       
-revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
-updated_at: "2026-09-28T08:45:24.378Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.827Z"
 fingerprint: 58f6bbe6d6e7f20311dcd2d6b599168c726ef2395e5fac4bf3d183c49cd6a4c1
 source:
   - path: "src/agent/decision/candidates.js"

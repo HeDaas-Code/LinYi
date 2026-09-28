@@ -10,8 +10,8 @@ description:
   en: >
       Forms, joins and leaves factions around survival strategy, resources or family interests.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T14:28:10.151Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.838Z"
 fingerprint: e434feb01f1b91255c0cdbc424619399c50dc3afeaaec7472502f6466e946735
 source:
   - path: "src/social/politics/faction.js"

@@ -10,8 +10,8 @@ description:
   en: >
       Fixes detected traits as family traits and enforces the max of 5.
       
-revision: 9f0996005124054052fc61d9ec3f762219e92a2c
-updated_at: "2026-09-26T05:45:37.199Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.837Z"
 fingerprint: 7b8daa6903e5066f35a510d8d043c0c91c3f26bb97d966d56eea7790bf118b0d
 source:
   - path: "src/social/family/trait/enforcer.js"

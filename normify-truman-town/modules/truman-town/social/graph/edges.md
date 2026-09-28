@@ -10,8 +10,8 @@ description:
   en: >
       Creates and removes friend, lover and family edges.
       
-revision: 1c7c3d69497e4bcdd67b1e32a59bd6bdbfdc92f5
-updated_at: "2026-09-24T04:00:14.039Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.838Z"
 fingerprint: c45e1a6fa22535cd5480e5109904ec50f97b71439d0c7398156cf67c237d83df
 source:
   - path: "src/social/graph/edges.js"

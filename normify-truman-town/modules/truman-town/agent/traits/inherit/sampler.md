@@ -10,8 +10,8 @@ description:
   en: >
       Combines paternal/maternal tags into a unique child tag set by ratio.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T06:24:06.393Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.832Z"
 fingerprint: a0049d486c0fecaeef7a5679408ce9a6a258b952a5e757de4dd8c103806c04d5
 source:
   - path: "src/agent/traits/inherit/sampler.js"

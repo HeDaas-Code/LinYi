@@ -10,8 +10,8 @@ description:
   en: >
       Books and cancels event venues.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-26T03:35:09.438Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.839Z"
 fingerprint: 13d97fe7649728fd32f57df3c7302698950a6638c2802dac493690e980ae52ed
 source:
   - path: "src/town/facility/venue.js"

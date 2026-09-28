@@ -10,8 +10,8 @@ description:
   en: >
       Detects collective survival crises and raises alerts for collapse judgement.
       
-revision: da6092c786d6c0615331ed8d297d5c0d6a2fa45a
-updated_at: "2026-09-23T12:12:22.377Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.838Z"
 fingerprint: f0d0eb1991f6ae0d238507953f9b9195b503999e853e55e9f7eafa4ab5263515
 source:
   - path: "src/survival/crisis.js"

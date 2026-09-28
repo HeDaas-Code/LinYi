@@ -10,8 +10,8 @@ description:
   en: >
       Plans production and outputs goods and services.
       
-revision: f4968a009dccf5f3735a3f0d7a362ed5f05ff7bf
-updated_at: "2026-09-23T12:16:51.980Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.834Z"
 fingerprint: af5f48951e04d492c61e35a76c0c515ddf41ea696535374368c72d3af3a3b45d
 source:
   - path: "src/economy/industry/production.js"

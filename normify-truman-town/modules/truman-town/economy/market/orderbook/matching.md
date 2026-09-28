@@ -10,8 +10,8 @@ description:
   en: >
       Matches orders and settles via the ledger.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T08:02:50.389Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.835Z"
 fingerprint: 073819e0a578aaa3bb937760d2f73aed2229d21c0b5b2ffb411f6e8ab836dd16
 source:
   - path: "src/economy/market/orderbook/matching.js"

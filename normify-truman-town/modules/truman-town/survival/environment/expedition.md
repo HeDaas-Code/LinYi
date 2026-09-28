@@ -10,8 +10,8 @@ description:
   en: >
       Resolves expeditions as one computation combining radiation, weather, supplies, gear, agent traits, survival state and randomness; the result is only a log entry plus resource and agent-state changes — no open world.
       
-revision: 36ce55d9e3d8994abf455c13925f0c4f4a3f316c
-updated_at: "2026-09-25T09:50:41.311Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.838Z"
 fingerprint: 61b1c434e21c90ddccc9e89318c3d7d8c3b9043c2a74b929af3c4efd901abafa
 source:
   - path: "src/survival/environment/expedition.js"

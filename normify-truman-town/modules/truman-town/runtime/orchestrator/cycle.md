@@ -10,8 +10,8 @@ description:
   en: >
       Starts, pauses, resumes and steps the main loop.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T06:14:27.005Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.836Z"
 fingerprint: 624f64df5eb8310d134cd3f4208fc3865fc09f8c012516568dc7eb4be7cb5600
 source:
   - path: "src/runtime/orchestrator/cycle.js"

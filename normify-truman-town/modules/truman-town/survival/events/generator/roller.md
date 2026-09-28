@@ -10,8 +10,8 @@ description:
   en: >
       Rolls whether a random event occurs.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T06:36:55.532Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.838Z"
 fingerprint: 2079bd71cdd05eac36eead684f9804aec9e01da35f353d3aa98dd2aae9481cf8
 source:
   - path: "src/survival/events/generator/roller.js"

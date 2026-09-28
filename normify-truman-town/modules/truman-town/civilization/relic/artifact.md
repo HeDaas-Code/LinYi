@@ -10,8 +10,8 @@ description:
   en: >
       Turns past items, buildings and books into persistent relics.
       
-revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
-updated_at: "2026-09-28T09:00:32.044Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.834Z"
 fingerprint: ebc2a41f28ffb892732d4846b0db9943451abab3729ab0b6675339f56ca7529b
 source:
   - path: "src/civilization/relic/artifact.js"

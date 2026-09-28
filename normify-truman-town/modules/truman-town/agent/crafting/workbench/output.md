@@ -10,8 +10,8 @@ description:
   en: >
       Writes crafted outputs into the backpack and observer log.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T08:02:32.258Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.826Z"
 fingerprint: b2e68fe078708c9901babab50d9061afdf487585affa68b8a2b45e2d86149623
 source:
   - path: "src/agent/crafting/workbench/output.js"

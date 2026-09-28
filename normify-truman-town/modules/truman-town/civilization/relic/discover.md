@@ -10,8 +10,8 @@ description:
   en: >
       New agents excavate and interpret relics, bringing old knowledge back.
       
-revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
-updated_at: "2026-09-28T09:00:32.044Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.834Z"
 fingerprint: 5e0fc84a59cd8164030fc073b70c8195759b62daec98e5c478d3de9bc9a63ad8
 source:
   - path: "src/civilization/relic/discover.js"

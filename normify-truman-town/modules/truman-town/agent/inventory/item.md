@@ -10,8 +10,8 @@ description:
   en: >
       Defines item categories, properties and uses.
       
-revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
-updated_at: "2026-09-28T08:45:24.378Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.830Z"
 fingerprint: 1c9ccd05043b6746fb6c7296c18ea15e8222752be592891549897a4eb787540f
 source:
   - path: "src/agent/inventory/item.js"

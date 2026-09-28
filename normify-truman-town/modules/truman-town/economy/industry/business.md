@@ -10,8 +10,8 @@ description:
   en: >
       Founds, operates and closes businesses. Firms are created by agent decision rather than fixed bootstrapping; founding capital moves from the founder account into the business account so money is conserved.
       
-revision: 45f6c8b7b8ba210fcd94506b2097c8e601dd1382
-updated_at: "2026-09-26T03:35:08.159Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.834Z"
 fingerprint: 68ede4b03721b220f3eaf5b462243f40dd3673930067225cd62977ea9b4a8592
 source:
   - path: "src/economy/industry/business.js"

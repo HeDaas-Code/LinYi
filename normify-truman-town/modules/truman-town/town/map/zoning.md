@@ -10,8 +10,8 @@ description:
   en: >
       Assigns and rezones commercial, residential and public districts.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T07:57:17.694Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.840Z"
 fingerprint: 1941cade853d93d1bb704a83dfe3fe219da490b82a78c115838c6c76de053605
 source:
   - path: "src/town/map/zoning.js"

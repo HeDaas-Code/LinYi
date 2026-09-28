@@ -2,7 +2,7 @@
   "schema_version": 1,
   "ok": true,
   "project": "normify-truman-town",
-  "compiled_at": "2026-09-28T09:00:33.076Z",
+  "compiled_at": "2026-09-28T09:02:28.937Z",
   "stats": {
     "tree_count": 1,
     "module_count": 232,
@@ -24,8 +24,8 @@
   },
   "artifacts": {
     "tree.json": {
-      "sha256": "19400c385fd44d08414949907994a5dcc44f66f8fd39413683a82eafee1678bc",
-      "bytes": 564694
+      "sha256": "847d0417abec97209d7c48a9f0347499061fd2069eab7b381d11109de455461b",
+      "bytes": 564706
     },
     "outline.md": {
       "sha256": "295ca079217ff7cc91f84146d69a8345a012796a764f92a71b33e53097a792ff",
@@ -36,7 +36,7 @@
       "bytes": 30035
     },
     "receipt.json": {
-      "sha256": "01c121d3fb37a38ebe69f72f17e5d2fb7053c6b053a592aff729b24185dc747d",
+      "sha256": "7dc256ff8c874746304b93ac323d7f2f31d74c79e72c0cd17a11e14446b1dea2",
       "bytes": 958
     }
   }

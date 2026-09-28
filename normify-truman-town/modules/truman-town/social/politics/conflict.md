@@ -10,8 +10,8 @@ description:
   en: >
       Conflicts from arguments to faction fights, costing resources and lives.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T14:28:10.152Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.838Z"
 fingerprint: a0042c6353cbc7f6010a2fd7f5b1376c545a8ee8537dd83632b347bfb749abbe
 source:
   - path: "src/social/politics/conflict.js"

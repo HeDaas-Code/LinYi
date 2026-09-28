@@ -10,8 +10,8 @@ description:
   en: >
       Queries and plans roads, plots and adjacency.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T07:57:17.694Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.839Z"
 fingerprint: ab3890eb65ead3a31dc9bedafe431458ed6f31542c5d513ffd15359423682b80
 source:
   - path: "src/town/map/topology.js"

@@ -10,8 +10,8 @@ description:
   en: >
       Tracks medicine and medical supply production, consumption and stockpile.
       
-revision: da6092c786d6c0615331ed8d297d5c0d6a2fa45a
-updated_at: "2026-09-23T12:12:22.376Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.839Z"
 fingerprint: 44b3db65c5e6f17e9dc93e9e54a9c06ef347681b91ba9f5be73b81d5cf214e3e
 source:
   - path: "src/survival/resources/medical.js"

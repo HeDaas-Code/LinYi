@@ -10,8 +10,8 @@ description:
   en: >
       Defines accepted/forbidden norms that drift with violations; violations apply social pressure that constrains behavior.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T14:22:57.360Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.837Z"
 fingerprint: e287c0d29a52ef43766422c60541749e4d43c1edcb3de668750d3eb0a24f567d
 source:
   - path: "src/social/culture/norms.js"

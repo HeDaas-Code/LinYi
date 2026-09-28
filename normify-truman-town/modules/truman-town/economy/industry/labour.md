@@ -10,8 +10,8 @@ description:
   en: >
       Posts jobs, hires and pays wages linking careers to economy.
       
-revision: f4968a009dccf5f3735a3f0d7a362ed5f05ff7bf
-updated_at: "2026-09-23T12:16:51.980Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.834Z"
 fingerprint: 8c85094e7b84915a4e0aba11b88019c8fa24dc286bcfee385ff830748a3e8af1
 source:
   - path: "src/economy/industry/labour.js"

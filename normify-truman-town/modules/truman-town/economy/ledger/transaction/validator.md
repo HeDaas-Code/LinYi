@@ -10,8 +10,8 @@ description:
   en: >
       Validates balances and transaction atomicity.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T08:02:50.389Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.835Z"
 fingerprint: 39fdf876fff7c6d5f7bafe41c9d8f88af069ccc065e55398b2aa3ea24aa0824f
 source:
   - path: "src/economy/ledger/transaction/validator.js"

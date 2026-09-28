@@ -10,8 +10,8 @@ description:
   en: >
       Assembles and registers new agents into the runtime.
       
-revision: 02dffcd347b42bfde4f8a766a3a77cff7de9c286
-updated_at: "2026-09-25T10:17:35.034Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.835Z"
 fingerprint: 437e1e559322ca7923fc39370b5f9916d8f563ab980f7a6f19cff31451d7f2f7
 source:
   - path: "src/genesis/agent-factory/assemble.js"

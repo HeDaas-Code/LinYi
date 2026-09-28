@@ -10,8 +10,8 @@ description:
   en: >
       Collects world events and routes them to relevant agents as percepts.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T06:14:27.006Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.837Z"
 fingerprint: 5422105dc2476c0f37c80c1958240e8134bdf1773da653d954e965d9e93cd291
 source:
   - path: "src/runtime/orchestrator/perception.js"

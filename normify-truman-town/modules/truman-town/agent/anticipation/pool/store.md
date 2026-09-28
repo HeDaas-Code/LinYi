@@ -10,8 +10,8 @@ description:
   en: >
       Stores and lists an agent candidate actions with id-empotent upsert.
       
-revision: 26dba326d0f79bf978188bf6f3ac73c02723ff58
-updated_at: "2026-09-24T15:12:14.789Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.825Z"
 fingerprint: 7407fae91c83652ad973308f6652939eafac189e41c25e38c67055534b5bfffd
 source:
   - path: "src/agent/anticipation/pool/store.js"

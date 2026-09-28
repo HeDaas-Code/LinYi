@@ -10,8 +10,8 @@ description:
   en: >
       Places and cancels buy/sell orders.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T08:02:50.389Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.835Z"
 fingerprint: 3ef1b4278f09c1fe8c98ec85fcb3d4447ff1d99e4588dcc16d139402cc538f74
 source:
   - path: "src/economy/market/orderbook/orders.js"

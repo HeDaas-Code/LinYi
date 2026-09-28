@@ -10,8 +10,8 @@ description:
   en: >
       Restarts the sandbox and injects the previous civilization's legacy into the new one.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-26T03:35:07.127Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.834Z"
 fingerprint: 72c03347b405a984190fd6265277f5c239c9e4f61b85b85952e538c730958262
 source:
   - path: "src/civilization/restart.js"

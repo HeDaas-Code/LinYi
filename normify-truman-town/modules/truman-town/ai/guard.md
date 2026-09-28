@@ -10,8 +10,8 @@ description:
   en: >
       Checks generated content for safety and worldview consistency.
       
-revision: 824d4c242a0abd8e6ed58a6edcc322da739c728a
-updated_at: "2026-09-28T09:00:32.042Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.832Z"
 fingerprint: d6ac8b2f6080d4cbc46aabd84f828bfd8d5873c1c419ac21b2c6980eb4184bd3
 source:
   - path: "src/ai/guard.js"

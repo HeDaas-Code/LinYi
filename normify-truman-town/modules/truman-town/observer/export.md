@@ -10,8 +10,8 @@ description:
   en: >
       Exports chronicles and audits as reports or Markdown.
       
-revision: 796aec9412d132997f5cdc37d01cac934e03d018
-updated_at: "2026-09-25T10:03:44.359Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.836Z"
 fingerprint: d152d2681f1cad1e8369ea06b7a029f1aa8496bd7d770508f4a89574359143be
 source:
   - path: "src/observer/export.js"

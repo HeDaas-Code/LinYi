@@ -10,8 +10,8 @@ description:
   en: >
       Assembles agent prompts from 50 tags, persona and memory.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T06:18:02.555Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.833Z"
 fingerprint: 0f98aaad841b088d0949e52c7821fda60675cd0592b4340deae2506f5ac8f288
 source:
   - path: "src/ai/prompt/agent.js"

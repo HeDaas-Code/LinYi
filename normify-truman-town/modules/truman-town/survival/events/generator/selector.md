@@ -10,8 +10,8 @@ description:
   en: >
       Selects a concrete event by weight.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T06:36:55.532Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.839Z"
 fingerprint: 47141aeea9251abc9943f6c8fa6de11592cab6b0f0bdccb381ad828a91b3e17a
 source:
   - path: "src/survival/events/generator/selector.js"

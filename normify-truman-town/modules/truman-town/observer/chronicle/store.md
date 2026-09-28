@@ -10,8 +10,8 @@ description:
   en: >
       Queries and range-reads chronicles.
       
-revision: 796aec9412d132997f5cdc37d01cac934e03d018
-updated_at: "2026-09-25T10:03:44.359Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.836Z"
 fingerprint: 4b4c2d905c73fb29e158d46069575906f843210b5dbcd8d7f1fca4c84f3d937c
 source:
   - path: "src/observer/chronicle/store.js"

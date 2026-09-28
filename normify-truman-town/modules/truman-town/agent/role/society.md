@@ -10,8 +10,8 @@ description:
   en: >
       Holds civic identities such as mayor, shopkeeper or resident.
       
-revision: e350da98bb80d56a99c3c70b9cd269a351113026
-updated_at: "2026-09-24T03:13:06.631Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.832Z"
 fingerprint: f2c6662332eaf56b23501011d3e2e4ec1fc4bfdc3b1f70761b7adf116f921d9f
 source:
   - path: "src/agent/role/society.js"

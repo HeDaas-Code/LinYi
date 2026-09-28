@@ -10,8 +10,8 @@ description:
   en: >
       Queries and audits family trait inheritance records.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T07:57:42.689Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.837Z"
 fingerprint: c72b12e7df3cf9d4a647ca958a3b0896c47801e89b758264728687f414bc6a4f
 source:
   - path: "src/social/family/inherit/verifier.js"

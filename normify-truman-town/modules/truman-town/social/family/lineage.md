@@ -10,8 +10,8 @@ description:
   en: >
       Traces family generations and blood relations.
       
-revision: 9f0996005124054052fc61d9ec3f762219e92a2c
-updated_at: "2026-09-26T05:45:37.199Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.837Z"
 fingerprint: b344c01655d5b93ae1e18b1ace5880d8e2fe3cee898b7ad4971b74f154f10273
 source:
   - path: "src/social/family/lineage.js"

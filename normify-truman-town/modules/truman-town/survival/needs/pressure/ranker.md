@@ -10,8 +10,8 @@ description:
   en: >
       Ranks pressure scores and lists high-risk residents.
       
-revision: "0000000000000000000000000000000000000000"
-updated_at: "2026-09-22T06:36:55.532Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.839Z"
 fingerprint: f313ac82948b2dff810f2198b3f79913ca8779baab78978d81f28dafa70742fa
 source:
   - path: "src/survival/needs/pressure/ranker.js"

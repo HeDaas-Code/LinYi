@@ -10,8 +10,8 @@ description:
   en: >
       Persists an agent trait tag set (50 by default), accepting map or array input, with deep-copy isolation.
       
-revision: 1c7c3d69497e4bcdd67b1e32a59bd6bdbfdc92f5
-updated_at: "2026-09-24T04:10:06.312Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.832Z"
 fingerprint: fd656aed6ef8f9e94be6af1a9bcd54d83aaab7a738d936940c673f53e7c1f479
 source:
   - path: "src/agent/traits/tagset/store.js"

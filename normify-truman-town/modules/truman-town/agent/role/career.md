@@ -10,8 +10,8 @@ description:
   en: >
       Assigns and releases occupations linked to labour and industry.
       
-revision: e350da98bb80d56a99c3c70b9cd269a351113026
-updated_at: "2026-09-24T03:13:06.630Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.832Z"
 fingerprint: 51e4383a89ae1b86a5adb7674ce9312afe1988620ef7f319dad79277359a79d7
 source:
   - path: "src/agent/role/career.js"

@@ -10,8 +10,8 @@ description:
   en: >
       Records parent-child and kinship relations for family tracing.
       
-revision: 1c7c3d69497e4bcdd67b1e32a59bd6bdbfdc92f5
-updated_at: "2026-09-24T04:00:14.039Z"
+revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
+updated_at: "2026-09-28T09:01:56.838Z"
 fingerprint: 77e4484f5dc26439b194078531eb00b52ee03c92ade6d4704fd0fe882e84ae49
 source:
   - path: "src/social/relationship/family.js"
