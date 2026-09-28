@@ -28,7 +28,7 @@ function num(v, dflt) {
 /**
  * 组装决策提示词：处境 + 候选行动（含可行性理由）。
  * @param {{ name?: string, persona?: string, tags?: string[], needs?: object, stock?: object,
- *           candidates?: Array<{ action: string, why?: string|null }>, tick?: number }} input
+ *           populationContext?: object, memories?: string[], candidates?: Array<{ action: string, why?: string|null }>, tick?: number }} input
  * @returns {{ messages: Array<{role:string,content:string}>, allowed: string[] }}
  */
 export function composePrompt(input = {}) {
@@ -38,6 +38,9 @@ export function composePrompt(input = {}) {
   const needs = input.needs ?? {};
   const stock = input.stock ?? {};
   const cands = Array.isArray(input.candidates) ? input.candidates : [];
+  const populationContext = input.populationContext ?? input.socialContext ?? {};
+  const recentGroupActions = Array.isArray(input.recentGroupActions) ? input.recentGroupActions : [];
+  const memories = Array.isArray(input.memories) ? input.memories : [];
 
   const lines = [];
   lines.push('你是「' + name + '」。' + persona);
@@ -46,6 +49,9 @@ export function composePrompt(input = {}) {
   lines.push('你的饥饿程度：' + num(needs.food, 0).toFixed(2) + '（0=不饿，1=极饿）；'
     + '口渴程度：' + num(needs.water, 0).toFixed(2) + '（0=不渴，1=极渴）。');
   lines.push('避难所食物库存：' + num(stock.food, 0).toFixed(0) + '；水源库存：' + num(stock.water, 0).toFixed(0) + '。');
+  lines.push('群体库存：食物 ' + num(populationContext.food, num(stock.food, 0)).toFixed(0) + '，水 ' + num(populationContext.water, num(stock.water, 0)).toFixed(0) + '，能源 ' + num(populationContext.energy, 0).toFixed(0) + '，医疗 ' + num(populationContext.medical, 0).toFixed(0) + '；存活人口 ' + num(populationContext.alivePopulation, 0).toFixed(0) + '；危机：' + (populationContext.crisis ?? '暂无已知危机') + '。');
+  if (recentGroupActions.length) lines.push('最近群体行动：' + recentGroupActions.map((a) => typeof a === 'string' ? a : a.action + '×' + a.count).join('、') + '。');
+  if (memories.length) lines.push('你的个体记忆：' + memories.map((m) => typeof m === 'string' ? m : m.content).filter(Boolean).join('；') + '。');
   lines.push('');
   lines.push('你可选的行动：');
   for (const c of cands) {

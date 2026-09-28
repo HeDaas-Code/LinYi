@@ -69,3 +69,13 @@ test('config.set/get/setMany 统一读写（点分 key）', () => {
   assert.equal(all['stage2.tagCount'], 60);
   assert.equal(all['survival.eventProbability'], 0.42);
 });
+
+test('LLM decision defaults and validation', () => {
+  const d = config.defaults();
+  assert.equal(d.llmDecideMode, 'off');
+  assert.equal(d.llmDecideEnabled, false);
+  assert.equal(d.llmDecideConcurrency, 4);
+  assert.equal(d.llmDecidePopulationShare, 1);
+  assert.equal(config.validate({ llmDecideMaxAgents: 0, llmDecideMode: 'population', llmDecideConcurrency: 2, llmDecidePopulationShare: 0.5 }).ok, true);
+  assert.equal(config.validate({ llmDecideMode: 'invalid', llmDecideConcurrency: 0, llmDecidePopulationShare: 1.1 }).ok, false);
+});

@@ -10,9 +10,9 @@ description:
   en: >
       Reads and writes sandbox runtime parameters (dotted keys, persisted into the graph store), and exposes a defaults snapshot, validation and merge for externalized parameters.
       
-revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
-updated_at: "2026-09-28T09:01:56.835Z"
-fingerprint: 3e7f0509419ef296860cb861ef8cf1c9b69dd752fd1dcea4fae98ea4076236c5
+revision: 050f2e42262a110318bd7af859f5a3bea3220177
+updated_at: "2026-09-28T10:38:06.462Z"
+fingerprint: 9fe75308715a76bcadb42c05d3237c38823384f7478d64524cab727341583ebc
 source:
   - path: "src/infra/config.js"
 apis:

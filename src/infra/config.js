@@ -174,6 +174,9 @@ export const DEFAULTS = Object.freeze({
   // 有模型 E2E：让真实大模型从候选集中选行动（默认关闭，保证空跑确定性与速度）。
   // 实测 grok-4.6 单次约 18s，故用 llmDecideEveryTicks / llmDecideMaxAgents 控制规模。
   llmDecideEnabled: false,
+  llmDecideMode: 'off',
+  llmDecideConcurrency: 4,
+  llmDecidePopulationShare: 1,
   llmDecideEveryTicks: 1,
   llmDecideMaxAgents: 1,
   actionSpaceAttribution: false,
@@ -465,8 +468,11 @@ const RULES = {
   survivalGatePerCapita: (v) => (isNonNeg(v) ? true : '必须是非负有限数值'),
   forageWoodChance: (v) => (isUnit(v) ? true : '必须是 [0,1] 区间数值'),
   llmDecideEnabled: (v) => (typeof v === 'boolean' ? true : '必须是布尔值'),
+  llmDecideMode: (v) => (['off', 'sample', 'population'].includes(v) ? true : '必须是 off、sample 或 population'),
+  llmDecideConcurrency: (v) => (isPosInt(v) ? true : '必须是正整数'),
+  llmDecidePopulationShare: (v) => (isUnit(v) ? true : '必须是 [0,1] 区间数值'),
   llmDecideEveryTicks: (v) => (isPosInt(v) ? true : '必须是正整数'),
-  llmDecideMaxAgents: (v) => (isPosInt(v) ? true : '必须是正整数'),
+  llmDecideMaxAgents: (v) => (isNonNegInt(v) ? true : '必须是非负整数'),
 };
 
 /**

@@ -1789,16 +1789,32 @@ async function decideByModel(record, decision, tick, cfg) {
     why: o.reason ?? o.because ?? null,
   }));
   if (candidates.length === 0) return null;
+  const stock = {
+    food: survival.resources.food.query().stockpile,
+    water: survival.resources.water.query().stockpile,
+    energy: survival.resources.energy.query().stockpile,
+    medical: survival.resources.medical.query().stockpile,
+  };
+  const recent = observer.recorder.actionLog.recent({ limit: 80 }).filter((x) => x.tick < tick);
+  const counts = new Map();
+  for (const row of recent.slice(0, 40)) {
+    const action = typeof row.action === 'string' ? row.action : row.action?.action ?? row.action?.type ?? 'unknown';
+    counts.set(action, (counts.get(action) ?? 0) + 1);
+  }
+  const recentGroupActions = [...counts].map(([action, count]) => ({ action, count }));
+  const crisis = needs.food >= (cfg.crisisNeedLevel ?? 0.8) || needs.water >= (cfg.crisisNeedLevel ?? 0.8)
+    ? '个体饥渴需求达到危机阈值' : Math.min(stock.food, stock.water) < alivePopulation() ? '食物或水库存低于存活人口' : '暂无';
+  const contextSummary = { stock, alivePopulation: alivePopulation(), crisis, recentGroupActions };
   try {
     const picked = await ai.decide.choose({
       name: ctx.name,
       persona: ctx.persona,
       tags: ctx.tags,
       needs,
-      stock: {
-        food: survival.resources.food.query().stockpile,
-        water: survival.resources.water.query().stockpile,
-      },
+      stock,
+      populationContext: { ...stock, alivePopulation: contextSummary.alivePopulation, crisis },
+      recentGroupActions,
+      memories: ctx.memory,
       candidates,
       tick,
     }, { model: cfg.llmDecideModel });
@@ -1816,7 +1832,8 @@ async function decideByModel(record, decision, tick, cfg) {
     return {
       action: picked.action,
       reason: '模型选择「' + picked.action + '」（候选 ' + picked.meta.allowed + ' 项，' + picked.meta.model + '）',
-      meta: picked.meta,
+      meta: { ...picked.meta, contextSummary },
+      contextSummary,
     };
   } catch (err) {
     observer.recorder.eventLog.record({
@@ -2044,10 +2061,37 @@ async function* tickSequenceInner(config = {}) {
   // 3) 逐智能体：决策 → 观察者决策日志 → AI 思考
   const agentRecords = registry.lookup({ type: 'agent' });
   const decisions = [];
-  // 有模型 E2E：采样式让真实大模型进入决策环。默认关闭；开启时按 tick 与人数限额
-  // 调用（实测单次约 18s，全量 50×200 不可行），其余居民走确定性路径。
-  const llmDecide = cfg.llmDecideEnabled === true && (tick % (cfg.llmDecideEveryTicks ?? 1) === 0);
-  let llmCalls = 0;
+  const mode = cfg.llmDecideEnabled === true ? 'sample' : (cfg.llmDecideMode ?? 'off');
+  const llmDecide = mode !== 'off' && (tick % (cfg.llmDecideEveryTicks ?? 1) === 0);
+  const maxAgents = cfg.llmDecideMaxAgents === 0 ? agentRecords.length : (cfg.llmDecideMaxAgents ?? 1);
+  const orderedIds = agentRecords.map((r) => r.id);
+  let llmSelectedIds = [];
+  if (llmDecide && mode === 'sample') llmSelectedIds = orderedIds.slice(0, maxAgents);
+  if (llmDecide && mode === 'population') {
+    const limit = Math.min(maxAgents, Math.ceil(orderedIds.length * (cfg.llmDecidePopulationShare ?? 1)));
+    const hash = (id) => [...id].reduce((n, c) => (Math.imul(n, 31) + c.charCodeAt(0)) | 0, 7) >>> 0;
+    const sorted = [...orderedIds].sort((a, b) => hash(a) - hash(b) || a.localeCompare(b));
+    const start = sorted.length ? (tick - 1) % sorted.length : 0;
+    llmSelectedIds = [...sorted.slice(start), ...sorted.slice(0, start)].slice(0, limit);
+  }
+  const llmSelected = new Set(llmSelectedIds);
+  const recentActionRows = observer.recorder.actionLog.recent({ limit: 80 }).filter((x) => x.tick < tick).slice(0, 40);
+  const actionCounts = new Map();
+  for (const row of recentActionRows) {
+    const action = typeof row.action === 'string' ? row.action : row.action?.action ?? row.action?.type ?? 'unknown';
+    actionCounts.set(action, (actionCounts.get(action) ?? 0) + 1);
+  }
+  const recentGroupActions = [...actionCounts].map(([action, count]) => ({ action, count }));
+  const contextSummary = {
+    stock: {
+      food: survival.resources.food.query().stockpile,
+      water: survival.resources.water.query().stockpile,
+      energy: survival.resources.energy.query().stockpile,
+      medical: survival.resources.medical.query().stockpile,
+    },
+    alivePopulation: agentRecords.length,
+    recentGroupActions,
+  };
   // 识字者集合按 tick 统一计算：识字人数取决于全城人口，不是单人属性，
   // 因此必须在这里（能看到全部居民的位置）算一次，而不是在 decide 里逐个判断。
   computeLiterateSet(agentRecords.map((r) => r.id), cfg);
@@ -2059,14 +2103,37 @@ async function* tickSequenceInner(config = {}) {
   agent.decision.contention.open(tick, contentionCapacities());
   // t12：死亡居民的计划不留残影（否则 summary 与观测会把死者的意图算作在办事项）。
   agent.decision.goals.prune(new Set(agentRecords.map((r) => r.id)));
+  const prepared = [];
   for (const record of agentRecords) {
     const agentId = record.id;
     const decision = decide(agentId, tick, inbox[agentId] ?? [], cfg, agent.decision.contention.view());
     if (decision === null) continue;
+    const contention = agent.decision.contract.contentionOf(decision.action);
+    const poolName = contention?.pool ?? null;
+    const before = poolName === null ? undefined : agent.decision.contention.remaining(poolName);
+    const reserved = reserveContention(decision.action, surplusItemsOf(agentId), cfg);
+    const after = poolName === null ? undefined : agent.decision.contention.remaining(poolName);
+    prepared.push({ record, decision, contention, before, reserved, after });
+  }
+  const modelResults = new Map();
+  const modelTargets = prepared.filter(({ record }) => llmDecide && llmSelected.has(record.id));
+  let nextModelTarget = 0;
+  const workerCount = Math.min(modelTargets.length, Math.max(1, cfg.llmDecideConcurrency ?? 1));
+  await Promise.all(Array.from({ length: workerCount }, async () => {
+    while (nextModelTarget < modelTargets.length) {
+      const target = modelTargets[nextModelTarget++];
+      try {
+        modelResults.set(target.record.id, await decideByModel(target.record, target.decision, tick, cfg));
+      } catch {
+        modelResults.set(target.record.id, null);
+      }
+    }
+  }));
+  for (const { record, decision, contention, before, reserved, after } of prepared) {
+    const agentId = record.id;
     // 有模型 E2E：模型从**居民当前可行候选集**内做选择（不新增行动、不绕过可行性）。
-    if (llmDecide && llmCalls < (cfg.llmDecideMaxAgents ?? 1)) {
-      llmCalls += 1;
-      const picked = await decideByModel(record, decision, tick, cfg);
+    if (llmDecide && llmSelected.has(agentId)) {
+      const picked = modelResults.get(agentId) ?? null;
       if (picked !== null) {
         decision.action = picked.action;
         decision.reason = picked.reason;
@@ -2074,30 +2141,37 @@ async function* tickSequenceInner(config = {}) {
         // D01：模型只改选**候选集内**的行动；改选后最终动作的分数/置信度置 null，
         // 因为 choice.score 属于被覆盖的那个动作，不能冒充最终动作的分数。
         decision.model = {
-          mode: 'llm',
+          mode,
+          populationShare: cfg.llmDecidePopulationShare ?? 1,
+          sampledAgentIds: llmSelectedIds,
           applied: true,
           action: picked.action,
           fallbackReason: null,
           meta: picked.meta,
+          contextSummary: picked.contextSummary,
+          provider: picked.meta.provider,
+          model: picked.meta.model,
+          latencyMs: picked.meta.latencyMs,
         };
         decision.final = { action: picked.action, source: 'model', score: null, confidence: null };
         decision.score = null;
         decision.confidence = null;
       } else {
         // 模型回退必须透明：不可解析/不在候选集/调用失败都留档。
-        decision.model = { mode: 'llm', applied: false, action: null, fallbackReason: 'model_unavailable_or_unparsable', meta: null };
+        decision.model = { mode, populationShare: cfg.llmDecidePopulationShare ?? 1, sampledAgentIds: llmSelectedIds, applied: false, action: null, fallbackReason: 'model_unavailable_or_unparsable', meta: null, contextSummary: null, provider: null, model: null, latencyMs: null };
       }
     } else {
       decision.model = {
-        mode: 'rule', applied: false, action: null,
-        fallbackReason: llmDecide ? 'sampling_limit' : 'llm_decide_disabled', meta: null,
+        mode, populationShare: cfg.llmDecidePopulationShare ?? 1, sampledAgentIds: llmSelectedIds, applied: false, action: null,
+        fallbackReason: llmDecide ? 'sampling_limit' : 'llm_decide_disabled',
+        meta: null, contextSummary: llmSelected.has(agentId) ? contextSummary : null, provider: null, model: null, latencyMs: null,
       };
     }
     // 批次2-C（t48）：日程驱动行动（非紧急时以日程为准，紧急触发重排）
     if (cfg.scheduleEnabled !== false) {
       const scheduled = scheduleOverride(decision, agentId, tick, cfg);
       if (scheduled) {
-        const adopted = scheduled.action !== (decision.intent?.action ?? decision.action);
+        const adopted = scheduled.action !== decision.action;
         decision.action = scheduled.action;
         decision.reason = scheduled.reason;
         decision.schedule = {
@@ -2108,6 +2182,7 @@ async function* tickSequenceInner(config = {}) {
           replanned: scheduled.replanned === true,
         };
         if (adopted) {
+          if (decision.model?.applied) decision.model.overriddenBy = 'schedule';
           decision.final = { action: scheduled.action, source: 'schedule', score: null, confidence: null };
           decision.score = null;
           decision.confidence = null;
@@ -2126,11 +2201,25 @@ async function* tickSequenceInner(config = {}) {
     // t11：决策已定（含模型/日程覆盖）后，按**最终动作**预支共享额度。
     // 只影响后续居民的预想；真实取用仍由执行器对真实池操作。
     // 记账留在决策上下文里，使「谁在本 tick 预支了多少公共资源」可直接审计。
-    const contention = agent.decision.contract.contentionOf(decision.action);
+    const finalContention = agent.decision.contract.contentionOf(decision.action);
     const poolName = contention?.pool ?? null;
-    const before = poolName === null ? undefined : agent.decision.contention.remaining(poolName);
-    const reserved = reserveContention(decision.action, surplusItemsOf(agentId), cfg);
-    const after = poolName === null ? undefined : agent.decision.contention.remaining(poolName);
+    const finalPoolName = finalContention?.pool ?? null;
+    const finalBefore = finalPoolName === null ? undefined : agent.decision.contention.remaining(finalPoolName);
+    const modelAction = decision.model?.applied ? decision.model.action : null;
+    const modelContention = modelAction === null ? null : agent.decision.contract.contentionOf(modelAction);
+    const modelPoolName = modelContention?.pool ?? null;
+    const modelRemaining = modelPoolName === null ? undefined : agent.decision.contention.remaining(modelPoolName);
+    const modelRemainingBefore = modelPoolName === poolName ? after : modelRemaining;
+    const modelActionContention = modelAction === null
+      ? null
+      : {
+        action: modelAction,
+        pool: modelPoolName,
+        mode: modelContention?.mode ?? 'none',
+        remainingBefore: typeof modelRemainingBefore === 'number' ? modelRemainingBefore : null,
+        reserved: 0,
+        remainingAfter: typeof modelRemaining === 'number' ? modelRemaining : null,
+      };
     // 实测残留：少数居民在「池已被前面的居民预支空」时仍选了该行动。
     // 原因不是信息过期，而是**生存门有意压过争用惩罚**——食物/水见底时
     // forage 是唯一能补货的行动，此时「效率」必须让位于「活下去」。
@@ -2146,6 +2235,7 @@ async function* tickSequenceInner(config = {}) {
         reserved,
         remainingAfter: typeof after === 'number' ? after : null,
         doomedButChosen,
+        modelActionContention,
       },
     };
     observer.recorder.decisionLog.record({

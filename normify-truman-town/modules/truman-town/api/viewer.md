@@ -10,9 +10,9 @@ description:
   en: >
       Serves the sandbox visualization page.
       
-revision: e17e2c6652a39ef6b88d9f640adca34acd40c3a8
-updated_at: "2026-09-28T09:01:56.833Z"
-fingerprint: c0dbe072ac57e1d03676beeca7348ce510b96c6b6688f75c862e65b9f248fecc
+revision: 050f2e42262a110318bd7af859f5a3bea3220177
+updated_at: "2026-09-28T10:37:31.171Z"
+fingerprint: 78811eec7c44a53c65e00dd1072fdb1beba84804eb8d1aa473f9fd585a9eeaf7
 source:
   - path: "src/api/viewer.js"
   - path: "web/viewer.html"

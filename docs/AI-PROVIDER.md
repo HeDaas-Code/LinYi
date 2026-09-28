@@ -109,3 +109,18 @@ node --env-file=.env bin/bench.js --n 3
 ```
 
 脚本打印每次调用的墙钟耗时与 usage 统计（prompt / completion / reasoning tokens、cost_in_usd_ticks），不打印 key。
+
+## Population decision mode
+
+The runtime population entry point is `loop.step()` (or `loop.run()`), with these options:
+
+```js
+await loop.step({
+  llmDecideMode: 'population',
+  llmDecideMaxAgents: 0,       // 0 means all living residents
+  llmDecidePopulationShare: 1, // rotating share per tick
+  llmDecideConcurrency: 4,
+});
+```
+
+`llmDecideMode` defaults to `off`. `sample` selects the first bounded set; `population` rotates a bounded set across living residents. The model remains fail-soft: invalid output falls back to the rule decision. `llmDecideEnabled: true` is the legacy alias for `sample`.

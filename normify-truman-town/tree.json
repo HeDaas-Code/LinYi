@@ -8,7 +8,7 @@
         "root_uid": "d440391b"
       }
     ],
-    "compiled_at": "2026-09-28T09:02:28.937Z",
+    "compiled_at": "2026-09-28T10:38:07.234Z",
     "stats": {
       "tree_count": 1,
       "module_count": 232,
@@ -21,7 +21,7 @@
       "planned_count": 1,
       "deprecated_count": 8,
       "policy_rule_count": 2,
-      "change_count": 9,
+      "change_count": 10,
       "open_change_count": 0
     }
   },
@@ -2891,9 +2891,9 @@
           "path": "src/ai/decide.js"
         }
       ],
-      "revision": "e17e2c6652a39ef6b88d9f640adca34acd40c3a8",
-      "updated_at": "2026-09-28T09:01:56.832Z",
-      "fingerprint": "c281ec12873453862b934a22bfb002bfa16b629cee25b297b07e4888f43405b4",
+      "revision": "050f2e42262a110318bd7af859f5a3bea3220177",
+      "updated_at": "2026-09-28T10:38:06.461Z",
+      "fingerprint": "0a3de1cb49e4e7cd82b56c70cfbe25b40350659699a99c15529fb5252200bc94",
       "apis": [
         {
           "protocol": "rpc",
@@ -3881,9 +3881,9 @@
           "path": "web/viewer.html"
         }
       ],
-      "revision": "e17e2c6652a39ef6b88d9f640adca34acd40c3a8",
-      "updated_at": "2026-09-28T09:01:56.833Z",
-      "fingerprint": "c0dbe072ac57e1d03676beeca7348ce510b96c6b6688f75c862e65b9f248fecc",
+      "revision": "050f2e42262a110318bd7af859f5a3bea3220177",
+      "updated_at": "2026-09-28T10:37:31.171Z",
+      "fingerprint": "78811eec7c44a53c65e00dd1072fdb1beba84804eb8d1aa473f9fd585a9eeaf7",
       "apis": [
         {
           "protocol": "http",
@@ -6614,9 +6614,9 @@
           "path": "src/infra/config.js"
         }
       ],
-      "revision": "e17e2c6652a39ef6b88d9f640adca34acd40c3a8",
-      "updated_at": "2026-09-28T09:01:56.835Z",
-      "fingerprint": "3e7f0509419ef296860cb861ef8cf1c9b69dd752fd1dcea4fae98ea4076236c5",
+      "revision": "050f2e42262a110318bd7af859f5a3bea3220177",
+      "updated_at": "2026-09-28T10:38:06.462Z",
+      "fingerprint": "9fe75308715a76bcadb42c05d3237c38823384f7478d64524cab727341583ebc",
       "apis": [
         {
           "protocol": "rpc",
@@ -8171,9 +8171,9 @@
           "path": "src/runtime/orchestrator/loop.js"
         }
       ],
-      "revision": "e17e2c6652a39ef6b88d9f640adca34acd40c3a8",
-      "updated_at": "2026-09-28T09:01:56.837Z",
-      "fingerprint": "56d12036a82066b75d5b666272f28a7ed110363e85c8b8bd901ea88039d383ac",
+      "revision": "050f2e42262a110318bd7af859f5a3bea3220177",
+      "updated_at": "2026-09-28T10:38:06.462Z",
+      "fingerprint": "44ff2593c9445393adf4dfb6a6172c3eb8dbf2f18bf53ff7e8c95b7a793da83e",
       "apis": [
         {
           "protocol": "rpc",
@@ -17047,6 +17047,15 @@
         "en": "Truman Town Sandbox: Survival Pressure, Observer, Family and Civilization Restart"
       },
       "updated_at": "2026-09-22T04:57:04.584Z"
+    },
+    {
+      "id": "2026-09-28-llm-population-decisions",
+      "status": "verified",
+      "title": {
+        "zh": "将 LLM 个体决策接入群体生存闭环",
+        "en": "Integrate LLM Individual Decisions into Population Survival Loop"
+      },
+      "updated_at": "2026-09-28T10:38:07.098Z"
     },
     {
       "id": "2026-09-28-planned-parent-cleanup",

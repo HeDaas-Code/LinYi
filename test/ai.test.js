@@ -1,4 +1,6 @@
 import { test } from 'node:test';
+import { composePrompt, choose } from '../src/ai/decide.js';
+
 import assert from 'node:assert/strict';
 
 import { gateway } from '../src/ai/index.js';
@@ -211,4 +213,24 @@ test('thought.reflect: 返回反思文本与元信息', async () => {
   assert.equal(typeof out.reflection, 'string');
   assert.ok(out.reflection.includes('取水'));
   assert.equal(out.meta.provider, 'stub');
+});
+
+test('decide.composePrompt includes group context, memories, needs and allowed actions', () => {
+  const { messages, allowed } = composePrompt({
+    name: 'Lin', persona: 'careful', needs: { food: 0.8 },
+    populationContext: { food: 12, water: 8, energy: 4, medical: 2, alivePopulation: 5, crisis: 'water shortage' },
+    recentGroupActions: [{ action: 'forage', count: 3 }], memories: ['water tank leak'],
+    candidates: [{ action: 'eat' }, { action: 'rest' }],
+  });
+  const prompt = messages[1].content;
+  for (const part of ['careful', '0.80', '食物 12', 'water shortage', 'forage×3', 'water tank leak']) assert.ok(prompt.includes(part));
+  assert.deepEqual(allowed, ['eat', 'rest']);
+});
+
+test('decide.choose unparseable output is null with stub gateway', async () => {
+  gateway.__reset();
+  gateway.registerProvider({ name: 'bad-action', model: 'bad-1', async complete() { return { text: 'invented-action' }; }, async embed({ texts }) { return texts.map(() => [0]); } });
+  const out = await choose({ candidates: [{ action: 'eat' }] });
+  assert.equal(out.action, null);
+  gateway.__reset();
 });
