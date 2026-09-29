@@ -73,8 +73,10 @@ let activeEmbedProvider = stubProvider;
 const providersByName = new Map([[stubProvider.name, stubProvider]]);
 
 const DEFAULT_CONFIG = Object.freeze({
-  maxRetries: 2,
-  retryBaseDelayMs: 5,
+  // 5 次重试 = 最多 6 次尝试；模拟网络波动下的韧性调用。
+  maxRetries: 5,
+  retryBaseDelayMs: 250,
+  retryMaxDelayMs: 8000,
   minIntervalMs: 0,
 });
 let config = { ...DEFAULT_CONFIG };
@@ -227,7 +229,9 @@ async function withRetry(fn) {
   for (let attempt = 0; attempt <= config.maxRetries; attempt += 1) {
     if (attempt > 0) {
       stats.retries += 1;
-      await sleep(config.retryBaseDelayMs * 2 ** (attempt - 1));
+      // 指数退避 + 抖动：模拟不稳定网络，避免同时重试打满上游。
+      const base = Math.min(config.retryBaseDelayMs * 2 ** (attempt - 1), config.retryMaxDelayMs);
+      await sleep(base * (0.5 + Math.random() * 0.5));
     }
     await throttle();
     try {

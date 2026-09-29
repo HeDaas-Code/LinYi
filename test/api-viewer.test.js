@@ -9,15 +9,24 @@ test('GET /viewer returns the Chinese observer page', async () => {
     const html = await response.text();
     assert.equal(response.status, 200);
     assert.match(response.headers.get('content-type'), /^text\/html; charset=utf-8$/);
-    assert.match(html, /Truman Town/);
+    assert.match(html, /TRUMAN TOWN \/\/ STATE CONSOLE/);
     assert.match(html, /\/api\/v1\/world\/state/);
-    assert.match(html, /escapeHtml/);
-    assert.match(html, /pacing/);
-    assert.match(html, /svg/);
-    assert.match(html, /消耗/);
-    assert.match(html, /居民状态/);
-    assert.match(html, /决策与执行日志/);
-    assert.match(html, /刷新/);
+    assert.match(html, /DECISION TRACE/);
+    assert.match(html, /AI \/ LAYA LINK/);
+    assert.match(html, /SYSTEM LOG/);
+    assert.match(html, /RESOURCE HISTORY/);
+    assert.match(html, /data-tab="tab-decisions"/);
+    assert.match(html, /data-action="start"/);
+    assert.match(html, /data-action="step"/);
+    assert.match(html, /\/api\/v1\/decisions\//);
+    const logs = await fetch('http://127.0.0.1:' + port + '/api/v1/sim/logs?limit=5');
+    assert.equal(logs.status, 200);
+    const logBody = await logs.json();
+    assert.ok(Array.isArray(logBody.entries));
+    assert.equal(typeof logBody.stats.level, 'string');
+    const root = await fetch('http://127.0.0.1:' + port + '/');
+    assert.equal(root.status, 200);
+    assert.match(await root.text(), /STATE CONSOLE/);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

@@ -25,6 +25,7 @@ import * as hotLog from '../../infra/store/hot-log.js';
 import * as configStore from '../../infra/config.js';
 import * as identity from '../../infra/identity.js';
 import * as rng from '../../infra/rng.js';
+import * as logger from '../../infra/logger.js';
 
 import * as agent from '../../agent/index.js';
 import * as ai from '../../ai/index.js';
@@ -2033,6 +2034,8 @@ async function* tickSequenceInner(config = {}) {
   stageError = null;
   // t16：阶段进度从本 tick 的第一个单元开始记录。
   stageProgress.begin(tick);
+  const tickStartedAt = Date.now();
+  logger.info('loop', 'tick start', { tick, agents: registry.lookup({ type: 'agent' }).length });
   // 人口可能在上个 tick 因出生/死亡变化：先失效缓存再算采集池容量/再生。
   invalidateAlivePopulation();
 
@@ -2075,6 +2078,14 @@ async function* tickSequenceInner(config = {}) {
     llmSelectedIds = [...sorted.slice(start), ...sorted.slice(0, start)].slice(0, limit);
   }
   const llmSelected = new Set(llmSelectedIds);
+  if (llmDecide) {
+    logger.info('ai.decide', 'model sampling for tick', {
+      tick, mode, selected: llmSelectedIds, population: agentRecords.length,
+      concurrency: cfg.llmDecideConcurrency ?? 1, model: cfg.llmDecideModel ?? null,
+    });
+  } else {
+    logger.debug('ai.decide', 'llm decide skipped', { tick, mode });
+  }
   const recentActionRows = observer.recorder.actionLog.recent({ limit: 80 }).filter((x) => x.tick < tick).slice(0, 40);
   const actionCounts = new Map();
   for (const row of recentActionRows) {
@@ -2119,16 +2130,32 @@ async function* tickSequenceInner(config = {}) {
   const modelTargets = prepared.filter(({ record }) => llmDecide && llmSelected.has(record.id));
   let nextModelTarget = 0;
   const workerCount = Math.min(modelTargets.length, Math.max(1, cfg.llmDecideConcurrency ?? 1));
+  const modelStartedAt = Date.now();
   await Promise.all(Array.from({ length: workerCount }, async () => {
     while (nextModelTarget < modelTargets.length) {
       const target = modelTargets[nextModelTarget++];
       try {
-        modelResults.set(target.record.id, await decideByModel(target.record, target.decision, tick, cfg));
-      } catch {
+        const picked = await decideByModel(target.record, target.decision, tick, cfg);
+        modelResults.set(target.record.id, picked);
+        logger.info('ai.decide', 'model result', {
+          tick, agentId: target.record.id, applied: picked !== null,
+          action: picked?.action ?? null, latencyMs: picked?.meta?.latencyMs ?? null,
+        });
+      } catch (err) {
         modelResults.set(target.record.id, null);
+        logger.error('ai.decide', 'model call failed', {
+          tick, agentId: target.record.id, error: err instanceof Error ? err.message : String(err),
+        });
       }
     }
   }));
+  if (modelTargets.length > 0) {
+    logger.info('ai.decide', 'model phase settled', {
+      tick, targets: modelTargets.length, workers: workerCount,
+      applied: [...modelResults.values()].filter((v) => v !== null).length,
+      elapsedMs: Date.now() - modelStartedAt,
+    });
+  }
   for (const { record, decision, contention, before, reserved, after } of prepared) {
     const agentId = record.id;
     // 有模型 E2E：模型从**居民当前可行候选集**内做选择（不新增行动、不绕过可行性）。
@@ -2524,6 +2551,10 @@ async function* tickSequenceInner(config = {}) {
     ...(phase3Summary === null ? {} : { phase3: phase3Summary }),
   };
   yield unit('done', null, summary);
+  logger.info('loop', 'tick committed', {
+    tick, elapsedMs: Date.now() - tickStartedAt, events: eventPercepts.length,
+    decisions: decisions.length, alive: registry.lookup({ type: 'agent' }).length,
+  });
   return summary;
 }
 
@@ -2544,6 +2575,10 @@ export async function* tickSequence(config = {}) {
   } catch (err) {
     const cur = stageProgress.current();
     stageProgress.fail(cur === null ? -1 : cur.tick, err);
+    logger.error('loop', 'tick failed', {
+      tick: cur === null ? -1 : cur.tick,
+      error: err instanceof Error ? err.message : String(err),
+    });
     throw err;
   }
   const cur = stageProgress.current();

@@ -179,6 +179,10 @@ export const DEFAULTS = Object.freeze({
   llmDecidePopulationShare: 1,
   llmDecideEveryTicks: 1,
   llmDecideMaxAgents: 1,
+  // 显式指定决策模型；空串表示「用 gateway 当前默认 provider 的模型」。
+  // 必须是可 JSON 序列化的值：null/undefined 默认值过一遍存档往返会消失，
+  // 导致恢复后的配置快照与原状不等（persistence 逐字段比对会失败）。
+  llmDecideModel: '',
   actionSpaceAttribution: false,
   // 生存门：人均库存低于该值时，非生存行动在打分侧受到额外惩罚。
   // 这必须是「真实短缺」判据，不能是「理想储备」判据：3.0 在 50 人规模下永不可达
@@ -473,6 +477,8 @@ const RULES = {
   llmDecidePopulationShare: (v) => (isUnit(v) ? true : '必须是 [0,1] 区间数值'),
   llmDecideEveryTicks: (v) => (isPosInt(v) ? true : '必须是正整数'),
   llmDecideMaxAgents: (v) => (isNonNegInt(v) ? true : '必须是非负整数'),
+  // 空串是合法值（= 用 provider 默认模型），因此只要求是字符串。
+  llmDecideModel: (v) => (typeof v === 'string' ? true : '必须是字符串'),
 };
 
 /**

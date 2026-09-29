@@ -24,6 +24,7 @@ import * as loop from '../runtime/orchestrator/loop.js';
 import * as stageProgress from '../runtime/orchestrator/stage-progress.js';
 import * as metronome from '../runtime/orchestrator/metronome.js';
 import * as persistence from '../runtime/persistence.js';
+import * as logger from '../infra/logger.js';
 import { recorder } from '../observer/index.js';
 import { HttpError, sendEventStream, writeSse } from './http.js';
 import { currentPhase } from './control.js';
@@ -461,6 +462,17 @@ export const routes = [
   { method: 'GET', path: '/api/v1/agents/:agent_id', handler: ({ params }) => agentDetail(params.agent_id) },
   { method: 'GET', path: '/api/v1/sim/status', handler: () => simStatus() },
   { method: 'GET', path: '/api/v1/sim/stages', handler: ({ query }) => stages(intParam(query, 'limit', 5, 1, stageProgress.MAX_RECENT_TICKS)) },
+  {
+    method: 'GET',
+    path: '/api/v1/sim/logs',
+    handler: ({ query }) => ({
+      stats: logger.stats(),
+      entries: logger.recent(intParam(query, 'limit', 100, 1, 500), {
+        topic: typeof query?.topic === 'string' ? query.topic : undefined,
+        level: typeof query?.level === 'string' ? query.level : undefined,
+      }),
+    }),
+  },
   { method: 'GET', path: '/api/v1/sim/stream', stream: true, handler: (ctx) => streamEvents(ctx) },
   {
     method: 'GET',
@@ -472,7 +484,6 @@ export const routes = [
     path: '/api/v1/decisions/:decision_id',
     handler: ({ params, query }) => decisionTrace(params.decision_id, nullableIntParam(query, 'tick', 0, Number.MAX_SAFE_INTEGER)),
   },
-  { method: 'GET', path: '/api/v1/sim/persistence', handler: () => persistenceStatus() },
-  { method: 'POST', path: '/api/v1/sim/save', handler: ({ body }) => saveRun(body ?? {}) },
+  { method: 'GET', path: '/api/v1/sim/persistence', handler: () => persistenceStatus() },  { method: 'POST', path: '/api/v1/sim/save', handler: ({ body }) => saveRun(body ?? {}) },
   { method: 'POST', path: '/api/v1/sim/restore', handler: ({ body }) => restoreRun(body ?? {}) },
 ];

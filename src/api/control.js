@@ -40,6 +40,36 @@ import { HttpError } from './http.js';
 
 /** 控制侧相位（idle | running | paused | stopped）。 */
 let phase = 'idle';
+let aiRuntime = null;
+
+export function configureAiRuntime(profile = null) {
+  aiRuntime = profile === null ? null : structuredClone(profile);
+  return getAiRuntimeStatus();
+}
+
+export function getAiRuntimeStatus() {
+  const p = aiRuntime;
+  const endpoints = ['/api/v1/sim/decisions', '/api/v1/decisions/:decision_id', '/api/v1/sim/stream', '/api/v1/sim/logs'];
+  return p ? { ...p, enabled: p.mode !== 'off', tickPacing: p.mode === 'off' ? 'clock' : 'work-complete', traceEndpoints: endpoints } : {
+    mode: 'off', enabled: false, provider: 'stub', model: 'stub-0', maxAgents: 1,
+    populationShare: 1, concurrency: 4, everyTicks: 1, tickPacing: 'clock',
+    traceEndpoints: endpoints,
+  };
+}
+
+function effectiveTickConfig(input = {}) {
+  if (!aiRuntime) return input;
+  const cfg = { ...input, llmDecideEnabled: false, llmDecideMode: aiRuntime.mode,
+    llmDecideMaxAgents: aiRuntime.maxAgents, llmDecidePopulationShare: aiRuntime.populationShare,
+    llmDecideConcurrency: aiRuntime.concurrency, llmDecideEveryTicks: aiRuntime.everyTicks,
+    llmDecideModel: aiRuntime.mode === 'off' ? '' : aiRuntime.model };
+  // 真实模型模式下，tick 的节奏由**工作完成**决定而不是墙钟配额：
+  // msPerTick=0 让节拍器不插人工睡眠，一个 tick 在所有智能体（含模型调用）
+  // 全部结束后立即推进下一个。否则 37.5s 的默认配额与 30-90s 的真实调用
+  // 长期冲突，观察者会看到「时钟在跑、世界没动」的假象。
+  if (aiRuntime.mode !== 'off') cfg.msPerTick = 0;
+  return cfg;
+}
 
 /** 若尚无智能体则按数量补足（缺省 3 个）。 */
 function ensureAgents(agentCount) {
@@ -112,7 +142,7 @@ export function start(input = {}) {
       ...(input?.speed === undefined ? {} : { speed: input.speed }),
       ...(input?.autosaveEveryTicks === undefined ? {} : { autosaveEveryTicks: input.autosaveEveryTicks }),
       ...(input?.autosaveOnStop === undefined ? {} : { autosaveOnStop: input.autosaveOnStop }),
-      ...(input?.tickConfig === undefined ? {} : { tickConfig: input.tickConfig }),
+      tickConfig: effectiveTickConfig(input?.tickConfig ?? {}),
       // 节拍器跑完当前 tick 收尾后，把相位落到 'stopped'。
       onStopped: () => { phase = 'stopped'; },
     });
@@ -208,7 +238,7 @@ export async function step(input = {}) {
   // 这里把它转成 409，避免 HTTP 层暴露成 500。
   let summary;
   try {
-    summary = await loop.step(input ?? {});
+    summary = await loop.step(effectiveTickConfig(input ?? {}));
   } catch (err) {
     if (err && err.code === 'TICK_IN_FLIGHT') {
       throw new HttpError(409, err.message);
@@ -258,11 +288,13 @@ export function __reset() {
   // 必须一并强制停掉节拍器：否则一个后台 timer 会跨测试存活，
   // 在别的用例里偷偷推进 tick（这类污染极难定位）。
   metronome.__reset();
+  aiRuntime = null;
   config.setDifficulty('standard');
 }
 
 /** 本模块 HTTP 路由表。 */
 export const routes = [
+  { method: 'GET', path: '/api/v1/sim/ai-status', handler: () => getAiRuntimeStatus() },
   { method: 'POST', path: '/api/v1/sim/start', handler: ({ body }) => start(body ?? {}) },
   { method: 'POST', path: '/api/v1/sim/pause', handler: () => pause() },
   { method: 'POST', path: '/api/v1/sim/resume', handler: () => resume() },

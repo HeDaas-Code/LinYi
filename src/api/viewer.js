@@ -18,5 +18,6 @@ async function viewerPage({ res }) {
 }
 
 export const routes = [
+  { method: 'GET', path: '/', stream: true, handler: viewerPage },
   { method: 'GET', path: '/viewer', stream: true, handler: viewerPage },
 ];
