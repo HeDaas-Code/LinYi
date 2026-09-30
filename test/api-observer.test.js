@@ -250,6 +250,73 @@ test('sim/stream: 推进中时 progress 帧能带上当前阶段', async () => {
 });
 
 // ---------------------------------------------------------------------------
+// tick 采样帧：采样由「已提交 tick」驱动，不由客户端刷新驱动
+// ---------------------------------------------------------------------------
+
+test('sim/stream: 每个已提交 tick 推一帧 sample，且同一 tick 不重复推', async () => {
+  fresh();
+  control.start({ agentCount: 3 });
+  await withServer(async (base) => {
+    // 未推进任何 tick 时不应有 sample：0 号 tick 不是"完成了一个 tick"。
+    const idle = await readStream(base + '/api/v1/sim/stream?intervalMs=50&maxEvents=4');
+    assert.equal(
+      idle.events.filter((e) => e.event === 'sample').length, 0,
+      '还没提交过 tick 就不该推 sample',
+    );
+
+    await control.step({ eventProbability: 0 });
+    // 流要跑足够多帧，才能证明"同一 tick 只推一次"而不是"碰巧只跑了一帧"。
+    const { events } = await readStream(base + '/api/v1/sim/stream?intervalMs=50&maxEvents=10');
+    const samples = events.filter((e) => e.event === 'sample');
+    assert.equal(samples.length, 1, 'committedTick 未变时必须只推一帧 sample，实际 ' + samples.length);
+    assert.equal(samples[0].data.tick, 1);
+
+    const s = samples[0].data;
+    for (const key of ['food', 'water', 'energy', 'medical']) {
+      assert.equal(typeof s.resources[key], 'number', '资源快照必须是可画的数值：' + key);
+    }
+    assert.equal(typeof s.needs.min, 'number');
+    assert.equal(typeof s.needs.max, 'number');
+    assert.equal(typeof s.needs.avg, 'number');
+    assert.equal(typeof s.latency.count, 'number');
+    assert.equal(s.population, 3);
+    assert.equal(s.alive, 3);
+    assert.equal(s.missed, 0, '没有跳号时缺口应为 0');
+  });
+});
+
+test('sim/stream: 连接时已有进度则补一帧当前 tick 的 sample', async () => {
+  fresh();
+  control.start({ agentCount: 2 });
+  await control.step({ eventProbability: 0 });
+  await control.step({ eventProbability: 0 });
+  await withServer(async (base) => {
+    const { events } = await readStream(base + '/api/v1/sim/stream?intervalMs=50&maxEvents=6');
+    const samples = events.filter((e) => e.event === 'sample');
+    assert.equal(samples.length, 1, '中途接入应立刻拿到一帧当前 tick 作为图表基准');
+    assert.equal(samples[0].data.tick, 2);
+  });
+});
+
+test('sim/stream: sample 帧计入 maxEvents 预算，done 仍是最后一帧', async () => {
+  fresh();
+  control.start({ agentCount: 2 });
+  await control.step({ eventProbability: 0 });
+  await withServer(async (base) => {
+    // 2 是关键边界：此时 status 之后预算只剩 1 格，sample 必须让位给 done，
+    // 否则会多推一帧、越过 maxEvents。3/5/8 覆盖常规情形。
+    for (const maxEvents of [2, 3, 5, 8]) {
+      const { events } = await readStream(base + `/api/v1/sim/stream?intervalMs=50&maxEvents=${maxEvents}`);
+      assert.equal(
+        events.length, maxEvents,
+        `maxEvents=${maxEvents} 时不得多推帧，实际 ${events.length}`,
+      );
+      assert.equal(events[events.length - 1].event, 'done');
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
 // 决策链：意图 → 最终行动 → 执行结果
 // ---------------------------------------------------------------------------
 

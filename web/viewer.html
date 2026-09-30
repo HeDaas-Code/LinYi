@@ -62,7 +62,7 @@
 <script>
 const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),num=v=>Number.isFinite(Number(v))?Number(v):0;
 const LS_HISTORY='truman.history.v1',LS_LOGS='truman.logs.v1',LS_SELECTED='truman.selected.v1',LS_TAB='truman.tab.v1';
-let busy=false,selected=localStorage.getItem(LS_SELECTED)||null,timer=null,tickSeen=-1;
+let busy=false,selected=localStorage.getItem(LS_SELECTED)||null,timer=null,lastDecisions=[];
 let history=load(LS_HISTORY,[]),logs=load(LS_LOGS,[]);
 function load(k,def){try{const v=JSON.parse(localStorage.getItem(k));return v??def}catch{return def}}
 function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
@@ -108,31 +108,38 @@ function renderAgentList(as){$('resident-list').innerHTML=as.map(a=>`<button cla
 async function selectAgent(id){selected=id;save(LS_SELECTED,id);try{const d=await req('/api/v1/agents/'+encodeURIComponent(id));show('resident-detail',d);renderAgentList(agents(window.world||{}))}catch(e){$('resident-detail').innerHTML=`<div class="danger">详情加载失败：${esc(e.message)}</div>`;log('error','居民详情 '+e.message)}}
 function renderDecisions(ds){$('decisions').innerHTML=(ds||[]).map(d=>{const m=d.model??{},f=d.final??{};return`<tr><td>${esc(d.tick)}</td><td>${esc(d.agentId)}</td><td>${esc(zhVal(f.action??d.decision))}</td><td>${esc(zhVal(f.source??'rule'))}</td><td>${esc(m.model??m.mode??'规则')}<br><span class="muted">${m.applied?'已采用':'未采用'}</span></td><td>${m.latencyMs?esc(m.latencyMs)+' ms':'—'}</td><td><button data-trace="${esc(d.decisionId)}" data-tick="${esc(d.tick)}">查看</button></td></tr>`}).join('')||'<tr><td colspan="7" class="empty">暂无决策</td></tr>';document.querySelectorAll('[data-trace]').forEach(b=>b.onclick=async()=>{try{show('trace-detail',await req('/api/v1/decisions/'+encodeURIComponent(b.dataset.trace)+'?tick='+b.dataset.tick))}catch(e){$('trace-detail').innerHTML=`<div class="danger">决策详情加载失败：${esc(e.message)}</div>`;log('error','决策详情 '+e.message)}})}
 function renderAi(s){$('ai-head').textContent=`模型 ${zhVal(s.mode??'?')} · ${s.provider??'?'} · ${s.model??'?'}`;$('ai-head').className='badge '+(s.enabled?'on':'off');$('ai-status').innerHTML=`<span class="badge ${s.enabled?'on':'off'}">模式 ${esc(zhVal(s.mode))}</span><span class="badge">服务商 ${esc(s.provider)}</span><span class="badge">模型 ${esc(s.model)}</span><span class="badge">采样比例 ${esc(s.populationShare)}</span><span class="badge">并发 ${esc(s.concurrency)}</span><span class="badge">每 ${esc(s.everyTicks)} 时间步</span><span class="badge">节奏 ${esc(zhVal(s.tickPacing??'clock'))}</span><span class="badge">重试 5 次</span>`;show('ai-context',s)}
-/* 新一局判定：tick 比已记录的最后一个 tick 更小，说明世界被重置、重新开始计数。
-   此时必须丢掉上一局的曲线——否则新旧两局的点会连在同一条线上，读数完全失真。
-   用 tick 回退而不是「点了哪个按钮」作为信号：按钮只覆盖一条路径，
-   而 tick 回退覆盖所有重置来源（界面、curl、外部脚本）。 */
-function pushHistory(tick,stocks,agentsList,ds){
-  const lastTick=history.length?history[history.length-1].tick:null;
-  if(lastTick!==null&&tick<lastTick){history=[];tickSeen=-1;save(LS_HISTORY,history);log('info',`检测到新一局（tick ${lastTick} → ${tick}），图表已清零`)}
-  if(tick===tickSeen)return;
-  tickSeen=tick;
-  history.push({tick,stocks,needs:agentsList.map(a=>num(a.needs?.food)),latency:ds.filter(d=>d.model?.latencyMs).map(d=>num(d.model.latencyMs))});
-  history=history.slice(-240);save(LS_HISTORY,history)
+/* 采样只由后端推来的 sample 帧驱动（每个已提交 tick 恰好一帧），
+   与前端刷新彻底解耦——刷新只更新状态与列表，绝不产生采样点。
+   去重依据取**已持久化的最后一条 tick**，而不是内存游标：
+   内存游标刷新页面就归零，那正是"刷新一次多一个点"的根因。 */
+function pushSample(sample){
+  const tick=num(sample?.tick);
+  const lastTick=history.length?num(history[history.length-1].tick):null;
+  if(lastTick!==null&&tick<lastTick){history=[];save(LS_HISTORY,history);log('info',`检测到新一局（tick ${lastTick} → ${tick}），图表已清零`)}
+  else if(lastTick!==null&&tick===lastTick)return false;
+  if(num(sample?.missed)>0)log('warn',`tick ${tick} 之前有 ${num(sample.missed)} 个 tick 未采样（推进快于推送间隔）`);
+  history.push({tick,resources:sample?.resources??{},needs:sample?.needs??{},latency:sample?.latency??{},alive:num(sample?.alive),population:num(sample?.population)});
+  history=history.slice(-240);save(LS_HISTORY,history);renderCharts();return true
 }
+/* 所有图表只从 history / 决策列表渲染。抽成独立函数是为了让"清零"立刻可见：
+   若只在轮询里画图，清空之后要等到下一次刷新才反映出来。 */
+function renderCharts(ds=lastDecisions){const recent=history.slice(-60);renderChart($('stock-chart'),Object.keys(RES).map(k=>({color:RC[k],vals:recent.map(h=>num(h.resources?.[k]))})));$('stock-legend').innerHTML=Object.keys(RES).map(k=>`<span><i style="background:${RC[k]}"></i>${RES[k]}</span>`).join('');const all=recent.flatMap(h=>Object.values(h.resources??{}).map(num));$('axis-min').textContent='最低 '+Math.min(...all,0).toFixed(1);$('axis-max').textContent='最高 '+Math.max(...all,0).toFixed(1);
+renderChart($('needs-chart'),[{color:'#e0a33c',vals:recent.map(h=>num(h.needs?.max))},{color:'#7fc7b6',vals:recent.map(h=>num(h.needs?.min))}]);
+const counts={};(ds||[]).forEach(x=>{const act=x.final?.action??x.decision;counts[act]=(counts[act]??0)+1});const top=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8);renderChart($('action-chart'),[{color:'#e0a33c',vals:top.map(e=>e[1])}]);$('action-legend').innerHTML=top.map(e=>`<span>${esc(zhVal(e[0]))}：${e[1]}</span>`).join('')||'<span class="empty">暂无数据</span>';
+renderChart($('latency-chart'),[{color:'#d8f7a8',vals:recent.map(h=>num(h.latency?.avg))}]);
+$('chart-note').textContent=history.length?`已采样 ${history.length} 个 tick · 最新 tick ${history[history.length-1].tick}`:'等待 tick 采样'}
+/* 采样唯一来源：后端在每个已提交 tick 末尾推一帧 sample。
+   EventSource 断线会自动重连，重连后同一 tick 因去重不会重复入图。 */
+function connectStream(){if(typeof EventSource==='undefined')return null;const es=new EventSource('/api/v1/sim/stream');es.addEventListener('open',()=>log('info','已连接 tick 采样流'));es.addEventListener('sample',ev=>{try{pushSample(JSON.parse(ev.data))}catch(e){log('error','采样帧解析失败 '+e.message)}});es.addEventListener('error',()=>{});return es}
 async function refresh(){if(busy)return;try{const [w,s,d,a,st,lg]=await Promise.all([req('/api/v1/world/state'),req('/api/v1/sim/status'),req('/api/v1/sim/decisions?limit=60'),req('/api/v1/sim/ai-status'),req('/api/v1/sim/stages?limit=5'),req('/api/v1/sim/logs?limit=80').catch(()=>({entries:[],stats:{size:0}}))]);window.world=w;const tick=w.tick??s.tick??0,as=agents(w),ds=d||[],stocks=stockOf(w);$('phase').textContent=PHASE_ZH[s.phase]??s.phase??'--';$('state').textContent=STATE_ZH[s.state]??s.state??'--';$('driver').textContent=DRIVER_ZH[s.driver]??s.driver??'--';$('tick').textContent=tick;$('updated').textContent=new Date().toLocaleTimeString();$('alive').textContent=as.filter(x=>x.alive!==false).length+' / '+as.length;for(const k of Object.keys(RES))$(k).textContent=num(stocks[k]).toFixed(1);const cap=Math.max(1,...Object.values(stocks),10);for(const k of Object.keys(RES)){const g=$('g-'+k);g.firstElementChild.style.width=Math.min(100,(stocks[k]/cap)*100)+'%';g.className='gauge'+(stocks[k]/cap<0.2?' hot':'')}
 $('commit').textContent=s.lastCommit?.ms?num(s.lastCommit.ms).toFixed(0)+' ms':'—';const mc=ds.filter(x=>x.model?.applied).length;$('model-calls').textContent=ds.length;$('model-applied').textContent=mc+' / '+ds.length;$('model-applied').className=mc>0?'on':'';
-pushHistory(tick,stocks,as,ds);const recent=history.slice(-60);renderChart($('stock-chart'),Object.keys(RES).map(k=>({color:RC[k],vals:recent.map(h=>num(h.stocks?.[k]))})));$('stock-legend').innerHTML=Object.keys(RES).map(k=>`<span><i style="background:${RC[k]}"></i>${RES[k]}</span>`).join('');const allStock=recent.flatMap(h=>Object.values(h.stocks??{}).map(num));$('axis-min').textContent='最低 '+Math.min(...allStock,0).toFixed(1);$('axis-max').textContent='最高 '+Math.max(...allStock,0).toFixed(1);
-renderChart($('needs-chart'),[{color:'#e0a33c',vals:recent.map(h=>(h.needs??[]).length?Math.max(...h.needs):0)},{color:'#7fc7b6',vals:recent.map(h=>(h.needs??[]).length?Math.min(...h.needs):0)}]);
-const counts={};ds.forEach(x=>{const act=x.final?.action??x.decision;counts[act]=(counts[act]??0)+1});const top=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8);renderChart($('action-chart'),[{color:'#e0a33c',vals:top.map(e=>e[1])}]);$('action-legend').innerHTML=top.map(e=>`<span>${esc(zhVal(e[0]))}：${e[1]}</span>`).join('')||'<span class="empty">暂无数据</span>';
-renderChart($('latency-chart'),[{color:'#d8f7a8',vals:recent.flatMap(h=>h.latency??[]).slice(-60)}]);
-renderAgentList(as);renderDecisions(ds);renderAi(a);const last=st.recent?.at?.(-1);show('stages',last??st);if(last?.stages)renderChart($('stage-chart'),[{color:'#7fc7b6',vals:last.stages.map(x=>num(x.lastAtMs))}]);$('run-ind').textContent=s.background?'后台运行':(STATE_ZH[s.state]??s.state??'空闲');$('run-ind').className='badge '+(s.background||s.phase==='running'?'on':'');$('message').textContent='';resolveSelected(as);$('clock').textContent=new Date().toLocaleTimeString();renderServerLogs(lg)}catch(e){$('message').textContent='错误 '+e.message;$('message').className='danger';log('error',e.message)}}
+lastDecisions=ds;renderCharts(ds);renderAgentList(as);renderDecisions(ds);renderAi(a);const last=st.recent?.at?.(-1);show('stages',last??st);if(last?.stages)renderChart($('stage-chart'),[{color:'#7fc7b6',vals:last.stages.map(x=>num(x.lastAtMs))}]);$('run-ind').textContent=s.background?'后台运行':(STATE_ZH[s.state]??s.state??'空闲');$('run-ind').className='badge '+(s.background||s.phase==='running'?'on':'');$('message').textContent='';resolveSelected(as);$('clock').textContent=new Date().toLocaleTimeString();renderServerLogs(lg)}catch(e){$('message').textContent='错误 '+e.message;$('message').className='danger';log('error',e.message)}}
 function resolveSelected(as){if(selected&&as.some(a=>a.id===selected))return;if(as.length){selected=as[0].id;save(LS_SELECTED,selected)}}
-async function act(a){if(busy)return;busy=true;$('message').textContent='处理中…';const ACT_ZH={start:'启动',step:'单步',pause:'暂停',resume:'恢复',stop:'停止'};log('info','执行 '+ACT_ZH[a]);try{const body=a==='start'?{background:true}:a==='step'?{eventProbability:0}:a==='stop'?{wait:true}:{};await req('/api/v1/sim/'+a,{method:'POST',body:JSON.stringify(body)});log('ok',ACT_ZH[a]+' 成功')}catch(e){$('message').textContent='错误 '+e.message;$('message').className='danger';log('error',ACT_ZH[a]+' 失败 '+e.message)}finally{busy=false;tickSeen=-1;refresh()}}
+async function act(a){if(busy)return;busy=true;$('message').textContent='处理中…';const ACT_ZH={start:'启动',step:'单步',pause:'暂停',resume:'恢复',stop:'停止'};log('info','执行 '+ACT_ZH[a]);try{const body=a==='start'?{background:true}:a==='step'?{eventProbability:0}:a==='stop'?{wait:true}:{};await req('/api/v1/sim/'+a,{method:'POST',body:JSON.stringify(body)});log('ok',ACT_ZH[a]+' 成功')}catch(e){$('message').textContent='错误 '+e.message;$('message').className='danger';log('error',ACT_ZH[a]+' 失败 '+e.message)}finally{busy=false;refresh()}}
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));b.classList.add('active');$(b.dataset.tab).classList.add('active');localStorage.setItem(LS_TAB,b.dataset.tab)});
 const savedTab=localStorage.getItem(LS_TAB);if(savedTab&&$(savedTab)){document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x.dataset.tab===savedTab));document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('active',p.id===savedTab))}
 document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>act(b.dataset.action));$('refresh').onclick=()=>{log('info','手动刷新');refresh()};const speeds=[.25,.5,1,2,4,8];$('speed-options').innerHTML=speeds.map(x=>`<button data-speed="${x}">${x} 倍速</button>`).join('');document.querySelectorAll('[data-speed]').forEach(b=>b.onclick=()=>req('/api/v1/sim/pacing',{method:'POST',body:JSON.stringify({speed:num(b.dataset.speed)})}).then(()=>{log('ok','倍速设为 '+b.dataset.speed);refresh()}).catch(e=>log('error','倍速设置失败 '+e.message)));
 function setTimer(ms){if(timer)clearInterval(timer);timer=ms>0?setInterval(refresh,ms):null;$('interval').value=String(ms)}$('interval').onchange=()=>setTimer(num($('interval').value));
-renderLogs();setTimer(5000);refresh();
+renderLogs();setTimer(5000);connectStream();refresh();
 </script>
 </body></html>

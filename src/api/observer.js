@@ -258,6 +258,65 @@ export function stages(limit = 5) {
   };
 }
 
+/** 图表采样的资源维度（顺序即前端图例顺序）。 */
+const SAMPLE_RESOURCES = Object.freeze(['food', 'water', 'energy', 'medical']);
+
+/** 从 loop.snapshot() 的资源条目里取一个可画的数值。 */
+function stockValue(entry) {
+  if (typeof entry === 'number' && Number.isFinite(entry)) return entry;
+  const v = entry?.stockpile ?? entry?.stock ?? entry?.amount;
+  return Number.isFinite(Number(v)) ? Number(v) : 0;
+}
+
+/**
+ * 单个已提交 tick 的图表快照。
+ *
+ * 存在的理由：采样必须由「tick 完成」驱动，而不是由「前端刷新」驱动。
+ * 前端轮询只更新状态与列表，采样只走这里——因此刷新多少次都不会多出一个点。
+ *
+ * 只读取**已提交边界**的当前状态。若两次采样之间跳过了 tick（快 tick 快于推送间隔），
+ * 不伪造中间点（那会是把当前状态冒充成历史），而是用 missed 如实报出缺口。
+ * @param {number} tick 已提交的 tick
+ */
+export function tickSample(tick) {
+  const snap = loop.snapshot();
+  const resources = {};
+  for (const key of SAMPLE_RESOURCES) resources[key] = stockValue(snap.resources?.[key]);
+
+  const agents = Array.isArray(snap.agents) ? snap.agents : Object.values(snap.agents ?? {});
+  const needsMap = snap.world?.needs ?? {};
+  const alive = agents.filter((a) => (a?.data?.alive ?? a?.alive) !== false);
+  const foods = alive.map((a) => Number(needsMap[a?.id]?.food)).filter(Number.isFinite);
+  const needs = foods.length === 0
+    ? { min: 0, max: 0, avg: 0 }
+    : {
+      min: Math.min(...foods),
+      max: Math.max(...foods),
+      avg: foods.reduce((a, b) => a + b, 0) / foods.length,
+    };
+
+  const decisions = recentDecisions(MAX_DECISIONS, tick);
+  const latencies = decisions.map((d) => d?.model?.latencyMs).filter((v) => Number.isFinite(v));
+  const latency = latencies.length === 0
+    ? { count: 0, avg: 0, max: 0 }
+    : {
+      count: latencies.length,
+      avg: latencies.reduce((a, b) => a + b, 0) / latencies.length,
+      max: Math.max(...latencies),
+    };
+
+  return {
+    tick,
+    resources,
+    needs,
+    latency,
+    alive: alive.length,
+    population: agents.length,
+    decisions: decisions.length,
+    applied: decisions.filter((d) => d?.model?.applied === true).length,
+  };
+}
+
 /**
  * SSE 阶段流：先推一帧 status，随后按间隔推 progress，最后推 done。
  * maxEvents 用于让客户端（与测试）能确定性地结束流；0 表示不限。
@@ -282,18 +341,40 @@ export async function streamEvents(ctx) {
   if (ctx?.req && typeof ctx.req.on === 'function') ctx.req.on('close', onClose);
 
   const finished = () => closed === true || res?.writableEnded === true;
+  // maxEvents 预算里必须给 done 留一格，否则会多推一帧、越界。
+  const budget = () => (maxEvents > 0 ? maxEvents - count : Infinity);
+
+  // 采样由「已提交 tick 变化」驱动，而不是由客户端刷新驱动：
+  // 同一个 tick 只推一帧 sample，因此前端刷新多少次都不会多出一个采样点。
+  // 连接时若已有进度，先补一帧当前 tick，让图表立刻有基准而不是空白。
+  let sampledTick = null;
+  const sampleIfAdvanced = (committedTick) => {
+    if (!Number.isInteger(committedTick) || committedTick <= 0) return;
+    if (committedTick === sampledTick) return;
+    if (budget() <= 1) return;
+    // 快 tick 快于推送间隔时会跳号。此处不伪造中间点（那是把当前状态冒充成历史），
+    // 而是如实报出缺口，让前端能说清"这段没有采样"。
+    const missed = sampledTick === null ? 0 : Math.max(0, committedTick - sampledTick - 1);
+    sampledTick = committedTick;
+    emit('sample', { ...tickSample(committedTick), missed });
+  };
+
   try {
-    emit('status', simStatus());
+    const first = simStatus();
+    emit('status', first);
+    sampleIfAdvanced(first.committedTick);
     while (finished() === false) {
       await new Promise((resolve) => { setTimeout(resolve, intervalMs); });
       if (finished()) break;
-      const remaining = maxEvents > 0 ? maxEvents - count : Infinity;
-      if (remaining <= 1) {
+      if (budget() <= 1) {
         emit('done', { events: maxEvents > 0 ? maxEvents : count });
         break;
       }
+      const frame = simStatus();
+      // sample 先于 progress：tick 刚提交时，采样帧不该被进度帧挤掉。
+      sampleIfAdvanced(frame.committedTick);
       // progress 帧带上当前阶段明细：这正是「此刻跑到哪一步」的观测口径。
-      emit('progress', { ...simStatus(), stageDetail: stageProgress.current() });
+      if (budget() > 1) emit('progress', { ...frame, stageDetail: stageProgress.current() });
     }
   } finally {
     if (ctx?.req && typeof ctx.req.removeListener === 'function') ctx.req.removeListener('close', onClose);
