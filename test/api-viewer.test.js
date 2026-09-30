@@ -9,16 +9,20 @@ test('GET /viewer returns the Chinese observer page', async () => {
     const html = await response.text();
     assert.equal(response.status, 200);
     assert.match(response.headers.get('content-type'), /^text\/html; charset=utf-8$/);
-    assert.match(html, /TRUMAN TOWN \/\/ STATE CONSOLE/);
+    assert.match(html, /杜鲁门小镇 \/\/ 状态控制台/);
     assert.match(html, /\/api\/v1\/world\/state/);
-    assert.match(html, /DECISION TRACE/);
-    assert.match(html, /AI \/ LAYA LINK/);
-    assert.match(html, /SYSTEM LOG/);
-    assert.match(html, /RESOURCE HISTORY/);
+    assert.match(html, /决策链/);
+    assert.match(html, /模型与 LAYA 链路/);
+    assert.match(html, /系统日志/);
+    assert.match(html, /资源历史/);
     assert.match(html, /data-tab="tab-decisions"/);
     assert.match(html, /data-action="start"/);
     assert.match(html, /data-action="step"/);
     assert.match(html, /\/api\/v1\/decisions\//);
+    // 前端不得再直接吐出原始 JSON：详情区必须走解析后的结构化渲染。
+    assert.match(html, /function renderJson/);
+    assert.doesNotMatch(html, /textContent\s*=\s*JSON\.stringify/);
+    assert.doesNotMatch(html, /<h1>TRUMAN TOWN/);
     const logs = await fetch('http://127.0.0.1:' + port + '/api/v1/sim/logs?limit=5');
     assert.equal(logs.status, 200);
     const logBody = await logs.json();
@@ -26,7 +30,7 @@ test('GET /viewer returns the Chinese observer page', async () => {
     assert.equal(typeof logBody.stats.level, 'string');
     const root = await fetch('http://127.0.0.1:' + port + '/');
     assert.equal(root.status, 200);
-    assert.match(await root.text(), /STATE CONSOLE/);
+    assert.match(await root.text(), /状态控制台/);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
