@@ -1,6 +1,6 @@
 {
   "name": "truman-town",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "description": "LinYi 号避难所自治沙盘（楚门小镇）最小闭环 MVP",

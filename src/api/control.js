@@ -72,14 +72,19 @@ function effectiveTickConfig(input = {}) {
 }
 
 /** 若尚无智能体则按数量补足（缺省 3 个）。 */
-function ensureAgents(agentCount) {
+const CONTROL_INIT_DEFAULTS = Object.freeze({
+  phase2: false,
+  phase3: false,
+  scheduleEnabled: false,
+  careerEnabled: false,
+  societyEnabled: false,
+});
+
+function ensureAgents(agentCount, initOptions = {}) {
   const existing = loop.snapshot().agents.length;
   if (existing > 0) return existing;
   const count = Number.isInteger(agentCount) && agentCount > 0 ? agentCount : 3;
-  for (let i = 0; i < count; i += 1) {
-    loop.spawnAgent({ name: '居民' + (i + 1) });
-  }
-  return count;
+  return loop.initializeRun({ ...CONTROL_INIT_DEFAULTS, ...initOptions, agentCount: count }).agents.length;
 }
 
 /** 当前相位 + 提交边界 + 节拍器快照（供 API 响应）。 */
@@ -123,7 +128,8 @@ function status() {
  * @returns {{ phase: string, tick: number, committedTick: number, agentCount: number, spawned: number }}
  */
 export function start(input = {}) {
-  const spawned = ensureAgents(input?.agentCount);
+  const tickConfig = effectiveTickConfig(input?.tickConfig ?? {});
+  const spawned = ensureAgents(input?.agentCount, tickConfig);
   if (phase === 'paused') {
     cycle.resume();
     // 从暂停恢复：若后台节拍器在跑，一并恢复它的推进。
@@ -142,7 +148,7 @@ export function start(input = {}) {
       ...(input?.speed === undefined ? {} : { speed: input.speed }),
       ...(input?.autosaveEveryTicks === undefined ? {} : { autosaveEveryTicks: input.autosaveEveryTicks }),
       ...(input?.autosaveOnStop === undefined ? {} : { autosaveOnStop: input.autosaveOnStop }),
-      tickConfig: effectiveTickConfig(input?.tickConfig ?? {}),
+      tickConfig,
       // 节拍器跑完当前 tick 收尾后，把相位落到 'stopped'。
       onStopped: () => { phase = 'stopped'; },
     });
@@ -233,12 +239,13 @@ export async function step(input = {}) {
     throw new HttpError(409, 'sim 已暂停，请先 start 再 step');
   }
   if (phase === 'idle') phase = 'running';
-  ensureAgents(input?.agentCount);
+  const tickConfig = effectiveTickConfig(input ?? {});
+  ensureAgents(input?.agentCount, tickConfig);
   // loop.step 自带并发互斥：进行中再次 step 会抛 TICK_IN_FLIGHT。
   // 这里把它转成 409，避免 HTTP 层暴露成 500。
   let summary;
   try {
-    summary = await loop.step(effectiveTickConfig(input ?? {}));
+    summary = await loop.step(tickConfig);
   } catch (err) {
     if (err && err.code === 'TICK_IN_FLIGHT') {
       throw new HttpError(409, err.message);

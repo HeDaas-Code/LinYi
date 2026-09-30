@@ -2813,24 +2813,9 @@ export function reset() {
   resetGenerations();
 }
 
-/**
- * 复位并运行 N 个 tick，返回整段运行的汇总报告。
- * @param {object} [options]
- * @param {number} [options.ticks=1] 运行 tick 数
- * @param {number|string} [options.seed] 随机种子
- * @param {Array<object>} [options.agents] 初始智能体（见 spawnAgent）
- * @param {number} [options.agentCount] 未提供 agents 时自动生成的数量（默认 3）
- * @param {boolean} [options.reset=true] 运行前是否复位
- * @param {object} [options.decay] {food, water} 资源自然损耗率
- * @param {object} [options.needGrowth] {food, water} 每 tick 需求增长
- * @param {number} [options.eventProbability] 每 tick 突发事件概率
- * @param {Array<object>} [options.events] 突发事件目录
- * @returns {Promise<object>}
- */
-export async function run(options = {}) {
-  if (options.reset !== false) reset();
+/** 创建居民并执行一次性阶段初始化；调用方负责保证这是新一局。 */
+export function initializeRun(options = {}) {
   if (options.seed !== undefined) { currentSeed = String(options.seed); rng.seed(options.seed); }
-
   const spawned = [];
   const phase2 = options.phase2 === true;
   const phase3 = options.phase3 === true;
@@ -2865,6 +2850,29 @@ export async function run(options = {}) {
 
   // 批次2-C（t48）：为居民种子日程 / 职业 / 公共角色（真实调用 4 模块）
   seedAgentScheduleRoles(spawned, options);
+
+  return { agents: spawned, phase2Seed, phase3Seed };
+}
+
+/**
+ * 复位并运行 N 个 tick，返回整段运行的汇总报告。
+ * @param {object} [options]
+ * @param {number} [options.ticks=1] 运行 tick 数
+ * @param {number|string} [options.seed] 随机种子
+ * @param {Array<object>} [options.agents] 初始智能体（见 spawnAgent）
+ * @param {number} [options.agentCount] 未提供 agents 时自动生成的数量（默认 3）
+ * @param {boolean} [options.reset=true] 运行前是否复位
+ * @param {object} [options.decay] {food, water} 资源自然损耗率
+ * @param {object} [options.needGrowth] {food, water} 每 tick 需求增长
+ * @param {number} [options.eventProbability] 每 tick 突发事件概率
+ * @param {Array<object>} [options.events] 突发事件目录
+ * @returns {Promise<object>}
+ */
+export async function run(options = {}) {
+  if (options.reset !== false) reset();
+  const { agents: spawned, phase2Seed, phase3Seed } = initializeRun(options);
+  const phase2 = options.phase2 === true;
+  const phase3 = options.phase3 === true;
 
   const ticks = Number.isInteger(options.ticks) && options.ticks > 0 ? options.ticks : 1;
   const steps = [];
