@@ -11,7 +11,8 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const VIEWER = new URL('../web/viewer.html', import.meta.url);
-const LS_HISTORY = 'truman.history.v1';
+const LS_HISTORY = 'truman.history.v2';
+const LS_HISTORY_LEGACY = 'truman.history.v1';
 
 const sample = (tick, food = 0.5) => ({
   tick,
@@ -36,7 +37,7 @@ const world = (tick) => ({
 const settle = () => new Promise((r) => setTimeout(r, 5));
 
 /** 起一个页面实例。saved 模拟"上次访问留下的已持久化历史"。 */
-async function boot({ saved = null, tick = 5 } = {}) {
+async function boot({ saved = null, tick = 5, legacyKey = false } = {}) {
   const html = await readFile(VIEWER, 'utf8');
   const script = html.match(/<script>([\s\S]*)<\/script>/)[1];
 
@@ -51,7 +52,7 @@ async function boot({ saved = null, tick = 5 } = {}) {
     querySelectorAll: () => [],
   };
   const store = new Map();
-  if (saved !== null) store.set(LS_HISTORY, JSON.stringify(saved));
+  if (saved !== null) store.set(legacyKey ? LS_HISTORY_LEGACY : LS_HISTORY, JSON.stringify(saved));
   const localStorage = {
     getItem: (k) => (store.has(k) ? store.get(k) : null),
     setItem: (k, v) => store.set(k, String(v)),
@@ -106,6 +107,39 @@ test('刷新即使看到更新的 tick 也不采样（采样只能来自 sample 
     v.getHistory().map((h) => h.tick), [5],
     '刷新看到 tick 9 也不得自行入图——那是后端 sample 帧的职责',
   );
+});
+
+test('当前 key 上的旧形状历史必须被形状校验丢弃，而不是画成贴底零线', async () => {
+  // 关键：旧形状数据写在**当前 key**上。若只写 v1 key，光靠 key 升级就会被
+  // 忽略，测试根本走不到形状校验——那是一条空转的断言。
+  // 形状校验守的是"key 相同但结构变了"这种更隐蔽的情况。
+  const legacy = [
+    { tick: 1, stocks: { food: 90, water: 90 }, needs: [0.5, 0.6], latency: [1000, 2000] },
+    { tick: 2, stocks: { food: 80, water: 85 }, needs: [0.4, 0.5], latency: [1200, 2200] },
+  ];
+  const v = await boot({ saved: legacy });
+  await settle();
+  assert.deepEqual(v.getHistory(), [], '不兼容形状的历史必须整体丢弃');
+  assert.match(
+    v.node('chart-note').textContent, /等待 tick 采样/,
+    '图表必须回到等待态，而不是画一条零线',
+  );
+  assert.doesNotMatch(v.node('stock-chart').innerHTML, /polyline/, '不得画出任何折线');
+});
+
+test('升级前的 v1 key 历史被忽略，不参与渲染', async () => {
+  const legacy = [{ tick: 1, stocks: { food: 90 }, needs: [0.5], latency: [1000] }];
+  const v = await boot({ saved: legacy, legacyKey: true });
+  await settle();
+  assert.deepEqual(v.getHistory(), [], 'v1 key 的历史不得被当作当前采样读取');
+});
+
+test('形状正确的历史仍能正常恢复并渲染', async () => {
+  // 反向守卫：上一条不能靠"把所有历史都丢掉"来通过。
+  const v = await boot({ saved: [sample(1, 0.2), sample(2, 0.4)] });
+  await settle();
+  assert.deepEqual(v.getHistory().map((h) => h.tick), [1, 2], '合法历史必须保留');
+  assert.match(v.node('stock-chart').innerHTML, /polyline/, '合法历史必须真的画出折线');
 });
 
 test('sample 帧按 tick 去重，同一 tick 只入图一次', async () => {

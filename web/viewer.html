@@ -61,9 +61,15 @@
 </div></div></div>
 <script>
 const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),num=v=>Number.isFinite(Number(v))?Number(v):0;
-const LS_HISTORY='truman.history.v1',LS_LOGS='truman.logs.v1',LS_SELECTED='truman.selected.v1',LS_TAB='truman.tab.v1';
+const LS_HISTORY='truman.history.v2',LS_HISTORY_LEGACY='truman.history.v1',LS_LOGS='truman.logs.v1',LS_SELECTED='truman.selected.v1',LS_TAB='truman.tab.v1';
 let busy=false,selected=localStorage.getItem(LS_SELECTED)||null,timer=null,lastDecisions=[];
-let history=load(LS_HISTORY,[]),logs=load(LS_LOGS,[]);
+/* 只接受本轮 tickSample 形状的采样记录。
+   这个 key 历史上存过另一种形状（stocks / needs 数组 / latency 数组）。
+   若把旧记录喂给新渲染器，每个字段都取到 undefined，图表会画成一条贴底的
+   零线——"看着有图，其实全是 0"，比空图更难发现。因此按形状校验，不兼容即丢弃。 */
+function isSample(r){return r!==null&&typeof r==='object'&&Number.isFinite(Number(r.tick))&&r.resources!==null&&typeof r.resources==='object'&&!Array.isArray(r.resources)&&r.needs!==null&&typeof r.needs==='object'&&!Array.isArray(r.needs)&&r.latency!==null&&typeof r.latency==='object'&&!Array.isArray(r.latency)}
+function loadHistory(){try{localStorage.removeItem(LS_HISTORY_LEGACY)}catch{}const raw=load(LS_HISTORY,[]);return Array.isArray(raw)?raw.filter(isSample):[]}
+let history=loadHistory(),logs=load(LS_LOGS,[]);
 function load(k,def){try{const v=JSON.parse(localStorage.getItem(k));return v??def}catch{return def}}
 function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
 function log(kind,msg){logs.unshift({t:new Date().toLocaleTimeString(),kind,msg:String(msg).slice(0,300)});logs=logs.slice(0,250);save(LS_LOGS,logs);renderLogs()}
@@ -103,7 +109,7 @@ const PHASE_ZH={idle:'空闲',running:'运行中',paused:'已暂停',stopped:'�
 function agents(s){const a=s.agents??s.world?.agents??[];return(Array.isArray(a)?a:Object.entries(a).map(([id,x])=>({id,...x}))).map(x=>({...x,id:x.id??x.data?.id,name:x.name??x.data?.name??x.id,alive:x.alive??x.data?.alive,needs:x.needs??s.world?.needs?.[x.id]??{}}))}
 function stockOf(s){const src=s.resources??s.world?.resources??{};return Object.fromEntries(Object.keys(RES).map(k=>{const x=src[k];return[k,num(x&&typeof x==='object'?(x.stockpile??x.stock??x.amount):x)]}))}
 function linePath(vals,w,h,max,min){if(!vals.length)return '';const sx=vals.length<2?0:(w/(vals.length-1));return vals.map((v,i)=>`${(i*sx).toFixed(1)},${(h-((v-min)/(max-min||1))*h).toFixed(1)}`).join(' ')}
-function renderChart(svg,series){const w=720,h=180,all=series.flatMap(s=>s.vals);svg.innerHTML='';if(!all.length){svg.innerHTML='<text x="16" y="24" fill="#5c7f61" font-size="12">等待遥测数据…</text>';return}const max=Math.max(...all,1),min=Math.min(...all,0);let inner='';for(let i=0;i<=4;i+=1){const y=(h/4)*i;inner+=`<line x1="0" y1="${y}" x2="${w}" y2="${y}" stroke="#17301f" stroke-width="1"/>`}series.forEach(s=>{inner+=`<polyline fill="none" stroke="${s.color}" stroke-width="2" points="${linePath(s.vals,w,h,max,min)}"/>`});svg.innerHTML=inner}
+function renderChart(svg,series){const w=720,h=180,all=series.flatMap(s=>s.vals);svg.innerHTML='';if(!all.length){svg.innerHTML='<text x="16" y="24" fill="#5c7f61" font-size="12">等待 tick 采样…</text>';return}const max=Math.max(...all,1),min=Math.min(...all,0);let inner='';for(let i=0;i<=4;i+=1){const y=(h/4)*i;inner+=`<line x1="0" y1="${y}" x2="${w}" y2="${y}" stroke="#17301f" stroke-width="1"/>`}series.forEach(s=>{inner+=`<polyline fill="none" stroke="${s.color}" stroke-width="2" points="${linePath(s.vals,w,h,max,min)}"/>`});svg.innerHTML=inner}
 function renderAgentList(as){$('resident-list').innerHTML=as.map(a=>`<button class="resident ${a.id===selected?'selected':''}" data-agent="${esc(a.id)}">${esc(a.name)}　${a.alive===false?'已死亡':'存活'}　食 ${num(a.needs?.food).toFixed(2)}　水 ${num(a.needs?.water).toFixed(2)}</button>`).join('')||'<div class="empty">暂无居民</div>';document.querySelectorAll('[data-agent]').forEach(b=>b.onclick=()=>selectAgent(b.dataset.agent))}
 async function selectAgent(id){selected=id;save(LS_SELECTED,id);try{const d=await req('/api/v1/agents/'+encodeURIComponent(id));show('resident-detail',d);renderAgentList(agents(window.world||{}))}catch(e){$('resident-detail').innerHTML=`<div class="danger">详情加载失败：${esc(e.message)}</div>`;log('error','居民详情 '+e.message)}}
 function renderDecisions(ds){$('decisions').innerHTML=(ds||[]).map(d=>{const m=d.model??{},f=d.final??{};return`<tr><td>${esc(d.tick)}</td><td>${esc(d.agentId)}</td><td>${esc(zhVal(f.action??d.decision))}</td><td>${esc(zhVal(f.source??'rule'))}</td><td>${esc(m.model??m.mode??'规则')}<br><span class="muted">${m.applied?'已采用':'未采用'}</span></td><td>${m.latencyMs?esc(m.latencyMs)+' ms':'—'}</td><td><button data-trace="${esc(d.decisionId)}" data-tick="${esc(d.tick)}">查看</button></td></tr>`}).join('')||'<tr><td colspan="7" class="empty">暂无决策</td></tr>';document.querySelectorAll('[data-trace]').forEach(b=>b.onclick=async()=>{try{show('trace-detail',await req('/api/v1/decisions/'+encodeURIComponent(b.dataset.trace)+'?tick='+b.dataset.tick))}catch(e){$('trace-detail').innerHTML=`<div class="danger">决策详情加载失败：${esc(e.message)}</div>`;log('error','决策详情 '+e.message)}})}
