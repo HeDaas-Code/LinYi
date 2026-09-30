@@ -12,7 +12,7 @@ import * as gateway from '../src/ai/llm/gateway.js';
 
 const port = Number.parseInt(process.env.PORT ?? '3000', 10);
 const host = process.env.HOST ?? '127.0.0.1';
-const mode = process.env.TRUMAN_LLM_MODE ?? 'population';
+const mode = process.env.TRUMAN_LLM_MODE ?? 'off';
 if (!['off', 'sample', 'population'].includes(mode)) {
   throw new Error('TRUMAN_LLM_MODE must be off, sample, or population');
 }
@@ -33,10 +33,10 @@ const profile = {
   enabled: mode !== 'off',
   provider: provider.name,
   model: provider.model,
-  maxAgents: Math.floor(numberEnv('TRUMAN_LLM_MAX_AGENTS', 0)),
-  populationShare: numberEnv('TRUMAN_LLM_POPULATION_SHARE', 1),
-  concurrency: Math.floor(numberEnv('TRUMAN_LLM_CONCURRENCY', 4, 1)),
-  everyTicks: Math.floor(numberEnv('TRUMAN_LLM_EVERY_TICKS', 1, 1)),
+  maxAgents: Math.floor(numberEnv('TRUMAN_LLM_MAX_AGENTS', 1)),
+  populationShare: numberEnv('TRUMAN_LLM_POPULATION_SHARE', 0.1),
+  concurrency: Math.floor(numberEnv('TRUMAN_LLM_CONCURRENCY', 2, 1)),
+  everyTicks: Math.floor(numberEnv('TRUMAN_LLM_EVERY_TICKS', 5, 1)),
 };
 if (profile.populationShare > 1) throw new Error('TRUMAN_LLM_POPULATION_SHARE must be between 0 and 1');
 control.configureAiRuntime(profile);

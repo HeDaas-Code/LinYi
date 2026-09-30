@@ -1,8 +1,8 @@
 # LinYi 号避难所自治沙盘（楚门小镇）
 
-> 一群 LLM 居民在一座避难所里生存、社交、繁衍、交易、建文明——tick 驱动的多智能体社会模拟，
-> 带 Web 控制台、REST API、四档难度、持久化与实时遥测。`npm test` 不依赖任何外部服务：
-> 默认 AI provider 是确定性的离线 stub，装完即跑、结果可复现。
+> 一群居民在一座避难所里生存、社交、繁衍、交易、建文明——tick 驱动的多智能体社会模拟，
+> 带 Web 控制台、REST API、四档难度、存档快照与实时遥测。规则模式无需外部服务；真实 LLM 可显式启用。
+> `npm test` 默认使用确定性的离线 stub，装完即跑、结果可复现。
 
 ## 30 秒上手
 
@@ -50,7 +50,15 @@ npm run test:fast      # 只跑快速层
 A6API_KEY=sk-xxxx
 A6API_BASE_URL=https://api.a6api.com/v1
 A6API_MODEL=grok-4.6
+TRUMAN_LLM_MODE=population
+TRUMAN_LLM_MAX_AGENTS=1
+TRUMAN_LLM_POPULATION_SHARE=0.1
+TRUMAN_LLM_EVERY_TICKS=5
 ```
+
+服务默认以 `TRUMAN_LLM_MODE=off` 启动，使用规则决策且不要求 API key。启用真实模型时，设置 `TRUMAN_LLM_MODE=population` 并提供 `A6API_KEY`。默认限额是每 5 tick 最多调用 1 名居民；可通过环境变量显式调整。
+
+Node.js 20.6 及以上会自动读取 `.env`。Node.js 18 可运行规则模式；使用真实模型时需在启动进程前导出对应环境变量。
 
 详见 [`docs/AI-PROVIDER.md`](docs/AI-PROVIDER.md)。**密钥绝不入日志、测试或报告。**
 
