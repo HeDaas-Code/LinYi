@@ -4,8 +4,8 @@
 
 | 目录 | 内容 |
 | --- | --- |
-| [`normify-truman-town/`](normify-truman-town/) | **架构图谱**：148 个模块契约（105 叶子、225 API、110 依赖、43 布局），覆盖 runtime/agent/social/economy/town/genesis/ai/api/infra/survival/observer/civilization 十二域 |
-| [`normify-truman-town-flow/`](normify-truman-town-flow/) | **数据流图谱**：由仓库内 `bin/flow-to-normify.mjs` 从 `flow-index.json`（112 个模块级可变状态、43 个图节点类型）生成的读写流向图谱 |
+| [`normify-truman-town/`](normify-truman-town/) | **架构图谱**：148 个模块契约（105 叶子、225 API、110 依赖、43 布局），覆盖 runtime/agent/social/economy/town/genesis/ai/api/infra/survival/observer/civilization 十二域。渲染产物仅存本分支，主分支不留 |
+| [`normify-truman-town-flow/`](normify-truman-town-flow/) | **数据流图谱**：由仓库内 `bin/flow-to-normify.mjs` 从 `flow-index.json`（153 个状态单元、43 种图节点类型）生成的读写流向图谱。主分支保留同一份冻结基准（`test/flow-index.test.js` 的比对对象），本分支供在线交互浏览 |
 
 ## 在线查看
 
