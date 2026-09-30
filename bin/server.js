@@ -4,7 +4,11 @@
  *   PORT=3000 node bin/server.js
  */
 
-process.loadEnvFile?.('.env');
+try {
+  process.loadEnvFile?.('.env');
+} catch (err) {
+  if (err?.code !== 'ENOENT') throw err;
+}
 
 import { start } from '../src/api/index.js';
 import * as control from '../src/api/control.js';
