@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.civilization",
+  "updated_at": "2026-09-22T05:09:08.678Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "从文明状态与崩溃判定出发，经技术树、文明遗产与遗物，到存档、重启并继承给下一代文明。",
+    "en": "From state and collapse detection through tech tree, legacy and relics to archive, restart and inheritance."
+  },
+  "order": [
+    "truman-town.civilization.state",
+    "truman-town.civilization.collapse",
+    "truman-town.civilization.tech",
+    "truman-town.civilization.legacy",
+    "truman-town.civilization.relic",
+    "truman-town.civilization.archive",
+    "truman-town.civilization.restart"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.survival.environment",
+  "updated_at": "2026-09-28T03:48:21.693Z",
+  "mode": "grid",
+  "reading": {
+    "zh": "探索结算整合环境风险；辐射与天气提供风险因子。",
+    "en": "Expedition resolution combines environmental risks from radiation and weather."
+  },
+  "order": [
+    "truman-town.survival.environment.expedition",
+    "truman-town.survival.environment.radiation",
+    "truman-town.survival.environment.weather"
+  ]
+}

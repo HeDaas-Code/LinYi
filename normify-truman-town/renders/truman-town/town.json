@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.town",
+  "updated_at": "2026-09-22T05:09:08.509Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "从地图分区到建筑与空间，再落到住宅、设施与土地，构成 LinYi 避难所的物理骨架。",
+    "en": "From map/zoning to buildings and spaces, then housing, facilities and land — the physical skeleton of the LinYi Shelter."
+  },
+  "order": [
+    "truman-town.town.map",
+    "truman-town.town.building",
+    "truman-town.town.residence",
+    "truman-town.town.facility",
+    "truman-town.town.land"
+  ]
+}

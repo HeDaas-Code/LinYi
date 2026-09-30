@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "id": "truman-town-flow.code.agent.traits.tagset",
+  "updated_at": "2026-09-28T02:36:36.158Z",
+  "mode": "grid",
+  "reading": {
+    "zh": "按领域层次浏览本层状态模型及其模块。",
+    "en": "Browse this layer's state models by domain."
+  },
+  "order": [
+    "truman-town-flow.code.agent.traits.tagset.store"
+  ]
+}

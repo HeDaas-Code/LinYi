@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "id": "truman-town-flow.code.survival.environment",
+  "updated_at": "2026-09-28T02:33:25.729Z",
+  "mode": "grid",
+  "reading": {
+    "zh": "按数据流顺序浏览本层模块，边表示已确认的依赖关系。",
+    "en": "Browse modules in data-flow order; edges show confirmed dependencies."
+  },
+  "order": [
+    "truman-town-flow.code.survival.environment.radiation",
+    "truman-town-flow.code.survival.environment.weather"
+  ]
+}

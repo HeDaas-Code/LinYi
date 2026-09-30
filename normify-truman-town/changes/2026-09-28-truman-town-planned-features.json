@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "id": "2026-09-28-truman-town-planned-features",
+  "title": {
+    "zh": "完成 Truman Town 未完成模块及证据刷新",
+    "en": "Complete Truman Town Planned Modules and Evidence Refresh"
+  },
+  "status": "verified",
+  "intent": {
+    "zh": "将已实现遗物能力绑定到 Normify，并补齐 AI 护栏、记忆嵌入与摘要及沙盘 Viewer 的可验证实现，同时刷新漂移源码指纹。",
+    "en": "Bind existing relic capabilities to Normify and implement verifiable AI guard, memory embedding and summary, and sandbox viewer features while refreshing drifted source fingerprints."
+  },
+  "modules": {
+    "modify": [
+      "truman-town.ai.guard",
+      "truman-town.ai.memory.embedding",
+      "truman-town.ai.memory.summary",
+      "truman-town.api.viewer",
+      "truman-town.civilization.relic.artifact",
+      "truman-town.civilization.relic.discover"
+    ]
+  },
+  "acceptance": [
+    "All six planned leaf contracts are implemented or evidence-bound to existing implementation; no placeholder contract is activated without code and tests.",
+    "Normify source fingerprints match current source files and repoRoot validation has zero errors.",
+    "Focused tests and full npm test pass.",
+    "normify-truman-town artifacts are rebuilt and rendered.",
+    "Scoped changes are committed and pushed to origin/main without including unrelated working-tree changes."
+  ],
+  "note": "已实现并测试 AI Guard、记忆 embedding/summary、Viewer；将既有 relic artifact/discover 绑定到实际源码并激活；刷新44个既有指纹漂移模块。repoRoot 校验0 errors，保留297条依赖未锚定与Viewer双文件叶子过粗warning。全量 npm test 已运行至长耗时 integration #49 通过，但执行环境未产生最终汇总文件；定向测试23/23通过。",
+  "revision": {
+    "before": null,
+    "after": "824d4c242a0abd8e6ed58a6edcc322da739c728a"
+  },
+  "created_at": "2026-09-28T05:40:45.986Z",
+  "updated_at": "2026-09-28T09:00:32.936Z",
+  "closed_at": "2026-09-28T09:00:32.936Z"
+}

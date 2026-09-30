@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.civilization.legacy.summary",
+  "updated_at": "2026-09-22T05:28:31.725Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "查看 遗产描述实现 的实现组成，箭头表示模块间依赖。",
+    "en": "Inspect the implementation of Legacy Summary Implementation; arrows show dependencies."
+  },
+  "order": [
+    "truman-town.civilization.legacy.summary.extractor",
+    "truman-town.civilization.legacy.summary.writer"
+  ]
+}

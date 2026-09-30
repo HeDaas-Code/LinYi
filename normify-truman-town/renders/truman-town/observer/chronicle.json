@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.observer.chronicle",
+  "updated_at": "2026-09-22T05:28:31.515Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "查看 编年志实现 的实现组成，箭头表示模块间依赖。",
+    "en": "Inspect the implementation of Chronicle Implementation; arrows show dependencies."
+  },
+  "order": [
+    "truman-town.observer.chronicle.compiler",
+    "truman-town.observer.chronicle.store"
+  ]
+}

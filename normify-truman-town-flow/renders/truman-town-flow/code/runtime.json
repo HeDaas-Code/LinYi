@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "id": "truman-town-flow.code.runtime",
+  "updated_at": "2026-09-28T02:33:23.658Z",
+  "mode": "grid",
+  "reading": {
+    "zh": "按数据流顺序浏览本层模块，边表示已确认的依赖关系。",
+    "en": "Browse modules in data-flow order; edges show confirmed dependencies."
+  },
+  "order": [
+    "truman-town-flow.code.runtime.clock",
+    "truman-town-flow.code.runtime.orchestrator",
+    "truman-town-flow.code.runtime.registry",
+    "truman-town-flow.code.runtime.world-state"
+  ]
+}

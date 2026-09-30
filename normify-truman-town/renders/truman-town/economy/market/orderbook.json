@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.economy.market.orderbook",
+  "updated_at": "2026-09-22T05:28:31.933Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "查看 订单簿实现 的实现组成，箭头表示模块间依赖。",
+    "en": "Inspect the implementation of Orderbook Implementation; arrows show dependencies."
+  },
+  "order": [
+    "truman-town.economy.market.orderbook.matching",
+    "truman-town.economy.market.orderbook.orders"
+  ]
+}

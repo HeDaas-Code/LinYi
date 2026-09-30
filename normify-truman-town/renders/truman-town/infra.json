@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.infra",
+  "updated_at": "2026-09-22T05:09:08.757Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "事件总线与持久化存储支撑上层，ID、随机与配置提供基础能力。",
+    "en": "Event bus and persistence support upper layers; identity, RNG and config provide base capabilities."
+  },
+  "order": [
+    "truman-town.infra.events",
+    "truman-town.infra.store",
+    "truman-town.infra.identity",
+    "truman-town.infra.rng",
+    "truman-town.infra.config"
+  ]
+}

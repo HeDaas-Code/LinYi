@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "truman-town-flow.code.survival",
+  "updated_at": "2026-09-28T02:33:25.177Z",
+  "mode": "grid",
+  "reading": {
+    "zh": "按数据流顺序浏览本层模块，边表示已确认的依赖关系。",
+    "en": "Browse modules in data-flow order; edges show confirmed dependencies."
+  },
+  "order": [
+    "truman-town-flow.code.survival.environment",
+    "truman-town-flow.code.survival.health",
+    "truman-town-flow.code.survival.needs"
+  ]
+}

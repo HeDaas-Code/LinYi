@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "id": "2026-09-28-flow-warning-cleanup",
+  "title": {
+    "zh": "清理数据流结构库警告",
+    "en": "Clean Flow Structure Warnings"
+  },
+  "status": "verified",
+  "intent": {
+    "zh": "补充来源/API、容器布局并细化过粗模块，使数据流结构库保持可验证且易读。",
+    "en": "Complete source/API evidence and container layouts for a verifiable readable flow database."
+  },
+  "modules": {
+    "modify": [
+      "truman-town-flow.code.agent.crafting.recipe",
+      "truman-town-flow.code.agent.decision.contention",
+      "truman-town-flow.code.runtime.orchestrator.loop"
+    ]
+  },
+  "acceptance": [
+    "代码叶子模块具有对应源码路径和唯一导出 API 键。",
+    "所有容器模块均有布局数据。",
+    "Normify 校验无 errors，warnings 仅保留纯文档根无源码提示。",
+    "生成 tree、api-index、receipt 与 HTML。"
+  ],
+  "note": "补全51个缺失source/API叶子、15个缺少layout容器，loop由粗粒度双源改为单源并声明实际导出；唯一保留warning为无源码的纯文档根。",
+  "revision": {
+    "before": null,
+    "after": "097b667976bac34f168628c34a69a1c227c462d0"
+  },
+  "created_at": "2026-09-28T02:40:09.715Z",
+  "updated_at": "2026-09-28T02:40:31.664Z",
+  "closed_at": "2026-09-28T02:40:31.664Z"
+}

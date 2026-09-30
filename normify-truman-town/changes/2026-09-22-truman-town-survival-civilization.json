@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "id": "2026-09-22-truman-town-survival-civilization",
+  "title": {
+    "zh": "楚门小镇沙盘：生存胁迫、观察者、家族与文明重启扩展",
+    "en": "Truman Town Sandbox: Survival Pressure, Observer, Family and Civilization Restart"
+  },
+  "status": "verified",
+  "intent": {
+    "zh": "在既有计划态模块树上增加 LinYi 避难所生存系统、全量行为观察者与编年志、家族特质遗传系统，以及文明崩溃后的遗产与重启机制。",
+    "en": "Extend the planned module tree with LinYi Shelter survival, full behavior observer and chronicles, family trait inheritance, and civilization legacy/restart after collapse."
+  },
+  "modules": {
+    "create": [
+      "truman-town.survival",
+      "truman-town.survival.shelter",
+      "truman-town.survival.resources",
+      "truman-town.survival.resources.water",
+      "truman-town.survival.resources.food",
+      "truman-town.survival.resources.energy",
+      "truman-town.survival.resources.medical",
+      "truman-town.survival.needs",
+      "truman-town.survival.needs.meter",
+      "truman-town.survival.needs.pressure",
+      "truman-town.survival.events",
+      "truman-town.survival.events.generator",
+      "truman-town.survival.events.impact",
+      "truman-town.survival.goal",
+      "truman-town.survival.crisis",
+      "truman-town.observer",
+      "truman-town.observer.recorder",
+      "truman-town.observer.chronicle",
+      "truman-town.observer.timeline",
+      "truman-town.observer.audit",
+      "truman-town.observer.export",
+      "truman-town.social.family",
+      "truman-town.social.family.registry",
+      "truman-town.social.family.lineage",
+      "truman-town.social.family.trait",
+      "truman-town.social.family.chronicle",
+      "truman-town.social.family.inherit",
+      "truman-town.civilization",
+      "truman-town.civilization.state",
+      "truman-town.civilization.collapse",
+      "truman-town.civilization.legacy",
+      "truman-town.civilization.legacy.graph",
+      "truman-town.civilization.legacy.summary",
+      "truman-town.civilization.archive",
+      "truman-town.civilization.restart"
+    ],
+    "modify": [
+      "truman-town",
+      "truman-town.social",
+      "truman-town.town",
+      "truman-town.agent.decision",
+      "truman-town.runtime.orchestrator.dispatch",
+      "truman-town.runtime.orchestrator.cycle",
+      "truman-town.agent.schedule.planner",
+      "truman-town.social.procreation.offspring",
+      "truman-town.social.relationship.family",
+      "truman-town.economy.industry.production",
+      "truman-town.api.observer"
+    ]
+  },
+  "acceptance": [
+    "新增 survival/observer/civilization 三个一级领域与 social.family 家族子树，全部为 planned + fingerprint pending",
+    "每个叶子模块声明 apis 契约，容器模块无 apis",
+    "每个容器模块都有 renders 布局数据",
+    "家族特质固化为三代稳定遗传且最多 5 个；文明遗产包含图谱与 200-500 字描述",
+    "normify_validate 达到 0 error",
+    "normify_build 产出 tree.json 与回执",
+    "normify_render 产出更新后的 HTML 图"
+  ],
+  "revision": {
+    "before": null,
+    "after": null
+  },
+  "created_at": "2026-09-22T04:57:02.990Z",
+  "updated_at": "2026-09-22T04:57:04.584Z",
+  "closed_at": "2026-09-22T04:57:04.584Z"
+}

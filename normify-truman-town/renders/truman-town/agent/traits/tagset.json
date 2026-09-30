@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.agent.traits.tagset",
+  "updated_at": "2026-09-22T05:28:31.261Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "查看 标签集合实现 的实现组成，箭头表示模块间依赖。",
+    "en": "Inspect the implementation of Tag Set Implementation; arrows show dependencies."
+  },
+  "order": [
+    "truman-town.agent.traits.tagset.sampler",
+    "truman-town.agent.traits.tagset.similarity",
+    "truman-town.agent.traits.tagset.store"
+  ]
+}

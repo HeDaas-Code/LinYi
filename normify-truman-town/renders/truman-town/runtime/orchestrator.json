@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.runtime.orchestrator",
+  "updated_at": "2026-09-24T15:12:21.915Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "order": [
+    "truman-town.runtime.orchestrator.cycle",
+    "truman-town.runtime.orchestrator.dispatch",
+    "truman-town.runtime.orchestrator.perception",
+    "truman-town.runtime.orchestrator.loop",
+    "truman-town.runtime.orchestrator.stage2"
+  ]
+}

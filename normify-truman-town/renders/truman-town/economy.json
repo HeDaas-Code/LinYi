@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.economy",
+  "updated_at": "2026-09-22T05:09:08.469Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "账本与市场是基础，产业与银行在其上运行，破产与税收形成闭环，生产补给生存资源。",
+    "en": "Ledger and market form the base; industry and banking run above; bankruptcy and tax close the loop; production feeds survival resources."
+  },
+  "order": [
+    "truman-town.economy.ledger",
+    "truman-town.economy.market",
+    "truman-town.economy.industry",
+    "truman-town.economy.bank",
+    "truman-town.economy.bankruptcy",
+    "truman-town.economy.tax"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "truman-town.ai.llm",
+  "updated_at": "2026-09-22T05:09:09.621Z",
+  "mode": "grid",
+  "max_columns": 2,
+  "reading": {
+    "zh": "查看 LLM 网关 的内部组成，箭头表示模块间依赖。",
+    "en": "Inspect the internals of LLM Gateway; arrows show dependencies."
+  },
+  "order": [
+    "truman-town.ai.llm.gateway",
+    "truman-town.ai.llm.router"
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "id": "2026-09-28-planned-parent-cleanup",
+  "title": {
+    "zh": "激活已完成域的计划态父模块",
+    "en": "Activate Completed-Domain Parent Modules"
+  },
+  "status": "verified",
+  "intent": {
+    "zh": "根据源码证据和完整子树状态，清理误留为 planned/pending 的父容器；不触碰未实现叶子、deprecated 节点或纯文档根。",
+    "en": "Clear stale planned/pending flags from parent containers only where source-backed descendants are complete; leave unfinished/deprecated leaves and the documentation root unchanged."
+  },
+  "modules": {
+    "modify": [
+      "truman-town.agent",
+      "truman-town.agent.anticipation",
+      "truman-town.agent.anticipation.pool",
+      "truman-town.agent.crafting",
+      "truman-town.agent.crafting.workbench",
+      "truman-town.agent.decision",
+      "truman-town.agent.inventory",
+      "truman-town.agent.memory",
+      "truman-town.agent.memory.episodic",
+      "truman-town.agent.persona",
+      "truman-town.agent.psyche",
+      "truman-town.agent.role",
+      "truman-town.agent.schedule",
+      "truman-town.agent.traits",
+      "truman-town.agent.traits.inherit",
+      "truman-town.agent.traits.tagset",
+      "truman-town.ai.llm",
+      "truman-town.civilization.collapse",
+      "truman-town.civilization.legacy",
+      "truman-town.civilization.legacy.summary",
+      "truman-town.civilization.tech",
+      "truman-town.economy",
+      "truman-town.economy.bank",
+      "truman-town.economy.industry",
+      "truman-town.economy.ledger",
+      "truman-town.economy.ledger.transaction",
+      "truman-town.economy.market",
+      "truman-town.economy.market.orderbook",
+      "truman-town.genesis.agent-factory",
+      "truman-town.genesis.heredity",
+      "truman-town.infra",
+      "truman-town.infra.events",
+      "truman-town.infra.store",
+      "truman-town.observer",
+      "truman-town.observer.chronicle",
+      "truman-town.observer.experiment",
+      "truman-town.observer.recorder",
+      "truman-town.runtime",
+      "truman-town.runtime.orchestrator",
+      "truman-town.social",
+      "truman-town.social.culture",
+      "truman-town.social.family",
+      "truman-town.social.family.inherit",
+      "truman-town.social.family.trait",
+      "truman-town.social.graph",
+      "truman-town.social.platform",
+      "truman-town.social.politics",
+      "truman-town.social.procreation",
+      "truman-town.social.relationship",
+      "truman-town.town.building",
+      "truman-town.town.map"
+    ]
+  },
+  "acceptance": [
+    "所有被修改父节点的后代叶子均有源码证据且无 planned/pending/deprecated 状态。",
+    "未实现叶子、deprecated 叶子和纯文档根保持原状态。",
+    "Normify 结构校验无 errors，构建和渲染成功。"
+  ],
+  "note": "仅将后代叶子全部有源码证据且无 planned/pending/deprecated 的51个父容器设为 active；保持纯文档根、含未实现 planned 叶子或 deprecated 后代的父模块不变。结构校验0 errors；全项目仍有297条 dep/unanchored及未传repoRoot导致跳过source检查的warnings。",
+  "revision": {
+    "before": null,
+    "after": null
+  },
+  "created_at": "2026-09-28T04:19:00.709Z",
+  "updated_at": "2026-09-28T04:20:34.855Z",
+  "closed_at": "2026-09-28T04:20:34.855Z"
+}
