@@ -26,7 +26,8 @@ node bin/flow-index.mjs --query business
 
 # 3) 生成可在图上逐层下钻的 Normify 结构树（依赖上一步的 flow-index.json）
 node bin/flow-to-normify.mjs
-#    产物：normify-truman-town-flow/normify.html（浏览器打开，支持双语/深链/悬停下钻）
+#    产物：normify-truman-town-flow/normify.html。渲染产物不进主分支——
+#    在线查看走 normify 归档分支（见文末「架构与数据流图谱」）。
 ```
 
 
@@ -58,7 +59,8 @@ node bin/flow-to-normify.mjs
 `A` 写状态 X、`B` 读 X；`B` 又写状态 Y、`A` 读 Y —— 这就是一个环，
 但它描述的正是「两个模块互相影响」这一事实，不是设计缺陷。
 `truman-town` 树描述**调用依赖**，环是 defect；本树描述**数据流转**，环是常态。
-因此本树安装了一份去掉 acyclic 的规则集（`normify-truman-town-flow/policy.yml`），
+因此本树安装了一份去掉 acyclic 的规则集（`policy.yml`，见 normify 归档分支的
+`normify-truman-town-flow/`），
 只保留「不依赖 deprecated 模块」这一条。
 
 ## 排查一个异常值的完整路径
@@ -95,10 +97,12 @@ node bin/flow-to-normify.mjs
 - `test/flow-index.test.js` 会重新生成并与仓库内文件比对，不一致即失败（防止有人改了代码没重建索引）；
 - 测试同时锁定 error 级诊断数量上限与孤立图类型数量上限，**退化会立即失败**。
 
-## 与 truman-town 结构树的分工
+## 架构与数据流图谱（normify 归档分支）
 
-- `normify-truman-town`：描述**代码该长什么样**（契约、分层、依赖方向）。
-- `normify-truman-town-flow`：描述**数据实际怎么流**（事实、读写方、时机、状态）。
+两棵 Normify 树的**渲染产物**归档在 [`normify` 孤儿分支](https://github.com/HeDaas-Code/LinYi/tree/normify)（主分支只保留 `flow-index.json` 与生成器，产物 8.3 MB 不进代码树）：
+
+- [`normify-truman-town`](https://github.com/HeDaas-Code/LinYi/blob/normify/normify-truman-town/outline.md)：描述**代码该长什么样**（契约、分层、依赖方向）。[在线交互图谱](https://htmlpreview.github.io/?https://github.com/HeDaas-Code/LinYi/blob/normify/normify-truman-town/normify.html)。
+- [`normify-truman-town-flow`](https://github.com/HeDaas-Code/LinYi/blob/normify/normify-truman-town-flow/outline.md)：描述**数据实际怎么流**（事实、读写方、时机、状态）。[在线交互图谱](https://htmlpreview.github.io/?https://github.com/HeDaas-Code/LinYi/blob/normify/normify-truman-town-flow/normify.html)。
 
 两者刻意分开：契约与事实会独立演进，混在一棵树里会互相污染。
 排查异常时以 flow 树为主、truman-town 树为辅。
