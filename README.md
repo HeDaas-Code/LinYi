@@ -15,6 +15,9 @@ npm test               # 全量测试（64 个文件，含长模拟层，耐心�
 npm run test:fast      # 只跑快速层
 ```
 
+服务默认将完整运行快照原子写入 `.data/linyi-run.json`，并在下次启动时自动恢复；
+可通过 `TRUMAN_SAVE_PATH` 指定其他存档文件。运行存档目录已加入 `.gitignore`。
+
 浏览器打开控制台后即可：开一局 → 调难度 → 单步/连跑 → 看居民实时决策与编年史。
 （进度条式的图表历史、中文行动标识、逐 tick 遥测都在 `web/viewer.html`。）
 控制台启动会初始化家庭/经济/文明阶段；直接调用 REST API 时，可在 `start.tickConfig` 或单步请求中传入 `phase2`、`phase3` 开关。
