@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "id": "truman-town-flow.state.area.economy",
+  "updated_at": "2026-09-28T02:33:29.957Z",
+  "mode": "grid",
+  "reading": {
+    "zh": "按数据流顺序浏览本层模块，边表示已确认的依赖关系。",
+    "en": "Browse modules in data-flow order; edges show confirmed dependencies."
+  },
+  "order": [
+    "truman-town-flow.state.area.economy.bankruptcy-handlers-45cbba7c",
+    "truman-town-flow.state.area.economy.pool-account-id-dfd57156",
+    "truman-town-flow.state.area.economy.prices-8b89e4ac",
+    "truman-town-flow.state.area.economy.seq-408361b9",
+    "truman-town-flow.state.area.economy.treasury-account-id-076bfbd7"
+  ]
+}

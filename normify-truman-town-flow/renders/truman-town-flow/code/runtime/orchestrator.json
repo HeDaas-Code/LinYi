@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "id": "truman-town-flow.code.runtime.orchestrator",
+  "updated_at": "2026-09-28T02:33:24.127Z",
+  "mode": "grid",
+  "reading": {
+    "zh": "按数据流顺序浏览本层模块，边表示已确认的依赖关系。",
+    "en": "Browse modules in data-flow order; edges show confirmed dependencies."
+  },
+  "order": [
+    "truman-town-flow.code.runtime.orchestrator.cycle",
+    "truman-town-flow.code.runtime.orchestrator.dispatch",
+    "truman-town-flow.code.runtime.orchestrator.loop",
+    "truman-town-flow.code.runtime.orchestrator.perception",
+    "truman-town-flow.code.runtime.orchestrator.stage-progress",
+    "truman-town-flow.code.runtime.orchestrator.stage2",
+    "truman-town-flow.code.runtime.orchestrator.stage3"
+  ]
+}

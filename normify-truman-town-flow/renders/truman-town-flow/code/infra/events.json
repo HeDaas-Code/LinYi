@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "id": "truman-town-flow.code.infra.events",
+  "updated_at": "2026-09-28T02:29:12.544Z",
+  "mode": "grid",
+  "reading": {
+    "zh": "按职责分组查看本层模块，模块箭头表示已登记的数据流或调用关系。",
+    "en": "Browse modules by responsibility; arrows represent recorded calls or data flows."
+  },
+  "order": [
+    "truman-town-flow.code.infra.events.pubsub",
+    "truman-town-flow.code.infra.events.retry"
+  ]
+}

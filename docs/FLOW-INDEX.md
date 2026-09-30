@@ -99,10 +99,10 @@ node bin/flow-to-normify.mjs
 
 ## 架构与数据流图谱（normify 归档分支）
 
-两棵 Normify 树的**渲染产物**归档在 [`normify` 孤儿分支](https://github.com/HeDaas-Code/LinYi/tree/normify)（主分支只保留 `flow-index.json` 与生成器，产物 8.3 MB 不进代码树）：
+交互式渲染副本归档在 [`normify` 孤儿分支](https://github.com/HeDaas-Code/LinYi/tree/normify)；`flow-index.json` 与生成器属于**代码**留在主分支：
 
-- [`normify-truman-town`](https://github.com/HeDaas-Code/LinYi/blob/normify/normify-truman-town/outline.md)：描述**代码该长什么样**（契约、分层、依赖方向）。[在线交互图谱](https://htmlpreview.github.io/?https://github.com/HeDaas-Code/LinYi/blob/normify/normify-truman-town/normify.html)。
-- [`normify-truman-town-flow`](https://github.com/HeDaas-Code/LinYi/blob/normify/normify-truman-town-flow/outline.md)：描述**数据实际怎么流**（事实、读写方、时机、状态）。[在线交互图谱](https://htmlpreview.github.io/?https://github.com/HeDaas-Code/LinYi/blob/normify/normify-truman-town-flow/normify.html)。
+- [`normify-truman-town`](https://github.com/HeDaas-Code/LinYi/blob/normify/normify-truman-town/outline.md)：描述**代码该长什么样**（契约、分层、依赖方向）。[在线交互图谱](https://htmlpreview.github.io/?https://github.com/HeDaas-Code/LinYi/blob/normify/normify-truman-town/normify.html)。渲染产物（2.9 MB）只在归档分支，主分支不留。
+- [`normify-truman-town-flow`](https://github.com/HeDaas-Code/LinYi/blob/normify/normify-truman-town-flow/outline.md)：描述**数据实际怎么流**（事实、读写方、时机、状态）。[在线交互图谱](https://htmlpreview.github.io/?https://github.com/HeDaas-Code/LinYi/blob/normify/normify-truman-town-flow/normify.html)。该目录在**主分支保留一份冻结基准**：`test/flow-index.test.js` 用它做防腐烂比对，而生成器依赖平台私有工具链（`@dsh-external/dsh-normify`，npm 上不可得），冻结产物即证据——重生成时须与守卫测试同批提交。
 
 两者刻意分开：契约与事实会独立演进，混在一棵树里会互相污染。
 排查异常时以 flow 树为主、truman-town 树为辅。

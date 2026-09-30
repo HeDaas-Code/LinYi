@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "id": "truman-town-flow.machines.list",
+  "updated_at": "2026-09-28T02:33:27.505Z",
+  "mode": "grid",
+  "reading": {
+    "zh": "按数据流顺序浏览本层模块，边表示已确认的依赖关系。",
+    "en": "Browse modules in data-flow order; edges show confirmed dependencies."
+  },
+  "order": [
+    "truman-town-flow.machines.list.agent-lifecycle-f5cfb834",
+    "truman-town-flow.machines.list.agent-schedule-da1a29c5",
+    "truman-town-flow.machines.list.civilization-lifecycle-cf9508be",
+    "truman-town-flow.machines.list.industry-business-2aac9fd5",
+    "truman-town-flow.machines.list.survival-health-disease-6d289621",
+    "truman-town-flow.machines.list.survival-health-epidemic-f00806a3"
+  ]
+}

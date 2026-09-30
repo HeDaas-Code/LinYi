@@ -20,10 +20,10 @@ npm run test:fast      # 只跑快速层
 
 ## 架构与数据流图谱（强烈推荐先看）
 
-两套 Normify 图谱归档在 [`normify` 孤儿分支](https://github.com/HeDaas-Code/LinYi/tree/normify)，渲染产物不进代码树：
+两套 Normify 图谱的**交互式渲染副本**归档在 [`normify` 孤儿分支](https://github.com/HeDaas-Code/LinYi/tree/normify)；架构渲染产物（2.9 MB）不进代码树：
 
 - [**架构图谱**](https://htmlpreview.github.io/?https://github.com/HeDaas-Code/LinYi/blob/normify/normify-truman-town/normify.html) —— 148 个模块契约（225 个 API、110 条依赖边），十二域分层，点击模块逐层下钻。逐层文本版见 [`outline.md`](https://github.com/HeDaas-Code/LinYi/blob/normify/normify-truman-town/outline.md)。
-- [**数据流图谱**](https://htmlpreview.github.io/?https://github.com/HeDaas-Code/LinYi/blob/normify/normify-truman-town-flow/normify.html) —— 153 个模块级可变状态的"谁写、谁读、tick 哪一刻被改"，43 种图节点类型的产出/消费关系。方法论见 [`docs/FLOW-INDEX.md`](docs/FLOW-INDEX.md)。
+- [**数据流图谱**](https://htmlpreview.github.io/?https://github.com/HeDaas-Code/LinYi/blob/normify/normify-truman-town-flow/normify.html) —— 153 个模块级可变状态的"谁写、谁读、tick 哪一刻被改"，43 种图节点类型的产出/消费关系。方法论见 [`docs/FLOW-INDEX.md`](docs/FLOW-INDEX.md)。`normify-truman-town-flow/` 保留在**主分支**：它是 `test/flow-index.test.js` 的冻结基准（生成器依赖平台私有工具链，冻结产物即证据），不是渲染缓存。
 
 `flow-index.json` 是受测试守卫的派生索引：改了代码不重建，`npm test` 直接红（`test/flow-index.test.js`）。
 
@@ -76,5 +76,5 @@ A6API_MODEL=grok-4.6
 ## 开发约定（摘要）
 
 - 模块先有 Normify 契约再有实现；重建图谱后更新 `normify` 分支并回填冻结 commit 号。
-- 索引与证据禁止手写：`flow-index.json` 只能由 `bin/flow-index.mjs` 生成，图谱产物只进归档分支。
+- 索引与证据禁止手写：`flow-index.json` 只能由 `bin/flow-index.mjs` 生成；`normify-truman-town-flow/` 是测试守卫的冻结基准，重生成须与守卫测试同批提交；架构渲染产物只进归档分支。
 - 测试分五层（fast / integration / long / model / perf），`npm run test:layers` 可按层跑。
