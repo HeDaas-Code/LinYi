@@ -1,6 +1,27 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import * as api from '../src/api/index.js';
+import { CONTRACTS } from '../src/agent/decision/action-contract.js';
+
+// 前端用 ACT_ZH 词表把行动标识翻成中文。词表是手写的，因此必须被钉在
+// 权威行动集上：契约新增一个行动而词表没跟上时，这里要失败，
+// 而不是等用户在界面上看到英文标识才发现。
+test('前端 ACT_ZH 词表覆盖契约里的全部行动', async () => {
+  const html = await readFile(new URL('../web/viewer.html', import.meta.url), 'utf8');
+  const table = html.match(/const ACT_ZH=\{([\s\S]*?)\};/);
+  assert.ok(table, 'viewer.html 必须定义 ACT_ZH 词表');
+  const actions = Object.keys(CONTRACTS);
+  assert.ok(actions.length > 0, '前置条件：契约里应有行动');
+  for (const action of actions) {
+    assert.match(table[1], new RegExp(`(^|[,{])\\s*${action}\\s*:`), `ACT_ZH 缺少行动「${action}」的中文名`);
+  }
+  // 反向：词表不得残留契约里已不存在的行动（改名的残影）。
+  const listed = [...table[1].matchAll(/(?:^|[,{])\s*([a-z_]+)\s*:/g)].map((m) => m[1]);
+  for (const name of listed) {
+    assert.ok(actions.includes(name), `ACT_ZH 含契约里不存在的行动「${name}」`);
+  }
+});
 
 test('GET /viewer returns the Chinese observer page', async () => {
   const { server, port } = await api.start(0);
