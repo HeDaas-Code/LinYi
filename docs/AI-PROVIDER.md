@@ -125,6 +125,6 @@ await loop.step({
 
 `llmDecideMode` defaults to `off`. `sample` selects the first bounded set; `population` rotates a bounded set across living residents. The model remains fail-soft: invalid output falls back to the rule decision. `llmDecideEnabled: true` is the legacy alias for `sample`.
 
-The HTTP server also defaults to rule-only mode (`TRUMAN_LLM_MODE=off`). To opt into model-backed decisions, set `TRUMAN_LLM_MODE=population` and provide `A6API_KEY`. The server defaults to at most one model-selected resident every five ticks (`TRUMAN_LLM_MAX_AGENTS=1`, `TRUMAN_LLM_EVERY_TICKS=5`); set `TRUMAN_LLM_MAX_AGENTS=0` only when intentionally allowing every living resident to be considered. `TRUMAN_LLM_POPULATION_SHARE` defaults to `0.1` and concurrency defaults to `2`.
+The HTTP server also defaults to rule-only mode (`TRUMAN_LLM_MODE=off`). To opt into model-backed decisions, set `TRUMAN_LLM_MODE=population` and provide `A6API_KEY`. Population mode samples residents every tick by default, with up to three model calls per tick (`TRUMAN_LLM_MAX_AGENTS=3`, `TRUMAN_LLM_EVERY_TICKS=1`). The default population share is `0.5`; residents who have gone longer without a model call receive greater weight in later draws. Set `TRUMAN_LLM_MAX_AGENTS=0` only when intentionally allowing every living resident to be considered. Concurrency defaults to `2`.
 
 `bin/server.js` uses Node's `process.loadEnvFile` when available (Node.js 20.6+). On Node.js 18, export these variables in the process environment before starting the server.

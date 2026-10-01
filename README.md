@@ -55,12 +55,12 @@ A6API_KEY=sk-xxxx
 A6API_BASE_URL=https://api.a6api.com/v1
 A6API_MODEL=grok-4.6
 TRUMAN_LLM_MODE=population
-TRUMAN_LLM_MAX_AGENTS=1
-TRUMAN_LLM_POPULATION_SHARE=0.1
-TRUMAN_LLM_EVERY_TICKS=5
+TRUMAN_LLM_MAX_AGENTS=3
+TRUMAN_LLM_POPULATION_SHARE=0.5
+TRUMAN_LLM_EVERY_TICKS=1
 ```
 
-服务默认以 `TRUMAN_LLM_MODE=off` 启动，使用规则决策且不要求 API key。启用真实模型时，设置 `TRUMAN_LLM_MODE=population` 并提供 `A6API_KEY`。默认限额是每 5 tick 最多调用 1 名居民；可通过环境变量显式调整。
+服务默认以 `TRUMAN_LLM_MODE=off` 启动，使用规则决策且不要求 API key。启用真实模型时，设置 `TRUMAN_LLM_MODE=population` 并提供 `A6API_KEY`。群体模式会在每个 tick 抽取居民，最多调用 3 人；初始默认抽样比例为 50%。
 
 Node.js 20.6 及以上会自动读取 `.env`。Node.js 18 可运行规则模式；使用真实模型时需在启动进程前导出对应环境变量。
 

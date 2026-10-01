@@ -86,6 +86,8 @@ const DYNAMIC_BASE_SCORE = Object.freeze({
  * 决策链完全不受影响。
  */
 const layaUrgencyCache = new Map();
+/** 每名居民最近一次被抽中调用模型的时间步，用于提高漏抽居民的后续权重。 */
+const llmLastSampledTick = new Map();
 
 /** 读取某居民的语义紧迫度（0..1）；未预取或服务不可用时返回 null。 */
 function layaUrgencyFor(agentId) {
@@ -2065,17 +2067,33 @@ async function* tickSequenceInner(config = {}) {
   const agentRecords = registry.lookup({ type: 'agent' });
   const decisions = [];
   const mode = cfg.llmDecideEnabled === true ? 'sample' : (cfg.llmDecideMode ?? 'off');
-  const llmDecide = mode !== 'off' && (tick % (cfg.llmDecideEveryTicks ?? 1) === 0);
+  // Population mode follows the random-tick design and always draws on every tick.
+  // Only the legacy bounded 'sample' mode can be interval-throttled.
+  const llmDecide = mode === 'population' || (mode === 'sample' && (tick % (cfg.llmDecideEveryTicks ?? 1) === 0));
   const maxAgents = cfg.llmDecideMaxAgents === 0 ? agentRecords.length : (cfg.llmDecideMaxAgents ?? 1);
   const orderedIds = agentRecords.map((r) => r.id);
   let llmSelectedIds = [];
   if (llmDecide && mode === 'sample') llmSelectedIds = orderedIds.slice(0, maxAgents);
-  if (llmDecide && mode === 'population') {
-    const limit = Math.min(maxAgents, Math.ceil(orderedIds.length * (cfg.llmDecidePopulationShare ?? 1)));
-    const hash = (id) => [...id].reduce((n, c) => (Math.imul(n, 31) + c.charCodeAt(0)) | 0, 7) >>> 0;
-    const sorted = [...orderedIds].sort((a, b) => hash(a) - hash(b) || a.localeCompare(b));
-    const start = sorted.length ? (tick - 1) % sorted.length : 0;
-    llmSelectedIds = [...sorted.slice(start), ...sorted.slice(0, start)].slice(0, limit);
+  if (llmDecide && mode === 'population' && orderedIds.length > 0) {
+    const shareLimit = Math.ceil(orderedIds.length * (cfg.llmDecidePopulationShare ?? 1));
+    const limit = Math.max(1, Math.min(orderedIds.length, maxAgents, shareLimit || 1));
+    const living = new Set(orderedIds);
+    for (const agentId of llmLastSampledTick.keys()) if (!living.has(agentId)) llmLastSampledTick.delete(agentId);
+    // Weighted lottery without replacement: the longer a resident has gone
+    // without a model call, the larger their share of the next draw.
+    const pool = orderedIds.map((id) => ({ id, weight: Math.max(1, tick - (llmLastSampledTick.get(id) ?? 0)) }));
+    while (llmSelectedIds.length < limit && pool.length > 0) {
+      const totalWeight = pool.reduce((sum, item) => sum + item.weight, 0);
+      let draw = rng.next() * totalWeight;
+      let index = pool.length - 1;
+      for (let i = 0; i < pool.length; i += 1) {
+        draw -= pool[i].weight;
+        if (draw < 0) { index = i; break; }
+      }
+      llmSelectedIds.push(pool[index].id);
+      pool.splice(index, 1);
+    }
+    for (const agentId of llmSelectedIds) llmLastSampledTick.set(agentId, tick);
   }
   const llmSelected = new Set(llmSelectedIds);
   if (llmDecide) {
@@ -2190,7 +2208,7 @@ async function* tickSequenceInner(config = {}) {
     } else {
       decision.model = {
         mode, populationShare: cfg.llmDecidePopulationShare ?? 1, sampledAgentIds: llmSelectedIds, applied: false, action: null,
-        fallbackReason: llmDecide ? 'sampling_limit' : 'llm_decide_disabled',
+        fallbackReason: !llmDecide ? (mode === 'off' ? 'llm_decide_disabled' : 'sampling_interval_skip') : 'not_sampled_this_tick',
         meta: null, contextSummary: llmSelected.has(agentId) ? contextSummary : null, provider: null, model: null, latencyMs: null,
       };
     }
@@ -2634,6 +2652,7 @@ export function __snapshot() {
     currentSeed,
     mortality: [...mortality.entries()].map(([agentId, st]) => ({ agentId, ...structuredClone(st) })),
     literateSet: literateSet === null ? null : [...literateSet],
+    llmLastSampledTick: [...llmLastSampledTick.entries()],
     inFlight,
     committedTick,
     inFlightTick,
@@ -2671,6 +2690,10 @@ export function __restore(data = {}) {
     mortality.set(agentId, structuredClone(rest));
   }
   literateSet = d.literateSet === null || d.literateSet === undefined ? null : new Set(d.literateSet);
+  llmLastSampledTick.clear();
+  for (const item of (Array.isArray(d.llmLastSampledTick) ? d.llmLastSampledTick : [])) {
+    if (Array.isArray(item) && typeof item[0] === 'string' && Number.isInteger(item[1]) && item[1] >= 0) llmLastSampledTick.set(item[0], item[1]);
+  }
   // 运行阶段：恢复为「已提交、无进行中 tick」的自洽态。
   committedTick = Number.isInteger(d.committedTick) && d.committedTick >= 0 ? d.committedTick : 0;
   inFlightTick = Number.isInteger(d.inFlightTick) && d.inFlightTick >= 0 ? d.inFlightTick : 0;
@@ -2698,6 +2721,7 @@ export function __restore(data = {}) {
 
 export function reset() {
   invalidateAlivePopulation();
+  llmLastSampledTick.clear();
   graph.__reset();
   // 热数据归档必须一起清空：graph.__reset 只清图节点，归档与序号水位是
   // hot-log 自己的模块级状态，不跟着图走。不清的话新一局会继承上一局的

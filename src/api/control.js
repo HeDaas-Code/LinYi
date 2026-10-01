@@ -144,7 +144,9 @@ export function start(input = {}) {
   // t8：只有显式要后台才启动节拍器。默认不启动，tick 仍只因显式 step 前进。
   if (input?.background === true) {
     metronome.start({
-      ...(input?.msPerTick === undefined ? {} : { msPerTick: input.msPerTick }),
+      ...(tickConfig.msPerTick === undefined
+        ? (input?.msPerTick === undefined ? {} : { msPerTick: input.msPerTick })
+        : { msPerTick: tickConfig.msPerTick }),
       ...(input?.speed === undefined ? {} : { speed: input.speed }),
       ...(input?.autosaveEveryTicks === undefined ? {} : { autosaveEveryTicks: input.autosaveEveryTicks }),
       ...(input?.autosaveOnStop === undefined ? {} : { autosaveOnStop: input.autosaveOnStop }),
