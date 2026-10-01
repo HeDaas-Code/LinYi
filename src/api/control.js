@@ -183,6 +183,20 @@ export async function stop(input = {}) {
   return status();
 }
 
+/** 停止当前推进并清空整局运行态，保留已配置的 LLM 运行时。 */
+export async function resetSimulation() {
+  await metronome.stop({ wait: true });
+  phase = 'stopped';
+  // 即使是手动推进模式，也等当前 tick 完整提交后再复位。
+  while (loop.tickStatus().inFlight === true) {
+    await new Promise((resolve) => setTimeout(resolve, 25));
+  }
+  cycle.__reset();
+  loop.reset();
+  phase = 'idle';
+  return status();
+}
+
 /** 从暂停恢复推进（相位回到 running）。 */
 export function resume() {
   if (phase !== 'paused') return status();

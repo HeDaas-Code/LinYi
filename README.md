@@ -18,7 +18,7 @@ npm run test:fast      # 只跑快速层
 服务默认将完整运行快照原子写入 `.data/linyi-run.json`，并在下次启动时自动恢复；
 可通过 `TRUMAN_SAVE_PATH` 指定其他存档文件。运行存档目录已加入 `.gitignore`。
 
-浏览器打开控制台后即可：开一局 → 调难度 → 单步/连跑 → 看居民实时决策与编年史。
+浏览器打开控制台后即可：开一局 → 调难度 → 单步/连跑 → 看居民实时决策与编年史。总览页支持命名存档槽、读档和新局重置；读档前需停止沙盘，重置会清空当前世界并更新自动恢复档，命名存档会保留。
 （进度条式的图表历史、中文行动标识、逐 tick 遥测都在 `web/viewer.html`。）
 控制台启动会初始化家庭/经济/文明阶段；直接调用 REST API 时，可在 `start.tickConfig` 或单步请求中传入 `phase2`、`phase3` 开关。
 
@@ -72,7 +72,8 @@ Node.js 20.6 及以上会自动读取 `.env`。Node.js 18 可运行规则模式�
 
 | 组 | 端点 |
 | --- | --- |
-| 仿真控制 | `POST /api/v1/sim/start` `stop` `step` `pause` `resume` `save` `restore` `pacing` |
+| 仿真控制 | `POST /api/v1/sim/start` `stop` `step` `pause` `resume` `reset` `save` `load` `restore` `pacing` |
+| 命名存档 | `GET /api/v1/sim/saves`；`POST /api/v1/sim/save`（传入 `{"slot":"quick"}`）；`POST /api/v1/sim/load`（传入 `{"slot":"quick"}`） |
 | 查询 | `GET /api/v1/sim/status` `stages` `ai-status` `logs` `/api/v1/agents/:id` `/api/v1/decisions/:id` `/api/v1/world/state` |
 | 难度 | `GET/POST /api/v1/sim/difficulty`（peaceful / standard / harsh / apocalyptic） |
 | 遥测 | `GET /api/v1/sim/stream`（SSE） |
