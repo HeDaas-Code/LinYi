@@ -24,10 +24,13 @@ import * as loop from '../runtime/orchestrator/loop.js';
 import * as stageProgress from '../runtime/orchestrator/stage-progress.js';
 import * as metronome from '../runtime/orchestrator/metronome.js';
 import * as persistence from '../runtime/persistence.js';
+import * as snapshotFile from '../infra/store/snapshot-file.js';
 import * as logger from '../infra/logger.js';
 import { recorder } from '../observer/index.js';
 import { HttpError, sendEventStream, writeSse } from './http.js';
-import { currentPhase } from './control.js';
+import { currentPhase, resetSimulation } from './control.js';
+import path from 'node:path';
+import { readdir } from 'node:fs/promises';
 
 /**
  * state 取值 → 给人看的说明。键与 state 取值一一对应，
@@ -58,6 +61,10 @@ const MAX_DECISIONS = 200;
 let lastSave = null;
 let lastRestore = null;
 let lastSnapshot = null;
+let snapshotPath = null;
+let snapshotFilePresent = false;
+let snapshotStorageError = null;
+let snapshotWriteQueue = Promise.resolve();
 
 /** 从 query 取整型参数；缺省用 fallback，非法或越界抛 400。 */
 function intParam(query, name, fallback, min, max) {
@@ -461,6 +468,60 @@ export function persistenceStatus() {
     lastSave,
     lastRestore,
     slot: lastSnapshot === null ? null : lastSave,
+    storage: {
+      configured: snapshotPath !== null,
+      file: snapshotPath === null ? null : path.basename(snapshotPath),
+      present: snapshotPath === null ? null : snapshotFilePresent,
+      lastError: snapshotStorageError,
+    },
+  };
+}
+
+/** 初始化服务端单文件存档，并在存在有效存档时恢复运行。 */
+export async function initializeSnapshotStorage(filePath) {
+  if (typeof filePath !== 'string' || filePath.trim() === '') {
+    throw new TypeError('运行存档路径必须为非空字符串');
+  }
+  snapshotPath = path.resolve(filePath);
+  snapshotFilePresent = false;
+  snapshotStorageError = null;
+  snapshotWriteQueue = Promise.resolve();
+
+  let snapshot;
+  try {
+    snapshot = await snapshotFile.readSnapshot(snapshotPath);
+  } catch (err) {
+    snapshotStorageError = err instanceof Error ? err.message : String(err);
+    throw err;
+  }
+  snapshotFilePresent = snapshot !== null;
+
+  let restored = null;
+  if (snapshot !== null) {
+    const validation = persistence.validate(snapshot);
+    if (validation.ok !== true) {
+      snapshotStorageError = '运行存档不完整或版本不兼容：' + (validation.reason ?? '未知原因');
+      throw new Error(snapshotStorageError);
+    }
+    restored = restoreRun({ snapshot });
+    lastSnapshot = snapshot;
+    const t = loop.tickStatus();
+    lastSave = {
+      tick: t.committedTick,
+      at: snapshot.savedAt ?? null,
+      records: Array.isArray(snapshot.records) ? snapshot.records.length : 0,
+      sections: snapshot.sections && typeof snapshot.sections === 'object' ? Object.keys(snapshot.sections).length : 0,
+      schemaVersion: snapshot.schemaVersion ?? null,
+      reason: snapshot.meta?.reason ?? null,
+    };
+  }
+
+  metronome.setAutosaveHook(({ reason }) => saveRunToDisk({ reason }));
+  return {
+    configured: true,
+    file: path.basename(snapshotPath),
+    restored: restored !== null,
+    tick: restored?.restore?.committedTick ?? null,
   };
 }
 
@@ -469,12 +530,19 @@ export function persistenceStatus() {
  * 推进中（inFlight）拒绝：半提交态存档在恢复后会自相矛盾
  * （时钟已前进、阶段却只跑了一半），因此宁可不存。
  */
-export function saveRun(input = {}) {
+function captureRun(input = {}) {
   const t = loop.tickStatus();
   if (t.inFlight === true) {
     throw new HttpError(409, 'tick 推进中不可存档（会存到一半旧一半新的世界）');
   }
-  const snapshot = persistence.saveRun(input ?? {});
+  const opts = input ?? {};
+  const meta = { ...(opts.meta ?? {}) };
+  if (opts.reason !== undefined) meta.reason = opts.reason;
+  return persistence.saveRun({ ...opts, meta });
+}
+
+function rememberSave(snapshot, input = {}) {
+  const t = loop.tickStatus();
   const at = Date.now();
   lastSnapshot = snapshot;
   lastSave = {
@@ -486,6 +554,96 @@ export function saveRun(input = {}) {
     reason: (input ?? {}).reason ?? null,
   };
   return { ok: true, save: lastSave, describe: persistence.describe(snapshot) };
+}
+
+/** 保存到当前进程内的快照槽，供现有调用方与测试使用。 */
+export function saveRun(input = {}) {
+  return rememberSave(captureRun(input), input);
+}
+
+/** 保存快照并等待写入配置的服务端存档文件。 */
+export async function saveRunToDisk(input = {}) {
+  const slotPath = input?.slot === undefined ? snapshotPath : namedSlotPath(input.slot);
+  // 磁盘存档可等待正在推进的 tick 完整提交，再抓取一致的边界快照。
+  while (loop.tickStatus().inFlight === true) {
+    await new Promise((resolve) => setTimeout(resolve, 25));
+  }
+  const snapshot = captureRun(input);
+  if (snapshotPath !== null) {
+    const write = snapshotWriteQueue.then(() => snapshotFile.writeSnapshot(slotPath, snapshot));
+    snapshotWriteQueue = write.catch(() => {});
+    try {
+      await write;
+      snapshotFilePresent = true;
+      snapshotStorageError = null;
+    } catch (err) {
+      snapshotStorageError = err instanceof Error ? err.message : String(err);
+      throw err;
+    }
+  }
+  return rememberSave(snapshot, input);
+}
+
+function namedSlotPath(slot) {
+  if (typeof slot !== 'string' || !/^[a-zA-Z0-9_-]{1,32}$/.test(slot)) {
+    throw new HttpError(400, '存档槽名称仅允许 1-32 位字母、数字、下划线和短横线');
+  }
+  if (snapshotPath === null) throw new HttpError(503, '服务端存档未配置');
+  const base = path.basename(snapshotPath, path.extname(snapshotPath));
+  return path.join(path.dirname(snapshotPath), base + '-slots', slot + '.json');
+}
+
+/** 列出服务端命名存档槽；槽名只接受安全文件名字符。 */
+export async function listSaveSlots() {
+  if (snapshotPath === null) return { configured: false, slots: [] };
+  const directory = path.dirname(namedSlotPath('index'));
+  let names = [];
+  try {
+    names = (await readdir(directory, { withFileTypes: true }))
+      .filter((entry) => entry.isFile() && /^[a-zA-Z0-9_-]{1,32}\.json$/.test(entry.name))
+      .map((entry) => entry.name.slice(0, -5));
+  } catch (err) {
+    if (err?.code !== 'ENOENT') throw err;
+  }
+  const slots = [];
+  for (const name of names.sort()) {
+    try {
+      const snapshot = await snapshotFile.readSnapshot(namedSlotPath(name));
+      const validation = persistence.validate(snapshot);
+      slots.push({
+        name,
+        valid: validation.ok,
+        savedAt: snapshot?.savedAt ?? null,
+        schemaVersion: snapshot?.schemaVersion ?? null,
+        records: snapshot?.counts?.records ?? (Array.isArray(snapshot?.records) ? snapshot.records.length : null),
+      });
+    } catch (err) {
+      slots.push({ name, valid: false, error: err instanceof Error ? err.message : String(err) });
+    }
+  }
+  return { configured: true, slots };
+}
+
+/** 从命名存档恢复；运行中或 tick 未提交时拒绝，避免覆盖活动世界。 */
+export async function loadSaveSlot(input = {}) {
+  if (currentPhase() === 'running') throw new HttpError(409, '请先停止沙盘，再读取存档');
+  if (loop.tickStatus().inFlight === true) throw new HttpError(409, 'tick 推进中不可读取存档');
+  const file = namedSlotPath(input?.slot);
+  const snapshot = await snapshotFile.readSnapshot(file);
+  if (snapshot === null) throw new HttpError(404, '找不到存档槽：' + input.slot);
+  const validation = persistence.validate(snapshot);
+  if (validation.ok !== true) throw new HttpError(400, '存档无效或版本不兼容：' + (validation.reason ?? '未知原因'));
+  const result = restoreRun({ snapshot });
+  lastSnapshot = snapshot;
+  const saved = await saveRunToDisk({ reason: 'load' });
+  return { ...result, slot: input.slot, save: saved.save };
+}
+
+/** 清空当前世界，并将空白新局写入自动存档，避免重启后复活旧世界。 */
+export async function resetSimulationRun() {
+  const status = await resetSimulation();
+  const saved = await saveRunToDisk({ reason: 'reset' });
+  return { ...status, reset: true, save: saved.save };
 }
 
 /**
@@ -535,6 +693,10 @@ export function __reset() {
   lastSave = null;
   lastRestore = null;
   lastSnapshot = null;
+  snapshotPath = null;
+  snapshotFilePresent = false;
+  snapshotStorageError = null;
+  snapshotWriteQueue = Promise.resolve();
 }
 
 /** 本模块 HTTP 路由表。 */
@@ -565,6 +727,10 @@ export const routes = [
     path: '/api/v1/decisions/:decision_id',
     handler: ({ params, query }) => decisionTrace(params.decision_id, nullableIntParam(query, 'tick', 0, Number.MAX_SAFE_INTEGER)),
   },
-  { method: 'GET', path: '/api/v1/sim/persistence', handler: () => persistenceStatus() },  { method: 'POST', path: '/api/v1/sim/save', handler: ({ body }) => saveRun(body ?? {}) },
+  { method: 'GET', path: '/api/v1/sim/persistence', handler: () => persistenceStatus() },
+  { method: 'POST', path: '/api/v1/sim/save', handler: ({ body }) => saveRunToDisk(body ?? {}) },
   { method: 'POST', path: '/api/v1/sim/restore', handler: ({ body }) => restoreRun(body ?? {}) },
+  { method: 'GET', path: '/api/v1/sim/saves', handler: () => listSaveSlots() },
+  { method: 'POST', path: '/api/v1/sim/load', handler: ({ body }) => loadSaveSlot(body ?? {}) },
+  { method: 'POST', path: '/api/v1/sim/reset', handler: () => resetSimulationRun() },
 ];

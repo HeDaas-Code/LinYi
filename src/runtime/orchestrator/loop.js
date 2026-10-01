@@ -86,6 +86,8 @@ const DYNAMIC_BASE_SCORE = Object.freeze({
  * 决策链完全不受影响。
  */
 const layaUrgencyCache = new Map();
+/** 每名居民最近一次被抽中调用模型的时间步，用于提高漏抽居民的后续权重。 */
+const llmLastSampledTick = new Map();
 
 /** 读取某居民的语义紧迫度（0..1）；未预取或服务不可用时返回 null。 */
 function layaUrgencyFor(agentId) {
@@ -2065,17 +2067,33 @@ async function* tickSequenceInner(config = {}) {
   const agentRecords = registry.lookup({ type: 'agent' });
   const decisions = [];
   const mode = cfg.llmDecideEnabled === true ? 'sample' : (cfg.llmDecideMode ?? 'off');
-  const llmDecide = mode !== 'off' && (tick % (cfg.llmDecideEveryTicks ?? 1) === 0);
+  // Population mode follows the random-tick design and always draws on every tick.
+  // Only the legacy bounded 'sample' mode can be interval-throttled.
+  const llmDecide = mode === 'population' || (mode === 'sample' && (tick % (cfg.llmDecideEveryTicks ?? 1) === 0));
   const maxAgents = cfg.llmDecideMaxAgents === 0 ? agentRecords.length : (cfg.llmDecideMaxAgents ?? 1);
   const orderedIds = agentRecords.map((r) => r.id);
   let llmSelectedIds = [];
   if (llmDecide && mode === 'sample') llmSelectedIds = orderedIds.slice(0, maxAgents);
-  if (llmDecide && mode === 'population') {
-    const limit = Math.min(maxAgents, Math.ceil(orderedIds.length * (cfg.llmDecidePopulationShare ?? 1)));
-    const hash = (id) => [...id].reduce((n, c) => (Math.imul(n, 31) + c.charCodeAt(0)) | 0, 7) >>> 0;
-    const sorted = [...orderedIds].sort((a, b) => hash(a) - hash(b) || a.localeCompare(b));
-    const start = sorted.length ? (tick - 1) % sorted.length : 0;
-    llmSelectedIds = [...sorted.slice(start), ...sorted.slice(0, start)].slice(0, limit);
+  if (llmDecide && mode === 'population' && orderedIds.length > 0) {
+    const shareLimit = Math.ceil(orderedIds.length * (cfg.llmDecidePopulationShare ?? 1));
+    const limit = Math.max(1, Math.min(orderedIds.length, maxAgents, shareLimit || 1));
+    const living = new Set(orderedIds);
+    for (const agentId of llmLastSampledTick.keys()) if (!living.has(agentId)) llmLastSampledTick.delete(agentId);
+    // Weighted lottery without replacement: the longer a resident has gone
+    // without a model call, the larger their share of the next draw.
+    const pool = orderedIds.map((id) => ({ id, weight: Math.max(1, tick - (llmLastSampledTick.get(id) ?? 0)) }));
+    while (llmSelectedIds.length < limit && pool.length > 0) {
+      const totalWeight = pool.reduce((sum, item) => sum + item.weight, 0);
+      let draw = rng.next() * totalWeight;
+      let index = pool.length - 1;
+      for (let i = 0; i < pool.length; i += 1) {
+        draw -= pool[i].weight;
+        if (draw < 0) { index = i; break; }
+      }
+      llmSelectedIds.push(pool[index].id);
+      pool.splice(index, 1);
+    }
+    for (const agentId of llmSelectedIds) llmLastSampledTick.set(agentId, tick);
   }
   const llmSelected = new Set(llmSelectedIds);
   if (llmDecide) {
@@ -2190,7 +2208,7 @@ async function* tickSequenceInner(config = {}) {
     } else {
       decision.model = {
         mode, populationShare: cfg.llmDecidePopulationShare ?? 1, sampledAgentIds: llmSelectedIds, applied: false, action: null,
-        fallbackReason: llmDecide ? 'sampling_limit' : 'llm_decide_disabled',
+        fallbackReason: !llmDecide ? (mode === 'off' ? 'llm_decide_disabled' : 'sampling_interval_skip') : 'not_sampled_this_tick',
         meta: null, contextSummary: llmSelected.has(agentId) ? contextSummary : null, provider: null, model: null, latencyMs: null,
       };
     }
@@ -2634,6 +2652,7 @@ export function __snapshot() {
     currentSeed,
     mortality: [...mortality.entries()].map(([agentId, st]) => ({ agentId, ...structuredClone(st) })),
     literateSet: literateSet === null ? null : [...literateSet],
+    llmLastSampledTick: [...llmLastSampledTick.entries()],
     inFlight,
     committedTick,
     inFlightTick,
@@ -2671,6 +2690,10 @@ export function __restore(data = {}) {
     mortality.set(agentId, structuredClone(rest));
   }
   literateSet = d.literateSet === null || d.literateSet === undefined ? null : new Set(d.literateSet);
+  llmLastSampledTick.clear();
+  for (const item of (Array.isArray(d.llmLastSampledTick) ? d.llmLastSampledTick : [])) {
+    if (Array.isArray(item) && typeof item[0] === 'string' && Number.isInteger(item[1]) && item[1] >= 0) llmLastSampledTick.set(item[0], item[1]);
+  }
   // 运行阶段：恢复为「已提交、无进行中 tick」的自洽态。
   committedTick = Number.isInteger(d.committedTick) && d.committedTick >= 0 ? d.committedTick : 0;
   inFlightTick = Number.isInteger(d.inFlightTick) && d.inFlightTick >= 0 ? d.inFlightTick : 0;
@@ -2698,6 +2721,7 @@ export function __restore(data = {}) {
 
 export function reset() {
   invalidateAlivePopulation();
+  llmLastSampledTick.clear();
   graph.__reset();
   // 热数据归档必须一起清空：graph.__reset 只清图节点，归档与序号水位是
   // hot-log 自己的模块级状态，不跟着图走。不清的话新一局会继承上一局的
@@ -2813,24 +2837,9 @@ export function reset() {
   resetGenerations();
 }
 
-/**
- * 复位并运行 N 个 tick，返回整段运行的汇总报告。
- * @param {object} [options]
- * @param {number} [options.ticks=1] 运行 tick 数
- * @param {number|string} [options.seed] 随机种子
- * @param {Array<object>} [options.agents] 初始智能体（见 spawnAgent）
- * @param {number} [options.agentCount] 未提供 agents 时自动生成的数量（默认 3）
- * @param {boolean} [options.reset=true] 运行前是否复位
- * @param {object} [options.decay] {food, water} 资源自然损耗率
- * @param {object} [options.needGrowth] {food, water} 每 tick 需求增长
- * @param {number} [options.eventProbability] 每 tick 突发事件概率
- * @param {Array<object>} [options.events] 突发事件目录
- * @returns {Promise<object>}
- */
-export async function run(options = {}) {
-  if (options.reset !== false) reset();
+/** 创建居民并执行一次性阶段初始化；调用方负责保证这是新一局。 */
+export function initializeRun(options = {}) {
   if (options.seed !== undefined) { currentSeed = String(options.seed); rng.seed(options.seed); }
-
   const spawned = [];
   const phase2 = options.phase2 === true;
   const phase3 = options.phase3 === true;
@@ -2865,6 +2874,29 @@ export async function run(options = {}) {
 
   // 批次2-C（t48）：为居民种子日程 / 职业 / 公共角色（真实调用 4 模块）
   seedAgentScheduleRoles(spawned, options);
+
+  return { agents: spawned, phase2Seed, phase3Seed };
+}
+
+/**
+ * 复位并运行 N 个 tick，返回整段运行的汇总报告。
+ * @param {object} [options]
+ * @param {number} [options.ticks=1] 运行 tick 数
+ * @param {number|string} [options.seed] 随机种子
+ * @param {Array<object>} [options.agents] 初始智能体（见 spawnAgent）
+ * @param {number} [options.agentCount] 未提供 agents 时自动生成的数量（默认 3）
+ * @param {boolean} [options.reset=true] 运行前是否复位
+ * @param {object} [options.decay] {food, water} 资源自然损耗率
+ * @param {object} [options.needGrowth] {food, water} 每 tick 需求增长
+ * @param {number} [options.eventProbability] 每 tick 突发事件概率
+ * @param {Array<object>} [options.events] 突发事件目录
+ * @returns {Promise<object>}
+ */
+export async function run(options = {}) {
+  if (options.reset !== false) reset();
+  const { agents: spawned, phase2Seed, phase3Seed } = initializeRun(options);
+  const phase2 = options.phase2 === true;
+  const phase3 = options.phase3 === true;
 
   const ticks = Number.isInteger(options.ticks) && options.ticks > 0 ? options.ticks : 1;
   const steps = [];
